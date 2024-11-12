@@ -106,16 +106,6 @@ const Footer: React.FC = () => {
             {t("common.faqs")}
           </LinkTo>
           <DotDivide />
-          <CustomTooltip
-            componentsProps={{ transition: { style: { marginBottom: "10px" } } }}
-            title={t("common.tooltipBugBounty")}
-          >
-            <StyledLinkExternal href={BUG_BOUNTY_URL} target="_blank" rel="noopener noreferrer">
-              {t("common.bugBounty")}
-            </StyledLinkExternal>
-          </CustomTooltip>
-
-          <DotDivide />
           <LinkTo to={routers.TERMS_OF_SERVICE} rel="noopener noreferrer">
             {t("common.termsOfService")}
           </LinkTo>

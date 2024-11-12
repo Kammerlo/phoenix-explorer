@@ -33,9 +33,8 @@ const TransactionListFull: React.FC<TransactionListFullProps> = ({
   const history = useHistory();
   const pageInfo = getPageInfo(search);
 
-  const onClickRow = (_: MouseEvent<Element, globalThis.MouseEvent>, r: Transactions) => {
-    if (openDetail) return openDetail(_, r);
-    history.push(details.transaction(r.hash));
+  const onClickRow = (_: MouseEvent<Element, globalThis.MouseEvent>, r: Transaction) => {
+    history.push(details.transaction(r.tx.hash));
   };
 
   const columns: Column<Transaction>[] = [
