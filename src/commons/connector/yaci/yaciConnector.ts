@@ -3,8 +3,23 @@ import axios, { AxiosInstance } from "axios";
 import { ApiConnector } from "../ApiConnector";
 import { ApiReturnType } from "../types/APIReturnType";
 import { TRANSACTION_STATUS } from "../../utils/constants";
-import { BlockDto, BlocksPage, TransactionDetails, TransactionSummary, Epoch, EpochNo, TransactionPage } from "./types";
-import { mapBlockDTOToBlock, mapTxUtxoToCollateralResponse, mapTxUtxoToUtxo } from "./mapper/Mapper";
+import {
+  BlockDto,
+  BlocksPage,
+  TransactionDetails,
+  TransactionSummary,
+  Epoch,
+  EpochNo,
+  TransactionPage,
+  TxMetadataLabelDto
+} from "./types";
+import {
+  amtToToken,
+  mapBlockDTOToBlock,
+  mapTxDetailsToTxSummary,
+  mapTxUtxoToCollateralResponse,
+  mapTxUtxoToUtxo
+} from "./mapper/Mapper";
 import applyCaseMiddleware from "axios-case-converter";
 
 export class YaciConnector implements ApiConnector {
@@ -87,6 +102,8 @@ export class YaciConnector implements ApiConnector {
     const txDetails = response.data;
     const blockResponse = await this.getBlockDetail(txDetails.blockHeight!);
     const block = blockResponse.data;
+    const metadataResponse = await this.client.get<TxMetadataLabelDto[]>(`${this.baseUrl}/txs/${txHash}/metadata`);
+    const metadata = metadataResponse.data;
     const tx: Transaction = {
       tx: {
         hash: txDetails.hash!,
@@ -109,6 +126,7 @@ export class YaciConnector implements ApiConnector {
           return mapTxUtxoToUtxo(output);
         })
       },
+      // TODO will add later, when needed
       collaterals: {
         collateralInputResponses: txDetails.collateralInputs
           ? txDetails.collateralInputs.map((input) => {
@@ -118,14 +136,15 @@ export class YaciConnector implements ApiConnector {
         collateralOutputResponses: [] // TODO: need to implement
       },
       summary: {
-        stakeAddress: txDetails.inputs!.map((input) => {
-          return {
-            address: input.stakeAddress || "",
-            value: 0, // TODO: need to implement
-            tokens: [] // TODO: need to implement
-          };
-        })
+        stakeAddress: mapTxDetailsToTxSummary(txDetails)
       },
+      // signersInformation: mapToSignersInformation(txDetails), // TODO requiredSigners is not available in response
+      metadata: metadata.map((meta) => {
+        return {
+          label: meta.label ? +meta.label : 0,
+          value: meta.jsonMetadata?.toString() || ""
+        };
+      }),
       metadataHash: "" // TODO
     };
     return {

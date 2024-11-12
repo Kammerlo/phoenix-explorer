@@ -269,14 +269,6 @@ interface Transaction {
     metadataCIP83: { valid?: boolean; requiredProperties?: TTCIP25Properties[] };
     metadataCIP25: CIP;
     metadataCIP60: CIP;
-    metadataBolnisi: {
-      cid: string;
-      cidVerified: boolean;
-      externalApiAvailable: boolean;
-      wineryData: WineryData[];
-      certData: CertData;
-      tag: string;
-    };
   }[];
 }
 

@@ -75,7 +75,13 @@ const SummaryItems = ({
                 width={"100%"}
               >
                 <Link
-                  to={item.address.startsWith("stake") ? details.stake(item.address) : details.address(item.address)}
+                  to={
+                    item.address
+                      ? item.address.startsWith("stake")
+                        ? details.stake(item.address)
+                        : details.address(item.address)
+                      : ""
+                  }
                   style={{ width: "100%" }}
                 >
                   <Box

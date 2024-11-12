@@ -80,6 +80,8 @@ const CIPLabel1904 = 1904;
 
 const Metadata: React.FC<MetadataProps> = ({ hash, data }) => {
   const LIMIT_MESSAGE_ROW = 4;
+  console.log(`MetadataIndex ${data}`);
+  console.log(data);
   const { t } = useTranslation();
   const theme = useTheme();
   const supportEnc = "basic";
@@ -305,32 +307,30 @@ const Metadata: React.FC<MetadataProps> = ({ hash, data }) => {
             )}
           </MetaDataValue>
         </MetadataContent>
-
-        {data.cidVerified && data.tag === "scm" && <Wineries wineryData={data.wineryData} />}
-        {data.tag !== "scm" && <ConformityCert type={data.tag} certData={data.certData} />}
       </Box>
     );
   };
 
   return (
     <Box>
-      <Wrapper>
-        <Header>
-          <Box>{t("common.metadataHash")}</Box>
-        </Header>
+      {/*TODO will add later, when the hash is available*/}
+      {/*<Wrapper>*/}
+      {/*  <Header>*/}
+      {/*    <Box>{t("common.metadataHash")}</Box>*/}
+      {/*  </Header>*/}
 
-        <Box
-          textAlign={"left"}
-          fontWeight={"bold"}
-          display={"block"}
-          pt={2}
-          color={({ palette }) => `${palette.secondary.main}  !important`}
-          width={"fit-content"}
-          maxWidth={"100%"}
-        >
-          <DynamicEllipsisText isTooltip value={hash || ""} isCopy />
-        </Box>
-      </Wrapper>
+      {/*  <Box*/}
+      {/*    textAlign={"left"}*/}
+      {/*    fontWeight={"bold"}*/}
+      {/*    display={"block"}*/}
+      {/*    pt={2}*/}
+      {/*    color={({ palette }) => `${palette.secondary.main}  !important`}*/}
+      {/*    width={"fit-content"}*/}
+      {/*    maxWidth={"100%"}*/}
+      {/*  >*/}
+      {/*    <DynamicEllipsisText isTooltip value={hash || ""} isCopy />*/}
+      {/*  </Box>*/}
+      {/*</Wrapper>*/}
       {(data || [])?.map((metadata, idx) => {
         return (
           <MetadataWrapper key={idx}>
@@ -480,7 +480,7 @@ const Metadata: React.FC<MetadataProps> = ({ hash, data }) => {
               metadata?.metadataCIP83.valid &&
               !textRaw &&
               renderButtonDecrypt(metadata?.metadataCIP83?.requiredProperties)}
-            {String(metadata.label) === String(CIPLabel1904) && renderBolnisi(metadata?.metadataBolnisi)}
+            {/*{String(metadata.label) === String(CIPLabel1904) && renderBolnisi(metadata?.metadataBolnisi)}*/}
           </MetadataWrapper>
         );
       })}
@@ -493,28 +493,28 @@ const Metadata: React.FC<MetadataProps> = ({ hash, data }) => {
         title={`${t("common.key")}: ${selectedText?.label || 0}`}
         subTitle={t("common.value")}
       />
-      <CIP25Modal
-        data={data?.[selectedIndedx || 0].metadataCIP25?.tokenMap}
-        open={typeof selectedIndedx === "number" && cip === CIP.CIP25}
-        version={data?.[selectedIndedx || 0].metadataCIP25?.version}
-        onClose={() => setSelectedIndex(null)}
-      />
-      <CIP60Modal
-        data={data?.[selectedIndedx || 0].metadataCIP60?.tokenMap}
-        open={typeof selectedIndedx === "number" && cip === CIP.CIP60}
-        version={data?.[selectedIndedx || 0].metadataCIP60?.version}
-        onClose={() => setSelectedIndex(null)}
-      />
-      <CIP20Modal
-        data={data?.[selectedIndedx || 0].metadataCIP20?.requiredProperties}
-        open={typeof selectedIndedx === "number" && cip === CIP.CIP20}
-        onClose={() => setSelectedIndex(null)}
-      />
-      <CIP83Modal
-        data={data?.[selectedIndedx || 0].metadataCIP83?.requiredProperties}
-        open={typeof selectedIndedx === "number" && cip === CIP.CIP83}
-        onClose={() => setSelectedIndex(null)}
-      />
+      {/*<CIP25Modal*/}
+      {/*  data={data?.[selectedIndedx || 0].metadataCIP25?.tokenMap}*/}
+      {/*  open={typeof selectedIndedx === "number" && cip === CIP.CIP25}*/}
+      {/*  version={data?.[selectedIndedx || 0].metadataCIP25?.version}*/}
+      {/*  onClose={() => setSelectedIndex(null)}*/}
+      {/*/>*/}
+      {/*<CIP60Modal*/}
+      {/*  data={data?.[selectedIndedx || 0].metadataCIP60?.tokenMap}*/}
+      {/*  open={typeof selectedIndedx === "number" && cip === CIP.CIP60}*/}
+      {/*  version={data?.[selectedIndedx || 0].metadataCIP60?.version}*/}
+      {/*  onClose={() => setSelectedIndex(null)}*/}
+      {/*/>*/}
+      {/*<CIP20Modal*/}
+      {/*  data={data?.[selectedIndedx || 0].metadataCIP20?.requiredProperties}*/}
+      {/*  open={typeof selectedIndedx === "number" && cip === CIP.CIP20}*/}
+      {/*  onClose={() => setSelectedIndex(null)}*/}
+      {/*/>*/}
+      {/*<CIP83Modal*/}
+      {/*  data={data?.[selectedIndedx || 0].metadataCIP83?.requiredProperties}*/}
+      {/*  open={typeof selectedIndedx === "number" && cip === CIP.CIP83}*/}
+      {/*  onClose={() => setSelectedIndex(null)}*/}
+      {/*/>*/}
       <PassphraseDecryptModal
         setPassphrasse={setPassphrasse}
         hanldeDecrypt={hanldeDecrypt}
@@ -582,270 +582,5 @@ export const VerifyBadge = ({ status, type }: { status: boolean; type?: string }
       </Box>
       {t("bolsini.verified")}
     </BadgeContainerVerify>
-  );
-};
-
-const Wineries: React.FC<{
-  wineryData?: Transaction["metadata"][number]["metadataBolnisi"]["wineryData"];
-}> = ({ wineryData }) => {
-  const theme = useTheme();
-  const history = useHistory();
-  const { trxHash } = useParams<{ trxHash: string }>();
-
-  const { wineryName, wineryNameLoading } = useSelector(({ system }: RootState) => system);
-
-  if (!wineryData) return null;
-
-  return (
-    <Box>
-      <Box alignItems={"center"} display={"flex"} mb={2}>
-        <MetadataJSONTitle
-          display={"flex"}
-          gap={2}
-          sx={{
-            [theme.breakpoints.down("sm")]: {
-              width: "unset",
-              mr: 2
-            }
-          }}
-        >
-          {t("bolsini.wineries")}
-        </MetadataJSONTitle>
-        <MetaDataValue display={"flex"} alignItems={"center"}>
-          <CustomNumberBadge ml="0px" value={wineryData?.length} />
-        </MetaDataValue>
-      </Box>
-      {wineryNameLoading && (
-        <Box component={Grid} container spacing={2}>
-          {new Array(3).fill(0).map((_, idx) => {
-            return (
-              <Grid item width={"100%"} lg={4} md={6} sm={6} xs={12} key={idx}>
-                <Box component={Skeleton} variant="rectangular" borderRadius={"10px"} height={150} />
-              </Grid>
-            );
-          })}
-        </Box>
-      )}
-
-      {!wineryNameLoading && (
-        <Box component={Grid} container spacing={2}>
-          {wineryData?.map((winery, idx) => {
-            const getWineName = (wineryId: string) => {
-              if (wineryName && wineryName[`${wineryId}`]) {
-                return wineryName[`${wineryId}`].name;
-              }
-              return "";
-            };
-            const getWineAddress = (wineryId: string) => {
-              if (wineryName && wineryName[`${wineryId}`]) {
-                return wineryName[`${wineryId}`].address;
-              }
-              return "";
-            };
-
-            return (
-              <Grid item width={"100%"} lg={4} md={6} sm={6} xs={12} key={idx}>
-                <Box height={"100%"} display="flex" flexDirection="column">
-                  <ItemBolnisi display="flex" flexDirection="column" height="100%" justifyContent="space-between">
-                    <Box display={"flex"} width={"100%"} justifyContent={"flex-end"} mb={1}>
-                      {winery.externalApiAvailable && <VerifyBadge status={winery.pkeyVerified} />}
-                      {!winery.externalApiAvailable && (
-                        <CustomTooltip
-                          title={
-                            <Box width={"max-content"} maxWidth={"75vw"}>
-                              {t("bolnisi.verifyErrorTooltip")}
-                              <br />
-                              {t("bolnisi.verifyErrorTooltipTryAgain")}
-                            </Box>
-                          }
-                        >
-                          <BadgeContainerVerify type="Warning" fontWeight={500}>
-                            <Box
-                              width={23}
-                              height={23}
-                              display={"flex"}
-                              alignItems={"center"}
-                              justifyContent={"center"}
-                              bgcolor={theme.palette.warning[700]}
-                              borderRadius={"50%"}
-                            >
-                              <InvalidIcon fill={theme.palette.secondary.main} />
-                            </Box>
-                            <Box width={"max-content"}>{t("bolnisi.verifyError")}</Box>
-                          </BadgeContainerVerify>
-                        </CustomTooltip>
-                      )}
-                    </Box>
-                    <Box display={"flex"} mb={2} alignItems={"center"} flexGrow={1} flexWrap={"wrap"} gap={2}>
-                      <Box component={DefaultImageWine} name={getWineName(winery.wineryId) || ""} />
-                      <Box mt={1}>
-                        <Box fontWeight={"bold"} mb={1} color={theme.palette.secondary.main}>
-                          {getWineName(winery.wineryId)}
-                        </Box>
-                        <Box display={"flex"} alignItems={"center"}>
-                          <BolsiniAddress fill={theme.palette.secondary.light} />
-                          <Box
-                            component={"span"}
-                            pl={0.5}
-                            fontSize={14}
-                            color={theme.palette.secondary.light}
-                            lineHeight={1}
-                          >
-                            {getWineAddress(winery.wineryId)}
-                          </Box>
-                        </Box>
-                      </Box>
-                    </Box>
-
-                    <Box
-                      component={ViewWineButton}
-                      width={"100%"}
-                      marginTop={"auto"}
-                      onClick={() => {
-                        history.push(details.transaction(trxHash, "metadata", winery.wineryId));
-                      }}
-                      disabled={!winery.pkeyVerified && winery.externalApiAvailable}
-                    >
-                      {t("bolsini.viewWineLots")}
-                    </Box>
-                  </ItemBolnisi>
-                </Box>
-              </Grid>
-            );
-          })}
-        </Box>
-      )}
-      <BolnisiWineDrawer />
-    </Box>
-  );
-};
-
-const ConformityCert: React.FC<{
-  certData?: Transaction["metadata"][number]["metadataBolnisi"]["certData"];
-  type?: string;
-}> = ({ certData, type }) => {
-  const theme = useTheme();
-  const [openDrawer, setOpenDrawer] = useState<boolean>(false);
-
-  if (!certData) return null;
-  const certificateMapping: Array<{ label: string; key: keyof OffChainData }> = [
-    { label: "Certificate No.", key: "certificate_number" },
-    { label: "Certificate Type", key: "certificate_type" },
-    { label: "Export country", key: "export_country" }
-  ];
-
-  return (
-    <Box>
-      <Box alignItems="center" display="flex" mb={2}>
-        <MetadataJSONTitle
-          display="flex"
-          gap={2}
-          sx={{
-            [theme.breakpoints.down("sm")]: {
-              width: "unset",
-              mr: 2
-            }
-          }}
-        >
-          Certification Entity
-        </MetadataJSONTitle>
-        <MetaDataValue display="flex" alignItems="center">
-          <CustomNumberBadge ml="0px" value={certData?.certs.length || 0} />
-        </MetaDataValue>
-      </Box>
-
-      <Grid container spacing={2}>
-        {certData?.certs.map((el, idx) => {
-          if (!el.offChainData) return null;
-          return (
-            <Grid item width="100%" lg={4} md={6} sm={6} xs={12} key={idx}>
-              <Box display="flex" flexDirection="column" height="100%">
-                <ItemBolnisi style={{ display: "flex", flexDirection: "column", height: "100%" }}>
-                  <Box display="flex" justifyContent="flex-end" mb={1}>
-                    <VerifyBadge type={type} status={el.signatureVerified} />
-                  </Box>
-
-                  <Box display="flex" alignItems="center" flexWrap="wrap" gap={"10px"}>
-                    <Box
-                      width={48}
-                      height={48}
-                      sx={{
-                        background: "#BD2F2D",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        borderRadius: "50%"
-                      }}
-                    >
-                      <CustomIcon height={34} width={24} icon={AvatarIcon} />
-                    </Box>
-                    <Box>
-                      <Box maxWidth={"140px"} fontWeight="bold" mb={1} color={theme.palette.secondary.main}>
-                        National Wine Agency
-                      </Box>
-                    </Box>
-                  </Box>
-                  <Box
-                    sx={{
-                      display: "flex",
-                      gap: "12px",
-                      flexDirection: "column",
-                      marginTop: "24px",
-                      marginBottom: "16px"
-                    }}
-                  >
-                    {certData.certs.map((cert, certIndex) => {
-                      return (
-                        <Box
-                          key={certIndex}
-                          sx={{ marginBottom: "16px", display: "flex", gap: "12px", flexDirection: "column" }}
-                        >
-                          {certificateMapping.map((field, fieldIndex) => {
-                            const value = cert?.offChainData[field.key];
-                            return value ? (
-                              <Box key={fieldIndex} sx={{ display: "flex", flexWrap: "wrap" }}>
-                                <Box
-                                  sx={{
-                                    fontSize: "16px",
-                                    fontWeight: "600",
-                                    color: theme.isDark ? "#F6F9FF" : "#434556",
-                                    marginRight: { lg: "20px", md: "12px", sm: "8px", xs: "8px" }
-                                  }}
-                                >
-                                  {field.label}
-                                </Box>
-                                <Box sx={{ fontSize: "16px", fontWeight: "400", color: theme.palette.secondary.main }}>
-                                  {String(cert.offChainData?.[field.key] || "N/A")}
-                                </Box>
-                              </Box>
-                            ) : null;
-                          })}
-                        </Box>
-                      );
-                    })}
-                  </Box>
-                  {type !== "conformityCertRevoke" && (
-                    <Box
-                      onClick={() => {
-                        setOpenDrawer(true);
-                      }}
-                      component={ViewWineButton}
-                      width={"100%"}
-                    >
-                      View Certificate
-                    </Box>
-                  )}
-                  <BolnisiWineDrawerConformity
-                    certNo={el.offChainData?.certificate_number}
-                    openDrawer={openDrawer}
-                    setOpenDrawer={setOpenDrawer}
-                  />
-                </ItemBolnisi>
-              </Box>
-            </Grid>
-          );
-        })}
-      </Grid>
-    </Box>
   );
 };
