@@ -80,8 +80,6 @@ const CIPLabel1904 = 1904;
 
 const Metadata: React.FC<MetadataProps> = ({ hash, data }) => {
   const LIMIT_MESSAGE_ROW = 4;
-  console.log(`MetadataIndex ${data}`);
-  console.log(data);
   const { t } = useTranslation();
   const theme = useTheme();
   const supportEnc = "basic";

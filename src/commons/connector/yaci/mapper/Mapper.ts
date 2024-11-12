@@ -1,7 +1,6 @@
 import { Amt, BlockDto, TransactionDetails, TxUtxo, Utxo } from "../types";
 
 export function mapTxUtxoToUtxo(input: TxUtxo) {
-  console.log(input);
   return {
     address: input.address || "",
     stakeAddress: input.stakeAddress || "",
