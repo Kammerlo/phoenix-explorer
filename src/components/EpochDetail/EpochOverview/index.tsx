@@ -22,7 +22,7 @@ import DetailHeader from "src/components/commons/DetailHeader";
 import { Subtext, TitleCard } from "./styles";
 
 interface EpochOverviewProps {
-  data: IDataEpoch | null;
+  data: IDataEpoch | null | undefined;
   loading: boolean;
   lastUpdated?: number;
 }
@@ -110,17 +110,6 @@ const EpochOverview: React.FC<EpochOverviewProps> = ({ data, loading, lastUpdate
       )
     },
     {
-      icon: User2Component,
-      title: (
-        <Box display={"flex"} alignItems="center">
-          <TitleCard data-testId="epoch.overview.uniqueAccountsTitle" mr={1}>
-            {t("glossary.uniqueAccounts")}
-          </TitleCard>
-        </Box>
-      ),
-      value: <div data-testId="epoch.overview.uniqueAccountsTitle">{data?.account}</div>
-    },
-    {
       icon: ExchageIcon,
       title: (
         <Box display={"flex"} alignItems="center">
@@ -130,26 +119,26 @@ const EpochOverview: React.FC<EpochOverviewProps> = ({ data, loading, lastUpdate
         </Box>
       ),
       value: <div data-testId="epoch.overview.transactionCountValue">{data?.txCount}</div>
-    },
-    {
-      icon: RewardIconComponent,
-      title: (
-        <Box data-testId="epoch.overview.rewardsDistributedTitle" display={"flex"} alignItems="center">
-          <TitleCard mr={1}> {t("glossary.rewardsDistributed")}</TitleCard>
-        </Box>
-      ),
-      value: (
-        <div data-testId="epoch.overview.rewardsDistributedValue">
-          {data?.rewardsDistributed ? (
-            <span>
-              {formatADAFull(data?.rewardsDistributed)} <ADAicon />
-            </span>
-          ) : (
-            t("common.N/A")
-          )}
-        </div>
-      )
     }
+    // {
+    //   icon: RewardIconComponent,
+    //   title: (
+    //     <Box data-testId="epoch.overview.rewardsDistributedTitle" display={"flex"} alignItems="center">
+    //       <TitleCard mr={1}> {t("glossary.rewardsDistributed")}</TitleCard>
+    //     </Box>
+    //   ),
+    //   value: (
+    //     <div data-testId="epoch.overview.rewardsDistributedValue">
+    //       {data?.rewardsDistributed ? (
+    //         <span>
+    //           {formatADAFull(data?.rewardsDistributed)} <ADAicon />
+    //         </span>
+    //       ) : (
+    //         t("common.N/A")
+    //       )}
+    //     </div>
+    //   )
+    // }
   ];
   return (
     <Box mb={3}>

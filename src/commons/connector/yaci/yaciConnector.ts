@@ -11,10 +11,13 @@ import {
   Epoch,
   EpochNo,
   TransactionPage,
-  TxMetadataLabelDto
+  TxMetadataLabelDto,
+  AddressBalanceDto,
+  EpochsPage
 } from "./types";
 import {
   amtToToken,
+  epochToIEpochData,
   mapBlockDTOToBlock,
   mapTxDetailsToTxSummary,
   mapTxUtxoToCollateralResponse,
@@ -31,8 +34,23 @@ export class YaciConnector implements ApiConnector {
     this.client = applyCaseMiddleware(axios.create());
   }
 
-  async getBlocks(): Promise<ApiReturnType<Block[]>> {
+  async getBlocksPage(): Promise<ApiReturnType<Block[]>> {
     const response = await this.client.get<BlocksPage>(`${this.baseUrl}/blocks`);
+    const blocks: Block[] = [];
+    // getting additional data
+    for (const block of response.data.blocks!) {
+      blocks.push((await this.getBlockDetail(block.number!)).data as Block);
+    }
+    return {
+      data: blocks,
+      total: response.data.total,
+      totalPage: response.data.totalPages,
+      lastUpdated: Date.now()
+    } as ApiReturnType<Block[]>;
+  }
+
+  async getBlocksByEpoch(epoch: number): Promise<ApiReturnType<Block[]>> {
+    const response = await this.client.get<BlocksPage>(`${this.baseUrl}/blocks/epoch/${epoch}`);
     const blocks: Block[] = [];
     // getting additional data
     for (const block of response.data.blocks!) {
@@ -180,5 +198,59 @@ export class YaciConnector implements ApiConnector {
       data: transactions,
       lastUpdated: Date.now()
     } as ApiReturnType<Transactions[]>;
+  }
+
+  async getWalletAddressFromAddress(address: string): Promise<ApiReturnType<WalletAddress>> {
+    const addressBalanceResponse = await this.client.get<AddressBalanceDto>(
+      `${this.baseUrl}/addresses/${address}/balance`
+    );
+    const addressBalance = addressBalanceResponse.data;
+    const walletAddress: WalletAddress = {
+      address: addressBalance.address || "",
+      balance: addressBalance.amounts
+        ? addressBalance.amounts
+            .map((amt) => {
+              return amt.assetName === "lovelace" ? +amt.quantity! : 0;
+            })
+            .reduce((a, b) => a + b, 0)
+        : 0,
+      tokens: addressBalance.amounts
+        ?.filter((amt) => amt.assetName !== "lovelace")
+        .map((token) => {
+          return {
+            address: address,
+            name: token.assetName || "",
+            displayName: token.assetName || "",
+            fingerprint: token.assetName || "",
+            quantity: token.quantity || 0
+          };
+        })
+    };
+    return {
+      data: walletAddress,
+      lastUpdated: Date.now()
+    } as ApiReturnType<WalletAddress>;
+  }
+
+  async getEpochs(): Promise<ApiReturnType<IDataEpoch[]>> {
+    const response = await this.client.get<EpochsPage>(`${this.baseUrl}/epochs`);
+
+    const epochs: IDataEpoch[] = response.data.epochs!.map((epoch) => {
+      return epochToIEpochData(epoch);
+    });
+    return {
+      data: epochs,
+      totalPage: response.data.totalPages || 0,
+      total: response.data.total || 0,
+      lastUpdated: Date.now()
+    } as ApiReturnType<IDataEpoch[]>;
+  }
+
+  async getEpoch(epochId: number): Promise<ApiReturnType<IDataEpoch>> {
+    const response = await this.client.get<Epoch>(`${this.baseUrl}/epochs/${epochId}`);
+    return {
+      data: epochToIEpochData(response.data),
+      lastUpdated: Date.now()
+    } as ApiReturnType<IDataEpoch>;
   }
 }

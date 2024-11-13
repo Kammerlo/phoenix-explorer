@@ -200,7 +200,7 @@ export const removeAuthInfo = () => {
   setUserData(null);
 };
 
-export const formatDateTimeLocal = (date: string) => {
+export const formatDateTimeLocal = (date: string, addDays: number = 0) => {
   if (!date) return "";
   if (!sessionStorage.getItem("timezone")) {
     return moment(moment.utc(`${date}`)).toISOString();
@@ -222,7 +222,9 @@ export const formatDateTimeLocal = (date: string) => {
     timeZone: timeZone == "UTC" ? "UTC" : Intl.DateTimeFormat().resolvedOptions().timeZone
   });
 
-  return dateFormat.format(moment(moment.utc(date, "YYYY-MM-DDTHH:mm:ssZ")) as never as Date);
+  return dateFormat.format(
+    moment(moment.utc(moment.unix(+date).add(addDays, "days"), "YYYY-MM-DDTHH:mm:ssZ")) as never as Date
+  );
 };
 
 export const formatDateLocal = (date: string) => {

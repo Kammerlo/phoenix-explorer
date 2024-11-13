@@ -29,7 +29,7 @@ export default function FirstEpoch({ data: currentEpochData, onClick }: IProps) 
   };
   const { currentEpoch } = useSelector(({ system }: RootState) => system);
   if (!currentEpochData) return null;
-  const progress = currentEpochData.syncingProgress * 100;
+  const progress = currentEpochData.syncingProgress;
 
   const listOverview = [
     {
@@ -99,7 +99,7 @@ export default function FirstEpoch({ data: currentEpochData, onClick }: IProps) 
       value: (
         <DatetimeTypeTooltip>
           <Content data-testid="epoch.firstEpoch.endTimeValue">
-            {formatDateTimeLocal(currentEpochData?.endTime || "")}
+            {formatDateTimeLocal(currentEpochData?.startTime || "", 5)}
           </Content>
         </DatetimeTypeTooltip>
       )

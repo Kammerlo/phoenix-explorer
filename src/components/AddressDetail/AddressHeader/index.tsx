@@ -25,7 +25,7 @@ import { NETWORK, NETWORKS } from "src/commons/utils/constants";
 import { BackButton, BackText, RedirectButton, StyledBoxCard, TimeDuration, TitleText, WrapHeader } from "./styles";
 
 interface Props {
-  data: WalletAddress | null;
+  data: WalletAddress | null | undefined;
   loading: boolean;
   adaHanldeData?: {
     stakeAddress: string;

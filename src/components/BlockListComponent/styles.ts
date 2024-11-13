@@ -1,25 +1,8 @@
-import { styled, Box } from "@mui/material";
+import { styled, Container, Box } from "@mui/material";
 import { Link } from "react-router-dom";
-
-export const StyledContainer = styled(Box)(({ theme }) => ({
-  [theme.breakpoints.down("sm")]: {
-    padding: "0px 16px"
-  },
-  [theme.breakpoints.up("sm")]: {
-    paddingTop: "10px"
-  },
-  "& h2": {
-    paddingLeft: "0px"
-  }
-}));
 
 export const BlueText = styled("span")`
   color: ${(props) => props.theme.palette.secondary.light};
-`;
-
-export const EpochNo = styled("span")`
-  font-family: var(--font-family-text);
-  color: ${(props) => props.theme.palette.primary.main};
 `;
 
 export const StyledLink = styled(Link)`
@@ -27,10 +10,8 @@ export const StyledLink = styled(Link)`
   color: ${(props) => props.theme.palette.primary.main} !important;
 `;
 
-export const StyledOutput = styled("div")`
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
+export const StyledImage = styled("img")`
+  margin-right: 8px;
 `;
 
 export const PriceWrapper = styled(BlueText)`
@@ -38,6 +19,29 @@ export const PriceWrapper = styled(BlueText)`
   align-items: center;
   gap: 10px;
 `;
+
+export const StyledContainer = styled(Container)(({ theme }) => ({
+  [theme.breakpoints.down("sm")]: {
+    padding: "0px 0 40px",
+    "& > div:nth-of-type(1)": {
+      "& > div:nth-of-type(1)": {
+        padding: "0 16px"
+      },
+      "& > div:nth-of-type(2)": {
+        "& > div:nth-of-type(2)": {
+          marginTop: "0px"
+        }
+      }
+    },
+    "& > div > div:nth-of-type(2)": {
+      margin: "0 16px"
+    },
+    "& > div > div:nth-of-type(3)": {
+      padding: "0 16px"
+    },
+    marginTop: "0px !important"
+  }
+}));
 
 export const Actions = styled(Box)(() => ({
   display: "flex",
