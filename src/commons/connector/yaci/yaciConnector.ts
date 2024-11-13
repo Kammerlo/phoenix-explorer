@@ -4,19 +4,17 @@ import { ApiConnector } from "../ApiConnector";
 import { ApiReturnType } from "../types/APIReturnType";
 import { TRANSACTION_STATUS } from "../../utils/constants";
 import {
+  AddressBalanceDto,
   BlockDto,
   BlocksPage,
-  TransactionDetails,
-  TransactionSummary,
   Epoch,
-  EpochNo,
+  EpochsPage,
+  TransactionDetails,
   TransactionPage,
-  TxMetadataLabelDto,
-  AddressBalanceDto,
-  EpochsPage
+  TransactionSummary,
+  TxMetadataLabelDto
 } from "./types";
 import {
-  amtToToken,
   epochToIEpochData,
   mapBlockDTOToBlock,
   mapTxDetailsToTxSummary,
@@ -24,6 +22,7 @@ import {
   mapTxUtxoToUtxo
 } from "./mapper/Mapper";
 import applyCaseMiddleware from "axios-case-converter";
+import { FunctionEnum } from "../types/FunctionEnum";
 
 export class YaciConnector implements ApiConnector {
   baseUrl: string;
@@ -32,6 +31,10 @@ export class YaciConnector implements ApiConnector {
   constructor(baseUrl: string) {
     this.baseUrl = baseUrl;
     this.client = applyCaseMiddleware(axios.create());
+  }
+
+  getSupportedFunctions(): FunctionEnum[] {
+    return [FunctionEnum.EPOCH, FunctionEnum.BLOCK, FunctionEnum.TRANSACTION];
   }
 
   async getBlocksPage(): Promise<ApiReturnType<Block[]>> {

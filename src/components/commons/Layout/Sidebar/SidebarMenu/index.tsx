@@ -106,6 +106,7 @@ const SidebarMenu: React.FC<RouteComponentProps> = ({ history }) => {
             const { href, key, children, icon, tooltip } = item;
             const title = t(key || "");
             const tooltipTitle = `${!sidebar ? `${title}${title && tooltip ? `: ` : ``}` : ``}${tooltip || ``}`;
+            if (item.hidden) return <></>;
             return (
               <React.Fragment key={index}>
                 {href ? (
@@ -190,6 +191,7 @@ const SidebarMenu: React.FC<RouteComponentProps> = ({ history }) => {
                         .map((subItem, subIndex) => {
                           const { href, icon, isSpecialPath, key } = subItem;
                           const title = t(key || "");
+                          if (subItem.hidden) return <></>;
                           return href ? (
                             <ListItem
                               data-testid={`submenu-button-${title.toLowerCase().replaceAll(" ", "_")}`}

@@ -35,7 +35,7 @@ const AddressWalletDetail = () => {
     document.documentElement.scrollTop = 0;
     console.log("address", address);
     apiConnector.getWalletAddressFromAddress(address).then((data) => {
-      setData(data.data!);
+      setData(data.data);
     });
   }, [address]);
 

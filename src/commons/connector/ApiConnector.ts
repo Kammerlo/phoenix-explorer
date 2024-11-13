@@ -1,5 +1,6 @@
 import { YaciConnector } from "./yaci/yaciConnector";
 import { ApiReturnType } from "./types/APIReturnType";
+import { FunctionEnum } from "./types/FunctionEnum";
 
 export abstract class ApiConnector {
   baseUrl: string;
@@ -12,7 +13,7 @@ export abstract class ApiConnector {
     return new YaciConnector("http://localhost:8080/api/v1");
     // return new YaciConnector("https://api.mainnet.yaci.xyz/api/v1");
   }
-
+  abstract getSupportedFunctions(): FunctionEnum[];
   abstract getBlocksPage(): Promise<ApiReturnType<Block[]>>;
 
   abstract getBlocksByEpoch(epoch: number): Promise<ApiReturnType<Block[]>>;

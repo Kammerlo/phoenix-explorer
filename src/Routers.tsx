@@ -6,12 +6,10 @@ import useAuth from "./commons/hooks/useAuth";
 import { routers } from "./commons/routers";
 import { APP_LANGUAGES, SUPPORTED_LANGUAGES } from "./commons/utils/constants";
 import { handleChangeLanguage } from "./commons/utils/helper";
-import AccountLayout from "./components/commons/Layout/AccountLayout";
 import i18n from "./i18n";
 import AddressWalletDetail from "./pages/AddressWalletDetail";
 import BlockDetail from "./pages/BlockDetail";
 import BlockList from "./pages/BlockList";
-import Bookmark from "./pages/Bookmark";
 import ContractDetail from "./pages/ContractDetail";
 import SmartContractDetail from "./pages/SmartContractDetail";
 import NativeScriptAndSC from "./pages/NativeScriptsAndSC";
@@ -19,9 +17,6 @@ import ContractList from "./pages/ContractList";
 import DelegationDetail from "./pages/DelegationDetail";
 import DelegationPools from "./pages/DelegationPools";
 import DelegatorLifecycle from "./pages/DelegatorLifecycle";
-import Epoch from "./pages/Epoch";
-import EpochDetail from "./pages/EpochDetail";
-import ForgotPassword from "./pages/ForgotPassword";
 import Home from "./pages/Home";
 import InstantRewards from "./pages/InstantRewards";
 import NotFound from "./pages/NotFound";
@@ -33,10 +28,8 @@ import TermOfServices from "./pages/Refference/TermOfServices";
 import RegistrationPools, { POOL_TYPE } from "./pages/RegistrationPools";
 import ReportGeneratedPoolDetail from "./pages/ReportGeneratedPoolDetail";
 import ReportGeneratedStakingDetail from "./pages/ReportGeneratedStakingDetail";
-import ResetPassword from "./pages/ResetPassword";
 import SPOLifecycle from "./pages/SPOLifecycle";
 import SearchResult from "./pages/SearchResult";
-import SignUp from "./pages/SignUp";
 import Stake, { STAKE_ADDRESS_TYPE } from "./pages/Stake";
 import StakeDelegations from "./pages/StakeDelegations";
 import StakeDetail from "./pages/StakeDetail";
@@ -46,7 +39,6 @@ import TokenDetail from "./pages/TokenDetail";
 import TopDelegators from "./pages/TopDelegators";
 import TransactionDetail from "./pages/TransactionDetail";
 import TransactionList from "./pages/TransactionList";
-import VerifyEmail from "./pages/VerifyEmail";
 import NativeScriptsDetailPage from "./pages/NativeScriptDetail";
 import DrepDetail from "./pages/DrepDetail";
 import Dreps from "./pages/Dreps";
@@ -57,6 +49,10 @@ import NetworkMonitoring from "./pages/NetworkMonitoring";
 import GovernanceActionDetails from "./pages/GovernanceActionDetails";
 import BolnisiLanding from "./pages/BolnisiLanding";
 import Micar from "./pages/Micar";
+import { ApiConnector } from "./commons/connector/ApiConnector";
+import { FunctionEnum } from "./commons/connector/types/FunctionEnum";
+import Epoch from "./pages/Epoch";
+import EpochDetail from "./pages/EpochDetail";
 
 const StakeAddressRegistration = () => <Stake stakeAddressType={STAKE_ADDRESS_TYPE.REGISTRATION} />;
 const StakeAddressDeregistration = () => <Stake stakeAddressType={STAKE_ADDRESS_TYPE.DEREREGISTRATION} />;
@@ -66,7 +62,7 @@ const PoolsDeregistration = () => <RegistrationPools poolType={POOL_TYPE.DEREREG
 
 const Routes: React.FC = () => {
   const history = useHistory();
-
+  const supportedFunctions = ApiConnector.getApiConnector().getSupportedFunctions();
   useEffect(() => {
     const pattern = /^\/([a-z]{2})\//;
     const currentLanguage = window.location.pathname.match(pattern)?.[1];
@@ -78,66 +74,155 @@ const Routes: React.FC = () => {
     }
   }, [history]);
 
+  function isSupportedRoute(element: React.FC, type: FunctionEnum) {
+    if (supportedFunctions.includes(type)) {
+      return element;
+    } else {
+      return NotFound;
+    }
+  }
+
   return (
     <Switch>
-      <Route path={routers.SIGN_UP} exact component={SignUp} />
-      <Route path={routers.VERIFY_EMAIL} exact component={VerifyEmail} />
-      <Route path={routers.FORGOT_PASSWORD} exact component={ForgotPassword} />
-      <Route path={routers.RESET_PASSWORD} exact component={ResetPassword} />
       <Route path={routers.HOME} exact component={Home} />
-      <Route path={routers.BLOCK_LIST} exact component={BlockList} />
-      <Route path={routers.BLOCK_DETAIL} component={BlockDetail} />
-      <Route path={routers.TRANSACTION_LIST} exact component={TransactionList} />
-      <Route path={routers.TRANSACTION_DETAIL} component={TransactionDetail} />
-      <Route path={routers.EPOCH_LIST} exact component={Epoch} />
-      <Route path={routers.EPOCH_DETAIL} exact component={EpochDetail} />
-      <Route path={routers.DELEGATION_POOLS} exact component={DelegationPools} />
-      <Route path={routers.DREPS} exact component={Dreps} />
-      <Route path={routers.DELEGATION_POOL_DETAIL} exact component={DelegationDetail} />
-      <Route path={routers.POOL_CERTIFICATE} exact component={PoolsCertificate} />
-      <Route path={routers.POOL_DEREGISTRATION} exact component={PoolsDeregistration} />
-      <Route path={routers.TOKEN_LIST} exact component={Tokens} />
-      <Route path={routers.TOKEN_DETAIL} exact component={TokenDetail} />
-      <Route path={routers.STAKE_ADDRESS_REGISTRATION} exact component={StakeAddressRegistration} />
-      <Route path={routers.STAKE_ADDRESS_DEREGISTRATION} exact component={StakeAddressDeregistration} />
-      <Route path={routers.STAKE_DETAIL} exact component={StakeDetail} />
-      <Route path={routers.CONTRACT_LIST} exact component={ContractList} />
-      <Route path={routers.CONTRACT_DETAIL} exact component={ContractDetail} />
-      <Route path={routers.SMART_CONTRACT} exact component={SmartContractDetail} />
-      <Route path={routers.NATIVE_SCRIPTS_AND_SC} exact component={NativeScriptAndSC} />
-      <Route path={routers.ADDRESS_DETAIL} exact component={AddressWalletDetail} />
-      <Route path={routers.POLICY_DETAIL} exact component={PolicyDetail} />
-      <Route path={routers.TOP_DELEGATOR} exact component={TopDelegators} />
-      <Route path={routers.CONSTITUIONAL_COMMITTEES} exact component={ConstitutionalCommittees} />
       <Route path={routers.OVERVIEW} exact component={Overview} />
-      <Route path={routers.OVERVIEW_GOVERNANCE_ACTION} exact component={GovernanceActionDetails} />
-      <Route path={routers.NETWORK_MONITORING} exact component={NetworkMonitoring} />
-      <Route path={routers.CONSTITUIONAL_COMMITTEE_DETAIL} exact component={ConstitutionalCommitteeDetail} />
+
       <Route path={routers.STAKING_LIFECYCLE} exact component={StakingLifecycle} />
-      <PrivateRoute path={routers.REPORT_GENERATED_STAKING_DETAIL} exact component={ReportGeneratedStakingDetail} />
-      <PrivateRoute path={routers.REPORT_GENERATED_POOL_DETAIL} exact component={ReportGeneratedPoolDetail} />
-      <Route path={routers.PROTOCOL_PARAMETER} exact component={ProtocolParameter} />
-      <Route path={routers.SEARCH} exact component={SearchResult} />
       <Route path={routers.DELEGATOR_LIFECYCLE} exact component={DelegatorLifecycle} />
       <Route path={routers.SPO_LIFECYCLE} exact component={SPOLifecycle} />
-      <Route path={routers.STAKE_ADDRESS_DELEGATIONS} exact component={StakeDelegations} />
-      <Route path={routers.INSTANTANEOUS_REWARDS} exact component={InstantRewards} />
+
+      <PrivateRoute path={routers.REPORT_GENERATED_STAKING_DETAIL} exact component={ReportGeneratedStakingDetail} />
+      <PrivateRoute path={routers.REPORT_GENERATED_POOL_DETAIL} exact component={ReportGeneratedPoolDetail} />
+
+      <Route path={routers.SEARCH} exact component={SearchResult} />
       <Route path={routers.FAQ} exact component={FAQ} />
       <Route path={routers.POLICY} exact component={Policy} />
       <Route path={routers.TERMS_OF_SERVICE} exact component={TermOfServices} />
-      <Route path={routers.NATIVE_SCRIPT_DETAIL} exact component={NativeScriptsDetailPage} />
-      <Route path={routers.DREP_DETAILS} exact component={DrepDetail} />
-      <Route path={routers.BOLNISI_LANDING} exact component={BolnisiLanding} />
-      <Route path={routers.MICAR} exact component={Micar} />
-      <Route path={routers.ACCOUNT}>
-        <AccountLayout>
-          <Switch>
-            <Route path={routers.ACCOUNT} exact component={() => <Redirect to={routers.MY_PROFILE} />} />
-            <Route path={routers.BOOKMARK} exact component={Bookmark} />
-            <Route path={routers.NOT_FOUND} component={NotFound} />
-          </Switch>
-        </AccountLayout>
-      </Route>
+
+      <Route path={routers.BLOCK_LIST} component={isSupportedRoute(BlockList, FunctionEnum.BLOCK)} />
+      <Route path={routers.BLOCK_DETAIL} component={isSupportedRoute(BlockDetail, FunctionEnum.BLOCK)} />
+      <Route path={routers.EPOCH_LIST} exact component={isSupportedRoute(Epoch, FunctionEnum.EPOCH)} />
+      <Route path={routers.EPOCH_DETAIL} exact component={isSupportedRoute(EpochDetail, FunctionEnum.EPOCH)} />
+      <Route
+        path={routers.TRANSACTION_LIST}
+        exact
+        component={isSupportedRoute(TransactionList, FunctionEnum.TRANSACTION)}
+      />
+      <Route
+        path={routers.TRANSACTION_DETAIL}
+        component={isSupportedRoute(TransactionDetail, FunctionEnum.TRANSACTION)}
+      />
+      <Route path={routers.ADDRESS_DETAIL} component={isSupportedRoute(AddressWalletDetail, FunctionEnum.ADDRESS)} />
+      <Route
+        path={routers.ADDRESS_DETAIL}
+        exact
+        component={isSupportedRoute(AddressWalletDetail, FunctionEnum.ADDRESS)}
+      />
+      <Route
+        path={routers.STAKE_ADDRESS_DELEGATIONS}
+        exact
+        component={isSupportedRoute(StakeDelegations, FunctionEnum.ADDRESS)}
+      />
+      <Route path={routers.DELEGATION_POOLS} exact component={isSupportedRoute(DelegationPools, FunctionEnum.POOL)} />
+      <Route
+        path={routers.DELEGATION_POOL_DETAIL}
+        exact
+        component={isSupportedRoute(DelegationDetail, FunctionEnum.POOL)}
+      />
+      <Route path={routers.TOP_DELEGATOR} exact component={isSupportedRoute(TopDelegators, FunctionEnum.POOL)} />
+      <Route path={routers.TOKEN_LIST} exact component={isSupportedRoute(Tokens, FunctionEnum.TOKENS)} />
+      <Route path={routers.TOKEN_DETAIL} exact component={isSupportedRoute(TokenDetail, FunctionEnum.TOKENS)} />
+      <Route path={routers.POLICY_DETAIL} exact component={isSupportedRoute(PolicyDetail, FunctionEnum.TOKENS)} />
+      <Route
+        path={routers.CONTRACT_LIST}
+        exact
+        component={isSupportedRoute(ContractList, FunctionEnum.SMART_CONTRACT)}
+      />
+      <Route
+        path={routers.CONTRACT_DETAIL}
+        exact
+        component={isSupportedRoute(ContractDetail, FunctionEnum.SMART_CONTRACT)}
+      />
+      <Route
+        path={routers.SMART_CONTRACT}
+        exact
+        component={isSupportedRoute(SmartContractDetail, FunctionEnum.SMART_CONTRACT)}
+      />
+      <Route
+        path={routers.NATIVE_SCRIPTS_AND_SC}
+        exact
+        component={isSupportedRoute(NativeScriptAndSC, FunctionEnum.SMART_CONTRACT)}
+      />
+      <Route
+        path={routers.NATIVE_SCRIPT_DETAIL}
+        exact
+        component={isSupportedRoute(NativeScriptsDetailPage, FunctionEnum.SMART_CONTRACT)}
+      />
+
+      <Route
+        path={routers.INSTANTANEOUS_REWARDS}
+        exact
+        component={isSupportedRoute(InstantRewards, FunctionEnum.REWARDS)}
+      />
+      <Route
+        path={routers.STAKE_ADDRESS_REGISTRATION}
+        exact
+        component={isSupportedRoute(StakeAddressRegistration, FunctionEnum.STAKE_ADDRESS_REGISTRATION)}
+      />
+      <Route
+        path={routers.STAKE_ADDRESS_DEREGISTRATION}
+        exact
+        component={isSupportedRoute(StakeAddressDeregistration, FunctionEnum.STAKE_ADDRESS_REGISTRATION)}
+      />
+      <Route
+        path={routers.STAKE_DETAIL}
+        exact
+        component={isSupportedRoute(StakeDetail, FunctionEnum.STAKE_ADDRESS_REGISTRATION)}
+      />
+      <Route
+        path={routers.POOL_CERTIFICATE}
+        exact
+        component={isSupportedRoute(PoolsCertificate, FunctionEnum.POOL_REGISTRATION)}
+      />
+      <Route
+        path={routers.POOL_DEREGISTRATION}
+        exact
+        component={isSupportedRoute(PoolsDeregistration, FunctionEnum.POOL_REGISTRATION)}
+      />
+      <Route
+        path={routers.PROTOCOL_PARAMETER}
+        exact
+        component={isSupportedRoute(ProtocolParameter, FunctionEnum.PROTOCOL_PARAMETER)}
+      />
+      <Route
+        path={routers.NETWORK_MONITORING}
+        exact
+        component={isSupportedRoute(NetworkMonitoring, FunctionEnum.NETWORK_MONITORING)}
+      />
+      <Route
+        path={routers.BOLNISI_LANDING}
+        exact
+        component={isSupportedRoute(BolnisiLanding, FunctionEnum.TRACEABILITY_PROGRAM)}
+      />
+      <Route path={routers.MICAR} exact component={isSupportedRoute(Micar, FunctionEnum.SUSTAINABILITY_INDICATORS)} />
+      <Route path={routers.DREPS} exact component={isSupportedRoute(Dreps, FunctionEnum.GOVERNANCE)} />
+      <Route
+        path={routers.CONSTITUIONAL_COMMITTEES}
+        exact
+        component={isSupportedRoute(ConstitutionalCommittees, FunctionEnum.GOVERNANCE)}
+      />
+      <Route
+        path={routers.OVERVIEW_GOVERNANCE_ACTION}
+        exact
+        component={isSupportedRoute(GovernanceActionDetails, FunctionEnum.GOVERNANCE)}
+      />
+      <Route
+        path={routers.CONSTITUIONAL_COMMITTEE_DETAIL}
+        exact
+        component={isSupportedRoute(ConstitutionalCommitteeDetail, FunctionEnum.GOVERNANCE)}
+      />
+      <Route path={routers.DREP_DETAILS} exact component={isSupportedRoute(DrepDetail, FunctionEnum.GOVERNANCE)} />
+
       <Route path={routers.NOT_FOUND} component={NotFound} />
     </Switch>
   );
