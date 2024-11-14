@@ -1,7 +1,3 @@
-interface WalletAddressAnalyst {
-  date: string;
-  value: number;
-}
 interface WalletAddress {
   address: string;
   txCount: number;

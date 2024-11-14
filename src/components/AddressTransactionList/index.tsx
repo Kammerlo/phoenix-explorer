@@ -20,14 +20,14 @@ import Table, { Column } from "src/components/commons/Table";
 import { DownRedUtxoDarkmode, TooltipIcon, TransferIcon, UpGreenUtxoDarkmode } from "src/commons/resources";
 
 import { Img, StyledLink } from "./styles";
-import { TextCardHighlight } from "../AddressDetail/AddressAnalytics/styles";
 import { Capitalize } from "../commons/CustomText/styles";
 import DatetimeTypeTooltip from "../commons/DatetimeTypeTooltip";
+import { TextCardHighlight } from "../StakeDetail/StakeAnalytics/styles";
 
 interface AddressTransactionListProps {
   underline?: boolean;
   openDetail?: (_: MouseEvent<Element, globalThis.MouseEvent>, transaction: Transactions) => void;
-  selected?: number | null;
+  selected?: string | number | null;
   showTabView?: boolean;
   address: string;
 }
@@ -258,7 +258,6 @@ const AddressTransactionList: React.FC<AddressTransactionListProps> = ({
         }}
         onClickRow={onClickRow}
         rowKey="hash"
-        selected={selected}
         showTabView={showTabView}
       />
     </Card>

@@ -57,6 +57,7 @@ const mockCurrentEpoch: EpochCurrentType = {
   startTime: "2023-01-31T07:02:46.115Z",
   endTime: "2023-05-31T07:02:46.115Z",
   circulatingSupply: 33999888463776064,
+  syncingProgress: 0,
   blkCount: 0
 };
 

@@ -72,7 +72,8 @@ export default defineConfig(({ mode }) => {
       rollupOptions: {
         plugins: [rollupNodePolyFill()] as any
       },
-      outDir: "build"
+      outDir: "build",
+      target: "esnext"
     }
   };
 });

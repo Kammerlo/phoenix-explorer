@@ -1,4 +1,4 @@
-import { Amt, BlockDto, Epoch, TransactionDetails, TxUtxo, Utxo } from "../types";
+import { Amt, BlockDto, Epoch, TransactionDetails, TxUtxo } from "../types";
 
 export function mapTxUtxoToUtxo(input: TxUtxo) {
   return {
@@ -70,13 +70,17 @@ export function mapBlockDTOToBlock(input: BlockDto): Block {
   };
 }
 
-function utxosToTokenArray(utxos: TxUtxo[]) {
+function utxosToTokenArray(utxos: TxUtxo[]): Token[] {
   const tokenMap = new Map<string, Token>();
   utxos.forEach((utxo) => {
     utxo.amount?.forEach((amount) => {
       if (amount.assetName !== "lovelace") {
         if (tokenMap.has(amount.assetName!)) {
-          tokenMap.get(amount.assetName!)!.assetQuantity += amount.quantity!;
+          if (tokenMap.get(amount.assetName!)!.assetQuantity + amount.quantity! === 0) {
+            tokenMap.delete(amount.assetName!);
+          } else {
+            tokenMap.get(amount.assetName!)!.assetQuantity += amount.quantity!;
+          }
         } else {
           tokenMap.set(amount.assetName!, {
             assetName: amount.assetName!,
@@ -93,7 +97,7 @@ function utxosToTokenArray(utxos: TxUtxo[]) {
     });
   });
   // returning only tokens where quantity is not 0
-  return Array.from(tokenMap.values()).filter((token) => token.assetQuantity !== 0);
+  return Array.from<Token>(tokenMap.values());
 }
 
 export function mapTxDetailsToTxSummary(txDetails: TransactionDetails) {

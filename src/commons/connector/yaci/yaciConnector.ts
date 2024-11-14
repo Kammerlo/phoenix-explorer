@@ -84,26 +84,6 @@ export class YaciConnector implements ApiConnector {
     } as ApiReturnType<Block>;
   }
 
-  async getCurrentEpoch(): Promise<ApiReturnType<EpochCurrentType>> {
-    const epochResponse = await this.client.get<Epoch>(`${this.baseUrl}/epochs/latest/details`);
-    const epoch = epochResponse.data;
-    const epochCurrentType: EpochCurrentType = {
-      no: epoch.number || 0,
-      slot: epoch.maxSlot || 0,
-      totalSlot: epoch.maxSlot || 0, // TODO: need to implement
-      account: 0,
-      endTime: epoch.endTime ? epoch.endTime.toString() : "",
-      startTime: epoch.startTime ? epoch.startTime.toString() : "",
-      circulatingSupply: 0, // TODO: need to implement
-      syncingProgress: 0, // TODO: need to implement
-      blkCount: epoch.blockCount || 0
-    };
-    return {
-      data: epochCurrentType,
-      error: null
-    };
-  }
-
   async getTx(txHash: string): Promise<ApiReturnType<Transaction>> {
     const response = await this.client.get<TransactionDetails>(`${this.baseUrl}/txs/${txHash}`);
     const txDetails = response.data;
@@ -210,33 +190,30 @@ export class YaciConnector implements ApiConnector {
     try {
       const stakeResponse = await this.client.get<StakeAccountInfo>(`${this.baseUrl}/accounts/${address}`);
       stake = stakeResponse.data;
+      return {
+        data: {
+          stakeAddress: stake.stakeAddress || "",
+          totalStake: stake.controlledAmount || 0,
+          rewardAvailable: stake.withdrawableAmount || 0,
+          rewardWithdrawn: 0, // TODO
+          status: "ACTIVE", // TODO
+          pool: {
+            poolId: stake.poolId || "",
+            poolName: "",
+            tickerName: ""
+          }
+        },
+        error: null,
+        lastUpdated: Date.now()
+      };
     } catch (e) {
       console.error("Error fetching stakeAddressInfo");
     }
-
-    if (!stake) {
-      return {
-        data: null,
-        error: "Couldn't fetch stakeAddressInfo",
-        lastUpdated: Date.now()
-      } as ApiReturnType<WalletStake>;
-    }
     return {
-      data: {
-        stakeAddress: stake.stakeAddress || "",
-        totalStake: stake.controlledAmount || 0,
-        rewardAvailable: stake.withdrawableAmount || 0,
-        rewardWithdrawn: 0, // TODO
-        status: "ACTIVE", // TODO
-        pool: {
-          poolId: stake.poolId || "",
-          poolName: "",
-          tickerName: ""
-        }
-      },
-      error: null,
+      data: null,
+      error: "Couldn't fetch stakeAddressInfo",
       lastUpdated: Date.now()
-    };
+    } as ApiReturnType<WalletStake>;
   }
 
   async getWalletAddressFromAddress(address: string): Promise<ApiReturnType<WalletAddress>> {
