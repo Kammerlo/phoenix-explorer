@@ -29,7 +29,7 @@ interface TTab {
 }
 
 const ContractTabs = ({ setVersion }: { setVersion: (v: string) => void }) => {
-  const { tabActive = false, address } = useParams<{ tabActive: keyof Transaction; address: string }>();
+  const { tabActive = false, address } = useParams<{ tabActive: keyof TransactionDetail; address: string }>();
   const history = useHistory();
   const { data, loading } = useFetch<ScriptAssociatedAddress>(API.SCRIPTS.ASSOCIATED_ADDRESS(address));
   const theme = useTheme();

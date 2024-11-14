@@ -21,14 +21,14 @@ const StyledContainer = styled(Container)`
 
 const TransactionDetail: React.FC = () => {
   const { trxHash } = useParams<{ trxHash: string }>();
-  const [txData, setTxData] = useState<ApiReturnType<Transaction>>();
+  const [txData, setTxData] = useState<ApiReturnType<TransactionDetail>>();
   const [loading, setLoading] = useState<boolean>(true);
   const apiConnector: ApiConnector = ApiConnector.getApiConnector();
 
   useEffect(() => {
     window.history.replaceState({}, document.title);
     document.title = `Transaction ${trxHash} | Cardano Blockchain Explorer`;
-    apiConnector.getTx(trxHash).then((data) => {
+    apiConnector.getTxDetail(trxHash).then((data) => {
       setTxData(data);
       setLoading(false);
     });

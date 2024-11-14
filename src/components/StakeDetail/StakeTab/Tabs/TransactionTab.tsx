@@ -52,11 +52,11 @@ const TransactionListFull: React.FC<TransactionListFullProps> = ({
   const { search } = useLocation();
   const history = useHistory();
   const pageInfo = getPageInfo(search);
-  const fetchData = useFetchList<Transactions>(url, { ...pageInfo, tabActive });
+  const fetchData = useFetchList<Transaction>(url, { ...pageInfo, tabActive });
   const theme = useTheme();
   const { isMobile } = useScreen();
 
-  const onClickRow = (e: React.MouseEvent<Element, globalThis.MouseEvent>, r: Transactions) => {
+  const onClickRow = (e: React.MouseEvent<Element, globalThis.MouseEvent>, r: Transaction) => {
     if (e.target instanceof HTMLAnchorElement || (e.target instanceof Element && e.target.closest("a"))) {
       e.preventDefault();
       e.stopPropagation();
@@ -65,7 +65,7 @@ const TransactionListFull: React.FC<TransactionListFullProps> = ({
     history.push(details.transaction(r.hash));
   };
 
-  const columns: Column<Transactions>[] = [
+  const columns: Column<Transaction>[] = [
     {
       title: t("glossary.txHash"),
       key: "hash",

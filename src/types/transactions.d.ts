@@ -1,6 +1,6 @@
 type TransactionStatus = import("src/commons/utils/constants").TRANSACTION_STATUS;
 
-interface Transactions {
+interface Transaction {
   hash: string;
   blockNo: number;
   blockHash: string;
@@ -181,7 +181,7 @@ type TTCIPProperties = {
   checkNotRequired?: boolean;
 };
 
-interface Transaction {
+interface TransactionDetail {
   tx: {
     hash: string;
     time: string;

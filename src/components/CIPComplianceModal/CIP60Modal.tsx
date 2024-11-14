@@ -27,8 +27,8 @@ import {
 export type TCIP60ComplianceModalProps = {
   open: boolean;
   onClose: () => void;
-  data?: Transaction["metadata"][0]["metadataCIP25"]["tokenMap"];
-  version?: Transaction["metadata"][0]["metadataCIP25"];
+  data?: TransactionDetail["metadata"][0]["metadataCIP25"]["tokenMap"];
+  version?: TransactionDetail["metadata"][0]["metadataCIP25"];
 };
 
 const DEFAULT_CIP60_REQUIRE = [
@@ -121,9 +121,11 @@ const CIP60Modal: React.FC<TCIP60ComplianceModalProps> = (props) => {
   useEffect(() => {
     if (tokenMaps) {
       tokenMaps.map((token) => {
-        const property = token.requireProperties.find((property) => property.property === "music_metadata_version");
+        const property = token.requireProperties.find(
+          (property: { property: string }) => property.property === "music_metadata_version"
+        );
         if (property.value === 1) {
-          setShowWarningVersion(true);
+          return setShowWarningVersion(true);
         }
       });
     }

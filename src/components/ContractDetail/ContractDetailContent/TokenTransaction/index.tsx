@@ -25,11 +25,11 @@ const TokenTransaction: React.FC = () => {
   const history = useHistory();
   const { onDetailView } = useSelector(({ user }: RootState) => user);
   const pageInfo = getPageInfo(search);
-  const fetchData = useFetchList<Transactions>(`${API.ADDRESS.DETAIL}/${params.address}/txs`, pageInfo);
+  const fetchData = useFetchList<Transaction>(`${API.ADDRESS.DETAIL}/${params.address}/txs`, pageInfo);
   const [txHashSelected, setTxHashSelected] = useState<string>("");
   const { error } = fetchData;
 
-  const openDetail = (_: React.MouseEvent<Element, MouseEvent>, r: Transactions) => {
+  const openDetail = (_: React.MouseEvent<Element, MouseEvent>, r: Transaction) => {
     setTxHashSelected(r.hash);
     setOnDetailView(true);
   };
@@ -43,7 +43,7 @@ const TokenTransaction: React.FC = () => {
     if (!onDetailView) handleClose();
   }, [onDetailView]);
 
-  const columns: Column<Transactions>[] = [
+  const columns: Column<Transaction>[] = [
     {
       title: t("glossary.txhash"),
       key: "hash",

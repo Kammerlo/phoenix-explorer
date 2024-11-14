@@ -15,8 +15,3 @@ interface Block {
   poolView: string;
   description: string;
 }
-
-type BlockDetail = Block & {
-  totalSlot: number;
-  confirmation: number;
-};

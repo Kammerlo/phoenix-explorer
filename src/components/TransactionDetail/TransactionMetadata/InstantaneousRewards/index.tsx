@@ -10,7 +10,7 @@ import DynamicEllipsisText from "src/components/DynamicEllipsisText";
 import { Content, Header, Item, ItemBox, ItemContent, Title, Value, Wrapper } from "./style";
 
 interface InstantaneousRewardsProps {
-  data: Transaction["instantaneousRewards"] | null;
+  data: TransactionDetail["instantaneousRewards"] | null;
 }
 
 const InstantaneousRewards: React.FC<InstantaneousRewardsProps> = ({ data }) => {
@@ -30,7 +30,7 @@ const InstantaneousRewards: React.FC<InstantaneousRewardsProps> = ({ data }) => 
 
 export default InstantaneousRewards;
 
-const ItemInstantaneousRewards = ({ data }: { data: Transaction["instantaneousRewards"] }) => {
+const ItemInstantaneousRewards = ({ data }: { data: TransactionDetail["instantaneousRewards"] }) => {
   return (
     <Box>
       {data?.map((item, index) => (

@@ -6,7 +6,7 @@ import { details } from "src/commons/routers";
 
 import Collaterals from ".";
 
-const mockCollaterals: Transaction["collaterals"] = {
+const mockCollaterals: TransactionDetail["collaterals"] = {
   collateralInputResponses: [
     {
       address: "address-input-1",

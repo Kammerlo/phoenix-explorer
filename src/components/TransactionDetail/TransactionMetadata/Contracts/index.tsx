@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import ContractDiagrams from "src/components/ContractDiagrams";
 
 interface ContractsProps {
-  data: Transaction["contracts"] | null;
+  data: TransactionDetail["contracts"] | null;
 }
 
 const Contracts: React.FC<ContractsProps> = ({ data }) => {

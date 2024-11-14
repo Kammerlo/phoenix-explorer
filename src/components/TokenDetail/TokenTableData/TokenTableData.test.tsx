@@ -120,7 +120,7 @@ describe("TokenTopHolder component", () => {
 });
 
 describe("TokenTransaction component", () => {
-  const mockData: Transactions = {
+  const mockData: Transaction = {
     hash: "transaction-hash",
     blockNo: 123,
     blockHash: "block-hash",

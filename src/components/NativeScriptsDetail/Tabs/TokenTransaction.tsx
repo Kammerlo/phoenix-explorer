@@ -15,7 +15,7 @@ import DatetimeTypeTooltip from "src/components/commons/DatetimeTypeTooltip";
 
 import { SmallText, StyledLink, ViewAddressButton } from "./styles";
 
-export type TTokenTransaction = Transactions & {
+export type TTokenTransaction = Transaction & {
   purposes: string[];
 };
 
@@ -26,10 +26,10 @@ const TokenTransaction: React.FC = () => {
   const history = useHistory();
   const { onDetailView } = useSelector(({ user }: RootState) => user);
   const pageInfo = getPageInfo(search);
-  const fetchData = useFetchList<Transactions>(`${API.ADDRESS.DETAIL}/${params.address}/txs`, pageInfo);
+  const fetchData = useFetchList<Transaction>(`${API.ADDRESS.DETAIL}/${params.address}/txs`, pageInfo);
   const [txHashSelected, setTxHashSelected] = useState<string>("");
 
-  const openDetail = (_: React.MouseEvent<Element, MouseEvent>, r: Transactions) => {
+  const openDetail = (_: React.MouseEvent<Element, MouseEvent>, r: Transaction) => {
     setTxHashSelected(r.hash);
     setOnDetailView(true);
   };

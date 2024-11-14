@@ -16,8 +16,8 @@ interface ITokenTableData {
   metadata?: ITokenMetadata;
   metadataJson?: string;
   loading?: boolean;
-  metadataCIP25?: Transaction["metadata"][0]["metadataCIP25"];
-  metadataCIP60?: Transaction["metadata"][0]["metadataCIP25"];
+  metadataCIP25?: TransactionDetail["metadata"][0]["metadataCIP25"];
+  metadataCIP60?: TransactionDetail["metadata"][0]["metadataCIP25"];
 }
 
 const TokenTableData: React.FC<ITokenTableData> = ({

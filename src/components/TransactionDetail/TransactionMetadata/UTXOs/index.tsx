@@ -35,7 +35,7 @@ import {
 } from "./styles";
 
 interface Props {
-  data: Transaction["utxOs"] | null;
+  data: TransactionDetail["utxOs"] | null;
   fee: number;
   isFailed?: boolean;
 }
@@ -57,7 +57,7 @@ const Card = ({
   isFailed
 }: {
   type: "up" | "down";
-  items?: Required<Transaction>["utxOs"]["inputs"];
+  items?: Required<TransactionDetail>["utxOs"]["inputs"];
   fee?: number;
   isFailed?: boolean;
 }) => {

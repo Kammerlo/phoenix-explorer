@@ -9,7 +9,7 @@ import { Column } from "src/components/commons/Table";
 import { TableProtocol, Wrapper, WrapperRowContent, WrapperSignerPublicKey } from "./styles";
 
 interface IProps {
-  data: Transaction["signersInformation"];
+  data: TransactionDetail["signersInformation"];
 }
 
 const TransactionSignatories: React.FC<IProps> = ({ data }) => {

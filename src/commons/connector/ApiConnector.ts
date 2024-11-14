@@ -2,6 +2,9 @@ import { YaciConnector } from "./yaci/yaciConnector";
 import { ApiReturnType } from "./types/APIReturnType";
 import { FunctionEnum } from "./types/FunctionEnum";
 
+const API_URL: string = process.env.REACT_APP_API_URL || "";
+const API_CONNECTOR_TYPE: string = process.env.REACT_APP_API_TYPE || "";
+
 export abstract class ApiConnector {
   baseUrl: string;
 
@@ -10,25 +13,27 @@ export abstract class ApiConnector {
   }
 
   public static getApiConnector(): ApiConnector {
-    return new YaciConnector("http://localhost:8080/api/v1");
+    if (API_CONNECTOR_TYPE === "YACI") {
+      return new YaciConnector(API_URL);
+    }
+    throw new Error("Invalid API_CONNECTOR_TYPE");
     // return new YaciConnector("https://api.mainnet.yaci.xyz/api/v1");
   }
   abstract getSupportedFunctions(): FunctionEnum[];
+
+  abstract getEpochs(): Promise<ApiReturnType<IDataEpoch[]>>;
+
+  abstract getEpoch(epochId: number): Promise<ApiReturnType<IDataEpoch>>;
+
   abstract getBlocksPage(): Promise<ApiReturnType<Block[]>>;
 
   abstract getBlocksByEpoch(epoch: number): Promise<ApiReturnType<Block[]>>;
 
   abstract getBlockDetail(blockId: string): Promise<ApiReturnType<Block>>;
 
-  abstract getTxList(blockId: number | string): Promise<ApiReturnType<Transaction[]>>;
+  abstract getTxDetail(txHash: string): Promise<ApiReturnType<TransactionDetail>>;
 
-  abstract getTx(txHash: string): Promise<ApiReturnType<Transaction>>;
-
-  abstract getEpochs(): Promise<ApiReturnType<IDataEpoch[]>>;
-
-  abstract getEpoch(epochId: number): Promise<ApiReturnType<IDataEpoch>>;
-
-  abstract getTransactions(): Promise<ApiReturnType<Transactions[]>>;
+  abstract getTransactions(blockId: number | string | undefined): Promise<ApiReturnType<Transaction[]>>;
 
   abstract getWalletAddressFromAddress(address: string): Promise<ApiReturnType<WalletAddress>>;
 

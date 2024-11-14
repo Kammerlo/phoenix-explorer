@@ -31,7 +31,7 @@ const TokenTransaction: React.FC<ITokenTransaction> = ({ tabActive, tokenId }) =
   const pageInfo = getPageInfo(search);
   const blockKey = useSelector(({ system }: RootState) => system.blockKey);
 
-  const fetchData = useFetchList<Transactions>(
+  const fetchData = useFetchList<Transaction>(
     tabActive === "transactions" ? API.TOKEN.TOKEN_TRX.replace(":tokenId", tokenId) : "",
     { ...pageInfo, tabActive },
     false,
@@ -39,7 +39,7 @@ const TokenTransaction: React.FC<ITokenTransaction> = ({ tabActive, tokenId }) =
   );
   const { error } = fetchData;
 
-  const onClickRow = (e: React.MouseEvent<Element, globalThis.MouseEvent>, r: Transactions) => {
+  const onClickRow = (e: React.MouseEvent<Element, globalThis.MouseEvent>, r: Transaction) => {
     if (e.target instanceof HTMLAnchorElement || (e.target instanceof Element && e.target.closest("a"))) {
       e.preventDefault();
       e.stopPropagation();
@@ -47,7 +47,7 @@ const TokenTransaction: React.FC<ITokenTransaction> = ({ tabActive, tokenId }) =
     }
     history.push(details.transaction(r.hash));
   };
-  const columns: Column<Transactions>[] = [
+  const columns: Column<Transaction>[] = [
     {
       title: t("glossary.txhash"),
       key: "trxhash",

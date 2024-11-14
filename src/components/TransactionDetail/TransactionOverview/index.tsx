@@ -29,7 +29,7 @@ import DatetimeTypeTooltip from "src/components/commons/DatetimeTypeTooltip";
 import { StyledLink, TitleCard } from "./styles";
 
 interface Props {
-  data: Transaction | null | undefined;
+  data: TransactionDetail | null | undefined;
   loading: boolean;
 }
 

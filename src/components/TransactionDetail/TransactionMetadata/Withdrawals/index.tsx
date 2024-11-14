@@ -27,7 +27,7 @@ import {
 } from "./styles";
 
 interface WithdrawalsProps {
-  data: Transaction["withdrawals"] | null;
+  data: TransactionDetail["withdrawals"] | null;
 }
 
 const Withdrawals: React.FC<WithdrawalsProps> = ({ data }) => {

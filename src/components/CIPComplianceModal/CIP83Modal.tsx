@@ -27,7 +27,7 @@ import {
 export type TCIP20ComplianceModalProps = {
   open: boolean;
   onClose: () => void;
-  data?: Transaction["metadata"][0]["metadataCIP20"]["requiredProperties"];
+  data?: TransactionDetail["metadata"][0]["metadataCIP20"]["requiredProperties"];
 };
 
 const CIP83Modal: React.FC<TCIP20ComplianceModalProps> = (props) => {

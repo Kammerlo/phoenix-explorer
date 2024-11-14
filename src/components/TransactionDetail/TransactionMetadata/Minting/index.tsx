@@ -15,7 +15,7 @@ import CustomIcon from "src/components/commons/CustomIcon";
 import { Amount, AssetName, LogoEmpty, TableMinting } from "./styles";
 
 interface MintingProps {
-  data: Transaction["mints"] | null;
+  data: TransactionDetail["mints"] | null;
 }
 
 const Minting: React.FC<MintingProps> = ({ data }) => {
@@ -24,7 +24,7 @@ const Minting: React.FC<MintingProps> = ({ data }) => {
   const theme = useTheme();
   const [selectedItem, setSelectedItem] = useState<string>("");
 
-  const columns: Column<Required<Transaction>["mints"][number]>[] = [
+  const columns: Column<Required<TransactionDetail>["mints"][number]>[] = [
     {
       title: <Box data-testid="trx.minting.title.name">{t("glossary.assetName")}</Box>,
       isHiddenBorder: true,

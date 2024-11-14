@@ -24,7 +24,7 @@ import {
 } from "./mapper/Mapper";
 import applyCaseMiddleware from "axios-case-converter";
 import { FunctionEnum } from "../types/FunctionEnum";
-import { credentialToRewardAddress, paymentCredentialOf } from "@lucid-evolution/lucid";
+import { credentialToRewardAddress, Network, paymentCredentialOf } from "@lucid-evolution/lucid";
 
 export class YaciConnector implements ApiConnector {
   baseUrl: string;
@@ -84,14 +84,14 @@ export class YaciConnector implements ApiConnector {
     } as ApiReturnType<Block>;
   }
 
-  async getTx(txHash: string): Promise<ApiReturnType<Transaction>> {
+  async getTxDetail(txHash: string): Promise<ApiReturnType<TransactionDetail>> {
     const response = await this.client.get<TransactionDetails>(`${this.baseUrl}/txs/${txHash}`);
     const txDetails = response.data;
     const blockResponse = await this.getBlockDetail(txDetails.blockHeight!);
     const block = blockResponse.data;
     const metadataResponse = await this.client.get<TxMetadataLabelDto[]>(`${this.baseUrl}/txs/${txHash}/metadata`);
     const metadata = metadataResponse.data;
-    const tx: Transaction = {
+    const tx: TransactionDetail = {
       tx: {
         hash: txDetails.hash!,
         time: block ? block.time : "",
@@ -137,15 +137,15 @@ export class YaciConnector implements ApiConnector {
     return {
       data: tx,
       lastUpdated: Date.now()
-    } as ApiReturnType<Transaction>;
+    } as ApiReturnType<TransactionDetail>;
   }
 
-  async getTxList(blockId: number | string): Promise<ApiReturnType<Transaction[]>> {
+  async getTxList(blockId: number | string): Promise<ApiReturnType<TransactionDetail[]>> {
     const response = await this.client.get<TransactionSummary[]>(`${this.baseUrl}/blocks/${blockId}/txs`);
-    const txs: Transaction[] = [];
+    const txs: TransactionDetail[] = [];
     for (const tx of response.data) {
       // get transaction detail
-      txs.push((await this.getTx(tx.txHash!)).data as Transaction);
+      txs.push((await this.getTxDetail(tx.txHash!)).data as TransactionDetail);
     }
     return {
       data: txs,
@@ -153,16 +153,22 @@ export class YaciConnector implements ApiConnector {
       totalPage: 1, // TODO
       currentPage: 1, // TODO
       lastUpdated: Date.now()
-    } as ApiReturnType<Transaction[]>;
+    } as ApiReturnType<TransactionDetail[]>;
   }
 
-  async getTransactions(): Promise<ApiReturnType<Transactions[]>> {
-    const txsResponse = await this.client.get<TransactionPage>(`${this.baseUrl}/txs`);
-
-    const transactions: Transactions[] = [];
-    for (const txSummary of txsResponse.data.transactionSummaries!) {
+  async getTransactions(blockId: number | string | undefined): Promise<ApiReturnType<Transaction[]>> {
+    let transactionSummaries: TransactionSummary[] = [];
+    if (blockId) {
+      const response = await this.client.get<TransactionSummary[]>(`${this.baseUrl}/blocks/${blockId}/txs`);
+      transactionSummaries = response.data;
+    } else {
+      const txsResponse = await this.client.get<TransactionPage>(`${this.baseUrl}/txs`);
+      transactionSummaries = txsResponse.data.transactionSummaries!;
+    }
+    const transactions: Transaction[] = [];
+    for (const txSummary of transactionSummaries) {
       const block = await this.getBlockDetail(txSummary.blockNumber!);
-      const tx: Transactions = {
+      const tx: Transaction = {
         hash: txSummary.txHash || "",
         time: block.data?.time || "", // TODO: need to implement
         blockNo: txSummary.blockNumber || 0,
@@ -182,7 +188,7 @@ export class YaciConnector implements ApiConnector {
     return {
       data: transactions,
       lastUpdated: Date.now()
-    } as ApiReturnType<Transactions[]>;
+    } as ApiReturnType<Transaction[]>;
   }
 
   async getWalletStakeFromAddress(address: string): Promise<ApiReturnType<WalletStake>> {
@@ -222,7 +228,8 @@ export class YaciConnector implements ApiConnector {
         `${this.baseUrl}/addresses/${address}/balance`
       );
       const credential = paymentCredentialOf(address);
-      const stakeAddress = credentialToRewardAddress("Preprod", credential); // TODO need to implement to get the right network
+      const network: Network = process.env.REACT_APP_NETWORK as Network;
+      const stakeAddress = credentialToRewardAddress(network, credential); // TODO need to implement to get the right network
       const addressBalance = addressBalanceResponse.data;
 
       const walletAddress: WalletAddress = {

@@ -1,7 +1,7 @@
 import { useHistory } from "react-router-dom";
 import { stringify } from "qs";
 import { Box } from "@mui/material";
-import { useRef, MouseEvent, useState } from "react";
+import { useRef, MouseEvent, useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 
 import { formatADAFull, formatDateTimeLocal, formatNameBlockNo, getShortHash } from "src/commons/utils/helper";
@@ -22,25 +22,27 @@ import { ApiReturnType } from "../../commons/connector/types/APIReturnType";
 
 interface TransactionListProps {
   underline?: boolean;
-  openDetail?: (_: MouseEvent<Element, globalThis.MouseEvent>, r: Transactions) => void;
-  selected?: string | null;
   showTabView?: boolean;
+  blockId?: string | number;
 }
 
-const TransactionList: React.FC<TransactionListProps> = ({ underline = false, selected, showTabView }) => {
+const TransactionList: React.FC<TransactionListProps> = ({ underline = false, showTabView, blockId }) => {
   const { t } = useTranslation();
   const history = useHistory();
   const { pageInfo, setSort } = usePageInfo();
 
-  const [transactions, setTransactions] = useState<ApiReturnType<Transactions[]> | undefined>();
+  const [transactions, setTransactions] = useState<ApiReturnType<Transaction[]> | undefined>();
   const apiConnector: ApiConnector = ApiConnector.getApiConnector();
-  apiConnector.getTransactions().then((data) => {
-    setTransactions(data);
-  });
+
+  useEffect(() => {
+    apiConnector.getTransactions(blockId).then((data) => {
+      setTransactions(data);
+    });
+  }, []);
 
   // const fetchData = useFetchList<Transactions>(url, { ...pageInfo }, false, blockKey);
   const mainRef = useRef(document.querySelector("#main"));
-  const onClickRow = (e: MouseEvent<Element, globalThis.MouseEvent>, r: Transactions) => {
+  const onClickRow = (e: MouseEvent<Element, globalThis.MouseEvent>, r: Transaction) => {
     if (e.target instanceof HTMLAnchorElement || (e.target instanceof Element && e.target.closest("a"))) {
       e.preventDefault();
       e.stopPropagation();
@@ -50,7 +52,7 @@ const TransactionList: React.FC<TransactionListProps> = ({ underline = false, se
   };
 
   const { error } = transactions || {};
-  const columns: Column<Transactions>[] = [
+  const columns: Column<Transaction>[] = [
     {
       title: <Box data-testid="transactions.table.title.txhash">{t("glossary.txhash")}</Box>,
       key: "hash",

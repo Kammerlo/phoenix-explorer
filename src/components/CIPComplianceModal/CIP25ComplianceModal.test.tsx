@@ -2,7 +2,7 @@ import { render, screen } from "src/test-utils";
 
 import CIP25Modal from "./CIP25Modal";
 
-const data: Transaction["metadata"][0]["metadataCIP25"]["tokenMap"] = {
+const data: TransactionDetail["metadata"][0]["metadataCIP25"]["tokenMap"] = {
   spacecoins: {
     tokenName: "spacecoins",
     requireProperties: [

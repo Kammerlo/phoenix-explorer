@@ -6,7 +6,7 @@ import { details } from "src/commons/routers";
 
 import Withdrawals from ".";
 
-const mockData: Transaction["withdrawals"] = [
+const mockData: TransactionDetail["withdrawals"] = [
   {
     stakeAddressFrom: "stake-address-1",
     addressTo: ["address-1", "address-2"],

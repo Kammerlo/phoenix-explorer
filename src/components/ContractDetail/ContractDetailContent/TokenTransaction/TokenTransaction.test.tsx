@@ -4,7 +4,7 @@ import { getShortHash } from "src/commons/utils/helper";
 
 import TokenTransaction from ".";
 
-const mockData: Transactions = {
+const mockData: Transaction = {
   hash: "transaction-hash",
   blockNo: 1234,
   blockHash: "block-hash",

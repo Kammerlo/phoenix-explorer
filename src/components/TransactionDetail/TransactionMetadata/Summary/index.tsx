@@ -28,7 +28,7 @@ const SummaryItems = ({
   type,
   isFailed
 }: {
-  item: Transaction["summary"]["stakeAddress"][number];
+  item: TransactionDetail["summary"]["stakeAddress"][number];
   type?: "up" | "down";
   isFailed?: boolean;
 }) => {
@@ -373,7 +373,7 @@ const SummaryItems = ({
 };
 
 interface SummaryProps {
-  data: Transaction["summary"] | null;
+  data: TransactionDetail["summary"] | null;
   isFailed?: boolean;
 }
 const Summary: React.FC<SummaryProps> = ({ data, isFailed }) => {

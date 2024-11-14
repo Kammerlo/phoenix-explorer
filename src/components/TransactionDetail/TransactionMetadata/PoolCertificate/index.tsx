@@ -10,7 +10,7 @@ import StakeKeyBox from "./StakeKeyBox";
 import { CardHeader, EllipsisContainer, TextLabel, TextValue, Wrapper, WrapRightSide } from "./styles";
 
 interface IProps {
-  data: Transaction["poolCertificates"] | null;
+  data: TransactionDetail["poolCertificates"] | null;
 }
 
 const PoolCertificate: React.FC<IProps> = ({ data }) => {

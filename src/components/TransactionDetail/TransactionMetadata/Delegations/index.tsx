@@ -11,7 +11,7 @@ import DynamicEllipsisText from "src/components/DynamicEllipsisText";
 import { AddressLink, Header, ItemContainer, StatusIcon, StyledItem, Wrapper, EllipsisContainer } from "./styles";
 
 interface DelegationProps {
-  data: Transaction["delegations"] | null;
+  data: TransactionDetail["delegations"] | null;
 }
 
 const Delegations: React.FC<DelegationProps> = ({ data }) => {

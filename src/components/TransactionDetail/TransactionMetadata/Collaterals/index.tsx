@@ -35,7 +35,7 @@ import {
 } from "./style";
 
 interface CollateralProps {
-  data: Transaction["collaterals"] | null;
+  data: TransactionDetail["collaterals"] | null;
 }
 
 const Collaterals: React.FC<CollateralProps> = ({ data }) => {

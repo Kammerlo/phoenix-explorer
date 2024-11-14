@@ -108,17 +108,8 @@
     "test:watch": "jest --watch"
   },
   "lint-staged": {
-    "*.{js,jsx,ts,tsx}": [
-      "eslint --fix"
-    ],
     "*.{css,scss,ts,tsx,js,jsx}": [
       "prettier --write"
-    ]
-  },
-  "eslintConfig": {
-    "extends": [
-      "react-app",
-      "react-app/jest"
     ]
   },
   "browserslist": {

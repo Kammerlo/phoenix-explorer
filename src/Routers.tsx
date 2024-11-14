@@ -38,7 +38,7 @@ import Tokens from "./pages/Token";
 import TokenDetail from "./pages/TokenDetail";
 import TopDelegators from "./pages/TopDelegators";
 import TransactionDetail from "./pages/TransactionDetail";
-import TransactionList from "./pages/TransactionList";
+import TransactionList from "./pages/TransactionListPage";
 import NativeScriptsDetailPage from "./pages/NativeScriptDetail";
 import DrepDetail from "./pages/DrepDetail";
 import Dreps from "./pages/Dreps";

@@ -15,8 +15,8 @@ import { CIPHeader, CIPHeaderTitle, MetaDataWraper, ViewJson } from "./styles";
 
 interface ITokenMetadataProps {
   metadataJson?: string;
-  metadataCIP25?: Transaction["metadata"][0]["metadataCIP25"];
-  metadataCIP60?: Transaction["metadata"][0]["metadataCIP25"];
+  metadataCIP25?: TransactionDetail["metadata"][0]["metadataCIP25"];
+  metadataCIP60?: TransactionDetail["metadata"][0]["metadataCIP25"];
 }
 
 const TokenMetadata: React.FC<ITokenMetadataProps> = ({ metadataJson, metadataCIP25, metadataCIP60 }) => {

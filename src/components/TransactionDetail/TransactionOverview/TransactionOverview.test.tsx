@@ -193,7 +193,7 @@ const mockTransaction = {
 };
 
 const mockProps = {
-  data: mockTransaction as Transaction,
+  data: mockTransaction as TransactionDetail,
   loading: false,
   lastUpdated: 1625112345
 };

@@ -63,8 +63,8 @@ import BolnisiWineDrawer from "./BolnisiWineDrawer";
 import BolnisiWineDrawerConformity from "./BolnisiWineDrawerConformity";
 
 interface MetadataProps {
-  data?: Transaction["metadata"];
-  hash?: Transaction["metadataHash"] | null;
+  data?: TransactionDetail["metadata"];
+  hash?: TransactionDetail["metadataHash"] | null;
 }
 
 enum CIP {
@@ -107,7 +107,7 @@ const Metadata: React.FC<MetadataProps> = ({ hash, data }) => {
     }
   };
 
-  const renderMessage = (requireValue: Transaction["metadata"][0]["metadataCIP20"]["requiredProperties"]) => {
+  const renderMessage = (requireValue: TransactionDetail["metadata"][0]["metadataCIP20"]["requiredProperties"]) => {
     if (requireValue && requireValue[0]) {
       return (
         <>
@@ -195,7 +195,7 @@ const Metadata: React.FC<MetadataProps> = ({ hash, data }) => {
     );
   };
 
-  const renderButtonDecrypt = (metadata: Transaction["metadata"][0]["metadataCIP83"]["requiredProperties"]) => {
+  const renderButtonDecrypt = (metadata: TransactionDetail["metadata"][0]["metadataCIP83"]["requiredProperties"]) => {
     if (metadata) {
       return (
         <MetadataContent>
@@ -223,7 +223,7 @@ const Metadata: React.FC<MetadataProps> = ({ hash, data }) => {
   };
 
   // Bolnisi Metadata
-  const renderBolnisi = (data?: Transaction["metadata"][number]["metadataBolnisi"]) => {
+  const renderBolnisi = (data?: TransactionDetail["metadata"][number]["metadataBolnisi"]) => {
     if (!data) return <Box>data not found</Box>;
     return (
       <Box>

@@ -44,12 +44,12 @@ import "./index.css";
 import { TitleTab } from "./styles";
 
 interface TransactionMetadataProps {
-  data: Transaction | null | undefined;
+  data: TransactionDetail | null | undefined;
   loading: boolean;
 }
 
 interface TTab {
-  key: keyof Transaction;
+  key: keyof TransactionDetail;
   icon: React.FC<React.SVGProps<SVGSVGElement>>;
   label: React.ReactNode;
   children: React.ReactNode;
@@ -57,7 +57,7 @@ interface TTab {
 
 const TransactionMetadata: React.FC<TransactionMetadataProps> = ({ data }) => {
   const { t } = useTranslation();
-  const { tabActive = false } = useParams<{ tabActive: keyof Transaction }>();
+  const { tabActive = false } = useParams<{ tabActive: keyof TransactionDetail }>();
   const history = useHistory();
   const theme = useTheme();
   const tabRef = useRef<HTMLDivElement>(null);

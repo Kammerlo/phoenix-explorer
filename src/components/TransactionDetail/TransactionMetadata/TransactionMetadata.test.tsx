@@ -168,7 +168,7 @@ const mockTransaction = {
     }
   ],
   metadataHash: "metadata-hash-2"
-} as Transaction;
+} as TransactionDetail;
 
 Object.defineProperty(window, "matchMedia", {
   writable: true,

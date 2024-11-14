@@ -12,17 +12,11 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "REACT_");
   return {
     define: {
+      "process.env.REACT_APP_API_TYPE": JSON.stringify(env.REACT_APP_API_TYPE),
       "process.env.REACT_APP_API_URL": JSON.stringify(env.REACT_APP_API_URL),
-      "process.env.REACT_APP_AUTH_API_URL": JSON.stringify(env.REACT_APP_AUTH_API_URL),
-      "process.env.REACT_APP_NETWORK_NAMES": JSON.stringify(env.REACT_APP_NETWORK_NAMES),
-      "process.env.REACT_APP_JSD_WIDGET_KEY": JSON.stringify(env.REACT_APP_JSD_WIDGET_KEY),
       "process.env.REACT_APP_NETWORK": JSON.stringify(env.REACT_APP_NETWORK),
-      "process.env.REACT_APP_MAINNET_APP_URL": JSON.stringify(env.REACT_APP_MAINNET_APP_URL),
-      "process.env.REACT_APP_SANCHONET_APP_URL": JSON.stringify(env.REACT_APP_SANCHONET_APP_URL),
-      "process.env.REACT_APP_BOLNISI_NAME_API": JSON.stringify(env.REACT_APP_BOLNISI_NAME_API),
       "process.env.REACT_APP_ADA_HANDLE_API": JSON.stringify(env.REACT_APP_ADA_HANDLE_API),
-      "process.env.REACT_APP_API_URL_COIN_GECKO": JSON.stringify(env.REACT_APP_API_URL_COIN_GECKO),
-      "process.env.REACT_APP_FF_GLOBAL_IS_CONWAY_ERA": JSON.stringify(env.REACT_APP_FF_GLOBAL_IS_CONWAY_ERA)
+      "process.env.REACT_APP_API_URL_COIN_GECKO": JSON.stringify(env.REACT_APP_API_URL_COIN_GECKO)
     },
     optimizeDeps: {
       exclude: ["util"],

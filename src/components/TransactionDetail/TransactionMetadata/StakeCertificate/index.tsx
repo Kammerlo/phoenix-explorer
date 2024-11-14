@@ -7,7 +7,7 @@ import { CardHeader } from "../PoolCertificate/styles";
 import { Wrapper } from "./styles";
 
 interface IProps {
-  data: Transaction["stakeCertificates"] | null;
+  data: TransactionDetail["stakeCertificates"] | null;
 }
 
 const StakeCertificate: React.FC<IProps> = ({ data }) => {

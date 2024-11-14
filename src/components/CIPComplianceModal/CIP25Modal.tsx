@@ -27,8 +27,8 @@ import ViewAllButtonExternal from "../commons/ViewAllButtonExternal";
 export type TCIP25ModalProps = {
   open: boolean;
   onClose: () => void;
-  data?: Transaction["metadata"][0]["metadataCIP25"]["tokenMap"];
-  version?: Transaction["metadata"][0]["metadataCIP25"];
+  data?: TransactionDetail["metadata"][0]["metadataCIP25"]["tokenMap"];
+  version?: TransactionDetail["metadata"][0]["metadataCIP25"];
 };
 
 const DEFAULT_CIP25_REQUIRE = [

@@ -128,7 +128,7 @@ describe("TransactionTab component", () => {
     quantity: 1000
   };
 
-  const mockData: Transactions = {
+  const mockData: Transaction = {
     hash: "0x123456789abcdef",
     blockNo: 1000,
     blockHash: "0x987654321fedcba",

@@ -21,7 +21,7 @@ const Transactions = () => {
     document.title = `Transactions List | Cardano Blockchain Explorer`;
   }, []);
 
-  const openDetail = (_: React.MouseEvent<Element, MouseEvent>, r: Transactions) => {
+  const openDetail = (_: React.MouseEvent<Element, MouseEvent>, r: Transaction) => {
     setOnDetailView(true);
     setSelected(r.hash);
   };
@@ -29,7 +29,7 @@ const Transactions = () => {
   return (
     <>
       <StyledContainer>
-        <TransactionList openDetail={openDetail} selected={selected} showTabView />
+        <TransactionList showTabView />
       </StyledContainer>
     </>
   );
