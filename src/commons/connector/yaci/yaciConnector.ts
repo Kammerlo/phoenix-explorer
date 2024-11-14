@@ -9,6 +9,7 @@ import {
   BlocksPage,
   Epoch,
   EpochsPage,
+  StakeAccountInfo,
   TransactionDetails,
   TransactionPage,
   TransactionSummary,
@@ -23,6 +24,7 @@ import {
 } from "./mapper/Mapper";
 import applyCaseMiddleware from "axios-case-converter";
 import { FunctionEnum } from "../types/FunctionEnum";
+import { credentialToRewardAddress, paymentCredentialOf } from "@lucid-evolution/lucid";
 
 export class YaciConnector implements ApiConnector {
   baseUrl: string;
@@ -34,7 +36,7 @@ export class YaciConnector implements ApiConnector {
   }
 
   getSupportedFunctions(): FunctionEnum[] {
-    return [FunctionEnum.EPOCH, FunctionEnum.BLOCK, FunctionEnum.TRANSACTION];
+    return [FunctionEnum.EPOCH, FunctionEnum.BLOCK, FunctionEnum.TRANSACTION, FunctionEnum.ADDRESS];
   }
 
   async getBlocksPage(): Promise<ApiReturnType<Block[]>> {
@@ -80,22 +82,6 @@ export class YaciConnector implements ApiConnector {
       data: block,
       lastUpdated: Date.now()
     } as ApiReturnType<Block>;
-  }
-
-  async getTxList(blockId: number | string): Promise<ApiReturnType<Transaction[]>> {
-    const response = await this.client.get<TransactionSummary[]>(`${this.baseUrl}/blocks/${blockId}/txs`);
-    const txs: Transaction[] = [];
-    for (const tx of response.data) {
-      // get transaction detail
-      txs.push((await this.getTx(tx.txHash!)).data as Transaction);
-    }
-    return {
-      data: txs,
-      total: txs.length,
-      totalPage: 1, // TODO
-      currentPage: 1, // TODO
-      lastUpdated: Date.now()
-    } as ApiReturnType<Transaction[]>;
   }
 
   async getCurrentEpoch(): Promise<ApiReturnType<EpochCurrentType>> {
@@ -174,6 +160,22 @@ export class YaciConnector implements ApiConnector {
     } as ApiReturnType<Transaction>;
   }
 
+  async getTxList(blockId: number | string): Promise<ApiReturnType<Transaction[]>> {
+    const response = await this.client.get<TransactionSummary[]>(`${this.baseUrl}/blocks/${blockId}/txs`);
+    const txs: Transaction[] = [];
+    for (const tx of response.data) {
+      // get transaction detail
+      txs.push((await this.getTx(tx.txHash!)).data as Transaction);
+    }
+    return {
+      data: txs,
+      total: txs.length,
+      totalPage: 1, // TODO
+      currentPage: 1, // TODO
+      lastUpdated: Date.now()
+    } as ApiReturnType<Transaction[]>;
+  }
+
   async getTransactions(): Promise<ApiReturnType<Transactions[]>> {
     const txsResponse = await this.client.get<TransactionPage>(`${this.baseUrl}/txs`);
 
@@ -203,34 +205,79 @@ export class YaciConnector implements ApiConnector {
     } as ApiReturnType<Transactions[]>;
   }
 
-  async getWalletAddressFromAddress(address: string): Promise<ApiReturnType<WalletAddress>> {
-    const addressBalanceResponse = await this.client.get<AddressBalanceDto>(
-      `${this.baseUrl}/addresses/${address}/balance`
-    );
-    const addressBalance = addressBalanceResponse.data;
-    const walletAddress: WalletAddress = {
-      address: addressBalance.address || "",
-      balance: addressBalance.amounts
-        ? addressBalance.amounts
-            .map((amt) => {
-              return amt.assetName === "lovelace" ? +amt.quantity! : 0;
-            })
-            .reduce((a, b) => a + b, 0)
-        : 0,
-      tokens: addressBalance.amounts
-        ?.filter((amt) => amt.assetName !== "lovelace")
-        .map((token) => {
-          return {
-            address: address,
-            name: token.assetName || "",
-            displayName: token.assetName || "",
-            fingerprint: token.assetName || "",
-            quantity: token.quantity || 0
-          };
-        })
-    };
+  async getWalletStakeFromAddress(address: string): Promise<ApiReturnType<WalletStake>> {
+    let stake: StakeAccountInfo;
+    try {
+      const stakeResponse = await this.client.get<StakeAccountInfo>(`${this.baseUrl}/accounts/${address}`);
+      stake = stakeResponse.data;
+    } catch (e) {
+      console.error("Error fetching stakeAddressInfo");
+    }
+
+    if (!stake) {
+      return {
+        data: null,
+        error: "Couldn't fetch stakeAddressInfo",
+        lastUpdated: Date.now()
+      } as ApiReturnType<WalletStake>;
+    }
     return {
-      data: walletAddress,
+      data: {
+        stakeAddress: stake.stakeAddress || "",
+        totalStake: stake.controlledAmount || 0,
+        rewardAvailable: stake.withdrawableAmount || 0,
+        rewardWithdrawn: 0, // TODO
+        status: "ACTIVE", // TODO
+        pool: {
+          poolId: stake.poolId || "",
+          poolName: "",
+          tickerName: ""
+        }
+      },
+      error: null,
+      lastUpdated: Date.now()
+    };
+  }
+
+  async getWalletAddressFromAddress(address: string): Promise<ApiReturnType<WalletAddress>> {
+    if (address.startsWith("addr")) {
+      const addressBalanceResponse = await this.client.get<AddressBalanceDto>(
+        `${this.baseUrl}/addresses/${address}/balance`
+      );
+      const credential = paymentCredentialOf(address);
+      const stakeAddress = credentialToRewardAddress("Preprod", credential); // TODO need to implement to get the right network
+      const addressBalance = addressBalanceResponse.data;
+
+      const walletAddress: WalletAddress = {
+        address: addressBalance?.address || "",
+        stakeAddress: stakeAddress,
+        balance: addressBalance?.amounts
+          ? addressBalance.amounts
+              .map((amt) => {
+                return amt.unit === "lovelace" ? +amt.quantity! : 0;
+              })
+              .reduce((a, b) => a + b, 0)
+          : 0,
+        tokens: addressBalance.amounts
+          ?.filter((amt) => amt.assetName !== "lovelace")
+          .map((token) => {
+            return {
+              address: address,
+              name: token.assetName || "",
+              displayName: token.assetName || "",
+              fingerprint: token.assetName || "",
+              quantity: token.quantity || 0
+            };
+          })
+      };
+      return {
+        data: walletAddress,
+        lastUpdated: Date.now()
+      } as ApiReturnType<WalletAddress>;
+    }
+    return {
+      data: null,
+      error: "Invalid address",
       lastUpdated: Date.now()
     } as ApiReturnType<WalletAddress>;
   }

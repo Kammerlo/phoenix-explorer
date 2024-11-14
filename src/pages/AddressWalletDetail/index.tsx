@@ -5,9 +5,9 @@ import { useSelector } from "react-redux";
 
 import useADAHandle from "src/commons/hooks/useADAHandle";
 import { ApiConnector } from "../../commons/connector/ApiConnector";
-import AddressAnalytics from "../../components/AddressDetail/AddressAnalytics";
 import AddressHeader from "../../components/AddressDetail/AddressHeader";
 import AddressTransactionList from "../../components/AddressTransactionList";
+import NoRecord from "../../components/commons/NoRecord";
 
 const AddressWalletDetail = () => {
   const { address } = useParams<{ address: string }>();
@@ -16,8 +16,9 @@ const AddressWalletDetail = () => {
   const blockKey = useSelector(({ system }: RootState) => system.blockKey);
   const [data, setData] = useState<WalletAddress>();
   const [{ data: adaHandle, loading: adaHandleLoading, initialized: ADAHandleInitialized }] = useADAHandle(address);
-
+  const [loading, setLoading] = useState<boolean>(true);
   const apiConnector: ApiConnector = ApiConnector.getApiConnector();
+  const [error, setError] = useState<string>();
 
   useEffect(() => {
     if (ADAHandleInitialized) {
@@ -33,33 +34,21 @@ const AddressWalletDetail = () => {
     window.history.replaceState({}, document.title);
     document.title = `Address ${address} | Cardano Blockchain Explorer`;
     document.documentElement.scrollTop = 0;
-    console.log("address", address);
     apiConnector.getWalletAddressFromAddress(address).then((data) => {
-      setData(data.data);
+      if (data.error) {
+        setLoading(false);
+        setError(data.error);
+        return;
+      }
+      setData(data.data!);
+      setLoading(false);
     });
   }, [address]);
 
-  // const { data, loading, initialized, error, statusError } = useFetch<WalletAddress>(
-  //   addressWallet ? `${API.ADDRESS.DETAIL}/${addressWallet}` : "",
-  //   state?.data,
-  //   false,
-  //   blockKey
-  // );
-
-  // if (adaHandleLoading || loading || !initialized || (!ADAHandleInitialized && !state?.data)) {
-  //   return (
-  //     <Box>
-  //       <CircularProgress />
-  //     </Box>
-  //   );
-  // }
-  // if (error && (statusError || 0) >= 500) return <FetchDataErr />;
-  // if (initialized && (!data || (error && (statusError || 0) < 500)) && !loading) return <NoRecord />;
-  //
+  if (error) return <NoRecord />;
   return (
     <ContainerBox>
-      <AddressHeader adaHanldeData={adaHandle} data={data} loading={true} />
-      {/*<AddressAnalytics address={addressWallet} />*/}
+      <AddressHeader adaHanldeData={adaHandle} data={data} loading={loading} />
       {/*<AddressTransactionList address={addressWallet} />*/}
     </ContainerBox>
   );

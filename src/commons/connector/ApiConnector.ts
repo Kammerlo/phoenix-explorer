@@ -33,4 +33,6 @@ export abstract class ApiConnector {
   abstract getTransactions(): Promise<ApiReturnType<Transactions[]>>;
 
   abstract getWalletAddressFromAddress(address: string): Promise<ApiReturnType<WalletAddress>>;
+
+  abstract getWalletStakeFromAddress(address: string): Promise<ApiReturnType<WalletStake>>;
 }

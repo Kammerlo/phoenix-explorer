@@ -70,6 +70,32 @@ export function mapBlockDTOToBlock(input: BlockDto): Block {
   };
 }
 
+function utxosToTokenArray(utxos: TxUtxo[]) {
+  const tokenMap = new Map<string, Token>();
+  utxos.forEach((utxo) => {
+    utxo.amount?.forEach((amount) => {
+      if (amount.assetName !== "lovelace") {
+        if (tokenMap.has(amount.assetName!)) {
+          tokenMap.get(amount.assetName!)!.assetQuantity += amount.quantity!;
+        } else {
+          tokenMap.set(amount.assetName!, {
+            assetName: amount.assetName!,
+            assetId: amount.unit!.replace(amount.policyId!, ""),
+            assetQuantity: amount.quantity!,
+            policy: {
+              policyId: amount.policyId!,
+              totalToken: 0, // TODO: need to implement
+              policyScript: "" // TODO: need to implement
+            }
+          });
+        }
+      }
+    });
+  });
+  // returning only tokens where quantity is not 0
+  return Array.from(tokenMap.values()).filter((token) => token.assetQuantity !== 0);
+}
+
 export function mapTxDetailsToTxSummary(txDetails: TransactionDetails) {
   const addresses = new Map<string, TxUtxo[]>();
   txDetails.inputs?.forEach((value) => {
@@ -103,33 +129,11 @@ export function mapTxDetailsToTxSummary(txDetails: TransactionDetails) {
       );
     });
     const value = map.reduce((acc, value) => acc + value, 0);
-    const tokenMap = new Map<string, Token>();
-    utxos.forEach((utxo) => {
-      utxo.amount?.forEach((amount) => {
-        if (amount.assetName !== "lovelace") {
-          if (tokenMap.has(amount.assetName!)) {
-            tokenMap.get(amount.assetName!)!.assetQuantity += amount.quantity!;
-          } else {
-            tokenMap.set(amount.assetName!, {
-              assetName: amount.assetName!,
-              assetId: amount.unit!.replace(amount.policyId!, ""),
-              assetQuantity: amount.quantity!,
-              policy: {
-                policyId: amount.policyId!,
-                totalToken: 0, // TODO: need to implement
-                policyScript: "" // TODO: need to implement
-              }
-            });
-          }
-        }
-      });
-    });
-    // remove tokens with quantity 0
     summary.push({
       address: stakeAddress,
       value: value,
       fee: -1, // TODO made it in purpose -1 to notice if it will be displayed somewhere
-      tokens: Array.from(tokenMap.values()).filter((token) => token.assetQuantity !== 0)
+      tokens: utxosToTokenArray(utxos)
     });
   });
   return summary;

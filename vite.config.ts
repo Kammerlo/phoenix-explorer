@@ -6,6 +6,7 @@ import svgr from "vite-plugin-svgr";
 import { resolve } from "path";
 import NodeGlobalsPolyfillPlugin from "@esbuild-plugins/node-globals-polyfill";
 import rollupNodePolyFill from "rollup-plugin-polyfill-node";
+import wasm from "vite-plugin-wasm";
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "REACT_");
@@ -52,6 +53,7 @@ export default defineConfig(({ mode }) => {
           plugins: ["@emotion/babel-plugin"]
         }
       }),
+      wasm(),
       viteTsconfigPaths(),
       svgr({
         svgrOptions: {

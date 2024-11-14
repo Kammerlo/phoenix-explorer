@@ -9,11 +9,9 @@ import { useLocalStorage } from "react-use";
 import { exchangeADAToUSD, formatADAFull, getShortHash } from "src/commons/utils/helper";
 import InfoSolidIcon from "src/components/commons/InfoSolidIcon";
 import Card from "src/components/commons/Card";
-import useFetch from "src/commons/hooks/useFetch";
 import CardAddress from "src/components/share/CardAddress";
 import { details } from "src/commons/routers";
 import { RootState } from "src/stores/types";
-import { API } from "src/commons/utils/api";
 import BookmarkButton from "src/components/commons/BookmarkIcon";
 import TokenAutocomplete from "src/components/TokenAutocomplete";
 import ADAicon from "src/components/commons/ADAIcon";
@@ -23,6 +21,7 @@ import CustomTooltip from "src/components/commons/CustomTooltip";
 import { NETWORK, NETWORKS } from "src/commons/utils/constants";
 
 import { BackButton, BackText, RedirectButton, StyledBoxCard, TimeDuration, TitleText, WrapHeader } from "./styles";
+import { ApiConnector } from "../../../commons/connector/ApiConnector";
 
 interface Props {
   data: WalletAddress | null | undefined;
@@ -39,19 +38,28 @@ const AddressHeader: React.FC<Props> = ({ data, loading, adaHanldeData }) => {
   const blockKey = useSelector(({ system }: RootState) => system.blockKey);
   const adaRate = usdDataLocal ? usdDataLocal.current_price : 0;
   const { address } = useParams<{ address: string }>();
+  const [dataStake, setDataStake] = useState<WalletStake | undefined>(undefined);
 
-  const {
-    data: dataStake,
-    loading: loadingStake,
-    lastUpdated,
-    error
-  } = useFetch<WalletStake>(stakeKey ? `${API.STAKE.DETAIL}/${stakeKey}` : "", undefined, false, blockKey);
+  // const {
+  //   data: dataStake,
+  //   loading: loadingStake,
+  //   lastUpdated,
+  //   error
+  // } = useFetch<WalletStake>(stakeKey ? `${API.STAKE.DETAIL}/${stakeKey}` : "", undefined, false, blockKey);
+
+  const apiConnector = ApiConnector.getApiConnector();
 
   const theme = useTheme();
   const { isMobile } = useScreen();
   const history = useHistory();
+
   useEffect(() => {
     setStakeKey(data?.stakeAddress || "");
+    if (data?.stakeAddress) {
+      apiConnector.getWalletStakeFromAddress(data.stakeAddress).then((data) => {
+        setDataStake(data.data);
+      });
+    }
   }, [data]);
 
   const itemLeft = [
@@ -150,9 +158,6 @@ const AddressHeader: React.FC<Props> = ({ data, loading, adaHanldeData }) => {
                   <CustomTooltip title={t("address.title.ADAHanlde")}>
                     <Box display={"inline-block"}>{address.startsWith("$") ? address : `$${address}`} </Box>
                   </CustomTooltip>
-                  <Box data-testid="addressDetail.adaHanldeData" display={"inline-block"}>
-                    <BookmarkButton keyword={data?.address || ""} type="ADDRESS" />
-                  </Box>
                 </Box>
               ) : (
                 <Box data-testid="address-detail-title">
@@ -182,7 +187,7 @@ const AddressHeader: React.FC<Props> = ({ data, loading, adaHanldeData }) => {
           )}
         </Box>
         <TimeDuration>
-          <FormNowMessage time={lastUpdated} />
+          <FormNowMessage time={Date.now()} />
         </TimeDuration>
       </WrapHeader>
       <Grid container spacing={2}>
@@ -204,8 +209,7 @@ const AddressHeader: React.FC<Props> = ({ data, loading, adaHanldeData }) => {
               type="right"
               address={data?.stakeAddress || ""}
               item={itemRight}
-              error={error}
-              loading={loading || loadingStake}
+              loading={loading}
               addressDestination={details.stake(data?.stakeAddress)}
             />
           </StyledBoxCard>
