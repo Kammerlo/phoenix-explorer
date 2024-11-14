@@ -5,6 +5,11 @@ import { FunctionEnum } from "./types/FunctionEnum";
 const API_URL: string = process.env.REACT_APP_API_URL || "";
 const API_CONNECTOR_TYPE: string = process.env.REACT_APP_API_TYPE || "";
 
+export enum StakeAddressAction {
+  REGISTRATION,
+  DEREGISTRATION
+}
+
 export abstract class ApiConnector {
   baseUrl: string;
 
@@ -38,4 +43,8 @@ export abstract class ApiConnector {
   abstract getWalletAddressFromAddress(address: string): Promise<ApiReturnType<WalletAddress>>;
 
   abstract getWalletStakeFromAddress(address: string): Promise<ApiReturnType<WalletStake>>;
+
+  abstract getStakeAddressRegistrations(stakeAddressAction: StakeAddressAction): Promise<ApiReturnType<IStakeKey[]>>;
+
+  abstract getStakeDelegations(): Promise<ApiReturnType<IStakeKey[]>>;
 }

@@ -1,6 +1,5 @@
 interface IStakeKey {
   txKey?: string;
-  txId: number;
   txHash: string;
   txTime: string;
   block: number;
@@ -8,7 +7,7 @@ interface IStakeKey {
   slotNo: number;
   epochSlotNo: number;
   stakeKey: string;
-  poolNames: string[];
+  poolName?: string;
 }
 
 type StakeStatus = "ACTIVE" | "DEACTIVATED" | "INACTIVE" | "RETIRED" | "EXPIRED";

@@ -1,11 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { stringify } from "qs";
 import { useSelector } from "react-redux";
-import { Box } from "@mui/material";
+import { Box, CircularProgress } from "@mui/material";
 import { useHistory, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-
-import useFetchList from "src/commons/hooks/useFetchList";
 import { details } from "src/commons/routers";
 import { formatDateTimeLocal, getPageInfo, getShortHash } from "src/commons/utils/helper";
 import Card from "src/components/commons/Card";
@@ -13,17 +11,19 @@ import CustomTooltip from "src/components/commons/CustomTooltip";
 import DetailViewStakeKey from "src/components/commons/DetailView/DetailViewStakeKey";
 import Table, { Column } from "src/components/commons/Table";
 import { setOnDetailView } from "src/stores/user";
-import { API } from "src/commons/utils/api";
 import SelectedIcon from "src/components/commons/SelectedIcon";
 import { useScreen } from "src/commons/hooks/useScreen";
 import FormNowMessage from "src/components/commons/FormNowMessage";
 import DatetimeTypeTooltip from "src/components/commons/DatetimeTypeTooltip";
 
 import { StyledContainer, StyledLink, TimeDuration } from "./styles";
+import { ApiConnector, StakeAddressAction } from "../../commons/connector/ApiConnector";
+import { ApiReturnType } from "../../commons/connector/types/APIReturnType";
 
 export enum STAKE_ADDRESS_TYPE {
   REGISTRATION = "registration",
-  DEREREGISTRATION = "de-registration"
+  DEREREGISTRATION = "deregistration",
+  DELEGATION = "delegation"
 }
 
 interface Props {
@@ -44,23 +44,36 @@ const Stake: React.FC<Props> = ({ stakeAddressType }) => {
   const pageInfo = getPageInfo(search);
   const { isMobile } = useScreen();
 
-  const fetchData = useFetchList<IStakeKey>(`${API.STAKE.DETAIL}/${stakeAddressType}`, pageInfo, false, blockKey);
+  const [data, setData] = useState<ApiReturnType<IStakeKey[]>>();
 
-  const { error } = fetchData;
+  const apiConnector = ApiConnector.getApiConnector();
 
-  const stakeDataWithKey = fetchData.data.map((item, id) => {
-    return { ...item, txKey: `key${id}` };
-  });
-  const _fetchData = {
-    ...fetchData,
-    data: [...stakeDataWithKey]
-  };
   useEffect(() => {
     handleClose();
   }, [history.location.pathname]);
 
   useEffect(() => {
-    const title = stakeAddressType === STAKE_ADDRESS_TYPE.REGISTRATION ? "Registrations" : "Deregistrations";
+    let title = "";
+    switch (stakeAddressType) {
+      case STAKE_ADDRESS_TYPE.DELEGATION:
+        apiConnector.getStakeDelegations().then((res) => {
+          setData(res);
+        });
+        title = "Delegations";
+        break;
+      case STAKE_ADDRESS_TYPE.REGISTRATION:
+        title = "Registrations";
+        apiConnector.getStakeAddressRegistrations(StakeAddressAction.REGISTRATION).then((res) => {
+          setData(res);
+        });
+        break;
+      case STAKE_ADDRESS_TYPE.DEREREGISTRATION:
+        apiConnector.getStakeAddressRegistrations(StakeAddressAction.DEREGISTRATION).then((res) => {
+          setData(res);
+        });
+        title = "Deregistrations";
+        break;
+    }
     document.title = `${title} Stake Addresses | Cardano Blockchain Explorer`;
   }, [stakeAddressType]);
 
@@ -153,7 +166,7 @@ const Stake: React.FC<Props> = ({ stakeAddressType }) => {
       )
     }
   ];
-
+  if (!data) return <CircularProgress />;
   return (
     <StyledContainer>
       <Box className="stake-list">
@@ -164,19 +177,19 @@ const Stake: React.FC<Props> = ({ stakeAddressType }) => {
               : t("head.page.stakeAddressDeregistration")
           }
         >
-          {!error && (
+          {!data?.error && (
             <TimeDuration>
-              <FormNowMessage time={_fetchData.lastUpdated} />
+              <FormNowMessage time={data!.lastUpdated} />
             </TimeDuration>
           )}
           <Table
             data-testid="stake.table"
-            {..._fetchData}
+            data={data?.data || []}
             columns={columns}
-            total={{ title: "Total Token List", count: _fetchData.total }}
+            total={{ title: "Total Token List", count: data?.total || 0 }}
             pagination={{
               ...pageInfo,
-              total: _fetchData.total,
+              total: data?.total || 0,
               onChange: (page, size) => {
                 mainRef.current?.scrollTo({ top: 0, behavior: "smooth" });
                 history.push({ search: stringify({ page, size, stakeAddressType }) });
@@ -185,7 +198,6 @@ const Stake: React.FC<Props> = ({ stakeAddressType }) => {
             }}
             onClickRow={openDetail}
             rowKey="txKey"
-            selected={selected}
             showTabView
             tableWrapperProps={{ sx: (theme) => ({ [theme.breakpoints.between("sm", "md")]: { minHeight: "60vh" } }) }}
           />

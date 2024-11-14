@@ -56,7 +56,7 @@ import EpochDetail from "./pages/EpochDetail";
 
 const StakeAddressRegistration = () => <Stake stakeAddressType={STAKE_ADDRESS_TYPE.REGISTRATION} />;
 const StakeAddressDeregistration = () => <Stake stakeAddressType={STAKE_ADDRESS_TYPE.DEREREGISTRATION} />;
-
+const StakeAddressDelegations = () => <Stake stakeAddressType={STAKE_ADDRESS_TYPE.DELEGATION} />;
 const PoolsCertificate = () => <RegistrationPools poolType={POOL_TYPE.REGISTRATION} />;
 const PoolsDeregistration = () => <RegistrationPools poolType={POOL_TYPE.DEREREGISTRATION} />;
 
@@ -121,7 +121,7 @@ const Routes: React.FC = () => {
       <Route
         path={routers.STAKE_ADDRESS_DELEGATIONS}
         exact
-        component={isSupportedRoute(StakeDelegations, FunctionEnum.ADDRESS)}
+        component={isSupportedRoute(StakeAddressDelegations, FunctionEnum.ADDRESS)}
       />
       <Route path={routers.DELEGATION_POOLS} exact component={isSupportedRoute(DelegationPools, FunctionEnum.POOL)} />
       <Route

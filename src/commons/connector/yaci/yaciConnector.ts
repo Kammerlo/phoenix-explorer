@@ -1,15 +1,17 @@
 import axios, { AxiosInstance } from "axios";
 
-import { ApiConnector } from "../ApiConnector";
+import { ApiConnector, StakeAddressAction } from "../ApiConnector";
 import { ApiReturnType } from "../types/APIReturnType";
 import { TRANSACTION_STATUS } from "../../utils/constants";
 import {
   AddressBalanceDto,
   BlockDto,
   BlocksPage,
+  Delegation,
   Epoch,
   EpochsPage,
   StakeAccountInfo,
+  StakeRegistrationDetail,
   TransactionDetails,
   TransactionPage,
   TransactionSummary,
@@ -36,7 +38,13 @@ export class YaciConnector implements ApiConnector {
   }
 
   getSupportedFunctions(): FunctionEnum[] {
-    return [FunctionEnum.EPOCH, FunctionEnum.BLOCK, FunctionEnum.TRANSACTION, FunctionEnum.ADDRESS];
+    return [
+      FunctionEnum.EPOCH,
+      FunctionEnum.BLOCK,
+      FunctionEnum.TRANSACTION,
+      FunctionEnum.ADDRESS,
+      FunctionEnum.STAKE_ADDRESS_REGISTRATION
+    ];
   }
 
   async getBlocksPage(): Promise<ApiReturnType<Block[]>> {
@@ -286,5 +294,53 @@ export class YaciConnector implements ApiConnector {
       data: epochToIEpochData(response.data),
       lastUpdated: Date.now()
     } as ApiReturnType<IDataEpoch>;
+  }
+
+  async getStakeAddressRegistrations(stakeAddressAction: StakeAddressAction): Promise<ApiReturnType<IStakeKey[]>> {
+    let stakeRegistrationDetails: StakeRegistrationDetail[] = [];
+    if (stakeAddressAction === StakeAddressAction.REGISTRATION) {
+      const response = await this.client.get<StakeRegistrationDetail[]>(`${this.baseUrl}/stake/registrations`);
+      stakeRegistrationDetails = response.data;
+    } else if (stakeAddressAction === StakeAddressAction.DEREGISTRATION) {
+      const response = await this.client.get<StakeRegistrationDetail[]>(`${this.baseUrl}/stake/deregistrations`);
+      stakeRegistrationDetails = response.data;
+    } else {
+      throw new Error("Invalid StakeAddressAction");
+    }
+    let iStakeKeys = stakeRegistrationDetails.map((stakeDetail) => {
+      return {
+        txHash: stakeDetail.txHash || "",
+        txTime: stakeDetail.blockTime + "" || "",
+        block: stakeDetail.blockNumber || 0,
+        epoch: stakeDetail.epoch || 0,
+        slotNo: stakeDetail.slot || 0,
+        epochSlotNo: stakeDetail.slot || 0, // TODO: need to implement
+        stakeKey: stakeDetail.address || ""
+      } as IStakeKey;
+    });
+    return {
+      data: iStakeKeys,
+      lastUpdated: Date.now()
+    } as ApiReturnType<IStakeKey[]>;
+  }
+
+  async getStakeDelegations(): Promise<ApiReturnType<IStakeKey[]>> {
+    const response = await this.client.get<Delegation[]>(`${this.baseUrl}/stake/delegations`);
+    let iStakeKeys = response.data.map((stakeDetail) => {
+      return {
+        txHash: stakeDetail.txHash || "",
+        txTime: stakeDetail.blockTime + "" || "",
+        block: stakeDetail.blockNumber || 0,
+        epoch: stakeDetail.epoch || 0,
+        slotNo: stakeDetail.slot || 0,
+        epochSlotNo: stakeDetail.slot || 0, // TODO: need to implement
+        stakeKey: stakeDetail.address || "",
+        poolName: stakeDetail.poolId || ""
+      } as IStakeKey;
+    });
+    return {
+      data: iStakeKeys,
+      lastUpdated: Date.now()
+    } as ApiReturnType<IStakeKey[]>;
   }
 }
