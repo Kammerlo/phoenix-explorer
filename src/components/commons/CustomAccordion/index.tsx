@@ -3,9 +3,7 @@ import React, { useMemo, useRef } from "react";
 import { IoIosArrowDown } from "react-icons/io";
 import { useParams } from "react-router-dom";
 
-import { SkeletonUI } from "src/components/AddressDetail/AddressAnalytics/styles";
-
-import { IconWrapper, StyledAccordion, TitleTab } from "./styles";
+import { IconWrapper, SkeletonUI, StyledAccordion, TitleTab } from "./styles";
 
 export type TTab = {
   key: string;

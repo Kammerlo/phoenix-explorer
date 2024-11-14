@@ -13,7 +13,6 @@ import { HighestIconComponent, LowestIconComponent } from "src/commons/resources
 import { API } from "src/commons/utils/api";
 import { OPTIONS_CHART_ANALYTICS } from "src/commons/utils/constants";
 import { formatNumberDivByDecimals, formatPrice, getIntervalAnalyticChart } from "src/commons/utils/helper";
-import { TextCardHighlight } from "src/components/AddressDetail/AddressAnalytics/styles";
 import CustomIcon from "src/components/commons/CustomIcon";
 import { TooltipBody } from "src/components/commons/Layout/styles";
 
@@ -33,6 +32,7 @@ import {
   ValueInfo,
   Wrapper
 } from "./styles";
+import { TextCardHighlight } from "../../StakeDetail/StakeAnalytics/styles";
 
 type AnalyticsData = { date: string; value: number };
 interface ITokenAnalyticsProps {

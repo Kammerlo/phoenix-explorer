@@ -225,3 +225,9 @@ export const TooltipLabel = styled(Box)(() => ({
 export const TooltipValue = styled(Box)(() => ({
   fontWeight: 700
 }));
+
+export const TextCardHighlight = styled("span")`
+  font-size: 20px;
+  border-bottom: ${(props) =>
+    `2px solid ${props.theme.mode === "light" ? props.theme.palette.primary[200] : props.theme.palette.primary.main}`};
+`;

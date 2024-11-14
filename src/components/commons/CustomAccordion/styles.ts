@@ -1,4 +1,5 @@
 import { Accordion, styled, Box } from "@mui/material";
+import { CommonSkeleton } from "../CustomSkeleton";
 
 export const StyledAccordion = styled(Accordion)<{
   expanded: boolean;
@@ -43,3 +44,10 @@ export const IconWrapper = styled(Box)<{ fill: string }>`
     fill: ${({ fill }) => fill};
   }
 `;
+
+export const SkeletonUI = styled(CommonSkeleton)(({ theme }) => ({
+  paddingTop: theme.spacing(3),
+  marginRight: theme.spacing(2),
+  borderRadius: 10,
+  boxSizing: "border-box"
+}));
