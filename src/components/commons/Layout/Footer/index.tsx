@@ -95,23 +95,10 @@ const Footer: React.FC = () => {
     <StyledFooter data-testid="footer" id="footer">
       <FooterContainer>
         <FooterMenu bottom={true} />
-        <Copyright data-testid="footer-text">
-          &copy; {new Date().getFullYear()} {t("common.copyright")}{" "}
-          <Version>
-            {t("common.version")}: {APP_VERSION}
-          </Version>
-        </Copyright>
+        <Copyright data-testid="footer-text"></Copyright>
         <RefContainer>
           <LinkTo to={routers.FAQ} rel="noopener noreferrer">
             {t("common.faqs")}
-          </LinkTo>
-          <DotDivide />
-          <LinkTo to={routers.TERMS_OF_SERVICE} rel="noopener noreferrer">
-            {t("common.termsOfService")}
-          </LinkTo>
-          <DotDivide />
-          <LinkTo to={routers.POLICY} rel="noopener noreferrer">
-            {t("common.privacyPolicy")}
           </LinkTo>
         </RefContainer>
       </FooterContainer>

@@ -1,16 +1,22 @@
-# Explorer Frontend
+# Cardano Explorer Frontend
+This repository houses an open source Cardano Explorer. It is based on the [Cardano Foundation Explorer](https://github.com/cardano-foundation/cf-explorer-frontend). 
+The idea behind this repository is to maintain and continue the development of this open source project. Currently there is no other open source Explorer available in the Cardano Ecosystem. 
+We want to keep this running and develop it further with the community.
 
-<p align="left">
-<img alt="Tests" src="https://github.com/cardano-foundation/cf-explorer-frontend/actions/workflows/tests.yaml/badge.svg" />
-<img alt="Release" src="https://github.com/cardano-foundation/cf-explorer-frontend/actions/workflows/release.yaml/badge.svg" />
-<img alt="Publish" src="https://github.com/cardano-foundation/cf-explorer-frontend/actions/workflows/publish.yaml/badge.svg" />
-<a href="https://app.fossa.com/reports/537ced0e-85fe-4d78-843b-f2ff2dd4faac"><img alt="FOSSA Status" src="https://app.fossa.com/api/projects/custom%2B41588%2Fgit%40github.com%3Acardano-foundation%2Fcf-explorer-frontend.git.svg?type=small"/></a>
-<a href="https://conventionalcommits.org"><img alt="conventionalcommits" src="https://img.shields.io/badge/Conventional%20Commits-1.0.0-%23FE5196?logo=conventionalcommits" /></a>
-</p>
+Currently this explorer is deployed here: [Cardano Explorer](https://cardano-explorer.xyz)
+We are still in heavy development and will add more features in the future. 
 
-This repository houses the frontend component of Explorer. Developed with TypeScript, React.js, and mui, it showcases a user-friendly interface that presents the Cardano blockchain data collected and aggregated by LedgerSync.
+This explorer is a frontend only application. We will implement different API connectors to plug it on top of already existing publics APIs. 
+Currently we ony support [Yaci-Store](https://github.com/bloxbean/yaci-store) API. We will add more API connectors in the future. 
+For example Blockfrost is planned to be added soon.
 
-👉 Check the [Explorer repository](https://github.com/cardano-foundation/cf-explorer) to understand how the microservices work together
+Relying only on public APIs comes with a downside as well. We are not able to provide all the features that are available in the official Cardano Beta Explorer, since we don't have aggregated data.
+In this application we will only show what is available in the respective APIs.
+
+### Contributing is appreciated
+If you need any new features or have any ideas, feel free to open an issue or create a pull request. 
+We are happy to work with you on this project, since we want to keep this project alive and running in collaboration with everyone from the Cardano Ecosystem.
+
 
 ## Prerequisites
 
@@ -35,49 +41,17 @@ In the terminal run command: `cp .env.example .env`
 
   > Example: `PORT=3000`
 
-- Update API URL for explorer service.
+- Update API Connector Type. Currently we only support `YACI` API. We will add more API connectors in the future.
+
+  > Example: `REACT_APP_API_TYPE=YACI`
+
+- Update API URL for the Basi API Service you want to use.
 
   > Example: `REACT_APP_API_URL=http://localhost:8080`
-
-- Update WebSocket URL for real-time expolorer service.
-
-  > Example: `REACT_APP_WS_URL=ws://localhost:8080/ws`
-
-- Update API URL for authentication service.
-
-  > Example: `REACT_APP_AUTH_API_URL=http://localhost:8081`
-
-- Update APP URL for other network. Example:
-
-  ```
-  REACT_APP_TESTNET_APP_URL=http://localhost:3000
-  REACT_APP_PREVIEW_APP_URL=http://localhost:3001
-  REACT_APP_PREPROD_APP_URL=http://localhost:3002
-  REACT_APP_MAINNET_APP_URL=http://localhost:3003
-  ```
-
-- Update Jira Embedded Key to Add Jira Support Widget to explorer
-
-  > Example: `REACT_APP_JSD_WIDGET_KEY=xxx`
-
-- Update link to the cardano price
-
-  > Example: `REACT_APP_EXT_ADA_PRICE_URL=https://www.coingecko.com/en/coins/cardano`
-
-- Update link to the cardano news
-
-  > Example: `REACT_APP_CARDANO_NEWS_URL=https://cardanofoundation.org/en/news`
 
 - Update application network (`mainnet`, `preprod` or `preview`)
 
   > Example: `REACT_APP_NETWORK=mainnet`
-
-- Configure supported network names (`mainnet`, `preprod` or `preview`)
-
-  > Example: `REACT_APP_NETWORK_NAMES="{"mainnet":"Mainnet","preprod":"Preprod", ...}"`
-
-- Update link takes the name of Bolnisi wine
-  > Example: `REACT_APP_BOLNISI_NAME_API="https://minio.pro.cf-bolnisi-mainnet.eu-west-1.bnwa.metadata.dev.cf-deployments.org/georgian-wine/public/winerymapping.json"`
 
 **Step 4** Run on localhost
 
@@ -87,104 +61,6 @@ Open terminal and run command: `npm start`
 The application will run by default on port 3000. If you want to run the application on another port, please change the `PORT` in the .env file.
 
 Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
-
-## Testing with Jest
-
-This app uses `Jest` for Unit test.
-
-To run your tests, execute the following command:
-
-- `npm run jest-test` to test all file `*.test.ts`.
-
-- `npm run jest-test-one [file_relative_path]` to test a file with `[file_relative_path]` being relative path of file. Ex: `npm run jest-test-one src\commons\utils\helper.test.ts`
-
-## Web automation test with Playwright
-
-### Pre-installed on local:
-
-- [allure commandline](https://docs.qameta.io/allure-report/#_installing_a_commandline)
-- npm and node js
-- add .env to root folder with APPLICATION_URL property pointing to chosen environment e.g.
-
-```
-APPLICATION_URL=<Explorer env url>
-API_URL=<Explorer api url>
-BLOCKFROST_API_URL=<BlockFrost api url>
-BLOCKFROST_API_TOKEN=<BlockFrost api token>
-KOIOS_API_URL=<Koios api url>
-KOIOS_API_TOKEN=<Koios api token>
-USERNAME=<Explorer user>
-PASSWORD=<Explorer user password>
-```
-
-### Test run in local:
-
-1. Install all packages locally
-
-```
-npm install
-```
-
-2. Install browsers
-
-```
-npx playwright install
-```
-
-3. Run tests for chosen project e.g.
-
-```
-npm run chrome
-```
-
-or
-
-```
-npm run firefox
-```
-
----
-
-### Test run with allure report
-
-1. Run tests in root folder
-
-```
-ALLURE_RESULTS_DIR=.reports/chrome/allure-results npx playwright test --project='chrome'
-```
-
-- there is also shorter command from package.json scripts to run all tests
-
-```
-npm run chrome
-```
-
-- to run specific feature test indicate full path to feature file
-
-```
-npm run chrome playwright/tests/features/sing-up.feature
-```
-
-- to run specific scenario for a feature add tag **@only** to the scenario and generate test changes:
-
-```
-npx bddgen
-npm run chrome playwright/tests/features/sing-up.feature
-```
-
-- more examples and documentation [here](https://vitalets.github.io/playwright-bdd/#/installation)
-
-2. Generate report
-
-```
-allure generate .reports/chrome/allure-results -o .reports/chrome/allure-report --clean
-```
-
-3. Open report
-
-```
-allure open .reports/chrome/allure-report
-```
 
 ## Build into production
 
