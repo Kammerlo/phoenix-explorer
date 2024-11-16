@@ -156,7 +156,7 @@ export const menus: Menu[] = [
     key: "glossary.stakingLifecycle",
     icon: StakingLifecycleIcon,
     href: lists.dashboard(),
-    hidden: !supportedFunctions.includes(FunctionEnum.STAKE_ADDRESS_REGISTRATION)
+    hidden: !supportedFunctions.includes(FunctionEnum.STAKING_LIFECYCLE)
   },
   {
     title: "Protocol Parameters",

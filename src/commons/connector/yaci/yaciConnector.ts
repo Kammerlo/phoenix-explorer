@@ -10,6 +10,8 @@ import {
   Delegation,
   Epoch,
   EpochsPage,
+  PoolRegistration,
+  PoolRetirement,
   StakeAccountInfo,
   StakeRegistrationDetail,
   TransactionDetails,
@@ -20,6 +22,8 @@ import {
 import {
   epochToIEpochData,
   mapBlockDTOToBlock,
+  mapPoolRegistrationsToRegistrations,
+  mapPoolRetirementsToRegistrations,
   mapTxDetailsToTxSummary,
   mapTxUtxoToCollateralResponse,
   mapTxUtxoToUtxo
@@ -27,6 +31,7 @@ import {
 import applyCaseMiddleware from "axios-case-converter";
 import { FunctionEnum } from "../types/FunctionEnum";
 import { credentialToRewardAddress, Network, paymentCredentialOf } from "@lucid-evolution/lucid";
+import { POOL_TYPE } from "../../../pages/RegistrationPools";
 
 export class YaciConnector implements ApiConnector {
   baseUrl: string;
@@ -43,7 +48,8 @@ export class YaciConnector implements ApiConnector {
       FunctionEnum.BLOCK,
       FunctionEnum.TRANSACTION,
       FunctionEnum.ADDRESS,
-      FunctionEnum.STAKE_ADDRESS_REGISTRATION
+      FunctionEnum.STAKE_ADDRESS_REGISTRATION,
+      FunctionEnum.POOL_REGISTRATION
     ];
   }
 
@@ -342,5 +348,20 @@ export class YaciConnector implements ApiConnector {
       data: iStakeKeys,
       lastUpdated: Date.now()
     } as ApiReturnType<IStakeKey[]>;
+  }
+
+  async getPoolRegistrations(type: POOL_TYPE): Promise<ApiReturnType<Registration[]>> {
+    let registrations: Registration[];
+    if (type === POOL_TYPE.REGISTRATION) {
+      const response = await this.client.get<PoolRegistration[]>(`${this.baseUrl}/pools/registrations`);
+      registrations = await mapPoolRegistrationsToRegistrations(response.data);
+    } else {
+      const response = await this.client.get<PoolRetirement[]>(`${this.baseUrl}/pools/retirements`);
+      registrations = mapPoolRetirementsToRegistrations(response.data);
+    }
+    return {
+      data: registrations,
+      lastUpdated: Date.now()
+    } as ApiReturnType<Registration[]>;
   }
 }

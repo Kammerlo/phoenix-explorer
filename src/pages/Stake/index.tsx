@@ -33,10 +33,7 @@ interface Props {
 const Stake: React.FC<Props> = ({ stakeAddressType }) => {
   const mainRef = useRef(document.querySelector("#main"));
   const { t } = useTranslation();
-  const [selected, setSelected] = useState<string | null>(null);
-  const [stakeKey, setStakeKey] = useState<string | null>(null);
   const { onDetailView } = useSelector(({ user }: RootState) => user);
-  const blockKey = useSelector(({ system }: RootState) => system.blockKey);
   const { search } = useLocation();
   const history = useHistory();
   const fromPath = history.location.pathname as SpecialPath;
@@ -47,10 +44,6 @@ const Stake: React.FC<Props> = ({ stakeAddressType }) => {
   const [data, setData] = useState<ApiReturnType<IStakeKey[]>>();
 
   const apiConnector = ApiConnector.getApiConnector();
-
-  useEffect(() => {
-    handleClose();
-  }, [history.location.pathname]);
 
   useEffect(() => {
     let title = "";
@@ -76,22 +69,6 @@ const Stake: React.FC<Props> = ({ stakeAddressType }) => {
     }
     document.title = `${title} Stake Addresses | Cardano Blockchain Explorer`;
   }, [stakeAddressType]);
-
-  const openDetail = (_: React.MouseEvent<Element, MouseEvent>, r: IStakeKey) => {
-    setOnDetailView(true);
-    r.txKey && setSelected(r.txKey);
-    setStakeKey(r.stakeKey);
-  };
-
-  const handleClose = () => {
-    setOnDetailView(false);
-    setSelected(null);
-    setStakeKey(null);
-  };
-
-  useEffect(() => {
-    if (!onDetailView) handleClose();
-  }, [onDetailView]);
 
   const columns: Column<IStakeKey>[] = [
     {
@@ -160,12 +137,28 @@ const Stake: React.FC<Props> = ({ stakeAddressType }) => {
               {getShortHash(r.stakeKey)}
             </StyledLink>
           </CustomTooltip>
-
-          {selected === r.stakeKey && <SelectedIcon />}
         </>
       )
     }
   ];
+  if (stakeAddressType === STAKE_ADDRESS_TYPE.DELEGATION) {
+    columns.push({
+      title: <div data-testid="stake.poolTitle">{t("glossary.pool")}</div>,
+      key: "pool",
+      render: (r) => (
+        <>
+          <CustomTooltip title={r.poolName || ""}>
+            <StyledLink
+              data-testid="stake.poolValue"
+              to={{ pathname: details.delegation(r.poolName), state: { fromPath } }}
+            >
+              {getShortHash(r.poolName)}
+            </StyledLink>
+          </CustomTooltip>
+        </>
+      )
+    });
+  }
   if (!data) return <CircularProgress />;
   return (
     <StyledContainer>
@@ -174,7 +167,9 @@ const Stake: React.FC<Props> = ({ stakeAddressType }) => {
           title={
             stakeAddressType === STAKE_ADDRESS_TYPE.REGISTRATION
               ? t("head.page.stakeAddressRegistration")
-              : t("head.page.stakeAddressDeregistration")
+              : stakeAddressType === STAKE_ADDRESS_TYPE.DEREREGISTRATION
+              ? t("head.page.stakeAddressDeregistration")
+              : t("head.page.stakeDelegation")
           }
         >
           {!data?.error && (
@@ -193,17 +188,14 @@ const Stake: React.FC<Props> = ({ stakeAddressType }) => {
               onChange: (page, size) => {
                 mainRef.current?.scrollTo({ top: 0, behavior: "smooth" });
                 history.push({ search: stringify({ page, size, stakeAddressType }) });
-              },
-              handleCloseDetailView: handleClose
+              }
             }}
-            onClickRow={openDetail}
             rowKey="txKey"
             showTabView
             tableWrapperProps={{ sx: (theme) => ({ [theme.breakpoints.between("sm", "md")]: { minHeight: "60vh" } }) }}
           />
         </Card>
       </Box>
-      <DetailViewStakeKey stakeId={stakeKey || ""} open={onDetailView} handleClose={handleClose} />
     </StyledContainer>
   );
 };

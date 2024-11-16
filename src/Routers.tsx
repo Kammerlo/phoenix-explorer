@@ -29,7 +29,6 @@ import ReportGeneratedStakingDetail from "./pages/ReportGeneratedStakingDetail";
 import SPOLifecycle from "./pages/SPOLifecycle";
 import SearchResult from "./pages/SearchResult";
 import Stake, { STAKE_ADDRESS_TYPE } from "./pages/Stake";
-import StakeDelegations from "./pages/StakeDelegations";
 import StakeDetail from "./pages/StakeDetail";
 import StakingLifecycle from "./pages/StakingLifecycle";
 import Tokens from "./pages/Token";
@@ -85,7 +84,11 @@ const Routes: React.FC = () => {
       <Route path={routers.HOME} exact component={Home} />
       <Route path={routers.OVERVIEW} exact component={Overview} />
 
-      <Route path={routers.STAKING_LIFECYCLE} exact component={StakingLifecycle} />
+      <Route
+        path={routers.STAKING_LIFECYCLE}
+        exact
+        component={isSupportedRoute(StakingLifecycle, FunctionEnum.STAKING_LIFECYCLE)}
+      />
       <Route path={routers.DELEGATOR_LIFECYCLE} exact component={DelegatorLifecycle} />
       <Route path={routers.SPO_LIFECYCLE} exact component={SPOLifecycle} />
 

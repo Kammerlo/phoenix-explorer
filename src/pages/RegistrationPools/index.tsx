@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { stringify } from "qs";
 import { useHistory } from "react-router-dom";
 import { Box } from "@mui/material";
@@ -19,6 +19,8 @@ import usePageInfo from "src/commons/hooks/usePageInfo";
 import DatetimeTypeTooltip from "src/components/commons/DatetimeTypeTooltip";
 
 import { RegistrationContainer, StakeKey, StyledLink, StyledPoolLink, TimeDuration } from "./styles";
+import { ApiConnector } from "../../commons/connector/ApiConnector";
+import { ApiReturnType } from "../../commons/connector/types/APIReturnType";
 
 export enum POOL_TYPE {
   REGISTRATION = "registration",
@@ -35,14 +37,15 @@ const RegistrationPools: React.FC<Props> = ({ poolType }) => {
   const { pageInfo, setSort } = usePageInfo();
   const mainRef = useRef(document.querySelector("#main"));
   const blockKey = useSelector(({ system }: RootState) => system.blockKey);
-
-  const fetchData = useFetchList<Registration>(`${API.POOL}/${poolType}`, { ...pageInfo }, false, blockKey);
-
-  const { error } = fetchData;
+  const [data, setData] = useState<ApiReturnType<Registration[]>>();
+  const apiConnector: ApiConnector = ApiConnector.getApiConnector();
 
   useEffect(() => {
     const title = poolType === POOL_TYPE.REGISTRATION ? "Registration" : "Deregistration";
     document.title = `${title} Pools | Cardano Blockchain Explorer`;
+    apiConnector.getPoolRegistrations(poolType).then((data) => {
+      setData(data);
+    });
   }, [poolType]);
 
   const columns: Column<Registration>[] = [
@@ -94,11 +97,6 @@ const RegistrationPools: React.FC<Props> = ({ poolType }) => {
       )
     },
     {
-      title: <Box data-testid="registrationPools.epochSlot">{t("glossary.slot")}</Box>,
-      key: "epochSlotNo",
-      minWidth: "50px"
-    },
-    {
       title: <Box data-testid="registrationPools.absoluteSlotNo">{t("glossary.absoluteSlot")}</Box>,
       key: "slotNo",
       minWidth: "100px"
@@ -110,13 +108,13 @@ const RegistrationPools: React.FC<Props> = ({ poolType }) => {
       render: (pool) => (
         <StyledPoolLink
           data-testid="registrationPools.poolValue"
-          to={{ pathname: details.delegation(pool.poolView), state: { fromPath: history.location.pathname } }}
+          to={{ pathname: details.delegation(pool.poolId), state: { fromPath: history.location.pathname } }}
         >
-          <CustomTooltip title={pool.poolName || pool.poolView || ""}>
+          <CustomTooltip title={pool.poolName || pool.poolId || ""}>
             <Box component={"span"}>
               {pool.poolName?.startsWith("pool")
                 ? getShortHash(pool.poolName)
-                : pool.poolName || getShortHash(pool.poolView)}
+                : pool.poolName || getShortHash(pool.poolId)}
             </Box>
           </CustomTooltip>
         </StyledPoolLink>
@@ -157,24 +155,6 @@ const RegistrationPools: React.FC<Props> = ({ poolType }) => {
       sort: ({ columnKey, sortValue }) => {
         sortValue ? setSort(`${columnKey},${sortValue}`) : setSort("");
       }
-    },
-    {
-      title: <Box data-testid="registrationPools.stakeAddressTitle">{t("glossary.stakeAddress")}</Box>,
-      key: "stakeAddress",
-      render: (pool) => (
-        <>
-          {pool.stakeKey?.slice(0, 2).map((stakeKey) => (
-            <StakeKey key={stakeKey}>
-              <CustomTooltip title={stakeKey}>
-                <StyledLink data-testid="registrationPools.stakeAddressValue" to={details.stake(stakeKey)}>
-                  {getShortHash(stakeKey)}
-                </StyledLink>
-              </CustomTooltip>
-            </StakeKey>
-          ))}
-          {pool.stakeKey?.length > 2 ? <StyledLink to={details.delegation(pool.poolView || "")}>...</StyledLink> : ""}
-        </>
-      )
     }
   ];
   if (!Object.values(POOL_TYPE).includes(poolType)) return <NoRecord />;
@@ -184,25 +164,25 @@ const RegistrationPools: React.FC<Props> = ({ poolType }) => {
       <Card
         title={poolType === POOL_TYPE.REGISTRATION ? t("glossary.poolCertificate") : t("glossary.poolDeregistration")}
       >
-        {!error && (
+        {!data?.error && (
           <TimeDuration>
-            <FormNowMessage time={fetchData.lastUpdated} />
+            <FormNowMessage time={data?.lastUpdated} />
           </TimeDuration>
         )}
       </Card>
       <Box>
         <Table
           data-testid="registrationPools.table"
-          {...fetchData}
+          data={data?.data || []}
           columns={columns}
-          total={{ title: "Total Transactions", count: fetchData.total }}
+          total={{ title: "Total Transactions", count: data?.total || 0 }}
           pagination={{
             ...pageInfo,
             onChange: (page, size) => {
               history.replace({ search: stringify({ ...pageInfo, page, size }) });
               mainRef.current?.scrollTo({ top: 0, behavior: "smooth" });
             },
-            total: fetchData.total
+            total: data?.total || 0
           }}
           tableWrapperProps={{ sx: (theme) => ({ [theme.breakpoints.between("sm", "md")]: { minHeight: "60vh" } }) }}
         />
