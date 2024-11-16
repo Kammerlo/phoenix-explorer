@@ -47,87 +47,6 @@ const useFetchList = <T>(
   const lastFetch = useRef<number>();
   const lastKey = useRef<number | string | undefined>(key);
 
-  const getList = useCallback(
-    async (needLoading?: boolean) => {
-      if (!url || url === "") {
-        setData([]);
-        setInitialized(false);
-        setLoading(false);
-        setError(null);
-        setStatusError(undefined);
-        setCurrentPage(0);
-        setTotalPage(0);
-        setTotal(0);
-        setRefreshLoading(false);
-        return;
-      }
-      let service: AxiosInstance = isAuth ? authAxios : defaultAxios;
-      if (url.search("http://") === 0 || url.search("https://") === 0) {
-        service = axios;
-      }
-      if (needLoading) setLoading(true);
-      else setRefreshLoading(true);
-      try {
-        const baseURL = url.split("?")[0];
-        const lastURL = url.split("?")[1];
-        const res = await service.get(
-          `${baseURL}?${lastURL ? `${lastURL}&` : ""}${qs.stringify(
-            params,
-            params.formatArrayComma ? { arrayFormat: "comma", encode: false } : {}
-          )}`
-        );
-        setQuery(cleanObject(params));
-        setData(res?.data?.data as T[]);
-        setError(null);
-        setStatusError(undefined);
-        setIsDataOverSize(res?.data?.isDataOverSize ?? null);
-        setCurrentPage(res.data.currentPage);
-        setTotalPage(res.data.totalPages);
-        setTotal(res.data.totalItems);
-        setInitialized(true);
-      } catch (error) {
-        setData([]);
-        setTotal(0);
-        setInitialized(true);
-        if (error instanceof AxiosError) {
-          setError(error?.response?.data?.message || error?.message);
-          setStatusError(error.response?.status || error.request?.status || undefined);
-        } else if (typeof error === "string") setError(error);
-      }
-      lastFetch.current = Date.now();
-      if (needLoading) setLoading(false);
-      else setRefreshLoading(false);
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [url, isAuth, JSON.stringify(params || {})]
-  );
-
-  useEffect(() => {
-    // Refresh without "loading" every time the "key" is updated
-    if (key && !loading && !refreshLoading) {
-      const onFocus = async () => {
-        if (lastKey.current !== key) {
-          getList();
-          lastKey.current = key;
-        }
-      };
-
-      window.addEventListener("focus", onFocus);
-
-      if (!document.hidden) {
-        getList();
-        lastKey.current = key;
-      }
-
-      return () => window.removeEventListener("focus", onFocus);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [key]);
-
-  useEffect(() => {
-    getList(true);
-  }, [getList]);
-
   return {
     data,
     loading,
@@ -137,7 +56,7 @@ const useFetchList = <T>(
     total,
     totalPage,
     currentPage,
-    refresh: getList,
+    refresh: () => {},
     update: setData,
     lastUpdated: lastFetch.current,
     query,

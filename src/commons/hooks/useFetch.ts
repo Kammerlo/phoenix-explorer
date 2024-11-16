@@ -24,68 +24,12 @@ const useFetch = <T>(url: string, initial?: T, isAuth?: boolean, key?: number | 
   const lastFetch = useRef<number>();
   const lastKey = useRef<number | string | undefined>(key);
 
-  const fetch = useCallback(
-    async (needLoading?: boolean) => {
-      if (!url) return;
-      let service: AxiosInstance = isAuth ? authAxios : defaultAxios;
-      if (url.search("http://") === 0 || url.search("https://") === 0) {
-        service = axios;
-      }
-      if (needLoading) setLoading(true);
-      else setRefreshLoading(true);
-      try {
-        const res = await service.get(url);
-        setData(res?.data as T);
-        setError(null);
-        setStatusError(undefined);
-        setInitialized(true);
-      } catch (error) {
-        setInitialized(true);
-        setData(null);
-        if (error instanceof AxiosError) {
-          setError(error?.response?.data?.message || error?.message);
-          setStatusError(error.response?.status);
-        } else if (typeof error === "string") setError(error);
-      }
-      lastFetch.current = Date.now();
-      if (needLoading) setLoading(false);
-      else setRefreshLoading(false);
-    },
-    [url, isAuth]
-  );
-
-  useEffect(() => {
-    // Refresh without "loading" every time the "key" is updated
-    if (key && !loading && !refreshLoading) {
-      const onFocus = async () => {
-        if (lastKey.current !== key) {
-          fetch();
-          lastKey.current = key;
-        }
-      };
-
-      window.addEventListener("focus", onFocus);
-
-      if (!document.hidden) {
-        fetch();
-        lastKey.current = key;
-      }
-
-      return () => window.removeEventListener("focus", onFocus);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [key]);
-
-  useEffect(() => {
-    fetch(true);
-  }, [fetch]);
-
   return {
     data,
     loading,
     error,
     initialized,
-    refresh: fetch,
+    refresh: () => {},
     lastUpdated: lastFetch.current,
     statusError,
     update: setData
