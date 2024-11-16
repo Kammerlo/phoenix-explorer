@@ -23,8 +23,6 @@ import NotFound from "./pages/NotFound";
 import PolicyDetail from "./pages/PolicyDetail";
 import ProtocolParameter from "./pages/ProtocolParameter";
 import FAQ from "./pages/Refference/FAQ";
-import Policy from "./pages/Refference/Policy";
-import TermOfServices from "./pages/Refference/TermOfServices";
 import RegistrationPools, { POOL_TYPE } from "./pages/RegistrationPools";
 import ReportGeneratedPoolDetail from "./pages/ReportGeneratedPoolDetail";
 import ReportGeneratedStakingDetail from "./pages/ReportGeneratedStakingDetail";
@@ -96,8 +94,6 @@ const Routes: React.FC = () => {
 
       <Route path={routers.SEARCH} exact component={SearchResult} />
       <Route path={routers.FAQ} exact component={FAQ} />
-      <Route path={routers.POLICY} exact component={Policy} />
-      <Route path={routers.TERMS_OF_SERVICE} exact component={TermOfServices} />
 
       <Route path={routers.BLOCK_LIST} component={isSupportedRoute(BlockList, FunctionEnum.BLOCK)} />
       <Route path={routers.BLOCK_DETAIL} component={isSupportedRoute(BlockDetail, FunctionEnum.BLOCK)} />
