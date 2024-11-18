@@ -1,6 +1,6 @@
 import { useHistory } from "react-router-dom";
 import { stringify } from "qs";
-import { Box } from "@mui/material";
+import { Box, CircularProgress } from "@mui/material";
 import { useRef, MouseEvent, useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -30,13 +30,14 @@ const TransactionList: React.FC<TransactionListProps> = ({ underline = false, sh
   const { t } = useTranslation();
   const history = useHistory();
   const { pageInfo, setSort } = usePageInfo();
-
+  const [loading, setLoading] = useState(true);
   const [transactions, setTransactions] = useState<ApiReturnType<Transaction[]> | undefined>();
   const apiConnector: ApiConnector = ApiConnector.getApiConnector();
 
   useEffect(() => {
     apiConnector.getTransactions(blockId).then((data) => {
       setTransactions(data);
+      setLoading(false);
     });
   }, []);
 
@@ -147,6 +148,9 @@ const TransactionList: React.FC<TransactionListProps> = ({ underline = false, sh
       }
     }
   ];
+
+  if (loading) return <CircularProgress />;
+
   const { pathname } = window.location;
   return (
     <Card

@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { useHistory } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { Box } from "@mui/material";
+import { Box, CircularProgress } from "@mui/material";
 
 import { EPOCH_STATUS } from "src/commons/utils/constants";
 import Card from "src/components/commons/Card";
@@ -27,11 +27,13 @@ const Epoch: React.FC = () => {
   const epochNo = useSelector(({ system }: RootState) => system.currentEpoch?.no);
   const { pageInfo, setSort } = usePageInfo();
   const [epochData, setEpochData] = useState<ApiReturnType<IDataEpoch[]>>();
+  const [loading, setLoading] = useState(true);
   const [key, setKey] = useState(0);
 
   const apiConnector: ApiConnector = ApiConnector.getApiConnector();
   useEffect(() => {
     apiConnector.getEpochs().then((data: ApiReturnType<IDataEpoch[]>) => {
+      setLoading(false);
       setEpochData(data);
     });
   }, []);
@@ -135,6 +137,8 @@ const Epoch: React.FC = () => {
     // { label: "Rewards Distributed", value: "rewardsDistributed", isFormatADA: true }, // TODO we might add it later
     { label: "Total Output", value: "outSum", isFormatADA: true }
   ];
+
+  if (loading) return <CircularProgress />;
 
   return (
     <StyledContainer>

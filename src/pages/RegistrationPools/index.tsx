@@ -1,26 +1,24 @@
 import { useEffect, useRef, useState } from "react";
 import { stringify } from "qs";
 import { useHistory } from "react-router-dom";
-import { Box } from "@mui/material";
+import { Box, CircularProgress } from "@mui/material";
 import { useTranslation } from "react-i18next";
-import { useSelector } from "react-redux";
 
 import Card from "src/components/commons/Card";
-import useFetchList from "src/commons/hooks/useFetchList";
 import { details } from "src/commons/routers";
 import { formatADAFull, formatDateTimeLocal, formatPercent, getShortHash } from "src/commons/utils/helper";
 import CustomTooltip from "src/components/commons/CustomTooltip";
 import Table, { Column } from "src/components/commons/Table";
-import { API } from "src/commons/utils/api";
 import NoRecord from "src/components/commons/NoRecord";
 import FormNowMessage from "src/components/commons/FormNowMessage";
 import ADAicon from "src/components/commons/ADAIcon";
 import usePageInfo from "src/commons/hooks/usePageInfo";
 import DatetimeTypeTooltip from "src/components/commons/DatetimeTypeTooltip";
 
-import { RegistrationContainer, StakeKey, StyledLink, StyledPoolLink, TimeDuration } from "./styles";
+import { RegistrationContainer, StyledLink, StyledPoolLink, TimeDuration } from "./styles";
 import { ApiConnector } from "../../commons/connector/ApiConnector";
 import { ApiReturnType } from "../../commons/connector/types/APIReturnType";
+import NotAvailable from "../../components/commons/NotAvailable";
 
 export enum POOL_TYPE {
   REGISTRATION = "registration",
@@ -36,7 +34,7 @@ const RegistrationPools: React.FC<Props> = ({ poolType }) => {
   const history = useHistory();
   const { pageInfo, setSort } = usePageInfo();
   const mainRef = useRef(document.querySelector("#main"));
-  const blockKey = useSelector(({ system }: RootState) => system.blockKey);
+  const [loading, setLoading] = useState(true);
   const [data, setData] = useState<ApiReturnType<Registration[]>>();
   const apiConnector: ApiConnector = ApiConnector.getApiConnector();
 
@@ -45,6 +43,7 @@ const RegistrationPools: React.FC<Props> = ({ poolType }) => {
     document.title = `${title} Pools | Cardano Blockchain Explorer`;
     apiConnector.getPoolRegistrations(poolType).then((data) => {
       setData(data);
+      setLoading(false);
     });
   }, [poolType]);
 
@@ -157,7 +156,10 @@ const RegistrationPools: React.FC<Props> = ({ poolType }) => {
       }
     }
   ];
+
   if (!Object.values(POOL_TYPE).includes(poolType)) return <NoRecord />;
+  if (data?.error) return <NotAvailable />;
+  if (loading) return <CircularProgress />;
 
   return (
     <RegistrationContainer>
