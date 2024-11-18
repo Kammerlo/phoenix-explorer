@@ -4,7 +4,6 @@ import { useTranslation } from "react-i18next";
 import { useParams } from "react-router-dom";
 
 import { API } from "src/commons/utils/api";
-import { defaultAxios } from "src/commons/utils/axios";
 import { VerifyScriptContext } from "src/pages/ContractDetail";
 
 import VerifyScriptModal from "./VerifyScriptModal";
@@ -38,19 +37,19 @@ export const VerifyScript = ({ setShowBanner }: IVerifyScript) => {
         throw Error("");
       }
       setLoading(true);
-      const res = await defaultAxios.post(API.CONTRACTS.VERIFY_SCRIPT, {
-        address,
-        script
-      });
-      if (res?.data as boolean) {
-        refreshOverviewAddress();
-        refreshScriptTab?.();
-        setShowBanner?.(true);
-        setTimeout(() => setShowBanner?.(false), 3000);
-        handleCloseModal();
-      } else {
-        throw Error("");
-      }
+      // const res = await defaultAxios.post(API.CONTRACTS.VERIFY_SCRIPT, {
+      //   address,
+      //   script
+      // });
+      // if (res?.data as boolean) {
+      //   refreshOverviewAddress();
+      //   refreshScriptTab?.();
+      //   setShowBanner?.(true);
+      //   setTimeout(() => setShowBanner?.(false), 3000);
+      //   handleCloseModal();
+      // } else {
+      //   throw Error("");
+      // }
     } catch (err) {
       // Todo: handle error
       setErrorMessage(t("message.invalidScript"));

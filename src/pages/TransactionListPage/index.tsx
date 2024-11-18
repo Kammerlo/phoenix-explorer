@@ -2,7 +2,6 @@ import styled from "@emotion/styled";
 import { Container } from "@mui/material";
 import { useEffect, useState } from "react";
 
-import { API } from "src/commons/utils/api";
 import TransactionList from "src/components/TransactionLists";
 import { setOnDetailView } from "src/stores/user";
 

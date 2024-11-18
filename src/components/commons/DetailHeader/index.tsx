@@ -16,7 +16,6 @@ import DynamicEllipsisText from "src/components/DynamicEllipsisText";
 import { TruncateSubTitleContainer } from "src/components/share/styled";
 
 import ProgressCircle from "../ProgressCircle";
-import Bookmark from "../BookmarkIcon";
 import CustomTooltip from "../CustomTooltip";
 import FormNowMessage from "../FormNowMessage";
 import {
@@ -197,7 +196,6 @@ const DetailHeader: React.FC<DetailHeaderProps> = (props) => {
           )}
           <HeaderContainer>
             <HeaderTitle data-testid="detail.page.title">{title}</HeaderTitle>
-            {bookmarkData && <Bookmark type={type} keyword={bookmarkData} />}
             {transactionStatus && <HeaderStatus status={transactionStatus}>{transactionStatus}</HeaderStatus>}
             {epoch?.status && (
               <HeaderStatus status={epoch.status}>{EPOCH_STATUS_MAPPING[EPOCH_STATUS[epoch.status]]}</HeaderStatus>

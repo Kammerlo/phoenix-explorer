@@ -17,7 +17,6 @@ import {
 import { details } from "src/commons/routers";
 import { formatADAFull, formatDateTimeLocal, formatPercent } from "src/commons/utils/helper";
 import ADAicon from "src/components/commons/ADAIcon";
-import BookmarkButton from "src/components/commons/BookmarkIcon";
 import CustomIcon from "src/components/commons/CustomIcon";
 import { CommonSkeleton } from "src/components/commons/CustomSkeleton";
 import CustomTooltip from "src/components/commons/CustomTooltip";
@@ -103,9 +102,6 @@ const DelegationDetailInfo: React.FC<IDelegationDetailInfo> = ({ data, loading, 
     return (
       <Box display="flex" alignItems="center" justifyContent={justifyStyle} flex="1">
         <Box display="flex" alignItems="center" width={"100%"}>
-          <Box marginLeft={isPoolName ? 0 : 3}>
-            <BookmarkButton keyword={data?.poolView || poolId} type="POOL" />
-          </Box>
           <Box marginLeft={width < 400 ? 0 : 1}>
             <HeaderStatus status={data?.poolStatus}>{data?.poolStatus}</HeaderStatus>
           </Box>

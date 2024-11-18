@@ -14,7 +14,6 @@ import { useScreen } from "src/commons/hooks/useScreen";
 import { HeaderSearchIconComponent } from "src/commons/resources";
 import { details, routers } from "src/commons/routers";
 import { API } from "src/commons/utils/api";
-import defaultAxios from "src/commons/utils/axios";
 import { API_ADA_HANDLE_API, FF_GLOBAL_IS_CONWAY_ERA } from "src/commons/utils/constants";
 import { getShortHash } from "src/commons/utils/helper";
 import CustomIcon from "src/components/commons/CustomIcon";
@@ -148,7 +147,6 @@ const HeaderSearch: React.FC<Props> = ({ home, callback, setShowErrorMobile, his
       value: "addresses",
       label: t("filter.address"),
       paths: [
-        routers.ADDRESS_LIST,
         routers.CONTRACT_LIST,
         routers.ADDRESS_DETAIL,
         routers.STAKE_ADDRESS_REGISTRATION,
@@ -201,80 +199,81 @@ const HeaderSearch: React.FC<Props> = ({ home, callback, setShowErrorMobile, his
 
   const handleSearchAll = async (query: string) => {
     try {
-      setLoading(true);
-      const res = await defaultAxios.get(API.SEARCH_ALL(query?.trim()));
-      const adaHanlde = await adaHandleSearch(search?.trim());
-      const filteredData = Object.fromEntries(
-        Object.entries(res?.data).filter(([, value]) => value !== null && value !== false)
-      );
-      setADAHanldeOption(isEmpty(adaHanlde) ? undefined : adaHanlde);
-      setDataSearchAll(res?.data);
-      const keyDetail = getKeyIfOnlyOneNonNullResult(res?.data);
-      if (
-        !res?.data?.validPoolName &&
-        !res?.data?.validTokenName &&
-        keyDetail === "" &&
-        !(Object.keys(filteredData).length > 0) &&
-        isEmpty(adaHanlde)
-      ) {
-        throw new Error();
-      }
-      if (adaHanlde && adaHanlde !== null) {
-        if (
-          adaHanlde &&
-          (!keyDetail || keyDetail === "address") &&
-          res.data &&
-          !res.data.validPoolName &&
-          !res.data.validTokenName &&
-          !(Object.keys(filteredData).length > 0)
-        ) {
-          handleSetSearchValueDefault();
-          setLoading(false);
-          callback?.();
-          setShowOption(false);
-          const adaHanldeSearch = search.startsWith("$") ? search : `$${search}`;
-          if (adaHanlde?.stakeAddress) {
-            history.push(`${details.stake(adaHanldeSearch)}`);
-            return;
-          }
-          if (adaHanlde?.paymentAddress) {
-            history.push(`${details.address(adaHanldeSearch)}`);
-            return;
-          }
-        }
-      }
-
-      if (!adaHanlde.paymentAddress) {
-        if (keyDetail) {
-          callback?.();
-          handleSetSearchValueDefault();
-          handleRedirectDetail(keyDetail, res?.data);
-          setLoading(false);
-          setShowOption(false);
-          return;
-        }
-
-        if (!res?.data?.validPoolName && res?.data?.validTokenName && !(Object.keys(filteredData).length > 0)) {
-          history.push(
-            `${routers.TOKEN_LIST}?tokenName=${encodeURIComponent((search || "").trim().toLocaleLowerCase())}`
-          );
-          setShowOption(false);
-          setLoading(false);
-          return;
-        }
-
-        if (res?.data?.validPoolName && !res?.data?.validTokenName) {
-          history.push(`${routers.DELEGATION_POOLS}?${stringify({ page: 1, size: 50, query: query })}`, {
-            tickerNameSearch: encodeURIComponent((search || "").trim().toLocaleLowerCase())
-          });
-          setShowOption(false);
-          setLoading(false);
-          return;
-        }
-      }
-
-      setShowOption(true);
-      setLoading(false);
+      // setLoading(true);
+      // const res = await defaultAxios.get(API.SEARCH_ALL(query?.trim()));
+      // const res = undefined;
+      // const adaHanlde = await adaHandleSearch(search?.trim());
+      // const filteredData = Object.fromEntries(
+      //   Object.entries(res?.data).filter(([, value]) => value !== null && value !== false)
+      // );
+      // setADAHanldeOption(isEmpty(adaHanlde) ? undefined : adaHanlde);
+      // setDataSearchAll(res?.data);
+      // const keyDetail = getKeyIfOnlyOneNonNullResult(res?.data);
+      // if (
+      //   !res?.data?.validPoolName &&
+      //   !res?.data?.validTokenName &&
+      //   keyDetail === "" &&
+      //   !(Object.keys(filteredData).length > 0) &&
+      //   isEmpty(adaHanlde)
+      // ) {
+      //   throw new Error();
+      // }
+      // if (adaHanlde && adaHanlde !== null) {
+      //   if (
+      //     adaHanlde &&
+      //     (!keyDetail || keyDetail === "address") &&
+      //     res.data &&
+      //     !res.data.validPoolName &&
+      //     !res.data.validTokenName &&
+      //     !(Object.keys(filteredData).length > 0)
+      //   ) {
+      //     handleSetSearchValueDefault();
+      //     setLoading(false);
+      //     callback?.();
+      //     setShowOption(false);
+      //     const adaHanldeSearch = search.startsWith("$") ? search : `$${search}`;
+      //     if (adaHanlde?.stakeAddress) {
+      //       history.push(`${details.stake(adaHanldeSearch)}`);
+      //       return;
+      //     }
+      //     if (adaHanlde?.paymentAddress) {
+      //       history.push(`${details.address(adaHanldeSearch)}`);
+      //       return;
+      //     }
+      //   }
+      // }
+      //
+      // if (!adaHanlde.paymentAddress) {
+      //   if (keyDetail) {
+      //     callback?.();
+      //     handleSetSearchValueDefault();
+      //     handleRedirectDetail(keyDetail, res?.data);
+      //     setLoading(false);
+      //     setShowOption(false);
+      //     return;
+      //   }
+      //
+      //   if (!res?.data?.validPoolName && res?.data?.validTokenName && !(Object.keys(filteredData).length > 0)) {
+      //     history.push(
+      //       `${routers.TOKEN_LIST}?tokenName=${encodeURIComponent((search || "").trim().toLocaleLowerCase())}`
+      //     );
+      //     setShowOption(false);
+      //     setLoading(false);
+      //     return;
+      //   }
+      //
+      //   if (res?.data?.validPoolName && !res?.data?.validTokenName) {
+      //     history.push(`${routers.DELEGATION_POOLS}?${stringify({ page: 1, size: 50, query: query })}`, {
+      //       tickerNameSearch: encodeURIComponent((search || "").trim().toLocaleLowerCase())
+      //     });
+      //     setShowOption(false);
+      //     setLoading(false);
+      //     return;
+      //   }
+      // }
+      //
+      // setShowOption(true);
+      // setLoading(false);
     } catch (error) {
       showResultNotFound();
       setLoading(false);

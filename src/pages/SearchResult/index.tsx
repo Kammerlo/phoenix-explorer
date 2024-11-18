@@ -5,7 +5,6 @@ import CircularProgress from "@mui/material/CircularProgress";
 import { useHistory, useLocation } from "react-router-dom";
 
 import { details, routers } from "src/commons/routers";
-import defaultAxios from "src/commons/utils/axios";
 import NoRecord from "src/components/commons/NoRecord";
 
 const SearchResultContainer = styled(Container)`
@@ -91,58 +90,58 @@ const SearchResult = () => {
     }
   };
 
-  useEffect(() => {
-    const checkFilter = async () => {
-      if (!value) return;
-
-      const urlDetect = getUrl(filter, value);
-      if (urlDetect) {
-        try {
-          const pathName = urlDetect?.includes("?search=") ? `${urlDetect}${value}` : `${urlDetect}/${value}`;
-          const res = (await defaultAxios.get(pathName)) || {};
-          if (urlDetect === "delegations/pool-list?search=") {
-            return handleFilterByPool(res.data);
-          }
-          const navigate = createNavigator(urlDetect);
-          if (navigate) history.replace(navigate(value), { data: res.data });
-        } catch {
-          return setLoading(false);
-        }
-      }
-
-      try {
-        const urls = filterURLS(value);
-        const result = await Promise.any(
-          /* eslint-disable  @typescript-eslint/no-explicit-any */
-          urls.map(async (url): Promise<{ url: FilterParams; data: any }> => {
-            try {
-              const pathName = url?.includes("?search=") ? `${url}${value}` : `${url}/${value}`;
-              const res = await defaultAxios.get(pathName);
-              if (url === "delegations/pool-list?search=") {
-                handleFilterByPool(res.data);
-              } else if (res.data) {
-                return Promise.resolve({ url, data: res.data });
-              }
-            } catch {
-              return Promise.reject();
-            }
-            return Promise.reject();
-          })
-        );
-        const { url, data } = result;
-        const navigate = createNavigator(url);
-
-        if (navigate) return history.replace(navigate(value), { data });
-      } catch (error) {
-        // Todo: handle error
-      }
-
-      setLoading(false);
-    };
-
-    checkFilter();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [history, filter, value]);
+  // useEffect(() => {
+  //   const checkFilter = async () => {
+  //     if (!value) return;
+  //
+  //     const urlDetect = getUrl(filter, value);
+  //     if (urlDetect) {
+  //       try {
+  //         const pathName = urlDetect?.includes("?search=") ? `${urlDetect}${value}` : `${urlDetect}/${value}`;
+  //         const res = (await defaultAxios.get(pathName)) || {};
+  //         if (urlDetect === "delegations/pool-list?search=") {
+  //           return handleFilterByPool(res.data);
+  //         }
+  //         const navigate = createNavigator(urlDetect);
+  //         if (navigate) history.replace(navigate(value), { data: res.data });
+  //       } catch {
+  //         return setLoading(false);
+  //       }
+  //     }
+  //
+  //     try {
+  //       const urls = filterURLS(value);
+  //       const result = await Promise.any(
+  //         /* eslint-disable  @typescript-eslint/no-explicit-any */
+  //         urls.map(async (url): Promise<{ url: FilterParams; data: any }> => {
+  //           try {
+  //             const pathName = url?.includes("?search=") ? `${url}${value}` : `${url}/${value}`;
+  //             const res = await defaultAxios.get(pathName);
+  //             if (url === "delegations/pool-list?search=") {
+  //               handleFilterByPool(res.data);
+  //             } else if (res.data) {
+  //               return Promise.resolve({ url, data: res.data });
+  //             }
+  //           } catch {
+  //             return Promise.reject();
+  //           }
+  //           return Promise.reject();
+  //         })
+  //       );
+  //       const { url, data } = result;
+  //       const navigate = createNavigator(url);
+  //
+  //       if (navigate) return history.replace(navigate(value), { data });
+  //     } catch (error) {
+  //       // Todo: handle error
+  //     }
+  //
+  //     setLoading(false);
+  //   };
+  //
+  //   checkFilter();
+  //   // eslint-disable-next-line react-hooks/exhaustive-deps
+  // }, [history, filter, value]);
 
   if (loading)
     return (

@@ -9,7 +9,6 @@ import Tabular from "src/components/StakingLifeCycle/DelegatorLifecycle/Tabular"
 import { details } from "src/commons/routers";
 import ReportComposerModal from "src/components/StakingLifeCycle/DelegatorLifecycle/ReportComposerModal";
 import CustomTooltip from "src/components/commons/CustomTooltip";
-import useAuth from "src/commons/hooks/useAuth";
 import useFetch from "src/commons/hooks/useFetch";
 import { API } from "src/commons/utils/api";
 import DelegatorDetailContext from "src/components/StakingLifeCycle/DelegatorLifecycle/DelegatorDetailContext";
@@ -75,7 +74,6 @@ const DelegatorLifecycle = () => {
 
   const theme = useTheme();
   const { sidebar } = useSelector(({ user }: RootState) => user);
-  const { isLoggedIn } = useAuth();
   const {
     data,
     error,
@@ -109,13 +107,11 @@ const DelegatorLifecycle = () => {
   };
 
   const checkDisableGenReport = () => {
-    if (!isLoggedIn) return true;
     if (dataReportLimit?.limitPer24hours === ROLE_ELEVATED_GEN_REPORT) return false;
     return dataReportLimit?.isLimitReached;
   };
 
   const getTooltip = () => {
-    if (!isLoggedIn) return t("common.pleaseSignIntoUseFeature");
     if (dataReportLimit?.limitPer24hours === ROLE_ELEVATED_GEN_REPORT) return "";
     return t("message.report.limitGenerate", { time: dataReportLimit?.limitPer24hours || 0 });
   };
