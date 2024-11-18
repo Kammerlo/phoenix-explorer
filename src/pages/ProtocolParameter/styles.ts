@@ -130,3 +130,19 @@ export const SubTitleList = styled("li")`
   list-style-type: none !important;
   margin-bottom: 12px;
 `;
+
+export const Header = styled(Box)(({ theme }) => ({
+  fontWeight: "bold",
+  color: theme.palette.secondary.main,
+  fontSize: "2.25rem",
+  textAlign: "left",
+  [theme.breakpoints.down("sm")]: {
+    fontSize: "1.5rem"
+  }
+}));
+
+export const ContainerHeader = styled(Box)`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+`;

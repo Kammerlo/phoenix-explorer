@@ -6,8 +6,6 @@ import { isArray } from "lodash";
 
 import { ProtectIcon, ProtectIconDark } from "src/commons/resources";
 import Card from "src/components/commons/Card";
-import { formatDateLocal } from "src/commons/utils/helper";
-import DatetimeTypeTooltip from "src/components/commons/DatetimeTypeTooltip";
 import ParseScriptModal from "src/components/ParseScriptModal";
 import CustomTooltip from "src/components/commons/CustomTooltip";
 
@@ -23,7 +21,7 @@ interface DisplayTooltip {
   [key: string]: TooltipNode;
 }
 type GroupType = {
-  group: { name: string; value: string | number | undefined; time: string | undefined; icon: boolean }[];
+  group: { name: string; value: string | number | undefined; icon: boolean }[];
   type: string;
   data: DisplayTooltip;
   loading: boolean;
@@ -146,13 +144,6 @@ function GroupProtocoParameters(props: GroupType) {
                         >
                           <Box>{truncateText(el.value ? `${el.value}` : t("N/A"), 20)}</Box>
                         </Box>
-                      </StyledCard.Value>
-                    </StyledCard.ContainerValue>
-
-                    <StyledCard.ContainerValue>
-                      <StyledCard.Value>{t("common.timestamp")}</StyledCard.Value>
-                      <StyledCard.Value>
-                        {el.time ? <DatetimeTypeTooltip>{formatDateLocal(el.time)}</DatetimeTypeTooltip> : t("N/A")}
                       </StyledCard.Value>
                     </StyledCard.ContainerValue>
                   </StyledCard.Content>
