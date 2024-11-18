@@ -197,7 +197,7 @@ const Member = ({ name, level }: { name: string; level: number }) => (
 );
 
 const ExplainerHoverTooltip = ({ items, level = 0 }: PropsExpainer) => {
-  if (!items) return;
+  if (!items) return <></>;
   return (
     <Box>
       {items.map((parentItem, i) => (
