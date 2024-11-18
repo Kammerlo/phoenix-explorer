@@ -7,7 +7,6 @@ import { Box } from "@mui/material";
 import CustomLayout from "./components/commons/Layout";
 import { RootState } from "./stores/types";
 import themes from "./themes";
-import { SystemLoader } from "./components/SystemLoader";
 import { routers } from "./commons/routers";
 interface Props {
   children: React.ReactNode;
@@ -27,7 +26,6 @@ const AppContainer: React.FC<Props> = (props) => {
   return (
     <ThemeProvider theme={themes[theme]}>
       <Box bgcolor={theme === "light" ? themes[theme].palette.primary[100] : themes[theme].palette.secondary[100]}>
-        <SystemLoader />
         <div data-theme={theme}>
           {excludedRoutes.includes(location.pathname) ? <>{children}</> : <CustomLayout>{children}</CustomLayout>}
         </div>
