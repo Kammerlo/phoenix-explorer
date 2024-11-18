@@ -8,6 +8,7 @@ import { ApiConnector } from "../../commons/connector/ApiConnector";
 import AddressHeader from "../../components/AddressDetail/AddressHeader";
 import AddressTransactionList from "../../components/AddressTransactionList";
 import NoRecord from "../../components/commons/NoRecord";
+import NotAvailable from "../../components/commons/NotAvailable";
 
 const AddressWalletDetail = () => {
   const { address } = useParams<{ address: string }>();
@@ -45,7 +46,9 @@ const AddressWalletDetail = () => {
     });
   }, [address]);
 
-  if (error) return <NoRecord />;
+  if (!error && !data) return <NoRecord />;
+  if (error) return <NotAvailable />;
+
   return (
     <ContainerBox>
       <AddressHeader adaHanldeData={adaHandle} data={data} loading={loading} />

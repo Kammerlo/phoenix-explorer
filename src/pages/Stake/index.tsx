@@ -33,14 +33,13 @@ interface Props {
 const Stake: React.FC<Props> = ({ stakeAddressType }) => {
   const mainRef = useRef(document.querySelector("#main"));
   const { t } = useTranslation();
-  const { onDetailView } = useSelector(({ user }: RootState) => user);
   const { search } = useLocation();
   const history = useHistory();
   const fromPath = history.location.pathname as SpecialPath;
 
   const pageInfo = getPageInfo(search);
   const { isMobile } = useScreen();
-
+  const [loading, setLoading] = useState(true);
   const [data, setData] = useState<ApiReturnType<IStakeKey[]>>();
 
   const apiConnector = ApiConnector.getApiConnector();
@@ -51,6 +50,7 @@ const Stake: React.FC<Props> = ({ stakeAddressType }) => {
       case STAKE_ADDRESS_TYPE.DELEGATION:
         apiConnector.getStakeDelegations().then((res) => {
           setData(res);
+          setLoading(false);
         });
         title = "Delegations";
         break;
@@ -58,11 +58,13 @@ const Stake: React.FC<Props> = ({ stakeAddressType }) => {
         title = "Registrations";
         apiConnector.getStakeAddressRegistrations(StakeAddressAction.REGISTRATION).then((res) => {
           setData(res);
+          setLoading(false);
         });
         break;
       case STAKE_ADDRESS_TYPE.DEREREGISTRATION:
         apiConnector.getStakeAddressRegistrations(StakeAddressAction.DEREGISTRATION).then((res) => {
           setData(res);
+          setLoading(false);
         });
         title = "Deregistrations";
         break;
@@ -159,7 +161,7 @@ const Stake: React.FC<Props> = ({ stakeAddressType }) => {
       )
     });
   }
-  if (!data) return <CircularProgress />;
+  if (loading) return <CircularProgress />;
   return (
     <StyledContainer>
       <Box className="stake-list">
