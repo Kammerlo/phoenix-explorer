@@ -2,7 +2,6 @@ import axios, { AxiosError, AxiosInstance } from "axios";
 
 import { ApiConnector, StakeAddressAction } from "../ApiConnector";
 import { ApiReturnType } from "../types/APIReturnType";
-import { TRANSACTION_STATUS } from "../../utils/constants";
 import {
   AddressBalanceDto,
   BlockDto,
@@ -12,6 +11,7 @@ import {
   EpochsPage,
   PoolRegistration,
   PoolRetirement,
+  ProtocolParamsDto,
   StakeAccountInfo,
   StakeRegistrationDetail,
   TransactionDetails,
@@ -23,9 +23,6 @@ import applyCaseMiddleware from "axios-case-converter";
 import { FunctionEnum } from "../types/FunctionEnum";
 import { credentialToRewardAddress, Network, paymentCredentialOf } from "@lucid-evolution/lucid";
 import { POOL_TYPE } from "../../../pages/RegistrationPools";
-import { txUtxoToUtxo } from "./mapper/TxUtxoToUtxo";
-import { txUtxoToCollateralResponse } from "./mapper/TxUtxoToCollateral";
-import { txDetailsToTxSummary } from "./mapper/TxDetailsToTxSummary";
 import { epochToIEpochData } from "./mapper/EpochToIEpochData";
 import { poolRegistrationsToRegistrations } from "./mapper/PoolRegistrationsToRegistrations";
 import { poolRetirementsToRegistrations } from "./mapper/PoolRetirementsToRegistrations";
@@ -35,6 +32,8 @@ import { transactionSummaryAndBlockToTransaction } from "./mapper/TransactionSum
 import { delegationToIStakeKey } from "./mapper/DelegationToIStakeKey";
 import { stakeRegistrationDetailToIStakeKey } from "./mapper/StakeRegistrationDetailToIStakeKey";
 import { addressBalanceDtoToWalletAddress } from "./mapper/AddressBalanceDtoToWalletAddress";
+import { TProtocolParam } from "../../../types/protocol";
+import { protocolParamsToTProtocolParam } from "./mapper/ProtocolParamsToTProtocolParam";
 
 export class YaciConnector implements ApiConnector {
   baseUrl: string;
@@ -52,7 +51,8 @@ export class YaciConnector implements ApiConnector {
       FunctionEnum.TRANSACTION,
       FunctionEnum.ADDRESS,
       FunctionEnum.STAKE_ADDRESS_REGISTRATION,
-      FunctionEnum.POOL_REGISTRATION
+      FunctionEnum.POOL_REGISTRATION,
+      FunctionEnum.PROTOCOL_PARAMETER
     ];
   }
 
@@ -392,5 +392,23 @@ export class YaciConnector implements ApiConnector {
         lastUpdated: Date.now()
       } as ApiReturnType<Registration[]>;
     }
+  }
+
+  async getCurrentProtocolParameters(): Promise<ApiReturnType<TProtocolParam>> {
+    return this.client
+      .get<ProtocolParamsDto>(`${this.baseUrl}/epochs/latest/parameters`)
+      .then((response) => {
+        return {
+          data: protocolParamsToTProtocolParam(response.data),
+          lastUpdated: Date.now()
+        } as ApiReturnType<TProtocolParam>;
+      })
+      .catch((error: AxiosError) => {
+        return {
+          data: null,
+          error: error.message,
+          lastUpdated: Date.now()
+        } as ApiReturnType<TProtocolParam>;
+      });
   }
 }

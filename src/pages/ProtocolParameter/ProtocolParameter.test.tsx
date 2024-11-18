@@ -6,7 +6,7 @@ import "@testing-library/jest-dom/extend-expect";
 import { render } from "src/test-utils";
 import useFetch from "src/commons/hooks/useFetch";
 
-import ProtocolParameter, { FilterComponent } from "./index";
+import ProtocolParameter from "./index";
 
 jest.mock("src/commons/hooks/useFetch");
 
@@ -36,32 +36,5 @@ describe("ProtocolParameter page", () => {
     render(<ProtocolParameter />);
     expect(screen.getByText(/Economic Group/)).toBeInTheDocument();
     expect(screen.getByText(/Technical Group/)).toBeInTheDocument();
-  });
-});
-
-describe("FilterComponent", () => {
-  it("should render filter options and handle filter changes", () => {
-    const setFilterParams = jest.fn();
-    const setResetFilter = jest.fn();
-    const setShowFiter = jest.fn();
-    const setSortTimeFilter = jest.fn();
-    const setDateRangeFilter = jest.fn();
-
-    render(
-      <FilterComponent
-        filterParams={[]}
-        sortTimeFilter=""
-        setFilterParams={setFilterParams}
-        setResetFilter={setResetFilter}
-        setShowFiter={setShowFiter}
-        setSortTimeFilter={setSortTimeFilter}
-        dateRangeFilter={{}}
-        setDateRangeFilter={setDateRangeFilter}
-      />
-    );
-
-    expect(screen.getByText("Latest - First")).toBeInTheDocument();
-    expect(screen.getByText("First - Latest")).toBeInTheDocument();
-    expect(screen.getByText("Date range")).toBeInTheDocument();
   });
 });
