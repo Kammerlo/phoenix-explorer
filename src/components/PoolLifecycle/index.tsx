@@ -6,9 +6,7 @@ import { useTranslation } from "react-i18next";
 
 import Table, { Column } from "src/components/commons/Table";
 import { FetchReturnType } from "src/commons/hooks/useFetchList";
-import { API } from "src/commons/utils/api";
 import { DownloadGreenIcon } from "src/commons/resources";
-import { defaultAxiosDownload } from "src/commons/utils/axios";
 import { details } from "src/commons/routers";
 import CustomIcon from "src/components/commons/CustomIcon";
 import { formatDateTimeLocal } from "src/commons/utils/helper";
@@ -58,22 +56,22 @@ const PoolLifecycle: React.FC<IPoolLifecycleProps> = ({ onSort, fetchData, pagin
 
   const downloadFn = async (reportId: number, fileName: string, typeExport: "CSV" | "EXCEL" = "EXCEL") => {
     setOnDownload(reportId);
-    defaultAxiosDownload
-      .get(`${API.REPORT.DOWNLOAD_POOL_SUMMARY(reportId)}?exportType=${typeExport}`)
-      .then((response) => {
-        const url = window.URL.createObjectURL(new Blob([response.data]));
-        const link = document.createElement("a");
-        link.href = url;
-        link.setAttribute("download", `${fileName}.${typeExport === "CSV" ? "csv" : "xlsx"}`);
-        document.body.appendChild(link);
-        link.click();
-      })
-      .catch(() => {
-        //To do
-      })
-      .finally(() => {
-        setOnDownload(false);
-      });
+    // defaultAxiosDownload
+    //   .get(`${API.REPORT.DOWNLOAD_POOL_SUMMARY(reportId)}?exportType=${typeExport}`)
+    //   .then((response) => {
+    //     const url = window.URL.createObjectURL(new Blob([response.data]));
+    //     const link = document.createElement("a");
+    //     link.href = url;
+    //     link.setAttribute("download", `${fileName}.${typeExport === "CSV" ? "csv" : "xlsx"}`);
+    //     document.body.appendChild(link);
+    //     link.click();
+    //   })
+    //   .catch(() => {
+    //     //To do
+    //   })
+    //   .finally(() => {
+    //     setOnDownload(false);
+    //   });
   };
 
   const columns: Column<IPoolReportList>[] = [

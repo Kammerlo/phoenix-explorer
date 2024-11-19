@@ -4,7 +4,6 @@ import { useTranslation } from "react-i18next";
 import { useSelector } from "react-redux";
 import { useHistory, useParams } from "react-router";
 
-import useAuth from "src/commons/hooks/useAuth";
 import useFetch from "src/commons/hooks/useFetch";
 import { ChartMode, TableMode } from "src/commons/resources";
 import { details } from "src/commons/routers";
@@ -89,8 +88,6 @@ const SPOLifecycle = () => {
 
   const [currentStep, setCurrentStep] = useState(tabList[validTab]);
 
-  const { isLoggedIn } = useAuth();
-
   useEffect(() => {
     if (renderTabsSPO && renderTabsSPO[tabsValid[tab]]) {
       setCurrentStep(tabList[validTab]);
@@ -114,13 +111,11 @@ const SPOLifecycle = () => {
   };
 
   const checkDisableGenReport = () => {
-    if (!isLoggedIn) return true;
     if (dataReportLimit?.limitPer24hours === ROLE_ELEVATED_GEN_REPORT) return false;
     return dataReportLimit?.isLimitReached;
   };
 
   const getTooltip = () => {
-    if (!isLoggedIn) return t("common.pleaseSignIntoUseFeature");
     if (dataReportLimit?.limitPer24hours === ROLE_ELEVATED_GEN_REPORT) return "";
     return t("message.report.limitGenerate", { time: dataReportLimit?.limitPer24hours || 0 });
   };

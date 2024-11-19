@@ -32,8 +32,10 @@ import { transactionSummaryAndBlockToTransaction } from "./mapper/TransactionSum
 import { delegationToIStakeKey } from "./mapper/DelegationToIStakeKey";
 import { stakeRegistrationDetailToIStakeKey } from "./mapper/StakeRegistrationDetailToIStakeKey";
 import { addressBalanceDtoToWalletAddress } from "./mapper/AddressBalanceDtoToWalletAddress";
+// @ts-ignore
 import { TProtocolParam } from "../../../types/protocol";
 import { protocolParamsToTProtocolParam } from "./mapper/ProtocolParamsToTProtocolParam";
+import { ParsedUrlQuery } from "querystring";
 
 export class YaciConnector implements ApiConnector {
   baseUrl: string;
@@ -56,18 +58,22 @@ export class YaciConnector implements ApiConnector {
     ];
   }
 
-  async getBlocksPage(): Promise<ApiReturnType<Block[]>> {
+  async getBlocksPage(pageInfo: ParsedUrlQuery): Promise<ApiReturnType<Block[]>> {
     try {
-      const response = await this.client.get<BlocksPage>(`${this.baseUrl}/blocks`);
+      const response = await this.client.get<BlocksPage>(`${this.baseUrl}/blocks`, {
+        params: pageInfo
+      });
       const blocks: Block[] = [];
       // getting additional data
       for (const block of response.data.blocks!) {
         blocks.push((await this.getBlockDetail(block.number!)).data as Block);
       }
+
+      const latestBlockResponse = await this.client.get<BlockDto>(`${this.baseUrl}/blocks/latest`);
       return {
         data: blocks,
-        total: response.data.total,
-        totalPage: response.data.totalPages,
+        total: latestBlockResponse.data.number!, // TODO - Check if this is correct
+        totalPage: latestBlockResponse.data.number! / 50,
         lastUpdated: Date.now()
       } as ApiReturnType<Block[]>;
     } catch (e) {
@@ -196,14 +202,21 @@ export class YaciConnector implements ApiConnector {
       });
   }
 
-  async getTransactions(blockId: number | string | undefined): Promise<ApiReturnType<Transaction[]>> {
+  async getTransactions(
+    blockId: number | string | undefined,
+    pageInfo: ParsedUrlQuery
+  ): Promise<ApiReturnType<Transaction[]>> {
     try {
       let transactionSummaries: TransactionSummary[] = [];
       if (blockId) {
-        const response = await this.client.get<TransactionSummary[]>(`${this.baseUrl}/blocks/${blockId}/txs`);
+        const response = await this.client.get<TransactionSummary[]>(`${this.baseUrl}/blocks/${blockId}/txs`, {
+          params: pageInfo
+        });
         transactionSummaries = response.data;
       } else {
-        const txsResponse = await this.client.get<TransactionPage>(`${this.baseUrl}/txs`);
+        const txsResponse = await this.client.get<TransactionPage>(`${this.baseUrl}/txs`, {
+          params: pageInfo
+        });
         transactionSummaries = txsResponse.data.transactionSummaries!;
       }
       const transactions: Transaction[] = [];
@@ -280,9 +293,12 @@ export class YaciConnector implements ApiConnector {
       });
   }
 
-  async getEpochs(): Promise<ApiReturnType<IDataEpoch[]>> {
+  async getEpochs(pageInfo: ParsedUrlQuery): Promise<ApiReturnType<IDataEpoch[]>> {
+    console.log("getEpochs pageInfo", pageInfo);
     return this.client
-      .get<EpochsPage>(`${this.baseUrl}/epochs`)
+      .get<EpochsPage>(`${this.baseUrl}/epochs`, {
+        params: pageInfo
+      })
       .then((response) => {
         const epochs: IDataEpoch[] = response.data.epochs!.map((epoch) => {
           return epochToIEpochData(epoch);

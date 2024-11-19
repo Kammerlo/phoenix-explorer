@@ -14,15 +14,11 @@ import {
 } from "src/commons/resources";
 import { setTheme } from "src/stores/theme";
 import { RootState } from "src/stores/types";
-import useAuth from "src/commons/hooks/useAuth";
-import { authAxios } from "src/commons/utils/axios";
-import { USER_API } from "src/commons/utils/api";
 
 import SidebarMenu from "./SidebarMenu";
-import { HeaderTop, LogoLink, NavBarLogo, NavbarContainer, NavbarMenuBottom, WrapButtonSelect } from "./styles";
+import { HeaderTop, LogoLink, NavBarLogo, NavbarContainer, WrapButtonSelect } from "./styles";
 
 const Sidebar: React.FC = () => {
-  const { isLoggedIn } = useAuth();
   const { sidebar } = useSelector(({ user }: RootState) => user);
   const { theme } = useSelector(({ theme }: RootState) => theme);
   const [loading, setLoading] = useState(false);
@@ -31,63 +27,37 @@ const Sidebar: React.FC = () => {
   const zoneName = Intl.DateTimeFormat().resolvedOptions().timeZone;
   const zoneNameShort = moment.tz(zoneName).format("z");
   const [timezoneLS, setTimezoneLS] = useSessionStorage("timezone", window.navigator.language);
-  const [selectedTimeZone, setSelectedTimeZone] = useState(
-    isLoggedIn
-      ? `${localStorage.getItem("userTimezone")}` === "utc"
-        ? "UTC"
-        : localStorage.getItem("userTimezone") || "UTC"
-      : zoneNameShort !== "UTC"
-      ? timezoneLS
-      : "UTC"
-  );
+  const [selectedTimeZone, setSelectedTimeZone] = useState("UTC");
 
   const hanldeSetUserTimezone = async (tz: string) => {
     setLoading(true);
-    await authAxios
-      .post(`${USER_API.SET_TIMEZONE}?timezone=${tz}`)
-      .then((res) => res.data)
-      .then((data) => {
-        if (data) {
-          setSelectedTimeZone(tz);
-          localStorage.setItem("userTimezone", tz);
-          window.location.reload();
-        }
-      })
-      .finally(() => setLoading(false));
   };
 
   useEffect(() => {
     if (selectedTimeZone.toLowerCase() !== "utc") {
       sessionStorage.setItem("timezone", window.navigator.language);
-      if (isLoggedIn) {
-        localStorage.setItem("userTimezone", window.navigator.language);
-      }
     }
   }, [window.navigator.language]);
 
   const handleChange = async (tz: string) => {
-    if (isLoggedIn) {
-      await hanldeSetUserTimezone(tz);
-    } else {
-      setSelectedTimeZone(tz);
-      setTimezoneLS(tz);
-      window.location.reload();
-    }
+    setSelectedTimeZone(tz);
+    setTimezoneLS(tz);
+    window.location.reload();
   };
 
   const muiTheme = useTheme();
-  const getLogo = () => {
+  const getLogo = (): string => {
     if (theme === "light") {
       if (sidebar) {
-        return LogoFullIcon;
+        return LogoFullIcon.toString();
       } else {
-        return LogoIcon;
+        return LogoIcon.toString();
       }
     } else {
       if (sidebar) {
-        return LogoDarkmodeFullIcon;
+        return LogoDarkmodeFullIcon.toString();
       } else {
-        return LogoDarkmodeShortIcon;
+        return LogoDarkmodeShortIcon.toString();
       }
     }
   };

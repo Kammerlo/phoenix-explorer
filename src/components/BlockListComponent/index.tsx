@@ -22,18 +22,32 @@ import { getShortHash } from "../../commons/utils/helper";
 import { TooltipIcon } from "../../commons/resources";
 import { ApiReturnType } from "../../commons/connector/types/APIReturnType";
 import { APIResponse } from "@playwright/test";
+import { ParsedUrlQuery } from "querystring";
 
-interface BlockListComponentProps {
-  fetchData: ApiReturnType<Block[]> | undefined;
-}
-const BlockListComponent: React.FC<BlockListComponentProps> = ({ fetchData }) => {
+interface BlockListComponentProps {}
+const BlockListComponent: React.FC<BlockListComponentProps> = ({}) => {
   const { t } = useTranslation();
   const history = useHistory();
   const { onDetailView } = useSelector(({ user }: RootState) => user);
-  // const blockNo = useSelector(({ system }: RootState) => system.blockNo);
-  const { pageInfo, setSort } = usePageInfo();
+  const { pageInfo } = usePageInfo();
   const [selected, setSelected] = useState<(number | string | null)[]>([]);
   const mainRef = useRef(document.querySelector("#main"));
+  const [fetchData, setFetchData] = useState<ApiReturnType<Block[]>>();
+  const [loading, setLoading] = useState(true);
+
+  const apiConnector: ApiConnector = ApiConnector.getApiConnector();
+
+  function updateData(page: number) {
+    pageInfo.page = page;
+    apiConnector.getBlocksPage(pageInfo).then((data) => {
+      setFetchData(data);
+      setLoading(false);
+    });
+  }
+
+  useEffect(() => {
+    updateData(0);
+  }, []);
 
   const expandedBlockRowData = [
     { label: "Transactions", value: "txCount" },
@@ -109,10 +123,7 @@ const BlockListComponent: React.FC<BlockListComponentProps> = ({ fetchData }) =>
         <DatetimeTypeTooltip>
           <PriceWrapper data-testid={`blocks.table.value.createAt#${index}`}>{r.time}</PriceWrapper>
         </DatetimeTypeTooltip>
-      ),
-      sort: ({ columnKey, sortValue }) => {
-        sortValue ? setSort(`${columnKey},${sortValue}`) : setSort("");
-      }
+      )
     }
   ];
 
@@ -139,6 +150,9 @@ const BlockListComponent: React.FC<BlockListComponentProps> = ({ fetchData }) =>
       }
     });
   };
+
+  if (loading) return <CircularProgress />;
+
   return (
     <>
       <Table
@@ -148,9 +162,8 @@ const BlockListComponent: React.FC<BlockListComponentProps> = ({ fetchData }) =>
         pagination={{
           ...pageInfo,
           total: fetchData?.total,
-          onChange: (page, size) => {
-            history.replace({ search: stringify({ ...pageInfo, page, size }) });
-            mainRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+          onChange: (page) => {
+            updateData(page);
           },
           handleCloseDetailView: handleClose
         }}

@@ -5,9 +5,7 @@ import moment from "moment";
 import { useTranslation } from "react-i18next";
 
 import { useScreen } from "src/commons/hooks/useScreen";
-import useToast from "src/commons/hooks/useToast";
 import { lists } from "src/commons/routers";
-import { generateStakeKeyReport, generateStakePoolReport } from "src/commons/utils/userRequest";
 import { getPoolEventType } from "src/components/PoolLifecycle";
 import { getEventType } from "src/components/StakekeySummary";
 import CustomModal from "src/components/commons/CustomModal";
@@ -32,7 +30,6 @@ import { IPropsModal, STEPS } from ".";
 
 const StepReviewModal: React.FC<IPropsModal> = ({ open, handleCloseModal, params, gotoStep }) => {
   const { t } = useTranslation();
-  const toast = useToast();
   const [loading, setLoading] = useState(false);
   const theme = useTheme();
   const history = useHistory();
@@ -65,7 +62,6 @@ const StepReviewModal: React.FC<IPropsModal> = ({ open, handleCloseModal, params
           zoneOffset: timeZone == "UTC" ? 0 : moment().utcOffset(),
           dateFormat: formatTypeDate().replace("Date format ", "")
         };
-        response = await generateStakePoolReport(paramsStakeKeyReport);
       } else {
         const events = params?.eventsKey?.map((event: string) => ({ type: event }));
         const paramsStakeKeyReport = {
@@ -80,17 +76,8 @@ const StepReviewModal: React.FC<IPropsModal> = ({ open, handleCloseModal, params
           isFeesPaid: params?.feesPaid === "YES",
           ...getEventType(events?.map((item: { type: string }) => item.type) || [])
         };
-        response = await generateStakeKeyReport(paramsStakeKeyReport);
       }
-      if (response?.data) {
-        toast.success(t("message.report.generated"));
-        setTimeout(() => {
-          history.push(lists.dashboard(isPoolReport ? "pool-reports" : "stake-key-reports"));
-        }, 2000);
-      } else {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        toast.error(t((response as any)?.response?.data?.errorCode));
-      }
+
       handleCloseModal();
       setTimeout(() => {
         history.push(lists.dashboard(isPoolReport ? "pool-reports" : "stake-key-reports"));

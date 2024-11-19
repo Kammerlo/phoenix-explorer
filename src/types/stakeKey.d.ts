@@ -67,14 +67,6 @@ interface WithdrawalHistory {
   txHash: string;
 }
 
-interface TopDelegator {
-  stakeKey: string;
-  balance: number;
-  poolId: string;
-  tickerName: string;
-  poolName: string;
-}
-
 interface StakeAnalytics {
   activeStake: number;
   liveStake: number;
@@ -153,10 +145,6 @@ interface StakeDelegations {
   time: string;
   txHash: string;
   slotNo: number;
-}
-
-interface StakeDelegationItem extends Omit<StakeDelegations, "pools"> {
-  pools: Delegators[];
 }
 
 interface InstantRewards {

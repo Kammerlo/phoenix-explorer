@@ -1,8 +1,7 @@
 import { changeLanguage } from "i18next";
 import React, { useEffect } from "react";
-import { Redirect, Route, RouteProps, Switch, useHistory } from "react-router-dom";
+import { Route, Switch, useHistory } from "react-router-dom";
 
-import useAuth from "./commons/hooks/useAuth";
 import { routers } from "./commons/routers";
 import { APP_LANGUAGES, SUPPORTED_LANGUAGES } from "./commons/utils/constants";
 import { handleChangeLanguage } from "./commons/utils/helper";
@@ -22,10 +21,8 @@ import InstantRewards from "./pages/InstantRewards";
 import NotFound from "./pages/NotFound";
 import PolicyDetail from "./pages/PolicyDetail";
 import ProtocolParameter from "./pages/ProtocolParameter";
-import FAQ from "./pages/Refference/FAQ";
+import FAQ from "./pages/Reference/FAQ";
 import RegistrationPools, { POOL_TYPE } from "./pages/RegistrationPools";
-import ReportGeneratedPoolDetail from "./pages/ReportGeneratedPoolDetail";
-import ReportGeneratedStakingDetail from "./pages/ReportGeneratedStakingDetail";
 import SPOLifecycle from "./pages/SPOLifecycle";
 import SearchResult from "./pages/SearchResult";
 import Stake, { STAKE_ADDRESS_TYPE } from "./pages/Stake";
@@ -33,7 +30,6 @@ import StakeDetail from "./pages/StakeDetail";
 import StakingLifecycle from "./pages/StakingLifecycle";
 import Tokens from "./pages/Token";
 import TokenDetail from "./pages/TokenDetail";
-import TopDelegators from "./pages/TopDelegators";
 import TransactionDetail from "./pages/TransactionDetail";
 import TransactionList from "./pages/TransactionListPage";
 import NativeScriptsDetailPage from "./pages/NativeScriptDetail";
@@ -44,7 +40,6 @@ import ConstitutionalCommitteeDetail from "./pages/ConstitutionalCommitteeDetail
 import Overview from "./pages/Overview";
 import NetworkMonitoring from "./pages/NetworkMonitoring";
 import GovernanceActionDetails from "./pages/GovernanceActionDetails";
-import BolnisiLanding from "./pages/BolnisiLanding";
 import Micar from "./pages/Micar";
 import { ApiConnector } from "./commons/connector/ApiConnector";
 import { FunctionEnum } from "./commons/connector/types/FunctionEnum";
@@ -92,9 +87,6 @@ const Routes: React.FC = () => {
       <Route path={routers.DELEGATOR_LIFECYCLE} exact component={DelegatorLifecycle} />
       <Route path={routers.SPO_LIFECYCLE} exact component={SPOLifecycle} />
 
-      <PrivateRoute path={routers.REPORT_GENERATED_STAKING_DETAIL} exact component={ReportGeneratedStakingDetail} />
-      <PrivateRoute path={routers.REPORT_GENERATED_POOL_DETAIL} exact component={ReportGeneratedPoolDetail} />
-
       <Route path={routers.SEARCH} exact component={SearchResult} />
       <Route path={routers.FAQ} exact component={FAQ} />
 
@@ -128,7 +120,6 @@ const Routes: React.FC = () => {
         exact
         component={isSupportedRoute(DelegationDetail, FunctionEnum.POOL)}
       />
-      <Route path={routers.TOP_DELEGATOR} exact component={isSupportedRoute(TopDelegators, FunctionEnum.POOL)} />
       <Route path={routers.TOKEN_LIST} exact component={isSupportedRoute(Tokens, FunctionEnum.TOKENS)} />
       <Route path={routers.TOKEN_DETAIL} exact component={isSupportedRoute(TokenDetail, FunctionEnum.TOKENS)} />
       <Route path={routers.POLICY_DETAIL} exact component={isSupportedRoute(PolicyDetail, FunctionEnum.TOKENS)} />
@@ -198,11 +189,6 @@ const Routes: React.FC = () => {
         exact
         component={isSupportedRoute(NetworkMonitoring, FunctionEnum.NETWORK_MONITORING)}
       />
-      <Route
-        path={routers.BOLNISI_LANDING}
-        exact
-        component={isSupportedRoute(BolnisiLanding, FunctionEnum.TRACEABILITY_PROGRAM)}
-      />
       <Route path={routers.MICAR} exact component={isSupportedRoute(Micar, FunctionEnum.SUSTAINABILITY_INDICATORS)} />
       <Route path={routers.DREPS} exact component={isSupportedRoute(Dreps, FunctionEnum.GOVERNANCE)} />
       <Route
@@ -224,33 +210,6 @@ const Routes: React.FC = () => {
 
       <Route path={routers.NOT_FOUND} component={NotFound} />
     </Switch>
-  );
-};
-
-interface PrivateRouteProps {
-  component: React.ComponentType<RouteProps>;
-  path: string;
-  exact?: boolean;
-}
-
-const PrivateRoute: React.FC<PrivateRouteProps> = ({ component: Component, ...rest }) => {
-  const { isLoggedIn } = useAuth();
-  return (
-    <Route
-      {...rest}
-      render={(props) =>
-        isLoggedIn ? (
-          <Component {...props} />
-        ) : (
-          <Redirect
-            to={{
-              pathname: "/",
-              state: { from: props.location }
-            }}
-          />
-        )
-      }
-    />
   );
 };
 

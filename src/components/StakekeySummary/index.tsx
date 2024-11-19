@@ -5,7 +5,6 @@ import { useTranslation } from "react-i18next";
 
 import { FetchReturnType } from "src/commons/hooks/useFetchList";
 import { API } from "src/commons/utils/api";
-import { defaultAxiosDownload } from "src/commons/utils/axios";
 import { details } from "src/commons/routers";
 import { DownloadGreenIcon } from "src/commons/resources";
 import { formatDateLocal, formatDateTimeLocal } from "src/commons/utils/helper";
@@ -60,20 +59,6 @@ const StakekeySummary: React.FC<IStakekeySummaryProps> = ({ fetchData, onSort, p
 
   const downloadFn = async (reportId: number, fileName: string, typeExport: "CSV" | "EXCEL" = "EXCEL") => {
     setDownloadingReport(reportId);
-    defaultAxiosDownload
-      .get(`${API.REPORT.DOWNLOAD_STAKE_KEY_SUMMARY(reportId)}?exportType=${typeExport}`)
-      .then((response) => {
-        const url = window.URL.createObjectURL(new Blob([response.data]));
-        const link = document.createElement("a");
-        link.href = url;
-        link.setAttribute("download", `${fileName}.${typeExport === "CSV" ? "csv" : "xlsx"}`);
-        document.body.appendChild(link);
-        link.click();
-      })
-      .catch(() => {
-        // Todo: handle error
-      })
-      .finally(() => setDownloadingReport(undefined));
   };
 
   const columns: Column<IReportStaking>[] = [

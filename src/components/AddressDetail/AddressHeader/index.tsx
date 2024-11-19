@@ -12,7 +12,6 @@ import Card from "src/components/commons/Card";
 import CardAddress from "src/components/share/CardAddress";
 import { details } from "src/commons/routers";
 import { RootState } from "src/stores/types";
-import BookmarkButton from "src/components/commons/BookmarkIcon";
 import TokenAutocomplete from "src/components/TokenAutocomplete";
 import ADAicon from "src/components/commons/ADAIcon";
 import { useScreen } from "src/commons/hooks/useScreen";
@@ -57,7 +56,7 @@ const AddressHeader: React.FC<Props> = ({ data, loading, adaHanldeData }) => {
     setStakeKey(data?.stakeAddress || "");
     if (data?.stakeAddress) {
       apiConnector.getWalletStakeFromAddress(data.stakeAddress).then((data) => {
-        setDataStake(data.data);
+        setDataStake(data.data!);
       });
     }
   }, [data]);
@@ -160,12 +159,7 @@ const AddressHeader: React.FC<Props> = ({ data, loading, adaHanldeData }) => {
                   </CustomTooltip>
                 </Box>
               ) : (
-                <Box data-testid="address-detail-title">
-                  {t("address.title.addressDetail")}
-                  <Box display={"inline-block"}>
-                    <BookmarkButton keyword={data?.address || ""} type="ADDRESS" />
-                  </Box>
-                </Box>
+                <Box data-testid="address-detail-title">{t("address.title.addressDetail")}</Box>
               )}
             </TitleText>
           </Box>

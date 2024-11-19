@@ -5,7 +5,6 @@ import { useTranslation } from "react-i18next";
 
 import CustomModal from "src/components/commons/CustomModal";
 import { API } from "src/commons/utils/api";
-import useMutation from "src/commons/hooks/useMutation";
 
 import { TextareaAutosize } from "./styles";
 import { VerifyScriptButton } from "../Tabs/styles";
@@ -23,13 +22,13 @@ const VerifyFormModal: React.FC<TVerifyFormModalProps> = ({ open, onClose, onRel
   const [text, setText] = useState("");
   const { id = "" } = useParams<{ id: string }>();
   const theme = useTheme();
-  const { mutate, loading, error, reset } = useMutation(
-    {
-      url: API.TOKEN.VERIFY_SCRIPT(id),
-      data: text
-    },
-    () => onReload?.()
-  );
+  // const { mutate, loading, error, reset } = useMutation(
+  //   {
+  //     url: API.TOKEN.VERIFY_SCRIPT(id),
+  //     data: text
+  //   },
+  //   () => onReload?.()
+  // );
 
   return (
     <CustomModal

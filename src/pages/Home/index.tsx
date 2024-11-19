@@ -19,15 +19,7 @@ const Home = () => {
     document.title = t("head.page.dashboard");
   }, [t]);
 
-  return (
-    <HomeContainer data-testid="home-container">
-      <HomeStatistic />
-      <HomeTrending />
-      <LatestTransactions />
-      <TopDelegationPools />
-      <LatestStories />
-    </HomeContainer>
-  );
+  return <HomeContainer data-testid="home-container"></HomeContainer>;
 };
 
 export default Home;

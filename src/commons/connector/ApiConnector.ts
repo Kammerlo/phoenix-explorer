@@ -2,7 +2,9 @@ import { YaciConnector } from "./yaci/yaciConnector";
 import { ApiReturnType } from "./types/APIReturnType";
 import { FunctionEnum } from "./types/FunctionEnum";
 import { POOL_TYPE } from "../../pages/RegistrationPools";
+// @ts-ignore
 import { TProtocolParam } from "../../types/protocol";
+import { ParsedUrlQuery } from "querystring";
 
 const API_URL: string = process.env.REACT_APP_API_URL || "";
 const API_CONNECTOR_TYPE: string = process.env.REACT_APP_API_TYPE || "";
@@ -28,11 +30,11 @@ export abstract class ApiConnector {
   }
   abstract getSupportedFunctions(): FunctionEnum[];
 
-  abstract getEpochs(): Promise<ApiReturnType<IDataEpoch[]>>;
+  abstract getEpochs(pageInfo: ParsedUrlQuery): Promise<ApiReturnType<IDataEpoch[]>>;
 
   abstract getEpoch(epochId: number): Promise<ApiReturnType<IDataEpoch>>;
 
-  abstract getBlocksPage(): Promise<ApiReturnType<Block[]>>;
+  abstract getBlocksPage(pageInfo: ParsedUrlQuery): Promise<ApiReturnType<Block[]>>;
 
   abstract getBlocksByEpoch(epoch: number): Promise<ApiReturnType<Block[]>>;
 
@@ -40,7 +42,10 @@ export abstract class ApiConnector {
 
   abstract getTxDetail(txHash: string): Promise<ApiReturnType<TransactionDetail>>;
 
-  abstract getTransactions(blockId: number | string | undefined): Promise<ApiReturnType<Transaction[]>>;
+  abstract getTransactions(
+    blockId: number | string | undefined,
+    pageInfo: ParsedUrlQuery
+  ): Promise<ApiReturnType<Transaction[]>>;
 
   abstract getWalletAddressFromAddress(address: string): Promise<ApiReturnType<WalletAddress>>;
 

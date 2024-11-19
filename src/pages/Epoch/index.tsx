@@ -31,11 +31,17 @@ const Epoch: React.FC = () => {
   const [key, setKey] = useState(0);
 
   const apiConnector: ApiConnector = ApiConnector.getApiConnector();
-  useEffect(() => {
-    apiConnector.getEpochs().then((data: ApiReturnType<IDataEpoch[]>) => {
+
+  function updateData(page: number) {
+    pageInfo.page = page;
+    apiConnector.getEpochs(pageInfo).then((data: ApiReturnType<IDataEpoch[]>) => {
       setLoading(false);
       setEpochData(data);
     });
+  }
+
+  useEffect(() => {
+    updateData(0);
   }, []);
 
   const EPOCH_STATUS_MAPPING = {
@@ -152,8 +158,8 @@ const Epoch: React.FC = () => {
           pagination={{
             ...pageInfo,
             total: epochData?.total || 0,
-            onChange: (page, size) => {
-              history.replace({ search: stringify({ ...pageInfo, page, size }) });
+            onChange: (page) => {
+              updateData(page);
             },
             handleCloseDetailView: handleClose
           }}

@@ -1,5 +1,4 @@
 import BigNumber from "bignumber.js";
-import jwtDecode from "jwt-decode";
 import { isNil } from "lodash";
 import moment, { DurationInputArg1, DurationInputArg2 } from "moment-timezone";
 import { parse } from "qs";
@@ -7,11 +6,9 @@ import { AxisInterval } from "recharts/types/util/types";
 import { createDecipheriv, pbkdf2Sync } from "crypto";
 import { ParsedUrlQuery } from "querystring";
 
-import { setUserData } from "src/stores/user";
 import breakpoints from "src/themes/breakpoints";
 
 import { APP_LANGUAGES, NETWORK, NETWORKS, OPTIONS_CHART_ANALYTICS } from "./constants";
-import { getInfo, signIn } from "./userRequest";
 BigNumber.config({ EXPONENTIAL_AT: [-50, 50] });
 
 export const alphaNumeric = /[^0-9a-zA-Z]/;
@@ -186,20 +183,6 @@ export function getPageInfo<T = ParsedUrlQuery>(
   return { ...query, retired, page, size, sort } as T & { page: number; size: number; sort: string; retired: string };
 }
 
-export const removeAuthInfo = () => {
-  localStorage.removeItem("token");
-  localStorage.removeItem("username");
-  localStorage.removeItem("refreshToken");
-  localStorage.removeItem("walletId");
-  localStorage.removeItem("email");
-  localStorage.removeItem("loginType");
-  localStorage.removeItem("userTimezone");
-  localStorage.removeItem("persist:user");
-  localStorage.setItem("cf-wallet-connected", "false");
-  localStorage.removeItem("cf-last-connected-wallet");
-  setUserData(null);
-};
-
 export const formatDateTimeLocal = (date: string, addDays: number = 0) => {
   if (!date) return "";
   if (!sessionStorage.getItem("timezone")) {
@@ -357,22 +340,6 @@ export const getHostname = (url: string): string => {
 export const toFixedBigNumber = (value: string | number, dp = 0, rm = BigNumber.ROUND_DOWN): number => {
   return +new BigNumber(value).toFixed(dp, rm);
 };
-
-export const isValidEmail = (email: string) => regexEmail.test(email);
-
-export function validateTokenExpired() {
-  try {
-    const token = localStorage.getItem("token");
-    if (!token) return false;
-    const decoded = jwtDecode<{ name: string; exp: number }>(token);
-    const now = moment();
-    const exp = moment(decoded?.exp * 1000);
-    return now.isBefore(exp);
-  } catch (e) {
-    removeAuthInfo();
-    return false;
-  }
-}
 
 export const isJson = (str: string) => {
   try {
