@@ -34,11 +34,16 @@ const TransactionList: React.FC<TransactionListProps> = ({ underline = false, sh
   const [transactions, setTransactions] = useState<ApiReturnType<Transaction[]> | undefined>();
   const apiConnector: ApiConnector = ApiConnector.getApiConnector();
 
-  useEffect(() => {
-    apiConnector.getTransactions(blockId).then((data) => {
+  function updateData(page: number) {
+    pageInfo.page = page;
+    apiConnector.getTransactions(blockId, pageInfo).then((data) => {
       setTransactions(data);
       setLoading(false);
     });
+  }
+
+  useEffect(() => {
+    updateData(0);
   }, []);
 
   // const fetchData = useFetchList<Transactions>(url, { ...pageInfo }, false, blockKey);
@@ -173,9 +178,8 @@ const TransactionList: React.FC<TransactionListProps> = ({ underline = false, sh
         pagination={{
           ...pageInfo,
           total: transactions?.total || 0,
-          onChange: (page, size) => {
-            mainRef.current?.scrollTo({ top: 0, behavior: "smooth" });
-            history.replace({ search: stringify({ ...pageInfo, page, size }) });
+          onChange: (page) => {
+            updateData(page);
           },
           hideLastPage: true
         }}

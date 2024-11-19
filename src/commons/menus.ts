@@ -194,13 +194,6 @@ export const menus: Menu[] = [
     hidden: !supportedFunctions.includes(FunctionEnum.NETWORK_MONITORING)
   },
   {
-    title: "Bolnisi",
-    key: "glossary.traceability",
-    icon: BolnisiDashboard,
-    href: routers.BOLNISI_LANDING,
-    hidden: !supportedFunctions.includes(FunctionEnum.TRACEABILITY_PROGRAM)
-  },
-  {
     title: "Micar",
     key: "glossary.micar",
     icon: MicarIcon,

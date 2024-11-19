@@ -11,31 +11,15 @@ import { CircularProgress } from "@mui/material";
 
 const BlockList: React.FC = () => {
   const { t } = useTranslation();
-  const [fetchData, setFetchData] = useState<ApiReturnType<Block[]>>();
-  const [loading, setLoading] = useState(true);
 
-  const apiConnector: ApiConnector = ApiConnector.getApiConnector();
   useEffect(() => {
     document.title = `Blocks List | Cardano Blockchain Explorer`;
-    apiConnector.getBlocksPage().then((data) => {
-      setFetchData(data);
-      setLoading(false);
-    });
   }, []);
-
-  if (loading) return <CircularProgress />;
 
   return (
     <StyledContainer>
       <Card data-testid="blocks-card" title={t("head.page.blocks")}>
-        {fetchData?.lastUpdated && (
-          <Actions>
-            <TimeDuration>
-              <FormNowMessage time={fetchData.lastUpdated} />
-            </TimeDuration>
-          </Actions>
-        )}
-        <BlockListComponent fetchData={fetchData} />
+        <BlockListComponent />
       </Card>
     </StyledContainer>
   );

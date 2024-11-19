@@ -100,8 +100,7 @@ const FooterMenu = ({ bottom = false }: TProps) => {
         const { href, title, icon: Icon } = item;
         return (
           <ListItem
-            key={index}
-            button
+            key={"FooterMenu" + index}
             component="a"
             href={href}
             target="_blank"
@@ -116,7 +115,7 @@ const FooterMenu = ({ bottom = false }: TProps) => {
 
       <CustomTooltip placement="right" title="Expand">
         <ListItem
-          button
+          key={"FooterMenuExpand"}
           component="a"
           target="_blank"
           rel="noreferrer"

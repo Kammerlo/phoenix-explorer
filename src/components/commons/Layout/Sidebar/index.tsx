@@ -14,10 +14,9 @@ import {
 } from "src/commons/resources";
 import { setTheme } from "src/stores/theme";
 import { RootState } from "src/stores/types";
-import { USER_API } from "src/commons/utils/api";
 
 import SidebarMenu from "./SidebarMenu";
-import { HeaderTop, LogoLink, NavBarLogo, NavbarContainer, NavbarMenuBottom, WrapButtonSelect } from "./styles";
+import { HeaderTop, LogoLink, NavBarLogo, NavbarContainer, WrapButtonSelect } from "./styles";
 
 const Sidebar: React.FC = () => {
   const { sidebar } = useSelector(({ user }: RootState) => user);
@@ -47,18 +46,18 @@ const Sidebar: React.FC = () => {
   };
 
   const muiTheme = useTheme();
-  const getLogo = () => {
+  const getLogo = (): string => {
     if (theme === "light") {
       if (sidebar) {
-        return LogoFullIcon;
+        return LogoFullIcon.toString();
       } else {
-        return LogoIcon;
+        return LogoIcon.toString();
       }
     } else {
       if (sidebar) {
-        return LogoDarkmodeFullIcon;
+        return LogoDarkmodeFullIcon.toString();
       } else {
-        return LogoDarkmodeShortIcon;
+        return LogoDarkmodeShortIcon.toString();
       }
     }
   };
