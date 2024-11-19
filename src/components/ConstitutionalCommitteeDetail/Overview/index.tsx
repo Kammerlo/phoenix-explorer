@@ -21,7 +21,7 @@ import { OverralCard } from "src/components/ConstitutionalCommittees/Overrall";
 import DynamicEllipsisText from "src/components/DynamicEllipsisText";
 import DatetimeTypeTooltip from "src/components/commons/DatetimeTypeTooltip";
 import DetailHeader from "src/components/commons/DetailHeader";
-import { VoteRate, voteOption } from "src/pages/DrepDetail";
+import { voteOption } from "src/pages/DrepDetail";
 import { StyledMenuItem, StyledSelect, TitleCard } from "src/pages/DrepDetail/styles";
 
 const Overview = ({ data, loading }: { data: CCDetailOVerview | null; loading: boolean }) => {
@@ -168,11 +168,7 @@ const Overview = ({ data, loading }: { data: CCDetailOVerview | null; loading: b
           </StyledSelect>
         </Box>
       ),
-      value: (
-        <Box>
-          <VoteRate data={dataChard} loading={loadingChard} showDataTooltip={true} />
-        </Box>
-      )
+      value: <Box>{/*<VoteRate data={dataChard} loading={loadingChard} showDataTooltip={true} />*/}</Box>
     },
     {},
     {}

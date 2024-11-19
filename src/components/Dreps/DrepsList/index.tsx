@@ -1,8 +1,6 @@
 import { Box, Button } from "@mui/material";
-import { pickBy } from "lodash";
-import moment from "moment";
 import { stringify } from "qs";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useSelector } from "react-redux";
 import { useHistory } from "react-router-dom";
@@ -20,8 +18,9 @@ import DatetimeTypeTooltip from "src/components/commons/DatetimeTypeTooltip";
 import { StakeKeyStatus } from "src/components/commons/DetailHeader/styles";
 import Table, { Column } from "src/components/commons/Table";
 
-import DrepFilter from "../DrepFilter";
-import { ListOfDreps, PoolName, TopSearchContainer } from "./styles";
+import { PoolName } from "./styles";
+import { ApiConnector } from "../../../commons/connector/ApiConnector";
+import { ApiReturnType } from "../../../commons/connector/types/APIReturnType";
 
 const DrepsList: React.FC = () => {
   const { t } = useTranslation();
@@ -33,43 +32,20 @@ const DrepsList: React.FC = () => {
   const handleBlankSort = () => {
     history.replace({ search: stringify({ ...pageInfo, page: 1, sort: undefined }) });
   };
-  const timeZone = localStorage.getItem("userTimezone")
-    ? `${localStorage.getItem("userTimezone")}` === "utc"
-      ? "UTC"
-      : localStorage.getItem("userTimezone") || "UTC"
-    : sessionStorage.getItem("timezone")?.replace(/"/g, "") || "UTC";
+  const [fetchData, setFetchData] = useState<ApiReturnType<Drep[]>>();
+  const apiConnector: ApiConnector = ApiConnector.getApiConnector();
 
-  const fetchData = useFetchList<Drep>(
-    API.DREPS_LIST.DREPS_LIST,
-    {
-      ...pickBy(
-        {
-          ...pageInfo,
-          fromDate: pageInfo?.fromDate
-            ? moment
-                .utc(pageInfo?.fromDate)
-                .subtract(timeZone == "UTC" ? 0 : moment().utcOffset(), "minutes")
-                .format(DATETIME_PARTTEN)
-            : "",
-          toDate: pageInfo?.toDate
-            ? moment
-                .utc(pageInfo?.toDate)
-                .endOf("D")
-                .subtract(timeZone == "UTC" ? 0 : moment().utcOffset(), "minutes")
-                .format(DATETIME_PARTTEN)
-            : "",
-          activeStakeTo: pageInfo?.maxActiveVoteStake ? +pageInfo.maxActiveVoteStake * 10 ** 6 : "",
-          activeStakeFrom: pageInfo?.minActiveVoteStake ? +pageInfo?.minActiveVoteStake * 10 ** 6 : "",
-          votingPowerTo: pageInfo?.maxVotingPower ? +pageInfo.maxVotingPower * 10 ** 6 : "",
-          votingPowerFrom: pageInfo?.minVotingPower ? +pageInfo?.minVotingPower * 10 ** 6 : ""
-        },
-        (value) => value !== "" && value !== undefined
-      )
-    },
-    false,
-    blockKey
-  );
-  const { error } = fetchData;
+  function updateData(page: number) {
+    pageInfo.page = page;
+    apiConnector.getDreps(pageInfo).then((data: ApiReturnType<Drep[]>) => {
+      setFetchData(data);
+    });
+  }
+
+  useEffect(() => {
+    updateData(0);
+  }, []);
+
   const columns: Column<Drep>[] = [
     {
       title: <div data-testid="drepList.drepIdTitle">{t("dreps.id")}</div>,
@@ -151,63 +127,6 @@ const DrepsList: React.FC = () => {
         )
     },
     {
-      title: (
-        <Box data-testid="drepList.activeStakeTitle" component={"span"}>
-          {t("glossary.activeStake")} (<ADAicon />)
-        </Box>
-      ),
-      key: "activeVoteStake",
-      minWidth: "120px",
-      render: (r) => (
-        <Box data-testid="drepList.activeStakeValue" component={"span"}>
-          {r.activeVoteStake != null ? formatADAFull(r.activeVoteStake) : t("common.N/A")}
-        </Box>
-      ),
-      sort: ({ columnKey, sortValue }) => {
-        sortValue ? setSort(`${columnKey},${sortValue}`) : handleBlankSort();
-      }
-    },
-    {
-      title: (
-        <Box data-testid="drepList.votingPowerTitle" component={"span"}>
-          {t("dreps.votingPower")}
-        </Box>
-      ),
-      minWidth: "120px",
-      key: "votingPower",
-      render: (r) =>
-        r.votingPower != null ? (
-          <Box data-testid="drepList.votingPowerValue" component={"span"} mr={1}>
-            {formatPercent(r.votingPower / 100) || `0%`}
-          </Box>
-        ) : (
-          t("common.N/A")
-        ),
-      sort: ({ columnKey, sortValue }) => {
-        sortValue ? setSort(`${columnKey},${sortValue}`) : handleBlankSort();
-      }
-    },
-    {
-      title: (
-        <Box data-testid="drepList.participationRate" component={"span"}>
-          {t("governanceParticipationRate")}
-        </Box>
-      ),
-      minWidth: "120px",
-      key: "govParticipationRate",
-      render: (r) =>
-        r.govParticipationRate != null ? (
-          <Box data-testid="drepList.ParticipationValue" component={"span"} mr={1}>
-            {formatPercent(r.govParticipationRate) || `0%`}
-          </Box>
-        ) : (
-          t("common.N/A")
-        ),
-      sort: ({ columnKey, sortValue }) => {
-        sortValue ? setSort(`${columnKey},${sortValue}`) : handleBlankSort();
-      }
-    },
-    {
       title: <div data-testid="drepList.statusTitle">{t("common.status")}</div>,
       key: "status",
       minWidth: "120px",
@@ -224,25 +143,6 @@ const DrepsList: React.FC = () => {
             : t("status.retired")}
         </StakeKeyStatus>
       )
-    },
-    {
-      title: (
-        <Box data-testid="drepList.registrationDateTitle" component={"span"}>
-          {t("dreps.registrationDate")}
-        </Box>
-      ),
-      minWidth: "100px",
-      key: "createdAt",
-      render: (r) => (
-        <DatetimeTypeTooltip>
-          <Box data-testid="drepList.registrationDateValue" component={"span"}>
-            {formatDateTimeLocal(r.createdAt)}
-          </Box>
-        </DatetimeTypeTooltip>
-      ),
-      sort: ({ columnKey, sortValue }) => {
-        sortValue ? setSort(`${columnKey},${sortValue}`) : handleBlankSort();
-      }
     },
     {
       title: (
@@ -266,30 +166,17 @@ const DrepsList: React.FC = () => {
   ];
   return (
     <>
-      {!error && (
-        <TopSearchContainer
-          sx={{
-            justifyContent: "space-between"
-          }}
-        >
-          <ListOfDreps>{t("dreps.listOfDreps")}</ListOfDreps>
-          <Box display="flex" gap="10px">
-            <DrepFilter loading={fetchData.loading} />
-          </Box>
-        </TopSearchContainer>
-      )}
       <Table
-        {...fetchData}
+        data={fetchData?.data || []}
         data-testid="drepList.table"
         columns={columns}
-        total={{ count: fetchData.total, title: "Total", isDataOverSize: fetchData.isDataOverSize }}
+        total={{ count: fetchData?.total || 0, title: "Total" }}
         onClickRow={(_, r: Drep) => history.push(details.drep(r.drepId))}
         pagination={{
           ...pageInfo,
-          total: fetchData.total,
-          onChange: (page, size) => {
-            history.replace({ search: stringify({ ...pageInfo, page, size }) });
-            tableRef.current?.scrollIntoView();
+          total: fetchData?.total || 0,
+          onChange: (page) => {
+            updateData(page);
           }
         }}
       />

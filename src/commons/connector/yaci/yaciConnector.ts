@@ -36,6 +36,10 @@ import { addressBalanceDtoToWalletAddress } from "./mapper/AddressBalanceDtoToWa
 import { TProtocolParam } from "../../../types/protocol";
 import { protocolParamsToTProtocolParam } from "./mapper/ProtocolParamsToTProtocolParam";
 import { ParsedUrlQuery } from "querystring";
+import { DRepPage } from "./types/drep-page";
+import { drepRegistrationsToDreps } from "./mapper/DrepRegistrationsToDreps";
+import { DRepDto } from "./types/drep-dto";
+import { dRepDtoToDrepOverview } from "./mapper/DRepDtoToDrepOverview";
 
 export class YaciConnector implements ApiConnector {
   baseUrl: string;
@@ -54,7 +58,8 @@ export class YaciConnector implements ApiConnector {
       FunctionEnum.ADDRESS,
       FunctionEnum.STAKE_ADDRESS_REGISTRATION,
       FunctionEnum.POOL_REGISTRATION,
-      FunctionEnum.PROTOCOL_PARAMETER
+      FunctionEnum.PROTOCOL_PARAMETER,
+      FunctionEnum.DREP
     ];
   }
 
@@ -425,6 +430,46 @@ export class YaciConnector implements ApiConnector {
           error: error.message,
           lastUpdated: Date.now()
         } as ApiReturnType<TProtocolParam>;
+      });
+  }
+
+  async getDreps(pageInfo: ParsedUrlQuery): Promise<ApiReturnType<Drep[]>> {
+    return this.client
+      .get<DRepPage>(`${this.baseUrl}/governance/dreps`, {
+        params: pageInfo
+      })
+      .then((response) => {
+        return {
+          data: drepRegistrationsToDreps(response.data.dreps!),
+          total: response.data.total,
+          totalPage: response.data.totalPages,
+          lastUpdated: Date.now()
+        } as ApiReturnType<Drep[]>;
+      })
+      .catch((error: AxiosError) => {
+        return {
+          data: [],
+          error: error.message,
+          lastUpdated: Date.now()
+        } as ApiReturnType<Drep[]>;
+      });
+  }
+
+  async getDrepOverview(drepId: string): Promise<ApiReturnType<DrepOverview>> {
+    return this.client
+      .get<DRepDto>(`${this.baseUrl}/governance/dreps/${drepId}`)
+      .then((response) => {
+        return {
+          data: dRepDtoToDrepOverview(response.data),
+          lastUpdated: Date.now()
+        } as ApiReturnType<DrepOverview>;
+      })
+      .catch((error: AxiosError) => {
+        return {
+          data: null,
+          error: error.message,
+          lastUpdated: Date.now()
+        } as ApiReturnType<DrepOverview>;
       });
   }
 }

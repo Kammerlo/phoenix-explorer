@@ -10,6 +10,7 @@ interface DrepOverview {
   status: "ACTIVE" | "INACTIVE" | "RETIRED";
   votingParticipation: number;
   type: string;
+  certHistory: CertificateHistory[];
 }
 
 interface DrepOverviewChart {

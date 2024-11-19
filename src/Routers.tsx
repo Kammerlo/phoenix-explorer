@@ -190,7 +190,7 @@ const Routes: React.FC = () => {
         component={isSupportedRoute(NetworkMonitoring, FunctionEnum.NETWORK_MONITORING)}
       />
       <Route path={routers.MICAR} exact component={isSupportedRoute(Micar, FunctionEnum.SUSTAINABILITY_INDICATORS)} />
-      <Route path={routers.DREPS} exact component={isSupportedRoute(Dreps, FunctionEnum.GOVERNANCE)} />
+      <Route path={routers.DREPS} exact component={isSupportedRoute(Dreps, FunctionEnum.DREP)} />
       <Route
         path={routers.CONSTITUIONAL_COMMITTEES}
         exact
@@ -206,7 +206,7 @@ const Routes: React.FC = () => {
         exact
         component={isSupportedRoute(ConstitutionalCommitteeDetail, FunctionEnum.GOVERNANCE)}
       />
-      <Route path={routers.DREP_DETAILS} exact component={isSupportedRoute(DrepDetail, FunctionEnum.GOVERNANCE)} />
+      <Route path={routers.DREP_DETAILS} exact component={isSupportedRoute(DrepDetail, FunctionEnum.DREP)} />
 
       <Route path={routers.NOT_FOUND} component={NotFound} />
     </Switch>

@@ -58,4 +58,8 @@ export abstract class ApiConnector {
   abstract getPoolRegistrations(type: POOL_TYPE): Promise<ApiReturnType<Registration[]>>;
 
   abstract getCurrentProtocolParameters(): Promise<ApiReturnType<TProtocolParam>>;
+
+  abstract getDreps(pageInfo: ParsedUrlQuery): Promise<ApiReturnType<Drep[]>>;
+
+  abstract getDrepOverview(drepId: string): Promise<ApiReturnType<DrepOverview>>;
 }
