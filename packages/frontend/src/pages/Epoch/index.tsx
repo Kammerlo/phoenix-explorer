@@ -1,4 +1,3 @@
-import { stringify } from "qs";
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { useHistory } from "react-router-dom";
@@ -16,8 +15,9 @@ import { details } from "src/commons/routers";
 
 import { Blocks, BlueText, EpochNumber, StatusTableRow, StyledContainer, StyledLink } from "./styles";
 import { ApiConnector } from "../../commons/connector/ApiConnector";
-import { ApiReturnType } from "../../commons/connector/types/APIReturnType";
+import { ApiReturnType } from "@shared/APIReturnType";
 import { formatDateTimeLocal } from "../../commons/utils/helper";
+import { IDataEpoch } from "@shared/dtos/epoch.dto";
 
 const Epoch: React.FC = () => {
   const { t } = useTranslation();

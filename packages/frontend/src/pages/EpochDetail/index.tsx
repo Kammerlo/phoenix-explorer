@@ -8,11 +8,16 @@ import { ApiConnector } from "../../commons/connector/ApiConnector";
 import { ApiReturnType } from "../../commons/connector/types/APIReturnType";
 import BlockListComponent from "../../components/BlockListComponent";
 
+import { IDataEpoch } from "@shared/dtos/epoch.dto";
+import { Block } from "@shared/dtos/block.dto";
+import usePageInfo from "src/commons/hooks/usePageInfo";
+
 const EpochDetail: React.FC = () => {
   const { epochId } = useParams<{ epochId: string }>();
   const [data, setData] = useState<ApiReturnType<IDataEpoch>>();
   const [fetchData, setFetchData] = useState<ApiReturnType<Block[]>>();
   const [loading, setLoading] = useState(true);
+  const { pageInfo, setSort } = usePageInfo();
   const apiConnector = ApiConnector.getApiConnector();
 
   // useEffect(() => {
@@ -29,16 +34,19 @@ const EpochDetail: React.FC = () => {
       setData(data);
       setLoading(false);
     });
-    apiConnector.getBlocksByEpoch(Number(epochId)).then((data) => {
-      console.log("fetchData");
+    updateBlocks(0);
+  }, [epochId]);
+
+  function updateBlocks(page: number) {
+    apiConnector.getBlocksByEpoch(Number(epochId), pageInfo).then((data) => {
       setFetchData(data);
     });
-  }, [epochId]);
+  }
 
   return (
     <StyledContainer>
       <EpochOverview data={data?.data} loading={loading} lastUpdated={data?.lastUpdated} />
-      <BlockListComponent fetchData={fetchData} />
+      <BlockListComponent fetchData={fetchData} updateData={updateBlocks}/>
     </StyledContainer>
   );
 };

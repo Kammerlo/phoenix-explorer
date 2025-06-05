@@ -12,6 +12,7 @@ import { Container, Content, EpochNumber, EpochProgress, SubContent, TitleCard }
 import ProgressCircle from "../../ProgressCircle";
 import DetailHeader from "../../DetailHeader";
 import DatetimeTypeTooltip from "../../DatetimeTypeTooltip";
+import { IDataEpoch } from "@shared/dtos/epoch.dto";
 
 interface IProps {
   data: IDataEpoch;
@@ -119,24 +120,6 @@ export default function FirstEpoch({ data: currentEpochData, onClick }: IProps) 
         </Content>
       )
     },
-    {
-      icon: SlotIcon,
-      title: (
-        <Box display={"flex"} alignItems="center">
-          <TitleCard data-testid="epoch.firstEpoch.slotTitle" mr={1}>
-            {t("glossary.Slot")}
-          </TitleCard>
-        </Box>
-      ),
-      value: (
-        <Content data-testid="epoch.firstEpoch.slotValue">
-          {moment(formatDateTimeLocal(currentEpochData.endTime), "YYYY-MM-DDTHH:mm:ssZ").diff(moment()) >= 0
-            ? currentEpoch?.slot
-            : MAX_SLOT_EPOCH}
-          <SubContent>/{MAX_SLOT_EPOCH}</SubContent>
-        </Content>
-      )
-    }
   ];
   return (
     <Container onClick={(e) => onClick(e, currentEpochData)} data-testid="epoch.firstEpoch.container">

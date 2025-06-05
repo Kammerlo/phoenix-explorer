@@ -15,39 +15,26 @@ import FormNowMessage from "src/components/commons/FormNowMessage";
 import usePageInfo from "src/commons/hooks/usePageInfo";
 import DatetimeTypeTooltip from "src/components/commons/DatetimeTypeTooltip";
 
-import { PriceWrapper, StyledContainer, StyledLink, Actions, TimeDuration } from "./styles";
+import { PriceWrapper, StyledLink } from "./styles";
 import { ApiConnector } from "../../commons/connector/ApiConnector";
 import CustomTooltip from "../commons/CustomTooltip";
 import { getShortHash } from "../../commons/utils/helper";
 import { TooltipIcon } from "../../commons/resources";
 import { ApiReturnType } from "../../commons/connector/types/APIReturnType";
-import { APIResponse } from "@playwright/test";
-import { ParsedUrlQuery } from "querystring";
 
-interface BlockListComponentProps {}
-const BlockListComponent: React.FC<BlockListComponentProps> = ({}) => {
+import { Block } from "@shared/dtos/block.dto";
+
+interface BlockListComponentProps {
+  fetchData?: ApiReturnType<Block[]>;
+  updateData: (page: number) => void;
+  loading?: boolean;
+}
+const BlockListComponent: React.FC<BlockListComponentProps> = ({fetchData, updateData, loading}) => {
   const { t } = useTranslation();
   const history = useHistory();
   const { onDetailView } = useSelector(({ user }: RootState) => user);
   const { pageInfo } = usePageInfo();
   const [selected, setSelected] = useState<(number | string | null)[]>([]);
-  const mainRef = useRef(document.querySelector("#main"));
-  const [fetchData, setFetchData] = useState<ApiReturnType<Block[]>>();
-  const [loading, setLoading] = useState(true);
-
-  const apiConnector: ApiConnector = ApiConnector.getApiConnector();
-
-  function updateData(page: number) {
-    pageInfo.page = page;
-    apiConnector.getBlocksPage(pageInfo).then((data) => {
-      setFetchData(data);
-      setLoading(false);
-    });
-  }
-
-  useEffect(() => {
-    updateData(0);
-  }, []);
 
   const expandedBlockRowData = [
     { label: "Transactions", value: "txCount" },

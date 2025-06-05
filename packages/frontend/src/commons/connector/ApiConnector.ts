@@ -6,6 +6,7 @@ import { POOL_TYPE } from "../../pages/RegistrationPools";
 import { TProtocolParam } from "../../types/protocol";
 import { ParsedUrlQuery } from "querystring";
 import {GatewayConnector} from "./gateway/gatewayConnector";
+import { IDataEpoch } from "@shared/dtos/epoch.dto";
 
 const API_URL: string = process.env.REACT_APP_API_URL || "";
 const API_CONNECTOR_TYPE: string = process.env.REACT_APP_API_TYPE || "";
@@ -40,7 +41,7 @@ export abstract class ApiConnector {
 
   abstract getBlocksPage(pageInfo: ParsedUrlQuery): Promise<ApiReturnType<Block[]>>;
 
-  abstract getBlocksByEpoch(epoch: number): Promise<ApiReturnType<Block[]>>;
+  abstract getBlocksByEpoch(epoch: number, pageInfo: ParsedUrlQuery): Promise<ApiReturnType<Block[]>>;
 
   abstract getBlockDetail(blockId: string): Promise<ApiReturnType<Block>>;
 
