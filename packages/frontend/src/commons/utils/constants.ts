@@ -1,7 +1,5 @@
 import { get } from "lodash";
 
-import { Wallet } from "../../types/user";
-import { EternlIcon, FlintIcon, NamiIcon, TyphonIcon, YoroiIcon } from "../resources";
 export const STORAGE_KEYS = {
   THEME: "dark",
   USER_INFO: "user_info",

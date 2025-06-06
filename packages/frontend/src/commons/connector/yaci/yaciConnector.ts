@@ -1,7 +1,6 @@
 import axios, { AxiosError, AxiosInstance } from "axios";
 
 import { ApiConnector, StakeAddressAction } from "../ApiConnector";
-import { ApiReturnType } from "../types/APIReturnType";
 import {
   AddressBalanceDto,
   BlockDto,
@@ -36,6 +35,9 @@ import { addressBalanceDtoToWalletAddress } from "./mapper/AddressBalanceDtoToWa
 import { TProtocolParam } from "../../../types/protocol";
 import { protocolParamsToTProtocolParam } from "./mapper/ProtocolParamsToTProtocolParam";
 import { ParsedUrlQuery } from "querystring";
+import {Block} from "@shared/dtos/block.dto";
+import {ApiReturnType} from "@shared/APIReturnType";
+import {IDataEpoch} from "@shared/dtos/epoch.dto";
 
 /**
  * This ApiConnector implementation uses the YACI API to fetch data.

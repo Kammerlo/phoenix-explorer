@@ -21,8 +21,9 @@
     "noImplicitAny": true,
     "downlevelIteration": true,
     "paths": {
-      "src/*": ["src/*"]
-    }
+      "src/*": ["src/*"],
+      "@shared/*": ["../shared/src/*"]
+    },
   },
   "include": ["src/**/*", "public/**/*", "**/*.ts"],
   "references": [{ "path": "../shared" }]

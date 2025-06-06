@@ -1,5 +1,4 @@
 import { YaciConnector } from "./yaci/yaciConnector";
-import { ApiReturnType } from "./types/APIReturnType";
 import { FunctionEnum } from "./types/FunctionEnum";
 import { POOL_TYPE } from "../../pages/RegistrationPools";
 // @ts-ignore
@@ -7,6 +6,8 @@ import { TProtocolParam } from "../../types/protocol";
 import { ParsedUrlQuery } from "querystring";
 import {GatewayConnector} from "./gateway/gatewayConnector";
 import { IDataEpoch } from "@shared/dtos/epoch.dto";
+import {Block} from "@shared/dtos/block.dto";
+import {ApiReturnType} from "@shared/APIReturnType";
 
 const API_URL: string = process.env.REACT_APP_API_URL || "";
 const API_CONNECTOR_TYPE: string = process.env.REACT_APP_API_TYPE || "";
