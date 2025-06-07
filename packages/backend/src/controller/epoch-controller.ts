@@ -3,10 +3,12 @@ import {API} from "../config/blockfrost";
 import {EpochStatus, IDataEpoch} from "@shared/dtos/epoch.dto";
 import {Block} from "@shared/dtos/block.dto";
 import {ApiReturnType} from "@shared/APIReturnType";
+import {cache, getBlock, getEpoch} from "../config/cache";
+import { components } from '@blockfrost/openapi';
 
-export const epochRoutes = Router();
+export const epochController = Router();
 
-epochRoutes.get('', async (req, res) => {
+epochController.get('', async (req, res) => {
   const pageInfo = req.query;
   const unixTimestamp = Math.floor(Date.now() / 1000);
   const latestEpoch = await API.epochsLatest();
@@ -41,11 +43,14 @@ epochRoutes.get('', async (req, res) => {
   } as ApiReturnType<IDataEpoch[]>);
 });
 
-epochRoutes.get('/:epochNo', async (req, res) => {
+epochController.get('/:epochNo', async (req, res) => {
   const {epochNo} = req.params;
   const latestEpoch = await API.epochsLatest();
-  const requestedEpoch = await API.epochs(Number.parseInt(epochNo));
+
+  let requestedEpoch = await getEpoch(epochNo);
+
   const unixTimestamp = Math.floor(Date.now() / 1000);
+
   const epoch: IDataEpoch = {
     no: requestedEpoch.epoch,
     syncingProgress: getProgressPercentage(requestedEpoch.start_time, requestedEpoch.end_time, unixTimestamp),
@@ -66,17 +71,17 @@ epochRoutes.get('/:epochNo', async (req, res) => {
   } as ApiReturnType<IDataEpoch>);
 });
 
-epochRoutes.get('/:epochNo/blocks', async (req, res) => {
+epochController.get('/:epochNo/blocks', async (req, res) => {
   const {epochNo} = req.params;
   const pageInfo = req.query;
-  const epoch = await API.epochs(Number.parseInt(epochNo));
+  let epoch = await getEpoch(epochNo);
   const epochBlocks = await API.epochsBlocks(Number.parseInt(epochNo), {
     page: Number.parseInt(String(pageInfo.page ?? 0)),
     count: Number.parseInt(String(pageInfo.size ?? 100)),
   });
   const blocks: Block[] = [];
   for (const blockHash of epochBlocks) {
-    const block = await API.blocks(blockHash);
+    const block = await getBlock(blockHash);
     blocks.push({
       blockNo: block.height ?? 0,
       epochNo: block.epoch ?? 0,

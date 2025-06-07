@@ -8,8 +8,9 @@ import TransactionMetadata from "src/components/TransactionDetail/TransactionMet
 import TransactionOverview from "src/components/TransactionDetail/TransactionOverview";
 import FetchDataErr from "src/components/commons/FetchDataErr";
 import NoRecord from "src/components/commons/NoRecord";
-import { ApiConnector } from "../../commons/connector/ApiConnector";
-import { ApiReturnType } from "../../commons/connector/types/APIReturnType";
+import { ApiConnector } from "src/commons/connector/ApiConnector";
+import {ApiReturnType} from "@shared/APIReturnType";
+import { TransactionDetail } from "@shared/dtos/transaction.dto";
 
 const StyledContainer = styled(Container)`
   padding: 30px 16px 40px;
@@ -19,7 +20,7 @@ const StyledContainer = styled(Container)`
   }
 `;
 
-const TransactionDetail: React.FC = () => {
+const TransactionDetailView: React.FC = () => {
   const { trxHash } = useParams<{ trxHash: string }>();
   const [txData, setTxData] = useState<ApiReturnType<TransactionDetail>>();
   const [loading, setLoading] = useState<boolean>(true);
@@ -54,4 +55,4 @@ const TransactionDetail: React.FC = () => {
   );
 };
 
-export default TransactionDetail;
+export default TransactionDetailView;

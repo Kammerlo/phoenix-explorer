@@ -2,11 +2,13 @@ import { alpha, Box, Grid, MenuItem, Select, styled } from "@mui/material";
 import { FiInfo } from "react-icons/fi";
 import { Link } from "react-router-dom";
 
-import { CONFIRMATION_STATUS, TRANSACTION_STATUS } from "src/commons/utils/constants";
+import { CONFIRMATION_STATUS } from "src/commons/utils/constants";
 import breakpoints from "src/themes/breakpoints";
 
 import CopyButton from "../CopyButton";
 import { CommonSkeleton } from "../CustomSkeleton";
+import {TRANSACTION_STATUS, TransactionStatus} from "@shared/dtos/transaction.dto";
+import {IDataEpoch} from "@shared/dtos/epoch.dto";
 interface CardItemProps {
   length: number;
   wide?: number;
@@ -86,7 +88,7 @@ export const HeaderStatus = styled("small")<{ status?: TransactionStatus | IData
         return theme.palette.error[700];
       case TRANSACTION_STATUS.SUCCESS:
         return theme.palette.success[800];
-      case TRANSACTION_STATUS.PENDDING:
+      case TRANSACTION_STATUS.PENDING:
       case "IN_PROGRESS":
       case "SYNCING":
         return theme.isDark ? theme.palette.warning[100] : theme.palette.warning[800];
@@ -102,7 +104,7 @@ export const HeaderStatus = styled("small")<{ status?: TransactionStatus | IData
         return theme.palette.error[100];
       case TRANSACTION_STATUS.SUCCESS:
         return theme.palette.success[100];
-      case TRANSACTION_STATUS.PENDDING:
+      case TRANSACTION_STATUS.PENDING:
       case "IN_PROGRESS":
       case "SYNCING":
         return theme.isDark ? theme.palette.warning[800] : theme.palette.warning[100];

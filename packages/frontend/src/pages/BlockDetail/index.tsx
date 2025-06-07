@@ -7,8 +7,9 @@ import NoRecord from "src/components/commons/NoRecord";
 
 import { StyledContainer } from "./styles";
 import { ApiConnector } from "../../commons/connector/ApiConnector";
-import { ApiReturnType } from "../../commons/connector/types/APIReturnType";
 import TransactionList from "../../components/TransactionLists";
+import {ApiReturnType} from "@shared/APIReturnType";
+import {Block} from "@shared/dtos/block.dto";
 
 const BlockDetail = () => {
   const { blockId } = useParams<{ blockId: string }>();

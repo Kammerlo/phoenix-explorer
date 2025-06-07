@@ -30,7 +30,7 @@ import StakeDetail from "./pages/StakeDetail";
 import StakingLifecycle from "./pages/StakingLifecycle";
 import Tokens from "./pages/Token";
 import TokenDetail from "./pages/TokenDetail";
-import TransactionDetail from "./pages/TransactionDetail";
+import TransactionDetailView from "./pages/TransactionDetail";
 import TransactionList from "./pages/TransactionListPage";
 import NativeScriptsDetailPage from "./pages/NativeScriptDetail";
 import DrepDetail from "./pages/DrepDetail";
@@ -100,7 +100,7 @@ const Routes: React.FC = () => {
       />
       <Route
         path={routers.TRANSACTION_DETAIL}
-        component={isSupportedRoute(TransactionDetail, FunctionEnum.TRANSACTION)}
+        component={isSupportedRoute(TransactionDetailView, FunctionEnum.TRANSACTION)}
       />
       <Route path={routers.ADDRESS_DETAIL} component={isSupportedRoute(AddressWalletDetail, FunctionEnum.ADDRESS)} />
       <Route

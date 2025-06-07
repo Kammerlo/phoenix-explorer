@@ -1,5 +1,5 @@
 import {ApiConnector, StakeAddressAction} from "../ApiConnector";
-import axios, {AxiosInstance} from "axios";
+import axios, {AxiosInstance, AxiosResponse} from "axios";
 import {ParsedUrlQuery} from "querystring";
 import {POOL_TYPE} from "src/pages/RegistrationPools";
 import {FunctionEnum} from "src/commons/connector/types/FunctionEnum";
@@ -7,6 +7,7 @@ import {ApiReturnType} from "@shared/APIReturnType";
 import applyCaseMiddleware from "axios-case-converter";
 import {IDataEpoch} from "@shared/dtos/epoch.dto";
 import {Block} from "@shared/dtos/block.dto";
+import {Transaction, TransactionDetail} from "@shared/dtos/transaction.dto";
 
 export class GatewayConnector implements ApiConnector {
   baseUrl: string;
@@ -18,7 +19,9 @@ export class GatewayConnector implements ApiConnector {
   }
 
   getSupportedFunctions(): FunctionEnum[] {
-    return [FunctionEnum.EPOCH];
+    return [FunctionEnum.EPOCH,
+    FunctionEnum.BLOCK,
+    FunctionEnum.TRANSACTION];
   }
 
   async getEpoch(epochId: number): Promise<ApiReturnType<IDataEpoch>> {
@@ -34,7 +37,8 @@ export class GatewayConnector implements ApiConnector {
   }
 
   async getBlockDetail(blockId: string): Promise<ApiReturnType<Block>> {
-    throw new Error("Not Implemented")
+    const response = await this.client.get<ApiReturnType<Block>>(`${this.baseUrl}/blocks/${blockId}`);
+    return response.data;
   }
 
   async getBlocksByEpoch(epoch: number, pageInfo: ParsedUrlQuery): Promise<ApiReturnType<Block[]>> {
@@ -45,7 +49,10 @@ export class GatewayConnector implements ApiConnector {
   }
 
   async getBlocksPage(pageInfo: ParsedUrlQuery): Promise<ApiReturnType<Block[]>> {
-    throw new Error("Not Implemented")
+    const response = await this.client.get<ApiReturnType<Block[]>>(`${this.baseUrl}/blocks`, {
+      params: pageInfo,
+    });
+    return response.data;
   }
 
   async getCurrentProtocolParameters(): Promise<ApiReturnType<TProtocolParam>> {
@@ -66,11 +73,23 @@ export class GatewayConnector implements ApiConnector {
 
 
   async getTransactions(blockId: number | string | undefined, pageInfo: ParsedUrlQuery): Promise<ApiReturnType<Transaction[]>> {
-    throw new Error("Not Implemented")
+    let response : AxiosResponse<ApiReturnType<Transaction[]>>;
+    if(blockId) {
+      response = await this.client.get<ApiReturnType<Transaction[]>>(`${this.baseUrl}/blocks/${blockId}/transactions`, {
+        params: pageInfo,
+      });
+    } else {
+      response = await this.client.get<ApiReturnType<Transaction[]>>(`${this.baseUrl}/transactions`, {
+        params: pageInfo,
+      });
+      }
+
+    return response.data;
   }
 
   async getTxDetail(txHash: string): Promise<ApiReturnType<TransactionDetail>> {
-    throw new Error("Not Implemented")
+    const response = await this.client.get<ApiReturnType<TransactionDetail>>(`${this.baseUrl}/transactions/${txHash}`);
+    return response.data;
   }
 
   async getWalletAddressFromAddress(address: string): Promise<ApiReturnType<WalletAddress>> {

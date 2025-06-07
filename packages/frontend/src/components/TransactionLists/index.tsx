@@ -1,10 +1,9 @@
 import { useHistory } from "react-router-dom";
-import { stringify } from "qs";
 import { Box, CircularProgress } from "@mui/material";
 import { useRef, MouseEvent, useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 
-import { formatADAFull, formatDateTimeLocal, formatNameBlockNo, getShortHash } from "src/commons/utils/helper";
+import { formatADAFull, formatNameBlockNo, getShortHash } from "src/commons/utils/helper";
 import { details } from "src/commons/routers";
 import usePageInfo from "src/commons/hooks/usePageInfo";
 import { TooltipIcon } from "src/commons/resources";
@@ -17,8 +16,9 @@ import Card from "../commons/Card";
 import { Actions, StyledLink, TimeDuration } from "./styles";
 import DatetimeTypeTooltip from "../commons/DatetimeTypeTooltip";
 import { Capitalize } from "../commons/CustomText/styles";
-import { ApiConnector } from "../../commons/connector/ApiConnector";
-import { ApiReturnType } from "../../commons/connector/types/APIReturnType";
+import { ApiConnector } from "src/commons/connector/ApiConnector";
+import {ApiReturnType} from "@shared/APIReturnType";
+import {Transaction} from "@shared/dtos/transaction.dto";
 
 interface TransactionListProps {
   underline?: boolean;
@@ -46,7 +46,6 @@ const TransactionList: React.FC<TransactionListProps> = ({ underline = false, sh
     updateData(0);
   }, []);
 
-  // const fetchData = useFetchList<Transactions>(url, { ...pageInfo }, false, blockKey);
   const mainRef = useRef(document.querySelector("#main"));
   const onClickRow = (e: MouseEvent<Element, globalThis.MouseEvent>, r: Transaction) => {
     if (e.target instanceof HTMLAnchorElement || (e.target instanceof Element && e.target.closest("a"))) {

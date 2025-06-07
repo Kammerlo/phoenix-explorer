@@ -20,6 +20,9 @@ importers:
       '@blockfrost/blockfrost-js':
         specifier: ^6.0.0
         version: 6.0.0
+      '@blockfrost/openapi':
+        specifier: ^0.1.78
+        version: 0.1.78
       cors:
         specifier: ^2.8.5
         version: 2.8.5
@@ -29,6 +32,9 @@ importers:
       express:
         specifier: ^5.1.0
         version: 5.1.0
+      node-cache:
+        specifier: ^5.1.2
+        version: 5.1.2
     devDependencies:
       '@types/cors':
         specifier: ^2.8.18
@@ -1203,6 +1209,10 @@ packages:
 
   '@blockfrost/openapi@0.1.73':
     resolution: {integrity: sha512-VsCzTVUKWNagIAHTtSAnsgPKsJ6uVvm/t7eth8YVaKK0MSsvQ7TPGEwobLN8hqNfaO20NDTz0L53A1kB+1V0ww==}
+    engines: {node: '>=20'}
+
+  '@blockfrost/openapi@0.1.78':
+    resolution: {integrity: sha512-FgusMwAksORQIJjE5bDRTGEf4AH2X7hiFmNVvZZTTJ8ljsJmajkQhuvfCuYkTqm1E2SsPd0wGYFAJ+HYj10AKA==}
     engines: {node: '>=20'}
 
   '@cardano-foundation/cardano-connect-with-wallet-core@0.2.8':
@@ -4432,6 +4442,10 @@ packages:
   clone-response@1.0.3:
     resolution: {integrity: sha512-ROoL94jJH2dUVML2Y/5PEDNaSHgeOdSDicUyS7izcF63G6sTc/FTjLub4b8Il9S8S0beOfYt0TaA5qvFK+w0wA==}
 
+  clone@2.1.2:
+    resolution: {integrity: sha512-3Pe/CF1Nn94hyhIYpjtiLhdCoEoz0DqQ+988E9gmeEdQZlojxnOb74wctFyuwWQHzqyf9X7C7MG8juUpqBJT8w==}
+    engines: {node: '>=0.8'}
+
   clsx@1.2.1:
     resolution: {integrity: sha512-EcR6r5a8bj6pu3ycsa/E/cKVGuTgZJZdsyUYHOksG/UHIiKfjxzRxYJpyVBwYaQeOvghal9fcc4PidlgzugAQg==}
     engines: {node: '>=6'}
@@ -7550,6 +7564,10 @@ packages:
 
   node-addon-api@7.1.1:
     resolution: {integrity: sha512-5m3bsyrjFWE1xf7nz7YXdN4udnVtXK6/Yfgn5qnahL6bCkf2yKt4k3nuTKAtT4r3IG8JNR2ncsIMdZuAzJjHQQ==}
+
+  node-cache@5.1.2:
+    resolution: {integrity: sha512-t1QzWwnk4sjLWaQAS8CHgOJ+RAfmHpxFWmc36IWTiWHQfs0w5JDMBS1b1ZxQteo0vVVuWJvIUKHDkkeK7vIGCg==}
+    engines: {node: '>= 8.0.0'}
 
   node-datachannel@0.12.0:
     resolution: {integrity: sha512-pZ9FsVZpHdUKqyWynuCc9IBLkZPJMpDzpNk4YNPCizbIXHYifpYeWqSF35REHGIWi9JMCf11QzapsyQGo/Y4Ig==}
@@ -11671,6 +11689,13 @@ snapshots:
       rimraf: 6.0.1
       yaml: 2.8.0
 
+  '@blockfrost/openapi@0.1.78':
+    dependencies:
+      ajv: 8.17.1
+      cbor: 9.0.2
+      rimraf: 6.0.1
+      yaml: 2.8.0
+
   '@cardano-foundation/cardano-connect-with-wallet-core@0.2.8':
     dependencies:
       bech32: 2.0.0
@@ -15577,6 +15602,8 @@ snapshots:
   clone-response@1.0.3:
     dependencies:
       mimic-response: 1.0.1
+
+  clone@2.1.2: {}
 
   clsx@1.2.1: {}
 
@@ -19588,6 +19615,10 @@ snapshots:
 
   node-addon-api@7.1.1:
     optional: true
+
+  node-cache@5.1.2:
+    dependencies:
+      clone: 2.1.2
 
   node-datachannel@0.12.0:
     dependencies:

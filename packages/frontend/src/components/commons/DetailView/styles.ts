@@ -2,10 +2,11 @@ import { alpha, Box, Button, Drawer, IconButton, styled } from "@mui/material";
 import { FiInfo } from "react-icons/fi";
 import { Link } from "react-router-dom";
 
-import { CONFIRMATION_STATUS, STAKE_KEY_STATUS, TRANSACTION_STATUS } from "src/commons/utils/constants";
+import { CONFIRMATION_STATUS, STAKE_KEY_STATUS } from "src/commons/utils/constants";
 
 import { BoxRaised } from "../BoxRaised";
 import { CommonSkeleton } from "../CustomSkeleton";
+import {TRANSACTION_STATUS, TransactionStatus} from "@shared/dtos/transaction.dto";
 
 export const ViewDetailDrawer = styled(Drawer)(({ theme }) => ({
   zIndex: 1302,
@@ -374,7 +375,7 @@ export const TxStatus = styled("small")<{ status?: TransactionStatus }>`
     switch (status) {
       case TRANSACTION_STATUS.FAILED:
         return theme.palette.error[700];
-      case TRANSACTION_STATUS.PENDDING:
+      case TRANSACTION_STATUS.PENDING:
         return theme.palette.warning[800];
       default:
         return theme.palette.success[800];
@@ -384,7 +385,7 @@ export const TxStatus = styled("small")<{ status?: TransactionStatus }>`
     switch (status) {
       case TRANSACTION_STATUS.FAILED:
         return theme.palette.error[100];
-      case TRANSACTION_STATUS.PENDDING:
+      case TRANSACTION_STATUS.PENDING:
         return theme.palette.warning[100];
       default:
         return theme.palette.success[100];

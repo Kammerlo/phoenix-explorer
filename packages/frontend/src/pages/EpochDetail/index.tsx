@@ -4,13 +4,13 @@ import { useParams } from "react-router-dom";
 import EpochOverview from "src/components/EpochDetail/EpochOverview";
 
 import { StyledContainer } from "./styles";
-import { ApiConnector } from "../../commons/connector/ApiConnector";
-import { ApiReturnType } from "../../commons/connector/types/APIReturnType";
+import { ApiConnector } from "src/commons/connector/ApiConnector";
 import BlockListComponent from "../../components/BlockListComponent";
 
 import { IDataEpoch } from "@shared/dtos/epoch.dto";
 import { Block } from "@shared/dtos/block.dto";
 import usePageInfo from "src/commons/hooks/usePageInfo";
+import {ApiReturnType} from "@shared/APIReturnType";
 
 const EpochDetail: React.FC = () => {
   const { epochId } = useParams<{ epochId: string }>();

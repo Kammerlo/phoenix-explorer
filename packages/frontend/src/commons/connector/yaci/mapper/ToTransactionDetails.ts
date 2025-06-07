@@ -1,8 +1,9 @@
 import { TransactionDetails, TxMetadataLabelDto } from "../types";
-import { TRANSACTION_STATUS } from "../../../utils/constants";
 import { txUtxoToUtxo } from "./TxUtxoToUtxo";
 import { txUtxoToCollateralResponse } from "./TxUtxoToCollateral";
 import { txDetailsToTxSummary } from "./TxDetailsToTxSummary";
+import {TransactionDetail} from "@shared/dtos/transaction.dto";
+import {Block} from "@shared/dtos/block.dto";
 
 export function toTransactionDetail<T>(
   txDetails: TransactionDetails,
@@ -16,7 +17,7 @@ export function toTransactionDetail<T>(
       blockNo: block ? block.blockNo : 0,
       epochSlot: block ? block.epochSlotNo : 0,
       epochNo: block ? block.epochNo : 0,
-      status: txDetails.invalid ? TRANSACTION_STATUS.FAILED : TRANSACTION_STATUS.SUCCESS,
+      status: txDetails.invalid ? 'FAILED' : 'SUCCESS',
       confirmation: 0, // TODO: need to implement
       fee: txDetails.fees || 0,
       totalOutput: txDetails.totalOutput || 0,

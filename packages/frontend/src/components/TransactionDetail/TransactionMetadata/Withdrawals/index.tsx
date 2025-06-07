@@ -25,6 +25,7 @@ import {
   ToContainer,
   AmountTextHeader
 } from "./styles";
+import {TransactionDetail} from "@shared/dtos/transaction.dto";
 
 interface WithdrawalsProps {
   data: TransactionDetail["withdrawals"] | null;

@@ -43,11 +43,7 @@ export const NETWORK: NETWORKS =
 export const MAX_SLOT_EPOCH =
   NETWORK?.toLowerCase() === NETWORKS.preview || NETWORK?.toLowerCase() === NETWORKS.sanchonet ? 86400 : 432000;
 
-export enum TRANSACTION_STATUS {
-  FAILED = "FAILED",
-  SUCCESS = "SUCCESS",
-  PENDDING = "PENDDING"
-}
+
 export enum CONFIRMATION_STATUS {
   MEDIUM = "MEDIUM",
   LOW = "LOW",

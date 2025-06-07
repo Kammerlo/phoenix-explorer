@@ -38,6 +38,7 @@ import { ParsedUrlQuery } from "querystring";
 import {Block} from "@shared/dtos/block.dto";
 import {ApiReturnType} from "@shared/APIReturnType";
 import {IDataEpoch} from "@shared/dtos/epoch.dto";
+import {Transaction, TransactionDetail} from "@shared/dtos/transaction.dto";
 
 /**
  * This ApiConnector implementation uses the YACI API to fetch data.

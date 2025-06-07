@@ -47,6 +47,7 @@ import {
 } from "./styles";
 import NoRecord from "../NoRecord";
 import CustomIcon from "../CustomIcon";
+import {TransactionStatus} from "@shared/dtos/transaction.dto";
 
 interface TokenInfo {
   assetName?: string;

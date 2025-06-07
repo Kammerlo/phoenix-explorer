@@ -51,6 +51,7 @@ const Epoch: React.FC = () => {
     [EPOCH_STATUS.SYNCING]: t("common.epoch.cyncing")
   };
 
+  // @ts-ignore
   const columns: Column<IDataEpoch>[] = [
     {
       title: <Capitalize data-testid="epoch.table.epochTitle">{t("glossary.epoch")}</Capitalize>,
@@ -62,9 +63,9 @@ const Epoch: React.FC = () => {
             <StyledLink to={details.epoch(r.no)} data-testid={`blocks.table.value.epoch#${idx}`}>
               {r.no}
             </StyledLink>
-            <StatusTableRow status={r.status as keyof typeof EPOCH_STATUS}>
-              {EPOCH_STATUS_MAPPING[EPOCH_STATUS[r.status]]}
-            </StatusTableRow>
+            {/*<StatusTableRow status={r.status as keyof typeof EPOCH_STATUS}>*/}
+            {/*  {EPOCH_STATUS_MAPPING[EPOCH_STATUS[r.status]]}*/}
+            {/*</StatusTableRow>*/}
           </Box>
         </EpochNumber>
       )

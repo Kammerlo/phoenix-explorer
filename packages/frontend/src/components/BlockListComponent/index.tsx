@@ -16,13 +16,12 @@ import usePageInfo from "src/commons/hooks/usePageInfo";
 import DatetimeTypeTooltip from "src/components/commons/DatetimeTypeTooltip";
 
 import { PriceWrapper, StyledLink } from "./styles";
-import { ApiConnector } from "../../commons/connector/ApiConnector";
 import CustomTooltip from "../commons/CustomTooltip";
 import { getShortHash } from "../../commons/utils/helper";
 import { TooltipIcon } from "../../commons/resources";
-import { ApiReturnType } from "../../commons/connector/types/APIReturnType";
 
 import { Block } from "@shared/dtos/block.dto";
+import {ApiReturnType} from "@shared/APIReturnType";
 
 interface BlockListComponentProps {
   fetchData?: ApiReturnType<Block[]>;

@@ -27,6 +27,7 @@ import DynamicEllipsisText from "src/components/DynamicEllipsisText";
 import DatetimeTypeTooltip from "src/components/commons/DatetimeTypeTooltip";
 
 import { StyledLink, TitleCard } from "./styles";
+import {TransactionDetail} from "@shared/dtos/transaction.dto";
 
 interface Props {
   data: TransactionDetail | null | undefined;
