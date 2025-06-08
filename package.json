@@ -12,7 +12,10 @@
   "scripts": {
     "prepare": "husky install",
     "backend": "pnpm --filter backend dev",
-    "frontend": "pnpm --filter frontend dev"
+    "frontend": "pnpm --filter frontend dev",
+    "build:shared": "tsc -b packages/shared",
+    "build:backend": "tsc -b packages/backend",
+    "build": "npm run build:shared && npm run build:backend"
   },
   "dependencies": {
     "@vercel/node": "^5.2.1"

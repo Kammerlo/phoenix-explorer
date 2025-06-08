@@ -113,3 +113,6 @@ fabric.properties
 build/
 /packages/frontend/node_modules/
 /packages/backend/node_modules/
+.vercel
+/packages/backend/dist/
+/packages/shared/dist/

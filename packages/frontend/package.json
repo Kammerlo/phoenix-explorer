@@ -94,6 +94,7 @@
   },
   "scripts": {
     "dev": "vite --config vite.config.ts",
+    "build": "vite build --config vite.config.ts",
     "test": "jest",
     "clearJestCache": "jest --clearCache",
     "lint": "eslint --ext ts,tsx frontend/src/",

@@ -6,11 +6,15 @@
     "lib": ["ES2020", "DOM"],
     "moduleResolution": "node",
     "esModuleInterop": true,
-    "rootDir": "src",
+    "rootDir": "./src",
     "outDir": "dist",
     "strict": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "baseUrl": ".",                     // Required for `paths`
+    "paths": {
+      "@shared/*": ["../shared/src/*"]  // ✅ resolves imports like @shared/APIReturnType
+    }
   },
-  "include": ["src"],
+  "include": ["src", "../shared/src"],
   "references": [{ "path": "../shared" }]
 }

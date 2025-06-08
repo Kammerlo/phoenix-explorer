@@ -6,7 +6,7 @@ export declare enum EpochStatus {
 }
 export interface IDataEpoch {
     no: number;
-    status: keyof typeof EpochStatus;
+    status: EpochStatus;
     blkCount: number;
     endTime: string;
     startTime: string;
