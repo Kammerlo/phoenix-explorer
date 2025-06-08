@@ -10,7 +10,6 @@
     "typescript": "^5.3.0"
   },
   "scripts": {
-    "prepare": "husky install",
     "backend": "pnpm --filter backend dev",
     "frontend": "pnpm --filter frontend dev",
     "build:shared": "tsc -b packages/shared",
