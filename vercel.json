@@ -2,15 +2,8 @@
   "version": 2,
   "builds": [
     {
-      "src": "packages/backend/**/*.ts",
-      "use": "@vercel/node",
-      "config": {
-        "includeFiles": ["packages/shared/dist/**"]
-      }
-    },
-    {
-      "src": "packages/frontend/package.json",
-      "use": "@vercel/static-build"
+      "src": "packages/backend/src/app.ts",
+      "use": "@vercel/node"
     }
   ],
   "routes": [
@@ -20,7 +13,8 @@
     },
     {
       "src": "/(.*)",
-      "dest": "packages/frontend/index.html"
+      "dest": "packages/frontend/dist/$1"
     }
-  ]
+  ],
+  "outputDirectory": "packages/frontend/dist"
 }

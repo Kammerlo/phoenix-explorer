@@ -15,7 +15,10 @@
     "frontend": "pnpm --filter frontend dev",
     "build:shared": "tsc -b packages/shared",
     "build:backend": "tsc -b packages/backend",
-    "build": "npm run build:shared && npm run build:backend"
+    "build": "npm run build:shared && npm run build:backend",
+    "dev": "pnpm --filter shared build && concurrently \"pnpm --filter frontend dev\" \"pnpm --filter backend dev\"",
+    "dev:frontend": "pnpm --filter frontend dev",
+    "dev:backend": "pnpm --filter backend dev"
   },
   "dependencies": {
     "@vercel/node": "^5.2.1"
