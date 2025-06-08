@@ -33,6 +33,7 @@ import {
   WrapTokenLink,
   WrapUTXOs
 } from "./styles";
+import {TransactionDetail} from "@shared/dtos/transaction.dto";
 
 interface Props {
   data: TransactionDetail["utxOs"] | null;

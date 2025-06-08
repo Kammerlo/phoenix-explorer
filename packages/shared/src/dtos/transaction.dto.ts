@@ -60,9 +60,6 @@ export interface TransactionDetail {
 
     collateralOutputResponses: CollateralResponses[];
   };
-  notes?: {
-    note: string;
-  }[];
   utxOs?: {
     inputs: {
       address: string;
@@ -104,7 +101,7 @@ export interface TransactionDetail {
   withdrawals?: {
     stakeAddressFrom: string;
     addressTo: string[];
-    amount: 0;
+    amount: number;
   }[];
   poolCertificates?: TPoolCertificated[];
   stakeCertificates?: TStakeCertificated[];
@@ -141,7 +138,7 @@ export interface TransactionDetail {
 //   valid?: boolean;
 // }
 
-type TPoolCertificated = {
+export type TPoolCertificated = {
   cost: number;
   margin: number;
   metadataHash: string;
@@ -173,8 +170,8 @@ export interface Token {
   assetId: string;
   policy?: {
     policyId: string;
-    totalToken: number;
-    policyScript: string;
+    totalToken?: number;
+    policyScript?: string;
   };
   metadata?: {
     decimals: number;

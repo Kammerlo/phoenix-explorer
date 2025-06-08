@@ -1,6 +1,7 @@
 import NodeCache from "node-cache";
 import {components} from "@blockfrost/openapi";
 import {API} from "./blockfrost";
+import {TransactionDetail} from "@shared/dtos/transaction.dto";
 
 export const cache = new NodeCache({
   stdTTL: 300 // 5 minutes (default time to live for cache entries)
@@ -62,4 +63,22 @@ export async function getTxMetadata(txHash: string) {
     cache.set(`tx-metadata-${txHash}`, metadata, 300); // Cache for 5 minutes
   }
   return metadata;
+}
+
+export async function getUtxos(txHash: string) {
+  const cachedUtxos = cache.get(`utxos-${txHash}`) as components['schemas']['tx_content_utxo'];
+  let utxos;
+  if (cachedUtxos) {
+    console.log("Using cached UTXOs for transaction:", txHash);
+    utxos = cachedUtxos;
+  } else {
+    // If not cached, fetch the UTXOs
+    utxos = await API.txsUtxos(txHash);
+    cache.set(`utxos-${txHash}`, utxos, 300); // Cache for 5 minutes
+  }
+  return utxos;
+}
+
+export async function getTxDetail(txHash: string) {
+  return cache.get(`tx-detail-${txHash}`) as TransactionDetail;
 }
