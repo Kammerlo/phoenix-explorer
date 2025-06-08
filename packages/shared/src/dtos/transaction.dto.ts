@@ -54,7 +54,7 @@ export interface TransactionDetail {
       tokens: Token[];
     }[];
   };
-  contracts?: IContractItemTx[];
+  contracts?: IContractItemTx[]; // TODO currently not implemented for Blockfrost
   collaterals?: {
     collateralInputResponses: CollateralResponses[];
 

@@ -1,4 +1,3 @@
-// services/transactionService.ts
 import {API} from "../config/blockfrost";
 import {getBlock, getTransactions, getTxDetail, getUtxos} from "../config/cache";
 import {Token, TPoolCertificated, Transaction, TransactionDetail} from "@shared/dtos/transaction.dto";
@@ -7,7 +6,7 @@ export async function fetchLatestTransactions(): Promise<Transaction[]> {
   const latestBlockTransactions = await API.blocksLatestTxs();
   const latestBlock = await API.blocksLatest();
 
-  const txs: Transaction[] = await Promise.all(
+  return Promise.all(
     latestBlockTransactions.map(async (txHash) => {
       const tx = await getTransactions(txHash);
       return {
@@ -25,8 +24,6 @@ export async function fetchLatestTransactions(): Promise<Transaction[]> {
       } as Transaction;
     })
   );
-
-  return txs;
 }
 
 async function getPoolCertificates(txHash: string, poolUpdateCount: number, poolRetireCount: number) {
@@ -75,7 +72,7 @@ async function getUtxosAndSummaryMap(txHash: string) {
 
 export async function fetchTransactionDetail(txHash: string): Promise<TransactionDetail> {
   const cachedTxDetail = await getTxDetail(txHash);
-  if(cachedTxDetail) {
+  if (cachedTxDetail) {
     console.log("Using cached transaction detail for transaction:", txHash);
     return cachedTxDetail;
   }

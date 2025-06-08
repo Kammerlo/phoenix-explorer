@@ -1,4 +1,3 @@
-// controllers/transactionController.ts
 import { Router } from "express";
 import { fetchLatestTransactions, fetchTransactionDetail } from "../service/transactionService";
 import { ApiReturnType } from "@shared/APIReturnType";
