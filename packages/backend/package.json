@@ -4,7 +4,7 @@
   "main": "server.js",
   "type": "commonjs",
   "scripts": {
-    "dev": "ts-node-dev -r tsconfig-paths/register src/server.ts --respawn --transpile-only src/server.ts",
+    "dev": "ts-node-dev --host 0.0.0.0 -r tsconfig-paths/register src/server.ts --respawn --transpile-only src/server.ts",
     "build": "tsc --project tsconfig.json",
     "start": "node dist/server.js"
   },
@@ -13,14 +13,14 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
-    "shared": "*",
     "@blockfrost/blockfrost-js": "^6.0.0",
     "@blockfrost/openapi": "^0.1.78",
     "cors": "^2.8.5",
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
     "node-cache": "^5.1.2",
-    "serverless-http": "^3.2.0"
+    "serverless-http": "^3.2.0",
+    "shared": "*"
   },
   "devDependencies": {
     "@types/cors": "^2.8.18",
@@ -28,6 +28,7 @@
     "@types/node": "^22.15.29",
     "nodemon": "^3.1.10",
     "ts-node": "^10.9.2",
+    "ts-node-dev": "^2.0.0",
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.8.3"
   }

@@ -116,3 +116,4 @@ build/
 .vercel
 /packages/backend/dist/
 /packages/shared/dist/
+/packages/frontend/build/
