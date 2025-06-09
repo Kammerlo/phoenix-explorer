@@ -1,8 +1,10 @@
 {
-  "name": "shared",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "name": "cardano-explorer-shared",
+  "exports": {
+    "./*": "./dist/*"
+  },
   "scripts": {
-    "build": "tsc -p tsconfig.json"
+    "build": "tsc -p tsconfig.json",
+    "clean": "rm -rf dist"
   }
 }

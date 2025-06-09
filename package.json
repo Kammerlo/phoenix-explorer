@@ -5,10 +5,8 @@
     "packages/*"
   ],
   "scripts": {
-    "build": "pnpm -r run build",
-    "dev": "concurrently \"pnpm --filter frontend dev\" \"pnpm --filter backend dev\""
+    "dev": "concurrently -k -n backend,frontend \"npm run dev --workspace backend\" \"npm run dev --workspace frontend\""
   },
-  "packageManager": "pnpm@8.15.4",
   "devDependencies": {
     "concurrently": "^8.2.2"
   }

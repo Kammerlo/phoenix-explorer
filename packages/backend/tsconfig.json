@@ -10,9 +10,9 @@
     "outDir": "dist",
     "strict": true,
     "skipLibCheck": true,
-    "baseUrl": ".",                     // Required for `paths`
+    "baseUrl": ".",
     "paths": {
-      "@shared/*": ["../shared/src/*"]  // ✅ resolves imports like @shared/APIReturnType
+      "@shared/*": ["../shared/src/*"]
     }
   },
   "include": ["src", "../shared/src"],

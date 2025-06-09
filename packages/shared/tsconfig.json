@@ -3,12 +3,13 @@
     "composite": true,
     "declaration": true,
     "emitDeclarationOnly": true,
-    "outDir": "dist",
     "module": "ESNext",
     "target": "ESNext",
     "moduleResolution": "Node",
     "skipLibCheck": true,
-    "strict": true
-  },
+    "strict": true,
+    "rootDir": "src",
+    "outDir": "dist"
+    },
   "include": ["src"]
 }

@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "ts-node-dev -r tsconfig-paths/register src/server.ts --respawn --transpile-only src/server.ts",
     "build": "tsc --project tsconfig.json",
+    "prebuild": "npm --workspace=cardano-explorer-shared run build",
     "start": "node dist/server.js"
   },
   "keywords": [],
@@ -19,8 +20,7 @@
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
     "node-cache": "^5.1.2",
-    "serverless-http": "^3.2.0",
-    "shared": "*"
+    "serverless-http": "^3.2.0"
   },
   "devDependencies": {
     "@types/cors": "^2.8.18",
