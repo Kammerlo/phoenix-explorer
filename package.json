@@ -8,5 +8,8 @@
     "build": "pnpm -r run build",
     "dev": "concurrently \"pnpm --filter frontend dev\" \"pnpm --filter backend dev\""
   },
-  "packageManager": "pnpm@8.15.4"
+  "packageManager": "pnpm@8.15.4",
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
 }
