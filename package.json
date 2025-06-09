@@ -5,7 +5,8 @@
     "packages/*"
   ],
   "scripts": {
-    "build": "pnpm -r run build"
+    "build": "pnpm -r run build",
+    "dev": "concurrently \"pnpm --filter frontend dev\" \"pnpm --filter backend dev\""
   },
   "packageManager": "pnpm@8.15.4"
 }
