@@ -4,6 +4,7 @@
   "private": true,
   "main": "index.tsx",
   "dependencies": {
+    "shared": "*",
     "@cardano-foundation/cardano-connect-with-wallet": "^0.2.9",
     "@cardano-foundation/cardano-connect-with-wallet-core": "^0.2.5",
     "@cardano-foundation/cf-flat-decoder-ts": "^0.1.1",
@@ -93,15 +94,9 @@
     "web-vitals": "^2.1.4"
   },
   "scripts": {
-    "dev": "vite --config vite.config.ts",
-    "build": "pnpm --filter shared build && vite build --config vite.config.ts",
-    "vercel-build": "pnpm --filter shared build && vite build",
-    "test": "jest",
-    "clearJestCache": "jest --clearCache",
-    "lint": "eslint --ext ts,tsx frontend/src/",
-    "lint:fix": "eslint --fix --ext ts,tsx frontend/src/",
-    "prettier": "prettier --check \"src/**/(*.tsx|*.ts|*.css|*.scss)\"",
-    "prettier:fix": "prettier --write \"src/**/(*.tsx|*.ts|*.css|*.scss)\""
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
   },
   "lint-staged": {
     "*.{css,scss,ts,tsx,js,jsx}": [

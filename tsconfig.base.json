@@ -1,20 +1,8 @@
 {
-  "compilerOptions": {
-    "target": "ESNext",
-    "module": "ESNext",
-    "moduleResolution": "Node",
-    "strict": true,
-    "esModuleInterop": true,
-    "skipLibCheck": true,
-    "baseUrl": ".",
-    "paths": {
-      "@shared/*": ["packages/shared/src/*"],
-    }
-  },
+  "files": [],
   "references": [
-    { "path": "packages/shared" },
-    { "path": "packages/frontend" },
-    { "path": "packages/backend" }
-  ],
-  "exclude": ["node_modules", "dist"]
+    { "path": "./packages/shared" },
+    { "path": "./packages/frontend" },
+    { "path": "./packages/backend" }
+  ]
 }

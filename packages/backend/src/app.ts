@@ -3,6 +3,7 @@ import cors from "cors";
 import {epochController} from "./controller/epoch-controller";
 import {blockController} from "./controller/block-controller";
 import {transactionController} from "./controller/transaction-controller";
+// optional, for typing
 
 const app = express();
 

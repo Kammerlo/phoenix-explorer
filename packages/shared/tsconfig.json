@@ -2,14 +2,13 @@
   "compilerOptions": {
     "composite": true,
     "declaration": true,
-    "rootDir": "src",
+    "emitDeclarationOnly": true,
     "outDir": "dist",
     "module": "ESNext",
-    "target": "ES2020",
-    "strict": true,
-    "esModuleInterop": true,
-    "moduleResolution": "node",
-    "baseUrl": "."
+    "target": "ESNext",
+    "moduleResolution": "Node",
+    "skipLibCheck": true,
+    "strict": true
   },
   "include": ["src"]
 }
