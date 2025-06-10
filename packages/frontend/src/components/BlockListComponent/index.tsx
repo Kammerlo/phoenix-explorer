@@ -1,4 +1,5 @@
 import { useSelector } from "react-redux";
+// @ts-ignore
 import React, { useEffect, useState, useRef, MouseEvent } from "react";
 import { Box, CircularProgress } from "@mui/material";
 import { stringify } from "qs";
@@ -17,7 +18,7 @@ import DatetimeTypeTooltip from "src/components/commons/DatetimeTypeTooltip";
 
 import { PriceWrapper, StyledLink } from "./styles";
 import CustomTooltip from "../commons/CustomTooltip";
-import { getShortHash } from "../../commons/utils/helper";
+import { getShortHash, formatDateTimeLocal } from "src/commons/utils/helper";
 import { TooltipIcon } from "../../commons/resources";
 
 import { Block } from "@shared/dtos/block.dto";
@@ -79,12 +80,12 @@ const BlockListComponent: React.FC<BlockListComponentProps> = ({fetchData, updat
     {
       title: (
         <Box sx={{ display: "flex", alignItems: "center", gap: "8px" }}>
-          <Capitalize data-testid="blocks.table.title.slot">{t("glossary.slot")}</Capitalize>
+          <Capitalize data-testid="blocks.table.title.txCount">{t("glossary.TxCount")}</Capitalize>
         </Box>
       ),
-      key: "epochSlot",
+      key: "txCount",
       minWidth: "100px",
-      render: (r, index) => <Box data-testid={`blocks.table.value.slot#${index}`}>{r.epochSlotNo}</Box>
+      render: (r, index) => <Box data-testid={`blocks.table.value.txCount#${index}`}>{r.txCount}</Box>
     },
     {
       title: (
@@ -107,7 +108,7 @@ const BlockListComponent: React.FC<BlockListComponentProps> = ({fetchData, updat
       minWidth: "100px",
       render: (r, index) => (
         <DatetimeTypeTooltip>
-          <PriceWrapper data-testid={`blocks.table.value.createAt#${index}`}>{r.time}</PriceWrapper>
+          <PriceWrapper data-testid={`blocks.table.value.createAt#${index}`}>{formatDateTimeLocal(r.time)}</PriceWrapper>
         </DatetimeTypeTooltip>
       )
     }

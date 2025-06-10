@@ -1,6 +1,7 @@
 import { Box, useTheme } from "@mui/material";
 import AccordionDetails from "@mui/material/AccordionDetails";
 import AccordionSummary from "@mui/material/AccordionSummary";
+// @ts-ignore
 import React, { useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { IoIosArrowDown } from "react-icons/io";
@@ -75,23 +76,23 @@ const TransactionMetadata: React.FC<TransactionMetadataProps> = ({ data }) => {
     history.replace(details.transaction(data?.tx?.hash, newExpanded ? panel : ""));
   };
 
-  const protocolsMergeData: TProtocolMerge[] = useMemo(() => {
-    const result = [];
-    const protocols = data?.protocols;
-    const previousProtocols = data?.previousProtocols;
-    for (const [key, value] of Object.entries(protocols || {})) {
-      if (previousProtocols) {
-        const oldValue = previousProtocols[key as keyof TProtocol];
-        const pItem: TProtocolMerge = {
-          protocol: key,
-          oldValue,
-          value
-        };
-        result.push(pItem);
-      }
-    }
-    return result;
-  }, [data?.protocols, data?.previousProtocols]);
+  // const protocolsMergeData: TProtocolMerge[] = useMemo(() => {
+  //   const result = [];
+  //   const protocols = data?.protocols;
+  //   const previousProtocols = data?.previousProtocols;
+  //   for (const [key, value] of Object.entries(protocols || {})) {
+  //     if (previousProtocols) {
+  //       const oldValue = previousProtocols[key as keyof TProtocol];
+  //       const pItem: TProtocolMerge = {
+  //         protocol: key,
+  //         oldValue,
+  //         value
+  //       };
+  //       result.push(pItem);
+  //     }
+  //   }
+  //   return result;
+  // }, [data?.protocols, data?.previousProtocols]);
   const _dataProposing = data?.contracts?.map((item) => ({
     ...item,
     purpose: "PROPOSING",
@@ -165,17 +166,6 @@ const TransactionMetadata: React.FC<TransactionMetadataProps> = ({ data }) => {
       children: <Collaterals data={data?.collaterals} />
     },
     {
-      key: "notes",
-      icon: NoteIcon,
-      label: (
-        <Box display={"flex"} alignItems={"center"}>
-          {t("tab.notes")}
-          <CustomNumberBadge value={data?.notes?.length} />
-        </Box>
-      ),
-      children: ""
-    },
-    {
       key: "withdrawals",
       icon: WithdrawalIcon,
       label: (
@@ -225,12 +215,12 @@ const TransactionMetadata: React.FC<TransactionMetadataProps> = ({ data }) => {
       ),
       children: <StakeCertificate data={data?.stakeCertificates} />
     },
-    {
-      key: "protocols",
-      icon: ProtocolUpdateIcon,
-      label: t("tab.protocolUpdate"),
-      children: <ProtocolUpdate data={protocolsMergeData} />
-    },
+    // {
+    //   key: "protocols",
+    //   icon: ProtocolUpdateIcon,
+    //   label: t("tab.protocolUpdate"),
+    //   children: <ProtocolUpdate data={protocolsMergeData} />
+    // },
     {
       key: "instantaneousRewards",
       icon: InstantaneousHistoryIcon,

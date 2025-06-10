@@ -22,6 +22,7 @@ import ADAicon from "src/components/commons/ADAIcon";
 import DropdownTokens, { TokenLink } from "src/components/commons/DropdownTokens";
 
 import { GridItem, Icon, TitleText, ValueText, WrapContainerGrid, WrapItemsInfo, WrapTokensInfo } from "./styles";
+import {TransactionDetail} from "@shared/dtos/transaction.dto";
 
 const SummaryItems = ({
   item,

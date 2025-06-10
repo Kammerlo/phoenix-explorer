@@ -240,7 +240,7 @@ interface DMetadata {
   decimals: number;
 }
 
-type TProtocol = {
+export type TProtocol = {
   minFeeA?: number;
   minFeeB?: number;
   maxBlockSize?: number;

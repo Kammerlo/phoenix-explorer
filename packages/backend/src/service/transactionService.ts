@@ -45,29 +45,62 @@ async function getPoolCertificates(txHash: string, poolUpdateCount: number, pool
   return poolCertificated;
 }
 
-async function getUtxosAndSummaryMap(txHash: string) {
-  const utxos = await getUtxos(txHash);
-
+async function getUtxosAndSummaryMap(utxos: any) {
   const summaryMap: { [address: string]: { address: string; value: number; tokens: Token[] } } = {};
 
   for (const utxo of [...utxos.inputs, ...utxos.outputs]) {
+    if (utxo.reference) {
+      // Skip reference inputs as they are not part of the transaction summary
+      continue;
+    }
     const value = parseInt(
-      utxo.amount.find((a) => a.unit === "lovelace")?.quantity ?? "0"
+      utxo.amount.find((a: { unit: string; }) => a.unit === "lovelace")?.quantity ?? "0"
     );
     const isOutput = utxos.outputs.includes(utxo);
     const signedValue = isOutput ? -value : value;
-    const tokens = await Promise.all(utxo.amount
-      .filter((a) => a.unit !== "lovelace")
-      .map(toToken));
 
     if (!summaryMap[utxo.address]) {
       summaryMap[utxo.address] = {address: utxo.address, value: 0, tokens: []};
     }
 
     summaryMap[utxo.address].value += signedValue;
-    summaryMap[utxo.address].tokens.push(...tokens);
+
+    const tokens = await Promise.all(utxo.amount
+      .filter((a: { unit: string; }) => a.unit !== "lovelace")
+      .map(toToken));
+    for(const token of tokens) {
+      if (!summaryMap[utxo.address].tokens.some(t => t.assetId === token.assetId)) {
+        summaryMap[utxo.address].tokens.push(token);
+      } else {
+        const existingToken = summaryMap[utxo.address].tokens.find(t => t.assetId === token.assetId);
+        if (existingToken) {
+          existingToken.assetQuantity += token.assetQuantity * (isOutput ? -1 : 1);
+        }
+      }
+    }
   }
-  return {utxos, summaryMap};
+  // Filter out tokens with amount zero
+  for (const address in summaryMap) {
+    summaryMap[address].tokens = summaryMap[address].tokens.filter(token => token.assetQuantity !== 0);
+  }
+  return summaryMap;
+}
+
+async function convertUtxosAndCollateral(utxos: any, tx: any) {
+  const inputUtxos = [];
+  const inputCollaterals = [];
+  for (const utxo of utxos) {
+    if (utxo.reference) {
+      // Skip reference inputs as they are not part of the transaction summary
+      continue;
+    }
+    if (utxo.collateral) {
+      inputCollaterals.push(await toUtxo(tx.hash, utxo));
+    } else {
+      inputUtxos.push(await toUtxo(tx.hash, utxo));
+    }
+  }
+  return {utxo: inputUtxos, collateral: inputCollaterals};
 }
 
 export async function fetchTransactionDetail(txHash: string): Promise<TransactionDetail> {
@@ -79,9 +112,13 @@ export async function fetchTransactionDetail(txHash: string): Promise<Transactio
 
   const tx = await getTransactions(txHash);
   const block = await getBlock(tx.block);
-  const {utxos, summaryMap} = await getUtxosAndSummaryMap(txHash);
+  const utxos = await getUtxos(txHash);
+  const summaryMap = await getUtxosAndSummaryMap(utxos);
 
   const metadata = await API.txsMetadata(txHash);
+
+  const { utxo: inputUtxos, collateral: inputCollaterals } = await convertUtxosAndCollateral(utxos.inputs, txHash);
+  const { utxo: outputUtxos, collateral: outputCollaterals } = await convertUtxosAndCollateral(utxos.outputs, txHash);
 
   const txDetail: TransactionDetail = {
     tx: {
@@ -103,16 +140,12 @@ export async function fetchTransactionDetail(txHash: string): Promise<Transactio
       stakeAddress: Object.values(summaryMap),
     },
     collaterals: {
-      collateralInputResponses: utxos.inputs
-        .filter((utxo) => utxo.collateral)
-        .map(toUtxo(tx.hash)),
-      collateralOutputResponses: utxos.outputs
-        .filter((utxo) => utxo.collateral)
-        .map(toUtxo(tx.hash))
+      collateralInputResponses: inputCollaterals,
+      collateralOutputResponses: outputCollaterals
     },
     utxOs: {
-      inputs: utxos.inputs.filter((utxo) => !utxo.collateral).map(toUtxo(tx.hash)),
-      outputs: utxos.outputs.filter((utxo) => !utxo.collateral).map(toUtxo(tx.hash)),
+      inputs: inputUtxos,
+      outputs: outputUtxos,
     },
     metadata: metadata.length > 0 ? metadata.map((m: any) => {
       return {
@@ -135,6 +168,7 @@ export async function fetchTransactionDetail(txHash: string): Promise<Transactio
 
   if (tx.withdrawal_count > 0) {
     const withdrawals = await API.txsWithdrawals(txHash);
+
     txDetail.withdrawals = withdrawals.map((w) => {
       return {
         stakeAddressFrom: w.address,
@@ -225,17 +259,21 @@ async function toToken(utxo: any): Promise<Token> {
   return token;
 }
 
-function toUtxo(txHash: string) {
-  return (utxo: any) => ({
+async function toUtxo(txHash: string, utxo: any) {
+  return {
     address: utxo.address,
     assetId: utxo.assetId,
     value: parseInt(
       utxo.amount.find((a: { unit: string; }) => a.unit === "lovelace")?.quantity ?? "0"
     ),
-    txHash,
+    txHash: utxo.tx_hash,
     index: utxo.output_index.toString(),
-    tokens: utxo.amount
-      .filter((a: { unit: string; }) => a.unit !== "lovelace")
-      .map(toToken),
-  });
+    tokens: (
+      await Promise.all(
+        utxo.amount
+          .filter((a: { unit: string }) => a.unit !== "lovelace")
+          .map(toToken)
+      )
+    ).filter(Boolean) // removes null/undefined
+  }
 }
