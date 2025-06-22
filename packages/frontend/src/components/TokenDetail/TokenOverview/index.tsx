@@ -12,20 +12,21 @@ import DatetimeTypeTooltip from "src/components/commons/DatetimeTypeTooltip";
 
 import ScriptModal from "../../ScriptModal";
 import { ButtonLink, PolicyId, PolicyScriptBtn, TokenDescription, TokenHeader, TokenUrl, WrapTitle } from "./styles";
+import {ITokenOverview} from "@shared/dtos/token.dto";
 
 BigNumber.config({ DECIMAL_PLACES: 40 });
 
-interface ITokenOverview {
-  data: IToken | null;
+interface TokenOverViewProps {
+  data: ITokenOverview | null;
   loading: boolean;
-  lastUpdated?: number;
+  lastUpdated: number;
 }
 
-const TokenOverview: React.FC<ITokenOverview> = ({ data, loading, lastUpdated }) => {
+const TokenOverview: React.FC<TokenOverViewProps> = ({ data, loading, lastUpdated }) => {
   const { t } = useTranslation();
   const [openModal, setOpenModal] = useState(false);
   const [policyId, setPolicyId] = useState("");
-  const decimalToken = data?.decimals || data?.metadata?.decimals || 0;
+  const decimalToken = data?.metadata?.decimals || 0;
 
   const listItem = [
     {
@@ -85,22 +86,6 @@ const TokenOverview: React.FC<ITokenOverview> = ({ data, loading, lastUpdated })
       )
     },
     {
-      title: <WrapTitle>{t("glossary.tokenType")}</WrapTitle>,
-      icon: USDIconComponent,
-      value: (
-        <>
-          <Box>{data?.tokenType}</Box>
-          {!data?.metadata ? (
-            ""
-          ) : (
-            <ButtonLink target="_blank" href={tokenRegistry(data?.policy, data?.name)}>
-              {t("glossary.registry")}
-            </ButtonLink>
-          )}
-        </>
-      )
-    },
-    {
       title: (
         <Box display={"flex"} alignItems="center">
           <Box component={"span"} mr={1}>
@@ -122,10 +107,6 @@ const TokenOverview: React.FC<ITokenOverview> = ({ data, loading, lastUpdated })
       icon: TimeIconComponent,
       value: <DatetimeTypeTooltip>{formatDateTimeLocal(data?.tokenLastActivity || "")}</DatetimeTypeTooltip>
     },
-    {
-      title: <></>,
-      value: <></>
-    }
   ];
 
   return (

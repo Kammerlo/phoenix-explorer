@@ -20,7 +20,6 @@ import {
 } from "./types";
 import applyCaseMiddleware from "axios-case-converter";
 import { FunctionEnum } from "../types/FunctionEnum";
-import { credentialToRewardAddress, Network, paymentCredentialOf } from "@lucid-evolution/lucid";
 import { POOL_TYPE } from "../../../pages/RegistrationPools";
 import { epochToIEpochData } from "./mapper/EpochToIEpochData";
 import { poolRegistrationsToRegistrations } from "./mapper/PoolRegistrationsToRegistrations";
@@ -30,15 +29,19 @@ import { toTransactionDetail } from "./mapper/ToTransactionDetails";
 import { transactionSummaryAndBlockToTransaction } from "./mapper/TransactionSummaryAndBlockToTransaction";
 import { delegationToIStakeKey } from "./mapper/DelegationToIStakeKey";
 import { stakeRegistrationDetailToIStakeKey } from "./mapper/StakeRegistrationDetailToIStakeKey";
-import { addressBalanceDtoToWalletAddress } from "./mapper/AddressBalanceDtoToWalletAddress";
 // @ts-ignore
 import { TProtocolParam } from "../../../types/protocol";
 import { protocolParamsToTProtocolParam } from "./mapper/ProtocolParamsToTProtocolParam";
+// @ts-ignore
 import { ParsedUrlQuery } from "querystring";
 import {Block} from "@shared/dtos/block.dto";
 import {ApiReturnType} from "@shared/APIReturnType";
 import {IDataEpoch} from "@shared/dtos/epoch.dto";
 import {Transaction, TransactionDetail} from "@shared/dtos/transaction.dto";
+import {Date} from "../../../components/commons/Epoch/FirstEpoch/styles";
+import {ITokenOverview} from "@shared/dtos/token.dto";
+// @ts-ignore
+import * as console from "node:console";
 
 /**
  * This ApiConnector implementation uses the YACI API to fetch data.
@@ -276,30 +279,6 @@ export class YaciConnector implements ApiConnector {
       });
   }
 
-  async getWalletAddressFromAddress(address: string): Promise<ApiReturnType<WalletAddress>> {
-    return this.client
-      .get<AddressBalanceDto>(`${this.baseUrl}/addresses/${address}/balance`)
-      .then((addressBalanceResponse) => {
-        const credential = paymentCredentialOf(address);
-        const network: Network = process.env.REACT_APP_NETWORK as Network;
-        const stakeAddress = credentialToRewardAddress(network, credential); // TODO need to implement to get the right network
-        const addressBalance = addressBalanceResponse.data;
-
-        const walletAddress = addressBalanceDtoToWalletAddress(addressBalance, stakeAddress, address);
-        return {
-          data: walletAddress,
-          lastUpdated: Date.now()
-        } as ApiReturnType<WalletAddress>;
-      })
-      .catch((error: AxiosError) => {
-        return {
-          data: null,
-          error: error.message,
-          lastUpdated: Date.now()
-        } as ApiReturnType<WalletAddress>;
-      });
-  }
-
   async getEpochs(pageInfo: ParsedUrlQuery): Promise<ApiReturnType<IDataEpoch[]>> {
     return this.client
       .get<EpochsPage>(`${this.baseUrl}/epochs`, {
@@ -432,5 +411,17 @@ export class YaciConnector implements ApiConnector {
           lastUpdated: Date.now()
         } as ApiReturnType<TProtocolParam>;
       });
+  }
+
+  getWalletAddressFromAddress(address: string): Promise<ApiReturnType<WalletAddress>> {
+    return Promise.resolve(undefined);
+  }
+
+  getTokensPage(pageInfo: ParsedUrlQuery): Promise<ApiReturnType<ITokenOverview[]>> {
+    return Promise.resolve(undefined);
+  }
+
+  getTokenDetail(tokenId: string): Promise<ApiReturnType<ITokenOverview>> {
+    return Promise.resolve(undefined);
   }
 }

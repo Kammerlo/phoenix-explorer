@@ -1,27 +1,26 @@
 import { stringify } from "qs";
-import { useEffect, useRef } from "react";
+// @ts-ignore
+import React, {useEffect, useRef, useState} from "react";
 import { useHistory, useLocation } from "react-router-dom";
-import { useSelector } from "react-redux";
 import { useTranslation } from "react-i18next";
-import { Box } from "@mui/material";
+import {Box, CircularProgress} from "@mui/material";
 
 import { details } from "src/commons/routers";
 import { formatDateTimeLocal, formatNumberTotalSupply, getShortHash } from "src/commons/utils/helper";
 import Card from "src/components/commons/Card";
 import Table, { Column } from "src/components/commons/Table";
 import FormNowMessage from "src/components/commons/FormNowMessage";
-import useFetchList from "src/commons/hooks/useFetchList";
-import { API } from "src/commons/utils/api";
 import CustomTooltip from "src/components/commons/CustomTooltip";
 import usePageInfo from "src/commons/hooks/usePageInfo";
 import DatetimeTypeTooltip from "src/components/commons/DatetimeTypeTooltip";
 
 import { AssetName, Logo, StyledContainer, TimeDuration } from "./styles";
+import {ApiReturnType} from "@shared/APIReturnType";
+import {ApiConnector} from "../../commons/connector/ApiConnector";
+import {ITokenOverview} from "@shared/dtos/token.dto";
 
 const Tokens = () => {
   const { t } = useTranslation();
-
-  const blockKey = useSelector(({ system }: RootState) => system.blockKey);
 
   const { search } = useLocation();
   const history = useHistory();
@@ -30,25 +29,38 @@ const Tokens = () => {
   const queries = new URLSearchParams(search);
 
   const mainRef = useRef(document.querySelector("#main"));
-  const { data, lastUpdated, error, statusError, ...fetchData } = useFetchList<ITokenOverview>(
-    API.TOKEN.LIST,
-    { ...pageInfo, query: queries.get("tokenName") || "" },
-    false,
-    blockKey
-  );
+
+  const [fetchData, setFetchData] = useState<ApiReturnType<ITokenOverview[]>>();
+  const [loading, setLoading] = useState<boolean>(true);
+  const apiConnector = ApiConnector.getApiConnector();
+
+  function updateData(page: number) {
+    pageInfo.page = page;
+    setLoading(true);
+    apiConnector.getTokensPage(pageInfo).then((data: ApiReturnType<ITokenOverview[]>) => {
+      setFetchData(data);
+      setLoading(false);
+    });
+  }
+
+
 
   useEffect(() => {
     window.history.replaceState({}, document.title);
     document.title = `Native Tokens | Cardano Blockchain Explorer`;
   }, []);
 
-  const columns: Column<IToken>[] = [
-    {
-      title: <Box data-testid="tokens.table.title.icon">{t("glossary.icon")}</Box>,
-      key: "icon",
-      minWidth: "50px",
-      render: (r) => (r?.metadata?.logo ? <Logo src={`${r.metadata?.logo}`} alt="icon" /> : "")
-    },
+  useEffect(() => {
+    updateData(0);
+  }, []);
+
+  const columns: Column<ITokenOverview>[] = [
+    // {
+    //   title: <Box data-testid="tokens.table.title.icon">{t("glossary.icon")}</Box>,
+    //   key: "icon",
+    //   minWidth: "50px",
+    //   render: (r) => (r?.metadata?.logo ? <Logo src={`${r.metadata?.logo}`} alt="icon" /> : "")
+    // },
     {
       title: <Box data-testid="tokens.table.title.assetName">{t("glossary.assetName")}</Box>,
       key: "assetName",
@@ -70,21 +82,21 @@ const Tokens = () => {
           </AssetName>
         )
     },
-    {
-      title: <Box data-testid="tokens.table.title.scriptHash">{t("glossary.scriptHash")}</Box>,
-      key: "policy",
-      minWidth: "100px",
-      render: (r, idx) => (
-        <CustomTooltip title={r.policy}>
-          <AssetName
-            to={r.policyIsNativeScript ? details.nativeScriptDetail(r.policy) : details.smartContract(r.policy)}
-            data-testid={`token.scriptHash#${idx}`}
-          >
-            {getShortHash(r.policy)}
-          </AssetName>
-        </CustomTooltip>
-      )
-    },
+    // {
+    //   title: <Box data-testid="tokens.table.title.scriptHash">{t("glossary.scriptHash")}</Box>,
+    //   key: "policy",
+    //   minWidth: "100px",
+    //   render: (r, idx) => (
+    //     <CustomTooltip title={r.policy}>
+    //       <AssetName
+    //         to={r.policyIsNativeScript ? details.nativeScriptDetail(r.policy) : details.smartContract(r.policy)}
+    //         data-testid={`token.scriptHash#${idx}`}
+    //       >
+    //         {getShortHash(r.policy)}
+    //       </AssetName>
+    //     </CustomTooltip>
+    //   )
+    // },
     {
       title: (
         <Box data-testid="tokens.table.title.totalSupply" component={"span"}>
@@ -94,48 +106,43 @@ const Tokens = () => {
       key: "supply",
       minWidth: "150px",
       render: (r) => {
-        const decimalToken = r?.decimals || r?.metadata?.decimals || 0;
+        const decimalToken = r?.metadata?.decimals || 0;
         return formatNumberTotalSupply(r?.supply, decimalToken);
       },
       sort: ({ columnKey, sortValue }) => {
         sortValue ? setSort(`${columnKey},${sortValue}`) : setSort("");
       }
     },
-    {
-      title: (
-        <Box data-testid="tokens.table.title.createdAt" component={"span"}>
-          {t("createdAt")}
-        </Box>
-      ),
-      key: "time",
-      minWidth: "150px",
-      render: (r) => <DatetimeTypeTooltip>{formatDateTimeLocal(r.createdOn || "")}</DatetimeTypeTooltip>,
-      sort: ({ columnKey, sortValue }) => {
-        sortValue ? setSort(`${columnKey},${sortValue}`) : setSort("");
-      }
-    }
+    // {
+    //   title: (
+    //     <Box data-testid="tokens.table.title.createdAt" component={"span"}>
+    //       {t("createdAt")}
+    //     </Box>
+    //   ),
+    //   key: "time",
+    //   minWidth: "150px",
+    //   render: (r) => <DatetimeTypeTooltip>{formatDateTimeLocal(r.createdOn || "")}</DatetimeTypeTooltip>,
+    //   sort: ({ columnKey, sortValue }) => {
+    //     sortValue ? setSort(`${columnKey},${sortValue}`) : setSort("");
+    //   }
+    // }
   ];
 
-  const toTokenDetail = (_: React.MouseEvent<Element, MouseEvent>, r: IToken) => {
+  const toTokenDetail = (_: React.MouseEvent<Element, MouseEvent>, r: ITokenOverview) => {
     if (!r.fingerprint) return;
     history.push(details.token(r.fingerprint ?? ""));
   };
 
+  if (loading) return <CircularProgress />;
+
   return (
     <StyledContainer>
       <Card title={t("glossary.nativeTokens")}>
-        {!error && (
-          <TimeDuration>
-            <FormNowMessage time={lastUpdated} />
-          </TimeDuration>
-        )}
         <Table
           {...fetchData}
-          statusError={statusError}
-          error={error}
-          data={data}
+          data={fetchData.data}
           columns={columns}
-          total={{ title: "Total", count: fetchData.total, isDataOverSize: fetchData.isDataOverSize }}
+          total={{ title: "Total", count: fetchData.total }}
           pagination={{
             ...pageInfo,
             total: fetchData.total,

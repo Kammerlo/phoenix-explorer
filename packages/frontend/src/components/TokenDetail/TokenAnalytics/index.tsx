@@ -1,5 +1,6 @@
 import { Box, Grid, useTheme } from "@mui/material";
 import BigNumber from "bignumber.js";
+// @ts-ignore
 import moment from "moment";
 import { FC, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -33,13 +34,14 @@ import {
   Wrapper
 } from "./styles";
 import { TextCardHighlight } from "../../StakeDetail/StakeAnalytics/styles";
+import {ITokenOverview} from "@shared/dtos/token.dto";
 
-type AnalyticsData = { date: string; value: number };
 interface ITokenAnalyticsProps {
-  dataToken?: IToken | null;
+  dataToken?: ITokenOverview | null;
+  loading?: boolean;
 }
 
-const TokenAnalytics: FC<ITokenAnalyticsProps> = ({ dataToken }) => {
+const TokenAnalytics: FC<ITokenAnalyticsProps> = ({ dataToken, loading }) => {
   const { t } = useTranslation();
   const options = [
     { value: OPTIONS_CHART_ANALYTICS.ONE_DAY, label: t("time.1d") },
@@ -51,14 +53,8 @@ const TokenAnalytics: FC<ITokenAnalyticsProps> = ({ dataToken }) => {
   const { tokenId } = useParams<{ tokenId: string }>();
   const blockKey = useSelector(({ system }: RootState) => system.blockKey);
   const theme = useTheme();
-  const { data, loading } = useFetch<AnalyticsData[]>(
-    `${API.TOKEN.ANALYTICS}/${tokenId}/${rangeTime}`,
-    undefined,
-    false,
-    blockKey
-  );
 
-  const values = (data || [])?.map((item) => item.value || 0) || [];
+  const values = (dataToken.analytics || [])?.map((item) => item.value || 0) || [];
 
   const maxBalance = BigNumber.max(0, ...values).toString();
   const minBalance = BigNumber.min(maxBalance, ...values).toString();
@@ -69,29 +65,13 @@ const TokenAnalytics: FC<ITokenAnalyticsProps> = ({ dataToken }) => {
     );
   };
 
-  const convertDataChart = data?.map((item) => ({
+  const convertDataChart = dataToken.analytics?.map((item) => ({
     value: item.value || 0,
-    date: item.date
+    date: item.date * 1000, // Convert to milliseconds
   }));
 
-  const getLabelTimeTooltip = (label: string) => {
-    switch (rangeTime) {
-      case OPTIONS_CHART_ANALYTICS.ONE_DAY:
-        return `${moment(label, "YYYY-MM-DDTHH:mm:ssZ").format("DD MMM HH:mm")} - ${moment(
-          label,
-          "YYYY-MM-DDTHH:mm:ssZ"
-        )
-          .add(2, "hour")
-          .format("HH:mm")}`;
-      case OPTIONS_CHART_ANALYTICS.ONE_WEEK:
-        return moment(label).format("DD MMM");
-      case OPTIONS_CHART_ANALYTICS.ONE_MONTH:
-        return `${moment(label).format("DD MMM")} - ${moment(label).add(1, "days").format("DD MMM")}`;
-      case OPTIONS_CHART_ANALYTICS.THREE_MONTH:
-        return `${moment(label).format("DD MMM")} - ${moment(label).add(1, "days").format("DD MMM")}`;
-      default:
-        return "";
-    }
+  const getLabelTimeTooltip = (label: number) => {
+    return `${moment(label).format("DD MMM HH:mm")}`;
   };
 
   const renderTooltip: TooltipProps<number, number>["content"] = (content) => {
@@ -105,6 +85,7 @@ const TokenAnalytics: FC<ITokenAnalyticsProps> = ({ dataToken }) => {
     );
   };
 
+  // @ts-ignore
   return (
     <Card title={<TextCardHighlight>{t("analytics")}</TextCardHighlight>}>
       <Wrapper container columns={24} spacing="35px">
@@ -124,7 +105,7 @@ const TokenAnalytics: FC<ITokenAnalyticsProps> = ({ dataToken }) => {
             </Grid>
           </Grid>
           <ChartBox>
-            {loading || !data ? (
+            {loading || !dataToken.analytics ? (
               <SkeletonUI variant="rectangular" style={{ height: "375px", display: "block" }} />
             ) : (
               <ResponsiveContainer width="100%" height={400}>
@@ -146,9 +127,7 @@ const TokenAnalytics: FC<ITokenAnalyticsProps> = ({ dataToken }) => {
                   </defs>
                   <XAxis
                     dataKey="date"
-                    tickFormatter={(value) =>
-                      moment(value, "YYYY-MM-DDTHH:mm:ssZ").format(rangeTime === "ONE_DAY" ? "HH:mm" : "DD MMM")
-                    }
+                    tickFormatter={(tick) => moment(tick).format('MMM DD')}
                     tickLine={false}
                     tickMargin={5}
                     dx={-15}

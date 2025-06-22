@@ -5,6 +5,7 @@
     "paths": {
       "@shared/*": ["../shared/src/*"]
     },
+    "allowSyntheticDefaultImports": true,
     "module": "ESNext",
     "target": "ESNext",
     "moduleResolution": "Node",

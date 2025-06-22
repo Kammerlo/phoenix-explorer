@@ -1,16 +1,17 @@
+// @ts-ignore
 import React, { createContext, useEffect, useRef, useState } from "react";
 import { useLocation, useParams } from "react-router-dom";
-import { useSelector } from "react-redux";
-
-import useFetch from "src/commons/hooks/useFetch";
-import { API } from "src/commons/utils/api";
 import NoRecord from "src/components/commons/NoRecord";
 import TokenOverview from "src/components/TokenDetail/TokenOverview";
-import TokenTableData from "src/components/TokenDetail/TokenTableData";
 import TokenAnalytics from "src/components/TokenDetail/TokenAnalytics";
 import FetchDataErr from "src/components/commons/FetchDataErr";
 
 import { StyledContainer } from "./styles";
+import {ITokenOverview} from "@shared/dtos/token.dto";
+import {ApiConnector} from "../../commons/connector/ApiConnector";
+import {ApiReturnType} from "@shared/APIReturnType";
+import CircularProgress from "@mui/material/CircularProgress";
+import TransactionList from "../../components/TransactionLists";
 
 interface IOverviewMetadataContext {
   txCountRealtime: number;
@@ -26,15 +27,21 @@ const TokenDetail: React.FC = () => {
   const mainRef = useRef(document.querySelector("#main"));
 
   const { tokenId } = useParams<{ tokenId: string }>();
-  const { state } = useLocation<{ data?: IToken }>();
-  const blockKey = useSelector(({ system }: RootState) => system.blockKey);
+  const [fetchData, setFechtData] = useState<ApiReturnType<ITokenOverview>>();
+  const [loading, setLoading] = useState<boolean>(true);
+  const apiConnector = ApiConnector.getApiConnector();
 
-  const { data, loading, initialized, error, lastUpdated, statusError } = useFetch<IToken>(
-    state?.data ? "" : `${API.TOKEN.LIST}/${tokenId}`,
-    state?.data,
-    false,
-    blockKey
-  );
+  function updateData() {
+    setLoading(true);
+    apiConnector.getTokenDetail(tokenId).then((data) => {
+      setFechtData(data);
+      setLoading(false);
+    });
+  }
+
+  useEffect(() => {
+    updateData();
+  }, [0]);
 
   const [txCountRealtime, setTxCountRealtime] = useState<number>(0);
 
@@ -44,8 +51,9 @@ const TokenDetail: React.FC = () => {
     mainRef.current?.scrollTo({ top: 0, behavior: "smooth" });
   }, [tokenId]);
 
-  if (error && (statusError || 0) >= 500) return <FetchDataErr />;
-  if ((initialized && !data) || (error && (statusError || 0) < 500)) return <NoRecord />;
+  if (loading) return <CircularProgress/>;
+  if (fetchData.error) return <FetchDataErr />;
+  if (!loading && !fetchData.data) return <NoRecord />;
 
   return (
     <OverviewMetadataTokenContext.Provider
@@ -55,16 +63,18 @@ const TokenDetail: React.FC = () => {
       }}
     >
       <StyledContainer>
-        <TokenOverview data={data} loading={loading} lastUpdated={lastUpdated} />
-        <TokenAnalytics dataToken={data} />
-        <TokenTableData
-          totalSupply={data?.supply}
-          metadata={data?.metadata}
-          metadataJson={data?.metadataJson}
-          loading={loading}
-          metadataCIP25={data?.metadataCIP25}
-          metadataCIP60={data?.metadataCIP60}
-        />
+        <TokenOverview data={fetchData.data} loading={loading} lastUpdated={fetchData.lastUpdated} />
+        <TokenAnalytics dataToken={fetchData.data} />
+        {/*<TokenTableData*/}
+        {/*  totalSupply={data?.supply}*/}
+        {/*  metadata={data?.metadata}*/}
+        {/*  metadataJson={data?.metadataJson}*/}
+        {/*  loading={loading}*/}
+        {/*  metadataCIP25={data?.metadataCIP25}*/}
+        {/*  metadataCIP60={data?.metadataCIP60}*/}
+        {/*/>*/}
+        {/*TODO show Transaction List here*/}
+        {/*<TransactionList></TransactionList>*/}
       </StyledContainer>
     </OverviewMetadataTokenContext.Provider>
   );

@@ -1,4 +1,5 @@
-interface ITokenOverview {
+
+export interface ITokenOverview {
   name?: string;
   displayName?: string;
   policy?: string;
@@ -7,13 +8,14 @@ interface ITokenOverview {
   supply?: number;
   createdOn?: string;
   metadata?: ITokenMetadata;
-  volumeIn24h: number;
-  totalVolume: string;
-  numberOfHolders: number;
-  tokenType?: string;
+  analytics?: { date: number; value: number }[];
+  // volumeIn24h: number;
+  // totalVolume: string;
+  // numberOfHolders: number;
+  // tokenType?: string;
   tokenLastActivity?: string;
   metadataJson?: string;
-  policyIsNativeScript: boolean;
+  // policyIsNativeScript: boolean;
 }
 
 interface ITokenMetadata {
@@ -23,11 +25,6 @@ interface ITokenMetadata {
   description?: string;
   ticker?: string;
   url?: string;
-}
-
-interface IToken extends ITokenOverview, ITokenMetadata {
-  metadataCIP25?: TransactionDetail["metadata"][0]["metadataCIP25"];
-  metadataCIP60?: TransactionDetail["metadata"][0]["metadataCIP25"];
 }
 
 interface ITokenTopHolderTable {

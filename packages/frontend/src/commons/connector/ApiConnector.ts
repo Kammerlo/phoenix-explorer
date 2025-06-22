@@ -9,6 +9,7 @@ import { IDataEpoch } from "@shared/dtos/epoch.dto";
 import {Block} from "@shared/dtos/block.dto";
 import {ApiReturnType} from "@shared/APIReturnType";
 import {Transaction, TransactionDetail} from "@shared/dtos/transaction.dto";
+import {ITokenOverview} from "@shared/dtos/token.dto";
 
 const API_URL: string = process.env.REACT_APP_API_URL || "";
 const API_CONNECTOR_TYPE: string = process.env.REACT_APP_API_TYPE || "";
@@ -65,4 +66,8 @@ export abstract class ApiConnector {
   abstract getPoolRegistrations(type: POOL_TYPE): Promise<ApiReturnType<Registration[]>>;
 
   abstract getCurrentProtocolParameters(): Promise<ApiReturnType<TProtocolParam>>;
+
+  abstract getTokensPage(pageInfo: ParsedUrlQuery) : Promise<ApiReturnType<ITokenOverview[]>>;
+
+  abstract getTokenDetail(tokenId: string) : Promise<ApiReturnType<ITokenOverview>>;
 }

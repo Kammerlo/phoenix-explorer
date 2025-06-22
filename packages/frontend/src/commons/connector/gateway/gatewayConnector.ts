@@ -1,5 +1,6 @@
 import {ApiConnector, StakeAddressAction} from "../ApiConnector";
 import axios, {AxiosInstance, AxiosResponse} from "axios";
+// @ts-ignore
 import {ParsedUrlQuery} from "querystring";
 import {POOL_TYPE} from "src/pages/RegistrationPools";
 import {FunctionEnum} from "src/commons/connector/types/FunctionEnum";
@@ -8,6 +9,8 @@ import applyCaseMiddleware from "axios-case-converter";
 import {IDataEpoch} from "@shared/dtos/epoch.dto";
 import {Block} from "@shared/dtos/block.dto";
 import {Transaction, TransactionDetail} from "@shared/dtos/transaction.dto";
+import {ITokenOverview} from "@shared/dtos/token.dto";
+import epoch from "../../../pages/Epoch";
 
 export class GatewayConnector implements ApiConnector {
   baseUrl: string;
@@ -21,7 +24,8 @@ export class GatewayConnector implements ApiConnector {
   getSupportedFunctions(): FunctionEnum[] {
     return [FunctionEnum.EPOCH,
     FunctionEnum.BLOCK,
-    FunctionEnum.TRANSACTION];
+    FunctionEnum.TRANSACTION,
+    FunctionEnum.TOKENS];
   }
 
   async getEpoch(epochId: number): Promise<ApiReturnType<IDataEpoch>> {
@@ -98,5 +102,17 @@ export class GatewayConnector implements ApiConnector {
 
   async getWalletStakeFromAddress(address: string): Promise<ApiReturnType<WalletStake>> {
     throw new Error("Not Implemented")
+  }
+
+  async getTokensPage(pageInfo: ParsedUrlQuery): Promise<ApiReturnType<ITokenOverview[]>> {
+    const response = await this.client.get<ApiReturnType<ITokenOverview[]>>(`${this.baseUrl}/tokens`, {
+      params: pageInfo
+    });
+    return response.data;
+  }
+
+  async getTokenDetail(tokenId: string): Promise<ApiReturnType<ITokenOverview>> {
+    const response = await this.client.get<ApiReturnType<ITokenOverview>>(`${this.baseUrl}/tokens/${tokenId}`);
+    return response.data;
   }
 }
