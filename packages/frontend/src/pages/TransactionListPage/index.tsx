@@ -1,9 +1,13 @@
 import styled from "@emotion/styled";
-import { Container } from "@mui/material";
-import { useEffect, useState } from "react";
+import {Container} from "@mui/material";
+import {useEffect, useState} from "react";
 
 import TransactionList from "src/components/TransactionLists";
-import { setOnDetailView } from "src/stores/user";
+import {setOnDetailView} from "src/stores/user";
+import {ApiReturnType} from "@shared/APIReturnType";
+import {Transaction} from "@shared/dtos/transaction.dto";
+import {ApiConnector} from "../../commons/connector/ApiConnector";
+import usePageInfo from "../../commons/hooks/usePageInfo";
 
 const StyledContainer = styled(Container)`
   @media screen and (max-width: ${(props) => props.theme.breakpoints.values.sm}px) {
@@ -13,24 +17,33 @@ const StyledContainer = styled(Container)`
 `;
 
 const Transactions = () => {
-  const [selected, setSelected] = useState<string | null>(null);
+
+  const [loading, setLoading] = useState(true);
+  const [transactions, setTransactions] = useState<ApiReturnType<Transaction[]> | undefined>();
+  const {pageInfo} = usePageInfo();
+  const apiConnector: ApiConnector = ApiConnector.getApiConnector();
+
+  function updateData() {
+    apiConnector.getTransactions(undefined, pageInfo).then((data) => {
+      console.log(data)
+      setTransactions(data);
+      setLoading(false);
+    });
+  }
+
+  useEffect(() => {
+    updateData();
+  }, []);
 
   useEffect(() => {
     window.history.replaceState({}, document.title);
     document.title = `Transactions List | Cardano Blockchain Explorer`;
   }, []);
 
-  const openDetail = (_: React.MouseEvent<Element, MouseEvent>, r: Transaction) => {
-    setOnDetailView(true);
-    setSelected(r.hash);
-  };
-
   return (
-    <>
-      <StyledContainer>
-        <TransactionList showTabView />
-      </StyledContainer>
-    </>
+    <StyledContainer>
+      <TransactionList showTabView transactions={transactions} loading={loading} updateData={updateData} paginated={false}/>
+    </StyledContainer>
   );
 };
 

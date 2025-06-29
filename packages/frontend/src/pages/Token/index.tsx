@@ -143,17 +143,6 @@ const Tokens = () => {
           data={fetchData.data}
           columns={columns}
           total={{ title: "Total", count: fetchData.total }}
-          pagination={{
-            ...pageInfo,
-            total: fetchData.total,
-            onChange: (page, size) => {
-              mainRef.current?.scrollTo({ top: 0, behavior: "smooth" });
-              history.replace({
-                search: stringify({ ...pageInfo, page, size, tokenName: queries.get("tokenName") || "" })
-              });
-            },
-            hideLastPage: true
-          }}
           onClickRow={toTokenDetail}
           rowKey="fingerprint"
           showTabView

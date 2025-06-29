@@ -10,11 +10,15 @@ import { ApiConnector } from "../../commons/connector/ApiConnector";
 import TransactionList from "../../components/TransactionLists";
 import {ApiReturnType} from "@shared/APIReturnType";
 import {Block} from "@shared/dtos/block.dto";
+import usePageInfo from "../../commons/hooks/usePageInfo";
+import {Transaction} from "@shared/dtos/transaction.dto";
 
 const BlockDetail = () => {
   const { blockId } = useParams<{ blockId: string }>();
   const [loading, setLoading] = useState<boolean>(true);
   const [blockData, setBlockData] = useState<ApiReturnType<Block>>();
+  const [transactions, setTransactions] = useState<ApiReturnType<Transaction[]>>();
+  const {pageInfo} = usePageInfo();
 
   const apiConnector: ApiConnector = ApiConnector.getApiConnector();
 
@@ -26,6 +30,11 @@ const BlockDetail = () => {
       setBlockData(data);
       setLoading(false);
     });
+    apiConnector.getTransactions(blockId, pageInfo).then((data) => {
+      setTransactions(data);
+      setLoading(false);
+    });
+
   }, [blockId]);
 
   if (loading) {
@@ -40,7 +49,7 @@ const BlockDetail = () => {
   return (
     <StyledContainer>
       <BlockOverview data={blockData?.data} loading={loading} lastUpdated={blockData?.lastUpdated} />
-      <TransactionList blockId={blockId} showTabView />
+      <TransactionList transactions={transactions} loading={loading} showTabView />
     </StyledContainer>
   );
 };

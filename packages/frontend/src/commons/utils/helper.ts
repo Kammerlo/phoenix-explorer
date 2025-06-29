@@ -390,7 +390,7 @@ export const handleChangeLanguage = (newLang: APP_LANGUAGES, currentLanguage: AP
   }
 };
 
-export const formatNameBlockNo = (blockNo: blockEpochNoType, epochNo: blockEpochNoType) => {
+export const formatNameBlockNo = (blockNo: blockEpochNoType, epochNo: blockEpochNoType) : {blockName: string, tooltip: string} => {
   if (isNil(blockNo) && isNil(epochNo))
     return {
       blockName: "Genesis",
@@ -403,7 +403,7 @@ export const formatNameBlockNo = (blockNo: blockEpochNoType, epochNo: blockEpoch
     };
   }
   return {
-    blockName: blockNo,
+    blockName: blockNo + "",
     tooltip: ""
   };
 };

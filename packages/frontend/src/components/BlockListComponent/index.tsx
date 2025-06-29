@@ -23,6 +23,7 @@ import { TooltipIcon } from "../../commons/resources";
 
 import { Block } from "@shared/dtos/block.dto";
 import {ApiReturnType} from "@shared/APIReturnType";
+import {Actions, TimeDuration} from "../TransactionLists/styles";
 
 interface BlockListComponentProps {
   fetchData?: ApiReturnType<Block[]>;
@@ -142,18 +143,15 @@ const BlockListComponent: React.FC<BlockListComponentProps> = ({fetchData, updat
 
   return (
     <>
+      <Actions>
+        <TimeDuration>
+          <FormNowMessage time={fetchData?.lastUpdated || 0} />
+        </TimeDuration>
+      </Actions>
       <Table
         data={fetchData?.data}
         columns={columns}
         total={{ title: t("common.totalBlocks"), count: fetchData?.total || 0 }}
-        pagination={{
-          ...pageInfo,
-          total: fetchData?.total,
-          onChange: (page) => {
-            updateData(page);
-          },
-          handleCloseDetailView: handleClose
-        }}
         onClickRow={handleOpenDetail}
         rowKey={(r: Block) => r.blockNo || r.hash}
         selected={selected}

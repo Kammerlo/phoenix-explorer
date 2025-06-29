@@ -16,37 +16,23 @@ import Card from "../commons/Card";
 import { Actions, StyledLink, TimeDuration } from "./styles";
 import DatetimeTypeTooltip from "../commons/DatetimeTypeTooltip";
 import { Capitalize } from "../commons/CustomText/styles";
-import { ApiConnector } from "src/commons/connector/ApiConnector";
 import {ApiReturnType} from "@shared/APIReturnType";
 import {Transaction} from "@shared/dtos/transaction.dto";
 
 interface TransactionListProps {
   underline?: boolean;
   showTabView?: boolean;
-  blockId?: string | number;
+  transactions: ApiReturnType<Transaction[]>;
+  updateData?: (page: number) => void;
+  loading: boolean;
+  paginated?: boolean;
 }
 
-const TransactionList: React.FC<TransactionListProps> = ({ underline = false, showTabView, blockId }) => {
+const TransactionList: React.FC<TransactionListProps> = ({ underline = false, showTabView, transactions, loading, updateData, paginated = true }) => {
   const { t } = useTranslation();
   const history = useHistory();
   const { pageInfo, setSort } = usePageInfo();
-  const [loading, setLoading] = useState(true);
-  const [transactions, setTransactions] = useState<ApiReturnType<Transaction[]> | undefined>();
-  const apiConnector: ApiConnector = ApiConnector.getApiConnector();
 
-  function updateData(page: number) {
-    pageInfo.page = page;
-    apiConnector.getTransactions(blockId, pageInfo).then((data) => {
-      setTransactions(data);
-      setLoading(false);
-    });
-  }
-
-  useEffect(() => {
-    updateData(0);
-  }, []);
-
-  const mainRef = useRef(document.querySelector("#main"));
   const onClickRow = (e: MouseEvent<Element, globalThis.MouseEvent>, r: Transaction) => {
     if (e.target instanceof HTMLAnchorElement || (e.target instanceof Element && e.target.closest("a"))) {
       e.preventDefault();
@@ -81,7 +67,7 @@ const TransactionList: React.FC<TransactionListProps> = ({ underline = false, sh
       key: "block",
       minWidth: 50,
       render: (r, index) => {
-        const { blockName, tooltip } = formatNameBlockNo(r.blockNo, r.epochNo) || getShortHash(r.blockHash);
+        const { blockName, tooltip } = formatNameBlockNo(r.blockNo, r.epochNo);
         return (
           <StyledLink
             to={details.block(r.blockNo || r.blockHash)}
@@ -159,7 +145,7 @@ const TransactionList: React.FC<TransactionListProps> = ({ underline = false, sh
   return (
     <Card
       data-testid="transactions-card"
-      title={pathname?.includes("/transactions") ? "Transactions" : ""}
+      title={pathname?.includes("/transactions") ? "Last Transactions" : ""}
       underline={underline}
     >
       {!error && (
@@ -174,14 +160,19 @@ const TransactionList: React.FC<TransactionListProps> = ({ underline = false, sh
         columns={columns}
         maxHeight={"unset"}
         total={{ count: transactions?.total || 0, title: t("common.totalTxs") }}
-        pagination={{
-          ...pageInfo,
-          total: transactions?.total || 0,
-          onChange: (page) => {
-            updateData(page);
-          },
-          hideLastPage: true
-        }}
+        pagination={
+          paginated
+            ? {
+              ...pageInfo,
+              total: transactions?.total || 0,
+              onChange: (page) => {
+                updateData(page);
+              },
+              hideLastPage: true,
+              paginated: true
+            }
+            : undefined
+        }
         onClickRow={onClickRow}
         rowKey="hash"
         showTabView={showTabView}

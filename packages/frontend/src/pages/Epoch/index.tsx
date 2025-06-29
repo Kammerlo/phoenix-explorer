@@ -150,20 +150,12 @@ const Epoch: React.FC = () => {
   return (
     <StyledContainer>
       <Card data-testid="epoch.epochsTitle" title={t("glossary.epochs")}>
-        {latestEpoch && <FirstEpoch data={latestEpoch} onClick={handleOpenDetail} />}
+        {latestEpoch && pageInfo.page == 0 && <FirstEpoch data={latestEpoch} onClick={handleOpenDetail} />}
         <Table
           data-testid="epoch.table"
           data={epochData?.data || []}
           columns={columns}
           total={{ title: t("common.totalEpochs"), count: epochData?.total || 0 }}
-          pagination={{
-            ...pageInfo,
-            total: epochData?.total || 0,
-            onChange: (page) => {
-              updateData(page);
-            },
-            handleCloseDetailView: handleClose
-          }}
           onClickRow={handleOpenDetail}
           onClickExpandedRow={handleExpandedRow}
           rowKey="no"

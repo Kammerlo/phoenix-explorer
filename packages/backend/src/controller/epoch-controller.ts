@@ -14,8 +14,11 @@ epochController.get('', async (req, res) => {
   const latestEpoch = await API.epochsLatest();
   const epochs = await API.epochsPrevious(latestEpoch.epoch,
     {page: Number.parseInt(String(pageInfo.page || 0)), count: Number.parseInt(String(pageInfo.size || 100))});
-
-  epochs.push(latestEpoch); // Add the latest epoch to the list
+  if(Number.parseInt(String(pageInfo.page || 0)) == 0) {
+    // If page is 0, we need to add the latest epoch to the list
+    // since the API does not return it
+    epochs.push(latestEpoch);
+  }
   const epochsData = epochs.map((epoch => {
     const dataEpoch: IDataEpoch = {
       no: epoch.epoch,

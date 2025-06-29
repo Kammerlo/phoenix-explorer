@@ -2,28 +2,36 @@ import {API} from "../config/blockfrost";
 import {getBlock, getTransactions, getTxDetail, getUtxos} from "../config/cache";
 import {Token, TPoolCertificated, Transaction, TransactionDetail} from "@shared/dtos/transaction.dto";
 
-export async function fetchLatestTransactions(): Promise<Transaction[]> {
+export async function fetchLatestTransactions(minTransactionCount : number = 10): Promise<Transaction[]> {
   const latestBlockTransactions = await API.blocksLatestTxs();
   const latestBlock = await API.blocksLatest();
+  let blockDelta = 1;
+  // ensuring we are adding atleast a minimum amount of transactions
+  while (latestBlockTransactions.length <= minTransactionCount) {
+    const blockHeight = latestBlock.height! - blockDelta;
+    const blockTxs = await API.blocksTxs(blockHeight);
+    latestBlockTransactions.push(...blockTxs);
+    blockDelta = blockDelta + 1;
+  }
 
-  return Promise.all(
-    latestBlockTransactions.map(async (txHash) => {
-      const tx = await getTransactions(txHash);
-      return {
-        blockNo: tx.block_height ?? 0,
-        hash: txHash,
-        time: tx.block_time.toString(),
-        slot: tx.slot ?? 0,
-        epochNo: latestBlock.epoch ?? 0,
-        epochSlotNo: latestBlock.epoch_slot ?? 0,
-        fee: parseInt(tx.fees ?? "0"),
-        totalOutput: tx.output_amount
-          .filter((amount) => amount.unit === "lovelace")
-          .reduce((acc, a) => acc + parseInt(a.quantity), 0),
-        blockHash: latestBlock.hash,
-      } as Transaction;
-    })
-  );
+  const transactions : Transaction[] = [];
+  for(const txHash of latestBlockTransactions) {
+    const tx = await getTransactions(txHash);
+    transactions.push({
+      blockNo: tx.block_height ?? 0,
+      hash: txHash,
+      time: tx.block_time.toString(),
+      slot: tx.slot ?? 0,
+      epochNo: latestBlock.epoch ?? 0,
+      epochSlotNo: latestBlock.epoch_slot ?? 0,
+      fee: parseInt(tx.fees ?? "0"),
+      totalOutput: tx.output_amount
+        .filter((amount) => amount.unit === "lovelace")
+        .reduce((acc, a) => acc + parseInt(a.quantity), 0),
+      blockHash: tx.block,
+    } as Transaction);
+  }
+  return transactions;
 }
 
 async function getPoolCertificates(txHash: string, poolUpdateCount: number, poolRetireCount: number) {
