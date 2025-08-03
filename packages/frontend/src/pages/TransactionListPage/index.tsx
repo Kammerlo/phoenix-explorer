@@ -25,7 +25,6 @@ const Transactions = () => {
 
   function updateData() {
     apiConnector.getTransactions(undefined, pageInfo).then((data) => {
-      console.log(data)
       setTransactions(data);
       setLoading(false);
     });

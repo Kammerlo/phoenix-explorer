@@ -9,7 +9,6 @@ type Props = {
 const FormNowMessage = ({ time }: Props) => {
   const { t } = useTranslation();
   const [message, setMessage] = useState(time ? `${t("common.lastUpdated")} ${moment.unix(time).fromNow()}` : "");
-  console.log(time);
   useEffect(() => {
     if (time) {
       setMessage(`${t("common.lastUpdated")} ${moment.unix(time).fromNow()}`);

@@ -21,7 +21,6 @@ const App: React.FC = () => {
     basename = `/${currentLanguage}`;
   }
 
-  console.log("App rendered");
   return (
     <I18nextProvider i18n={i18n} defaultNS={"translation"}>
       <Provider store={store}>
