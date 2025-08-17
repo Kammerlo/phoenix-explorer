@@ -11,21 +11,21 @@ import {
   useTheme
 } from "@mui/material";
 import axios from "axios";
-import {isEmpty, isNil, isObject, omitBy} from "lodash";
-import {stringify} from "qs";
-import React, {FormEvent, useCallback, useEffect, useState} from "react";
-import {useTranslation} from "react-i18next";
-import {BiChevronDown} from "react-icons/bi";
-import {GoChevronRight} from "react-icons/go";
-import {useSelector} from "react-redux";
-import {RouteComponentProps, useHistory, withRouter} from "react-router-dom";
+import { isEmpty, isNil, isObject, omitBy } from "lodash";
+import { stringify } from "qs";
+import React, { FormEvent, useCallback, useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { BiChevronDown } from "react-icons/bi";
+import { GoChevronRight } from "react-icons/go";
+import { useSelector } from "react-redux";
+import { RouteComponentProps, useHistory, withRouter } from "react-router-dom";
 
-import {useScreen} from "src/commons/hooks/useScreen";
-import {HeaderSearchIconComponent} from "src/commons/resources";
-import {details, routers} from "src/commons/routers";
-import {API} from "src/commons/utils/api";
-import {API_ADA_HANDLE_API, FF_GLOBAL_IS_CONWAY_ERA} from "src/commons/utils/constants";
-import {getShortHash} from "src/commons/utils/helper";
+import { useScreen } from "src/commons/hooks/useScreen";
+import { HeaderSearchIconComponent } from "src/commons/resources";
+import { details, routers } from "src/commons/routers";
+import { API } from "src/commons/utils/api";
+import { API_ADA_HANDLE_API, FF_GLOBAL_IS_CONWAY_ERA } from "src/commons/utils/constants";
+import { getShortHash } from "src/commons/utils/helper";
 import CustomIcon from "src/components/commons/CustomIcon";
 
 import {
@@ -38,7 +38,7 @@ import {
   SubmitButton,
   ValueOption
 } from "./style";
-import {OptionsSearch} from "./backup";
+import { OptionsSearch } from "./backup";
 
 interface Props extends RouteComponentProps {
   home: boolean;
@@ -50,27 +50,28 @@ interface Option {
   value: string;
   label: string;
   path?: string;
+  placeholder: string;
 }
 
 const options: Option[] = [
+  // ToDo: Add a general search option
   {
-    value: "all",
-    label: "filter.allFilters",
+    value: "transaction",
+    label: "filter.transactions",
+    path: "/transaction/",
+    placeholder: "filter.placeholder.transaction"
   },
   {
     value: "epoch",
     label: "filter.epochs",
-    path: "/epoch/"
+    path: "/epoch/",
+    placeholder: "filter.placeholder.epoch"
   },
   {
     value: "block",
     label: "filter.blocks",
-    path: "/block/"
-  },
-  {
-    value: "transaction",
-    label: "filter.transactions",
-    path: "/transactions/"
+    path: "/block/",
+    placeholder: "filter.placeholder.block"
   }
 ];
 
@@ -86,10 +87,10 @@ interface SearchResult {
   type: SearchType;
 }
 
-const HeaderSearch: React.FC<Props> = ({home, callback, setShowErrorMobile, history}) => {
+const HeaderSearch: React.FC<Props> = ({ home, callback, setShowErrorMobile, history }) => {
 
 
-  const {t} = useTranslation();
+  const { t } = useTranslation();
   const theme = useTheme();
   const [showOption, setShowOption] = useState(false);
   const [selectedOption, setSelectedOption] = useState(getPreSelectedOption());
@@ -106,15 +107,17 @@ const HeaderSearch: React.FC<Props> = ({home, callback, setShowErrorMobile, hist
   }
 
   function submit() {
-    if(selectedOption.path) {
+    if (selectedOption.path) {
       history.push(`${selectedOption.path}${searchValue}`);
+    } else {
+
     }
   }
 
   return (
     <Box>
       <Form home={+home} data-testid="header-search">
-        <Backdrop sx={{backgroundColor: "unset"}} open={showOption} onClick={() => setShowOption(false)}/>
+        <Backdrop sx={{ backgroundColor: "unset" }} open={showOption} onClick={() => setShowOption(false)} />
         <StyledSelect
           data-testid="all-filters-dropdown"
           IconComponent={BiChevronDown}
@@ -126,12 +129,12 @@ const HeaderSearch: React.FC<Props> = ({home, callback, setShowErrorMobile, hist
           MenuProps={{
             MenuListProps: {
               sx: {
-                bgcolor: ({palette}) => `${palette.secondary[0]} !important`
+                bgcolor: ({ palette }) => `${palette.secondary[0]} !important`
               }
             },
             PaperProps: {
               sx: {
-                bgcolor: ({palette}) => `${palette.secondary[0]} !important`
+                bgcolor: ({ palette }) => `${palette.secondary[0]} !important`
               }
             }
           }}
@@ -153,7 +156,7 @@ const HeaderSearch: React.FC<Props> = ({home, callback, setShowErrorMobile, hist
           onChange={(e) => {
             setSearchValue(e.target.value)
           }}
-          placeholder={t("filter.placeholder.searchAll")}
+          placeholder={t(selectedOption.placeholder)}
         />
         <SubmitButton type="submit" home={home ? 1 : 0} onClick={() => submit()}>
           <CustomIcon
@@ -180,7 +183,7 @@ const HeaderSearch: React.FC<Props> = ({home, callback, setShowErrorMobile, hist
             <List>
               {results.map((result, index) => (
                 <ListItem key={index} divider>
-                  <ListItemText primary={result.value}/>
+                  <ListItemText primary={result.value} />
                 </ListItem>
               ))}
             </List>
