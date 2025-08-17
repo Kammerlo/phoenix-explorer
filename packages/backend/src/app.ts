@@ -1,9 +1,9 @@
 import express from "express";
 import cors from "cors";
-import {epochController} from "./controller/epoch-controller";
-import {blockController} from "./controller/block-controller";
-import {transactionController} from "./controller/transaction-controller";
-import {tokenController} from "./controller/token-controller";
+import { epochController } from "./controller/epoch-controller";
+import { blockController } from "./controller/block-controller";
+import { transactionController } from "./controller/transaction-controller";
+import { tokenController } from "./controller/token-controller";
 // optional, for typing
 
 const app = express();
