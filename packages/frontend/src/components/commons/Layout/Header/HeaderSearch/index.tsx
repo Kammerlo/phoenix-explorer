@@ -72,6 +72,12 @@ const options: Option[] = [
     label: "filter.blocks",
     path: "/block/",
     placeholder: "filter.placeholder.block"
+  },
+  {
+    value: "token",
+    label: "filter.tokens",
+    path: "/token/",
+    placeholder: "filter.placeholder.token"
   }
 ];
 

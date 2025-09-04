@@ -37,7 +37,7 @@ import DrepDetail from "./pages/DrepDetail";
 import Dreps from "./pages/Dreps";
 import ConstitutionalCommittees from "./pages/ConstitutionalCommittees";
 import ConstitutionalCommitteeDetail from "./pages/ConstitutionalCommitteeDetail";
-import Overview from "./pages/Overview";
+import GovernanceOverview from "./pages/GovernanceOverview";
 import NetworkMonitoring from "./pages/NetworkMonitoring";
 import GovernanceActionDetails from "./pages/GovernanceActionDetails";
 import { ApiConnector } from "./commons/connector/ApiConnector";
@@ -76,7 +76,9 @@ const Routes: React.FC = () => {
   return (
     <Switch>
       <Route path={routers.HOME} exact component={Home} />
-      <Route path={routers.OVERVIEW} exact component={Overview} />
+
+      <Route path={routers.GOVERNANCE_OVERVIEW} exact
+        component={isSupportedRoute(GovernanceOverview, FunctionEnum.GOVERNANCE)} />
 
       <Route
         path={routers.STAKING_LIFECYCLE}

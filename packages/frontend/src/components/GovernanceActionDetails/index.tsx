@@ -3,21 +3,30 @@ import { useHistory, useParams } from "react-router-dom";
 
 import { details } from "src/commons/routers";
 import { CCGorvernanceVote, DescriptionIcon, PencilIcon } from "src/commons/resources";
-import useFetch from "src/commons/hooks/useFetch";
-import { API } from "src/commons/utils/api";
 
 import CustomAccordion, { TTab } from "../commons/CustomAccordion";
 import Description from "./Description";
 import OverviewHeader from "./OverviewHeader";
 import VotesOverview from "./VotesOverview";
 import CreatedBy from "./CreatedBy";
+import { ApiConnector } from "src/commons/connector/ApiConnector";
+import { GovernanceActionDetail } from "@shared/dtos/GovernanceOverview";
+import { useState } from "react";
 
 export default function GovernanceActionDetailsComponent() {
   const history = useHistory();
 
   const pathArray = history.location.pathname.split("/").filter(Boolean);
+  const apiConnector = ApiConnector.getApiConnector();
+  const [loading, setLoading] = useState(true);
+  const [data, setData] = useState<GovernanceActionDetail | null>(null);
+
   const { txHash, index } = useParams<{ txHash: string; index: string }>();
-  const { data, loading } = useFetch<OverviewGovActions>(API.OVERVIEW_GOV_ACTIONS.OVERVIEW(txHash, index));
+  apiConnector.getGovernanceDetail(txHash, index).then((response) => {
+    setData(response.data);
+    setLoading(false);
+  });
+  // const { data, loading } = useFetch<OverviewGovActions>(API.OVERVIEW_GOV_ACTIONS.OVERVIEW(txHash, index));
   const onTabChange = (tab: string) => {
     history.replace(details.overviewGovernanceAction(pathArray[1], pathArray[2], tab));
   };

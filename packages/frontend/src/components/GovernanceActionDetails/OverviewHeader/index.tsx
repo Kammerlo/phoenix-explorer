@@ -9,7 +9,6 @@ import DynamicEllipsisText from "src/components/DynamicEllipsisText";
 import { TruncateSubTitleContainer } from "src/components/share/styled";
 import DatetimeTypeTooltip from "src/components/commons/DatetimeTypeTooltip";
 import { formatDateLocal } from "src/commons/utils/helper";
-import { statusOverview } from "src/components/Overview/TabOverview";
 import { actionTypeListDrep } from "src/components/commons/CardGovernanceVotes";
 
 import VoteSubmitted from "./VoteSubmitted";
@@ -23,9 +22,10 @@ import {
   StyledCard,
   TitleContainer
 } from "./styles";
+import { GovernanceActionDetail } from "@shared/dtos/GovernanceOverview";
 
 interface Props {
-  data: OverviewGovActions | null;
+  data: GovernanceActionDetail | null;
 }
 
 export default function OverviewHeader({ data }: Props) {
@@ -102,7 +102,7 @@ export default function OverviewHeader({ data }: Props) {
                     width={24}
                   />
                   <StyledCard.Title>{t("govAction.status")}</StyledCard.Title>
-                  <StyledCard.Value>{statusOverview.find((el) => el.value === data?.status)?.text}</StyledCard.Value>
+                  {/* <StyledCard.Value>{statusOverview.find((el) => el.value === data?.status)?.text}</StyledCard.Value> */}
                 </StyledCard.Container>
               </Grid>
             </Grid>

@@ -12,9 +12,14 @@ import TabOverview from "./TabOverview";
 import NoRecord from "../commons/NoRecord";
 import FetchDataErr from "../commons/FetchDataErr";
 import PreDefinedVotesChart from "./ChartPreDefined";
+import { ApiConnector } from "src/commons/connector/ApiConnector";
+import { GovernanceOverview } from "@shared/dtos/GovernanceOverview";
 
 export default function OverviewComponent() {
-  const { data, loading, error, statusError } = useFetch<GOoverview>(API.GOVERNANCE_OVERVIEW.OVERVIEW);
+  const { data, loading, error, statusError } = useFetch<GovernanceOverview>(API.GOVERNANCE_OVERVIEW.OVERVIEW);
+  // const apiConnector = ApiConnector.getApiConnector();
+  // apiConnector.
+
   const dataCard = {
     activeDReps: data?.activeDReps,
     activeSPOs: data?.activeSPOs,
@@ -33,9 +38,9 @@ export default function OverviewComponent() {
       <Card marginBottom={"32px"} title={t("glossary.overview")}>
         <Description>{t("overview.page.description")}</Description>
       </Card>
-      <CardOverview loading={loading} data={dataCard} />
-      <ChartOverview loading={loading} data={dataChart} />
-      <PreDefinedVotesChart />
+      {/* <CardOverview loading={loading} data={dataCard} /> */}
+      {/* <ChartOverview loading={loading} data={dataChart} /> */}
+      {/* <PreDefinedVotesChart /> */}
       <TabOverview />
     </Box>
   );

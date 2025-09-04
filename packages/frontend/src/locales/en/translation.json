@@ -21,6 +21,7 @@
   "filter.placeholder.epoch": "Search for epochs...",
   "filter.placeholder.block": "Search for blocks...",
   "filter.placeholder.transaction": "Search for transactions...",
+  "filter.placeholder.token": "Search for tokens...",
   "filter.placeholder.searchAddressPools": "Search Stake Address, Pools",
   "filter.placeholder.search": "Search ...",
   "common.search": "Search",

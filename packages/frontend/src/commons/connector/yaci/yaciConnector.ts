@@ -34,14 +34,15 @@ import { TProtocolParam } from "../../../types/protocol";
 import { protocolParamsToTProtocolParam } from "./mapper/ProtocolParamsToTProtocolParam";
 // @ts-ignore
 import { ParsedUrlQuery } from "querystring";
-import {Block} from "@shared/dtos/block.dto";
-import {ApiReturnType} from "@shared/APIReturnType";
-import {IDataEpoch} from "@shared/dtos/epoch.dto";
-import {Transaction, TransactionDetail} from "@shared/dtos/transaction.dto";
-import {Date} from "../../../components/commons/Epoch/FirstEpoch/styles";
-import {ITokenOverview} from "@shared/dtos/token.dto";
+import { Block } from "@shared/dtos/block.dto";
+import { ApiReturnType } from "@shared/APIReturnType";
+import { IDataEpoch } from "@shared/dtos/epoch.dto";
+import { Transaction, TransactionDetail } from "@shared/dtos/transaction.dto";
+import { Date } from "../../../components/commons/Epoch/FirstEpoch/styles";
+import { ITokenOverview } from "@shared/dtos/token.dto";
 // @ts-ignore
 import * as console from "node:console";
+import { GovernanceOverview } from "@shared/dtos/GovernanceOverview";
 
 /**
  * This ApiConnector implementation uses the YACI API to fetch data.
@@ -54,6 +55,9 @@ export class YaciConnector implements ApiConnector {
   constructor(baseUrl: string) {
     this.baseUrl = baseUrl;
     this.client = applyCaseMiddleware(axios.create());
+  }
+  getGovernanceOverview(): Promise<ApiReturnType<GovernanceOverview>> {
+    throw new Error("Method not implemented.");
   }
 
   getSupportedFunctions(): FunctionEnum[] {

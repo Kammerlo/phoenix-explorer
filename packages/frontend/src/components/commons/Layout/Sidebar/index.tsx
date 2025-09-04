@@ -93,24 +93,21 @@ const Sidebar: React.FC = () => {
                   : muiTheme.palette.primary[200]
                 : "transparent"
             }
-            border={`2px solid ${
-              window.navigator.language === selectedTimeZone
+            border={`2px solid ${window.navigator.language === selectedTimeZone
                 ? muiTheme.palette.primary.main
                 : muiTheme.palette.primary[200]
-            } `}
+              } `}
             sx={{
               "&:hover": {
                 background:
                   window.navigator.language === selectedTimeZone ? muiTheme.palette.primary[200] : "transparent",
-                border: `${window.navigator.language === selectedTimeZone ? "2px" : "1px"} solid ${
-                  muiTheme.palette.primary.main
-                }`
+                border: `${window.navigator.language === selectedTimeZone ? "2px" : "1px"} solid ${muiTheme.palette.primary.main
+                  }`
               },
               "&:disabled": {
                 color: muiTheme.palette.primary[200],
-                border: `${window.navigator.language === selectedTimeZone ? "2px" : "1px"} solid ${
-                  muiTheme.palette.primary[200]
-                }`
+                border: `${window.navigator.language === selectedTimeZone ? "2px" : "1px"} solid ${muiTheme.palette.primary[200]
+                  }`
               }
             }}
             borderRadius={"8px"}
@@ -140,18 +137,16 @@ const Sidebar: React.FC = () => {
                   : muiTheme.palette.primary[200]
                 : "transparent"
             }
-            border={`2px solid ${
-              selectedTimeZone === "UTC" ? muiTheme.palette.primary.main : muiTheme.palette.primary[200]
-            } `}
+            border={`2px solid ${selectedTimeZone === "UTC" ? muiTheme.palette.primary.main : muiTheme.palette.primary[200]
+              } `}
             sx={{
               "&:hover": {
                 background: selectedTimeZone === "UTC" ? muiTheme.palette.primary[200] : "transparent",
                 border: `${selectedTimeZone === "UTC" ? "2px" : "1px"} solid ${muiTheme.palette.primary.main}`
               }
             }}
-            borderLeft={`2px solid ${
-              selectedTimeZone === "UTC" ? muiTheme.palette.primary.main : muiTheme.palette.primary.main
-            } !important`}
+            borderLeft={`2px solid ${selectedTimeZone === "UTC" ? muiTheme.palette.primary.main : muiTheme.palette.primary.main
+              } !important`}
           >
             UTC
           </Box>
@@ -196,9 +191,8 @@ const Sidebar: React.FC = () => {
             bgcolor={muiTheme.isDark ? muiTheme.palette.secondary[0] : "transparent"}
             border={`2px solid ${muiTheme.isDark ? muiTheme.palette.primary.main : muiTheme.palette.primary[200]} `}
             borderRadius={"8px"}
-            borderLeft={`2px solid ${
-              muiTheme.isDark ? muiTheme.palette.primary.main : muiTheme.palette.primary.main
-            } !important`}
+            borderLeft={`2px solid ${muiTheme.isDark ? muiTheme.palette.primary.main : muiTheme.palette.primary.main
+              } !important`}
           >
             <Box
               component={DarkModeMobile}

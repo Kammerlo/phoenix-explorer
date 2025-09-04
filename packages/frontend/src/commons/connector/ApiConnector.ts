@@ -4,12 +4,14 @@ import { POOL_TYPE } from "src/pages/RegistrationPools";
 // @ts-ignore
 import { TProtocolParam } from "../../types/protocol";
 import { ParsedUrlQuery } from "querystring";
-import {GatewayConnector} from "./gateway/gatewayConnector";
+import { GatewayConnector } from "./gateway/gatewayConnector";
 import { IDataEpoch } from "@shared/dtos/epoch.dto";
-import {Block} from "@shared/dtos/block.dto";
-import {ApiReturnType} from "@shared/APIReturnType";
-import {Transaction, TransactionDetail} from "@shared/dtos/transaction.dto";
-import {ITokenOverview} from "@shared/dtos/token.dto";
+import { Block } from "@shared/dtos/block.dto";
+import { ApiReturnType } from "@shared/APIReturnType";
+import { Transaction, TransactionDetail } from "@shared/dtos/transaction.dto";
+import { ITokenOverview } from "@shared/dtos/token.dto";
+// Import GovernanceOverview type (adjust the path as needed)
+import { GovernanceActionDetail, GovernanceActionListItem, GovernanceOverview } from "@shared/dtos/GovernanceOverview";
 
 const API_URL: string = process.env.REACT_APP_API_URL || "";
 const API_CONNECTOR_TYPE: string = process.env.REACT_APP_API_TYPE || "";
@@ -27,9 +29,9 @@ export abstract class ApiConnector {
   }
 
   public static getApiConnector(): ApiConnector {
-    if (API_CONNECTOR_TYPE === "YACI") {
-      return new YaciConnector(API_URL);
-    }
+    // if (API_CONNECTOR_TYPE === "YACI") {
+    //   return new YaciConnector(API_URL);
+    // }
     if (API_CONNECTOR_TYPE === "GATEWAY") {
       return new GatewayConnector(API_URL);
     }
@@ -67,7 +69,11 @@ export abstract class ApiConnector {
 
   abstract getCurrentProtocolParameters(): Promise<ApiReturnType<TProtocolParam>>;
 
-  abstract getTokensPage(pageInfo: ParsedUrlQuery) : Promise<ApiReturnType<ITokenOverview[]>>;
+  abstract getTokensPage(pageInfo: ParsedUrlQuery): Promise<ApiReturnType<ITokenOverview[]>>;
 
-  abstract getTokenDetail(tokenId: string) : Promise<ApiReturnType<ITokenOverview>>;
+  abstract getTokenDetail(tokenId: string): Promise<ApiReturnType<ITokenOverview>>;
+
+  abstract getGovernanceOverviewList(pageInfo: ParsedUrlQuery): Promise<ApiReturnType<GovernanceActionListItem[]>>;
+
+  abstract getGovernanceDetail(txHash: string, index: string): Promise<ApiReturnType<GovernanceActionDetail>>;
 }

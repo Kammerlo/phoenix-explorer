@@ -8,6 +8,7 @@
     "dev": "concurrently -k -n backend,frontend \"npm run dev --workspace backend\" \"npm run dev --workspace frontend\""
   },
   "devDependencies": {
+    "@types/node": "^24.3.0",
     "concurrently": "^8.2.2"
   }
 }

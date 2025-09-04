@@ -1,16 +1,17 @@
-import {ApiConnector, StakeAddressAction} from "../ApiConnector";
-import axios, {AxiosInstance, AxiosResponse} from "axios";
+import { ApiConnector, StakeAddressAction } from "../ApiConnector";
+import axios, { AxiosInstance, AxiosResponse } from "axios";
 // @ts-ignore
-import {ParsedUrlQuery} from "querystring";
-import {POOL_TYPE} from "src/pages/RegistrationPools";
-import {FunctionEnum} from "src/commons/connector/types/FunctionEnum";
-import {ApiReturnType} from "@shared/APIReturnType";
+import { ParsedUrlQuery } from "querystring";
+import { POOL_TYPE } from "src/pages/RegistrationPools";
+import { FunctionEnum } from "src/commons/connector/types/FunctionEnum";
+import { ApiReturnType } from "@shared/APIReturnType";
 import applyCaseMiddleware from "axios-case-converter";
-import {IDataEpoch} from "@shared/dtos/epoch.dto";
-import {Block} from "@shared/dtos/block.dto";
-import {Transaction, TransactionDetail} from "@shared/dtos/transaction.dto";
-import {ITokenOverview} from "@shared/dtos/token.dto";
+import { IDataEpoch } from "@shared/dtos/epoch.dto";
+import { Block } from "@shared/dtos/block.dto";
+import { Transaction, TransactionDetail } from "@shared/dtos/transaction.dto";
+import { ITokenOverview } from "@shared/dtos/token.dto";
 import epoch from "../../../pages/Epoch";
+import { GovernanceActionDetail, GovernanceActionListItem, GovernanceOverview } from "@shared/dtos/GovernanceOverview";
 
 export class GatewayConnector implements ApiConnector {
   baseUrl: string;
@@ -20,12 +21,22 @@ export class GatewayConnector implements ApiConnector {
     this.baseUrl = baseUrl;
     this.client = applyCaseMiddleware(axios.create());
   }
+  getGovernanceDetail(txHash: string, index: string): Promise<ApiReturnType<GovernanceActionDetail>> {
+    return this.client.get<ApiReturnType<GovernanceActionDetail>>(`${this.baseUrl}/governance/actions/${txHash}/${index}`)
+      .then(response => response.data);
+  }
+  getGovernanceOverviewList(pageInfo: ParsedUrlQuery): Promise<ApiReturnType<GovernanceActionListItem[]>> {
+    return this.client.get<ApiReturnType<GovernanceActionListItem[]>>(`${this.baseUrl}/governance/actions`, {
+      params: pageInfo
+    }).then(response => response.data);
+  }
 
   getSupportedFunctions(): FunctionEnum[] {
     return [FunctionEnum.EPOCH,
     FunctionEnum.BLOCK,
     FunctionEnum.TRANSACTION,
-    FunctionEnum.TOKENS];
+    FunctionEnum.TOKENS,
+    FunctionEnum.GOVERNANCE];
   }
 
   async getEpoch(epochId: number): Promise<ApiReturnType<IDataEpoch>> {
@@ -77,8 +88,8 @@ export class GatewayConnector implements ApiConnector {
 
 
   async getTransactions(blockId: number | string | undefined, pageInfo: ParsedUrlQuery): Promise<ApiReturnType<Transaction[]>> {
-    let response : AxiosResponse<ApiReturnType<Transaction[]>>;
-    if(blockId) {
+    let response: AxiosResponse<ApiReturnType<Transaction[]>>;
+    if (blockId) {
       response = await this.client.get<ApiReturnType<Transaction[]>>(`${this.baseUrl}/blocks/${blockId}/transactions`, {
         params: pageInfo,
       });
@@ -86,7 +97,7 @@ export class GatewayConnector implements ApiConnector {
       response = await this.client.get<ApiReturnType<Transaction[]>>(`${this.baseUrl}/transactions`, {
         params: pageInfo,
       });
-      }
+    }
 
     return response.data;
   }
@@ -113,6 +124,11 @@ export class GatewayConnector implements ApiConnector {
 
   async getTokenDetail(tokenId: string): Promise<ApiReturnType<ITokenOverview>> {
     const response = await this.client.get<ApiReturnType<ITokenOverview>>(`${this.baseUrl}/tokens/${tokenId}`);
+    return response.data;
+  }
+
+  async getGovernanceOverview(): Promise<ApiReturnType<GovernanceOverview>> {
+    const response = await this.client.get<ApiReturnType<GovernanceOverview>>(`${this.baseUrl}/governance`);
     return response.data;
   }
 }

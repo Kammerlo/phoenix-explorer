@@ -10,7 +10,6 @@ export default function GovernanceActionDetails() {
   useEffect(() => {
     document.title = `Governance Action Details | Cardano Blockchain Explorer`;
   }, []);
-  if (!FF_GLOBAL_IS_CONWAY_ERA) return <NotFound />;
   return (
     <StyledContainer>
       <GovernanceActionDetailsComponent />
