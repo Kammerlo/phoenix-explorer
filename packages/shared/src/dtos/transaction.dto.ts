@@ -37,6 +37,7 @@ export interface TransactionDetail {
     hash: string;
     time: string;
     blockNo: number;
+    blockHash: string;
     epochSlot: number;
     epochNo: number;
     status: TransactionStatus;

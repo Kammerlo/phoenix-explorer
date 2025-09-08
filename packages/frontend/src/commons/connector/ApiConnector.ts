@@ -12,6 +12,7 @@ import { Transaction, TransactionDetail } from "@shared/dtos/transaction.dto";
 import { ITokenOverview } from "@shared/dtos/token.dto";
 // Import GovernanceOverview type (adjust the path as needed)
 import { GovernanceActionDetail, GovernanceActionListItem, GovernanceOverview } from "@shared/dtos/GovernanceOverview";
+import { AddressDetail, StakeAddressDetail } from "@shared/dtos/address.dto";
 
 const API_URL: string = process.env.REACT_APP_API_URL || "";
 const API_CONNECTOR_TYPE: string = process.env.REACT_APP_API_TYPE || "";
@@ -57,9 +58,11 @@ export abstract class ApiConnector {
     pageInfo: ParsedUrlQuery
   ): Promise<ApiReturnType<Transaction[]>>;
 
-  abstract getWalletAddressFromAddress(address: string): Promise<ApiReturnType<WalletAddress>>;
+  abstract getWalletAddressFromAddress(address: string): Promise<ApiReturnType<AddressDetail>>;
 
-  abstract getWalletStakeFromAddress(address: string): Promise<ApiReturnType<WalletStake>>;
+  abstract getAddressTxsFromAddress(address: string, pageInfo: ParsedUrlQuery): Promise<ApiReturnType<Transaction[]>>;
+
+  abstract getWalletStakeFromAddress(address: string): Promise<ApiReturnType<StakeAddressDetail>>;
 
   abstract getStakeAddressRegistrations(stakeAddressAction: StakeAddressAction): Promise<ApiReturnType<IStakeKey[]>>;
 

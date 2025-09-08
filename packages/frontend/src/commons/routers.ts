@@ -8,7 +8,7 @@ export const routers = {
   BLOCK_LIST: "/blocks",
   BLOCK_DETAIL: "/block/:blockId",
   TRANSACTION_LIST: "/transactions",
-  TRANSACTION_DETAIL: "/transaction/:trxHash/:tabActive?/:wineryId?",
+  TRANSACTION_DETAIL: "/transaction/:trxHash/:tabActive?",
   EPOCH_LIST: "/epochs",
   EPOCH_DETAIL: "/epoch/:epochId",
   DELEGATION_POOLS: "/pools",
@@ -56,8 +56,6 @@ export const routers = {
   TERMS_OF_SERVICE: "/terms-of-service",
   SMARTCONTRACT_DETAIL: "/smartcontract/:id",
   DREP_DETAILS: "/drep/:drepId",
-  BOLNISI_LANDING: "/bolnisi",
-  MICAR: "/micar",
   NOT_FOUND: "/*"
 } as const;
 

@@ -28,7 +28,7 @@ interface TransactionListProps {
   paginated?: boolean;
 }
 
-const TransactionList: React.FC<TransactionListProps> = ({ underline = false, showTabView, transactions, loading, updateData, paginated = true }) => {
+const TransactionList: React.FC<TransactionListProps> = ({ underline = false, transactions, loading, updateData, paginated = true }) => {
   const { t } = useTranslation();
   const history = useHistory();
   const { pageInfo, setSort } = usePageInfo();
@@ -175,7 +175,6 @@ const TransactionList: React.FC<TransactionListProps> = ({ underline = false, sh
         }
         onClickRow={onClickRow}
         rowKey="hash"
-        showTabView={showTabView}
         tableWrapperProps={{ sx: (theme) => ({ [theme.breakpoints.between("sm", "md")]: { minHeight: "60vh" } }) }}
       />
     </Card>

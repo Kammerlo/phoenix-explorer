@@ -133,6 +133,7 @@ export async function fetchTransactionDetail(txHash: string): Promise<Transactio
       hash: tx.hash,
       time: tx.block_time.toString(),
       blockNo: tx.block_height ?? 0,
+      blockHash: block.hash ?? "",
       epochSlot: block.epoch_slot ?? 0,
       epochNo: block.epoch ?? 0,
       status: "SUCCESS",

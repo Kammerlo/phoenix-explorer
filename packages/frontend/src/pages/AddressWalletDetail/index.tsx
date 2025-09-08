@@ -1,35 +1,26 @@
 import { useEffect, useState } from "react";
-import { useLocation, useParams } from "react-router-dom";
-import { styled, Container, CircularProgress, Box } from "@mui/material";
-import { useSelector } from "react-redux";
+import { useParams } from "react-router-dom";
+import { styled, Container, CircularProgress } from "@mui/material";
 
-import useADAHandle from "src/commons/hooks/useADAHandle";
 import { ApiConnector } from "../../commons/connector/ApiConnector";
 import AddressHeader from "../../components/AddressDetail/AddressHeader";
-import AddressTransactionList from "../../components/AddressTransactionList";
 import NoRecord from "../../components/commons/NoRecord";
 import NotAvailable from "../../components/commons/NotAvailable";
+import { AddressDetail } from "@shared/dtos/address.dto";
+import TransactionList from "src/components/TransactionLists";
+import { ApiReturnType } from "@shared/APIReturnType";
+import { Transaction } from "@shared/dtos/transaction.dto";
+import usePageInfo from "src/commons/hooks/usePageInfo";
 
 const AddressWalletDetail = () => {
   const { address } = useParams<{ address: string }>();
-  const [addressWallet, setAddressWallet] = useState("");
-  const { state } = useLocation<{ data?: WalletAddress }>();
-  const blockKey = useSelector(({ system }: RootState) => system.blockKey);
-  const [data, setData] = useState<WalletAddress>();
-  const [{ data: adaHandle, loading: adaHandleLoading, initialized: ADAHandleInitialized }] = useADAHandle(address);
+  const [data, setData] = useState<AddressDetail>();
+  const [txData, setTxData] = useState<ApiReturnType<Transaction[]>>();
+  const [txDataLoading, setTxDataLoading] = useState<boolean>(true);
   const [loading, setLoading] = useState<boolean>(true);
   const apiConnector: ApiConnector = ApiConnector.getApiConnector();
   const [error, setError] = useState<string>();
-
-  useEffect(() => {
-    if (ADAHandleInitialized) {
-      if (adaHandle?.paymentAddress) {
-        setAddressWallet(adaHandle?.paymentAddress);
-      } else {
-        setAddressWallet(address);
-      }
-    }
-  }, [JSON.stringify(adaHandle), adaHandleLoading, address, ADAHandleInitialized]);
+  const { pageInfo } = usePageInfo();
 
   useEffect(() => {
     window.history.replaceState({}, document.title);
@@ -44,15 +35,25 @@ const AddressWalletDetail = () => {
       setData(data.data!);
       setLoading(false);
     });
+    updateTxPage();
   }, [address]);
 
+  function updateTxPage() {
+    setTxDataLoading(true);
+    apiConnector.getAddressTxsFromAddress(address, pageInfo).then((data) => {
+      setTxData(data);
+      setTxDataLoading(false);
+    });
+  }
+
+  if (loading) return <CircularProgress />;
   if (!error && !data) return <NoRecord />;
   if (error) return <NotAvailable />;
 
   return (
     <ContainerBox>
-      <AddressHeader adaHanldeData={adaHandle} data={data} loading={loading} />
-      {/*<AddressTransactionList address={addressWallet} />*/}
+      <AddressHeader data={data} loading={loading} />
+      <TransactionList showTabView transactions={txData} loading={txDataLoading} updateData={updateTxPage} paginated={true} />
     </ContainerBox>
   );
 };

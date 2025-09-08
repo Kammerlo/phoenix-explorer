@@ -18,7 +18,7 @@ export interface ITokenOverview {
   // policyIsNativeScript: boolean;
 }
 
-interface ITokenMetadata {
+export interface ITokenMetadata {
   policy?: string;
   logo?: string;
   decimals?: number;

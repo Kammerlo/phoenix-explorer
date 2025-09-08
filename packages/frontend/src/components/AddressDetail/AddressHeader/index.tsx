@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useHistory, useParams } from "react-router-dom";
-import { Grid, Box, useTheme, Button } from "@mui/material";
-import { useSelector } from "react-redux";
+import { Grid, Box, useTheme } from "@mui/material";
 import { HiArrowLongLeft } from "react-icons/hi2";
 import { useTranslation } from "react-i18next";
 import { useLocalStorage } from "react-use";
@@ -11,49 +10,32 @@ import InfoSolidIcon from "src/components/commons/InfoSolidIcon";
 import Card from "src/components/commons/Card";
 import CardAddress from "src/components/share/CardAddress";
 import { details } from "src/commons/routers";
-import { RootState } from "src/stores/types";
 import TokenAutocomplete from "src/components/TokenAutocomplete";
 import ADAicon from "src/components/commons/ADAIcon";
-import { useScreen } from "src/commons/hooks/useScreen";
 import FormNowMessage from "src/components/commons/FormNowMessage";
 import CustomTooltip from "src/components/commons/CustomTooltip";
 import { NETWORK, NETWORKS } from "src/commons/utils/constants";
 
-import { BackButton, BackText, RedirectButton, StyledBoxCard, TimeDuration, TitleText, WrapHeader } from "./styles";
+import { BackButton, BackText, StyledBoxCard, TimeDuration, TitleText, WrapHeader } from "./styles";
 import { ApiConnector } from "../../../commons/connector/ApiConnector";
-
+import { AddressDetail, StakeAddressDetail } from "@shared/dtos/address.dto";
 interface Props {
-  data: WalletAddress | null | undefined;
+  data: AddressDetail | null | undefined;
   loading: boolean;
-  adaHanldeData?: {
-    stakeAddress: string;
-    paymentAddress: string;
-  } | null;
 }
-const AddressHeader: React.FC<Props> = ({ data, loading, adaHanldeData }) => {
+const AddressHeader: React.FC<Props> = ({ data, loading }) => {
   const [usdDataLocal] = useLocalStorage<dataFromCoinGecko[number] | null>("usdData", null);
   const { t } = useTranslation();
-  const [stakeKey, setStakeKey] = useState("");
-  const blockKey = useSelector(({ system }: RootState) => system.blockKey);
   const adaRate = usdDataLocal ? usdDataLocal.current_price : 0;
   const { address } = useParams<{ address: string }>();
-  const [dataStake, setDataStake] = useState<WalletStake | undefined>(undefined);
-
-  // const {
-  //   data: dataStake,
-  //   loading: loadingStake,
-  //   lastUpdated,
-  //   error
-  // } = useFetch<WalletStake>(stakeKey ? `${API.STAKE.DETAIL}/${stakeKey}` : "", undefined, false, blockKey);
+  const [dataStake, setDataStake] = useState<StakeAddressDetail | undefined>(undefined);
 
   const apiConnector = ApiConnector.getApiConnector();
 
   const theme = useTheme();
-  const { isMobile } = useScreen();
   const history = useHistory();
 
   useEffect(() => {
-    setStakeKey(data?.stakeAddress || "");
     if (data?.stakeAddress) {
       apiConnector.getWalletStakeFromAddress(data.stakeAddress).then((data) => {
         setDataStake(data.data!);
@@ -152,33 +134,9 @@ const AddressHeader: React.FC<Props> = ({ data, loading, adaHanldeData }) => {
             flexWrap={"wrap"}
           >
             <TitleText>
-              {adaHanldeData ? (
-                <Box sx={{ wordBreak: "break-all" }} textTransform={"lowercase"}>
-                  <CustomTooltip title={t("address.title.ADAHanlde")}>
-                    <Box display={"inline-block"}>{address.startsWith("$") ? address : `$${address}`} </Box>
-                  </CustomTooltip>
-                </Box>
-              ) : (
-                <Box data-testid="address-detail-title">{t("address.title.addressDetail")}</Box>
-              )}
+                <Box data-testid="address-detail-title">{t("address.title.addressDetail")}: <span>{data?.address || ""}</span></Box>
             </TitleText>
           </Box>
-          {(data?.associatedSmartContract || data?.associatedNativeScript) && (
-            <RedirectButton
-              data-testid="addressDetail.view"
-              width={isMobile ? "100%" : "auto"}
-              component={Button}
-              onClick={() =>
-                history.push(
-                  data.associatedSmartContract
-                    ? details.smartContract(data?.scriptHash || "")
-                    : details.nativeScriptDetail(data?.scriptHash || "")
-                )
-              }
-            >
-              {data.associatedSmartContract ? t("address.viewContractDetail") : t("address.viewNativeScriptDetail")}
-            </RedirectButton>
-          )}
         </Box>
         <TimeDuration>
           <FormNowMessage time={Date.now()} />

@@ -12,6 +12,7 @@ import { Transaction, TransactionDetail } from "@shared/dtos/transaction.dto";
 import { ITokenOverview } from "@shared/dtos/token.dto";
 import epoch from "../../../pages/Epoch";
 import { GovernanceActionDetail, GovernanceActionListItem, GovernanceOverview } from "@shared/dtos/GovernanceOverview";
+import { AddressDetail, StakeAddressDetail } from "@shared/dtos/address.dto";
 
 export class GatewayConnector implements ApiConnector {
   baseUrl: string;
@@ -36,7 +37,9 @@ export class GatewayConnector implements ApiConnector {
     FunctionEnum.BLOCK,
     FunctionEnum.TRANSACTION,
     FunctionEnum.TOKENS,
-    FunctionEnum.GOVERNANCE];
+    // FunctionEnum.GOVERNANCE, // For now, we don't support governance actions
+    FunctionEnum.POOL,
+    FunctionEnum.ADDRESS];
   }
 
   async getEpoch(epochId: number): Promise<ApiReturnType<IDataEpoch>> {
@@ -107,12 +110,21 @@ export class GatewayConnector implements ApiConnector {
     return response.data;
   }
 
-  async getWalletAddressFromAddress(address: string): Promise<ApiReturnType<WalletAddress>> {
-    throw new Error("Not Implemented")
+  async getWalletAddressFromAddress(address: string): Promise<ApiReturnType<AddressDetail>> {
+    const response = await this.client.get<ApiReturnType<AddressDetail>>(`${this.baseUrl}/addresses/${address}`);
+    return response.data;
   }
 
-  async getWalletStakeFromAddress(address: string): Promise<ApiReturnType<WalletStake>> {
-    throw new Error("Not Implemented")
+  async getAddressTxsFromAddress(address: string, pageInfo: ParsedUrlQuery): Promise<ApiReturnType<Transaction[]>> {
+    const response = await this.client.get<ApiReturnType<Transaction[]>>(`${this.baseUrl}/addresses/${address}/transactions`, {
+      params: pageInfo
+    });
+    return response.data;
+  }
+
+  async getWalletStakeFromAddress(address: string): Promise<ApiReturnType<StakeAddressDetail>> {
+    const response = await this.client.get<ApiReturnType<StakeAddressDetail>>(`${this.baseUrl}/addresses/${address}/stake`);
+    return response.data;
   }
 
   async getTokensPage(pageInfo: ParsedUrlQuery): Promise<ApiReturnType<ITokenOverview[]>> {
