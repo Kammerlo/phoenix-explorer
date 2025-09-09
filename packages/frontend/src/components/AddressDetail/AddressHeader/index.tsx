@@ -24,9 +24,7 @@ interface Props {
   loading: boolean;
 }
 const AddressHeader: React.FC<Props> = ({ data, loading }) => {
-  const [usdDataLocal] = useLocalStorage<dataFromCoinGecko[number] | null>("usdData", null);
   const { t } = useTranslation();
-  const adaRate = usdDataLocal ? usdDataLocal.current_price : 0;
   const { address } = useParams<{ address: string }>();
   const [dataStake, setDataStake] = useState<StakeAddressDetail | undefined>(undefined);
 
@@ -56,10 +54,6 @@ const AddressHeader: React.FC<Props> = ({ data, loading }) => {
           <ADAicon />
         </Box>
       )
-    },
-    {
-      title: <div data-testid="addressDetail.usdTitle">{t("glossary.usdValue")}</div>,
-      value: <Box data-testid="addressDetail.usdValue">$ {exchangeADAToUSD(data?.balance || 0, adaRate, true)}</Box>
     },
     {
       value: <TokenAutocomplete data-testid="addressDetail.address" address={data?.address || ""} />
@@ -149,22 +143,28 @@ const AddressHeader: React.FC<Props> = ({ data, loading }) => {
               title={t("common.address")}
               type="left"
               address={data?.address || ""}
-              item={itemLeft}
+              item={itemLeft.map(item => ({
+                ...item,
+                title: typeof item.title === 'string' ? item.title : (item.title ? String(item.title) : '')
+              }))}
               loading={loading}
             />
           </StyledBoxCard>
         </Grid>
         <Grid item xs={12} md={6}>
-          <StyledBoxCard>
+            <StyledBoxCard>
             <CardAddress
               title={t("common.stakeAddress")}
               type="right"
               address={data?.stakeAddress || ""}
-              item={itemRight}
+              item={itemRight.map(item => ({
+                ...item,
+                title: typeof item.title === 'string' ? item.title : (item.title ? String(item.title) : '')
+              }))}
               loading={loading}
               addressDestination={details.stake(data?.stakeAddress)}
             />
-          </StyledBoxCard>
+            </StyledBoxCard>
         </Grid>
       </Grid>
     </Card>

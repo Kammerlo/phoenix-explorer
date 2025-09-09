@@ -4,6 +4,7 @@ import { AddressDetail, StakeAddressDetail } from "@shared/dtos/address.dto";
 import { Transaction } from "@shared/dtos/transaction.dto";
 import { Router, Request, Response } from "express";
 import { API } from "src/config/blockfrost";
+import { cache, fetchAddressTotal } from "src/config/cache";
 import { fetchTransactionDetail } from "src/service/transactionService";
 
 export const addressController = Router();
@@ -42,7 +43,8 @@ addressController.get('/:address', async (req, res) => {
 addressController.get('/:address/transactions', async (req, res) => {
     const address = req.params.address;
     const pageInfo = req.query;
-    const addressData = await API.addressesTotal(address);
+    const addressData = await fetchAddressTotal(address);
+    console.log(pageInfo)
     const addressTransactions = await API.addressesTransactions(address, {
     page: Number.parseInt(String(pageInfo.page || 0)),
     count: Number.parseInt(String(pageInfo.size || 10))

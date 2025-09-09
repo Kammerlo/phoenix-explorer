@@ -18,6 +18,7 @@ import DatetimeTypeTooltip from "../commons/DatetimeTypeTooltip";
 import { Capitalize } from "../commons/CustomText/styles";
 import {ApiReturnType} from "@shared/APIReturnType";
 import {Transaction} from "@shared/dtos/transaction.dto";
+import NotAvailable from "../commons/NotAvailable";
 
 interface TransactionListProps {
   underline?: boolean;
@@ -140,6 +141,7 @@ const TransactionList: React.FC<TransactionListProps> = ({ underline = false, tr
   ];
 
   if (loading) return <CircularProgress />;
+  if (transactions.error) return <NotAvailable/>;
 
   const { pathname } = window.location;
   return (

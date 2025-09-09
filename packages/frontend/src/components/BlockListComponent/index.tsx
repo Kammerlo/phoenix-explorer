@@ -160,6 +160,19 @@ const BlockListComponent: React.FC<BlockListComponentProps> = ({fetchData, updat
         onClickExpandedRow={handleExpandedRow}
         expandedTable
         expandedRowData={expandedBlockRowData}
+        pagination={
+          true
+            ? {
+              ...pageInfo,
+              total: fetchData.total || 0,
+              onChange: (page) => {
+                updateData(page);
+              },
+              hideLastPage: true,
+              paginated: true
+            }
+            : undefined
+        }
       />
     </>
   );

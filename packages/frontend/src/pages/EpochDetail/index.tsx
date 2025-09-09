@@ -17,7 +17,8 @@ const EpochDetail: React.FC = () => {
   const [data, setData] = useState<ApiReturnType<IDataEpoch>>();
   const [fetchData, setFetchData] = useState<ApiReturnType<Block[]>>();
   const [loading, setLoading] = useState(true);
-  const { pageInfo, setSort } = usePageInfo();
+  const [blocksLoading, setBlocksLoading] = useState(true);
+  const { pageInfo } = usePageInfo();
   const apiConnector = ApiConnector.getApiConnector();
 
   // useEffect(() => {
@@ -34,19 +35,20 @@ const EpochDetail: React.FC = () => {
       setData(data);
       setLoading(false);
     });
-    updateBlocks(0);
+    updateBlocks();
   }, [epochId]);
 
-  function updateBlocks(page: number) {
-    apiConnector.getBlocksByEpoch(Number(epochId), pageInfo).then((data) => {
+  function updateBlocks(page: number = 1) {
+    apiConnector.getBlocksByEpoch(Number(epochId), { ...pageInfo, page }).then((data) => {
       setFetchData(data);
+      setBlocksLoading(false);
     });
   }
 
   return (
     <StyledContainer>
       <EpochOverview data={data?.data} loading={loading} lastUpdated={data?.lastUpdated} />
-      <BlockListComponent fetchData={fetchData} updateData={updateBlocks}/>
+      <BlockListComponent loading={blocksLoading} fetchData={fetchData} updateData={updateBlocks}/>
     </StyledContainer>
   );
 };

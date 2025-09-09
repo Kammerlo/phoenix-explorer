@@ -2,10 +2,23 @@ import NodeCache from "node-cache";
 import {components} from "@blockfrost/openapi";
 import {API} from "./blockfrost";
 import {TransactionDetail} from "@shared/dtos/transaction.dto";
+import { addressesTotal } from "@blockfrost/blockfrost-js/lib/endpoints/api/addresses";
 
 export const cache = new NodeCache({
   stdTTL: 300 // 5 minutes (default time to live for cache entries)
 });
+
+export async function fetchAddressTotal(address: string): Promise<components['schemas']['address_content_total']> {
+  const cachedAddressTotal = cache.get(`address-total-${address}`) as components['schemas']['address_content_total'];
+    if (cachedAddressTotal) {
+        console.log("Using cached address total data for address:", address);
+        return cachedAddressTotal;
+    } else {
+        const addressTotal = await API.addressesTotal(address);
+        cache.set(`address-total-${address}`, addressTotal, 300); // Cache for 5 minutes
+        return addressTotal;
+    }
+}
 
 export async function getEpoch(epochNo : string) {
   // Check if the epoch is cached

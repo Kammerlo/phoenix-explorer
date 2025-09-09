@@ -7,21 +7,19 @@ import BlockListComponent from "../../components/BlockListComponent";
 import usePageInfo from "src/commons/hooks/usePageInfo";
 import {Block} from "@shared/dtos/block.dto";
 import {ApiReturnType} from "@shared/APIReturnType";
-import {IDataEpoch} from "@shared/dtos/epoch.dto";
 import {ApiConnector} from "src/commons/connector/ApiConnector";
 
 const BlockList: React.FC = () => {
   const { t } = useTranslation();
 
   const { pageInfo } = usePageInfo();
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [fetchData, setFetchData] = useState<ApiReturnType<Block[]>>();
   const apiConnector = ApiConnector.getApiConnector();
 
   function updateData(page: number) {
-    pageInfo.page = page;
     setLoading(true);
-    apiConnector.getBlocksPage(pageInfo).then((data: ApiReturnType<Block[]>) => {
+    apiConnector.getBlocksPage({...pageInfo, page}).then((data: ApiReturnType<Block[]>) => {
       setLoading(false);
       setFetchData(data);
     });
