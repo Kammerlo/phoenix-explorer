@@ -42,7 +42,7 @@ addressController.get('/:address', async (req, res) => {
 addressController.get('/:address/transactions', async (req, res) => {
     const address = req.params.address;
     const pageInfo = req.query;
-    console.log(pageInfo);
+    const addressData = await API.addressesTotal(address);
     const addressTransactions = await API.addressesTransactions(address, {
     page: Number.parseInt(String(pageInfo.page || 0)),
     count: Number.parseInt(String(pageInfo.size || 10))
@@ -71,6 +71,8 @@ addressController.get('/:address/transactions', async (req, res) => {
     res.json({
         data: txData,
         lastUpdated: Math.floor(Date.now() / 1000),
+        currentPage: Number.parseInt(String(pageInfo.page || 0)),
+        total: addressData.tx_count
     } as ApiReturnType<Transaction[]>);
 });
 
