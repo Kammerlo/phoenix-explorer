@@ -1,6 +1,6 @@
 name: 🐞 Bug
 description: Report a bug encountered while using this project
-title: "[🐞 Bug]: <Brief Description of the Issue>"
+title: "[🐞 Bug]: "
 labels: ["bug"]
 
 body:
