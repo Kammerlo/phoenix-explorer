@@ -14,7 +14,7 @@ import SmartContractDetail from "./pages/SmartContractDetail";
 import NativeScriptAndSC from "./pages/NativeScriptsAndSC";
 import ContractList from "./pages/ContractList";
 import DelegationDetail from "./pages/DelegationDetail";
-import DelegationPools from "./pages/DelegationPools";
+import DelegationPools from "./pages/PoolList";
 import DelegatorLifecycle from "./pages/DelegatorLifecycle";
 import Home from "./pages/Home";
 import InstantRewards from "./pages/InstantRewards";

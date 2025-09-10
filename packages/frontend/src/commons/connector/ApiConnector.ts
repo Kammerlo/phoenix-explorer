@@ -13,6 +13,7 @@ import { ITokenOverview } from "@shared/dtos/token.dto";
 // Import GovernanceOverview type (adjust the path as needed)
 import { GovernanceActionDetail, GovernanceActionListItem, GovernanceOverview } from "@shared/dtos/GovernanceOverview";
 import { AddressDetail, StakeAddressDetail } from "@shared/dtos/address.dto";
+import { PoolOverview } from "@shared/dtos/pool.dto";
 
 const API_URL: string = process.env.REACT_APP_API_URL || "";
 const API_CONNECTOR_TYPE: string = process.env.REACT_APP_API_TYPE || "";
@@ -79,4 +80,6 @@ export abstract class ApiConnector {
   abstract getGovernanceOverviewList(pageInfo: ParsedUrlQuery): Promise<ApiReturnType<GovernanceActionListItem[]>>;
 
   abstract getGovernanceDetail(txHash: string, index: string): Promise<ApiReturnType<GovernanceActionDetail>>;
+
+  abstract getPoolList(pageInfo: any): Promise<ApiReturnType<PoolOverview[]>>;
 }

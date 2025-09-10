@@ -29,7 +29,7 @@ import {
 import { FilterWrapper } from "src/pages/NativeScriptsAndSC/styles";
 import usePageInfo from "src/commons/hooks/usePageInfo";
 import { FF_GLOBAL_IS_CONWAY_ERA } from "src/commons/utils/constants";
-import { AntSwitch } from "src/components/DelegationPool/DelegationList/styles";
+import { AntSwitch } from "src/components/PoolList/styles";
 
 import { ApplyFilterButton, StyledInput } from "../CustomFilter/styles";
 import { AccordionContainer, AccordionDetailsFilter, FilterContainer, Input, StyledSlider } from "./styles";

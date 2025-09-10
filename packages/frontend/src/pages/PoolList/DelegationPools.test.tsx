@@ -5,7 +5,7 @@ import { Router } from "react-router";
 import { render } from "src/test-utils";
 import Table, { Column } from "src/components/commons/Table";
 import useFetchList from "src/commons/hooks/useFetchList";
-import DelegationLists from "src/components/DelegationPool/DelegationList";
+import DelegationLists from "src/components/PoolList";
 import { details } from "src/commons/routers";
 
 const mockData = {

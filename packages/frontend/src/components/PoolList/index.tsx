@@ -1,68 +1,35 @@
-import { Box } from "@mui/material";
-import { isNumber, isUndefined, omitBy } from "lodash";
-import { stringify } from "qs";
-import { useEffect, useRef, useState } from "react";
+import { Box, CircularProgress } from "@mui/material";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useSelector } from "react-redux";
-import { useHistory } from "react-router-dom";
 
-import useFetchList from "src/commons/hooks/useFetchList";
 import usePageInfo from "src/commons/hooks/usePageInfo";
 import { details } from "src/commons/routers";
-import { API } from "src/commons/utils/api";
-import { CONWAY_ERE_FEILD, FF_GLOBAL_IS_CONWAY_ERA } from "src/commons/utils/constants";
 import { formatADAFull, formatPercent, getShortHash } from "src/commons/utils/helper";
 import ADAicon from "src/components/commons/ADAIcon";
-import CustomFilterMultiRange from "src/components/commons/CustomFilterMultiRange";
 import CustomTooltip from "src/components/commons/CustomTooltip";
 import Table, { Column } from "src/components/commons/Table";
+import {PoolOverview} from "@shared/dtos/pool.dto";
 
-import { DelegationContainer, ListOfPools, PoolName, TopSearchContainer } from "./styles";
+import { DelegationContainer, PoolName } from "./styles";
+import { ApiConnector } from "src/commons/connector/ApiConnector";
+import { ApiReturnType } from "@shared/APIReturnType";
+import { useHistory } from "react-router";
 
 const DelegationLists: React.FC = () => {
   const { t } = useTranslation();
+  const { pageInfo } = usePageInfo();
+  const [ fetchData, setFetchData] = useState<ApiReturnType<PoolOverview[]>>();
   const history = useHistory<{ tickerNameSearch?: string; fromPath?: SpecialPath }>();
-  const { tickerNameSearch = "" } = history.location.state || {};
-  const [search, setSearch] = useState(decodeURIComponent(tickerNameSearch));
-  const { pageInfo, setSort } = usePageInfo();
+  const [loading, setLoading] = useState(true);
 
-  const tableRef = useRef<HTMLDivElement>(null);
-  const blockKey = useSelector(({ system }: RootState) => system.blockKey);
+  const apiConnector = ApiConnector.getApiConnector();
 
-  useEffect(() => {
-    if (tickerNameSearch !== search) history.replace({ search: stringify({ ...pageInfo, page: 1 }) });
-    if (tickerNameSearch) {
-      setSearch(decodeURIComponent(tickerNameSearch));
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tickerNameSearch]);
+  apiConnector.getPoolList(pageInfo).then((response) => {
+    setFetchData(response);
+    setLoading(false);
+  });
 
-  const newPageInfo = omitBy(
-    {
-      ...pageInfo
-    },
-    (value, key) => (isUndefined(value) && !isNumber(pageInfo[key])) || value === ""
-  );
-
-  const fetchData = useFetchList<Delegators>(
-    API.DELEGATION.POOL_LIST,
-    {
-      ...newPageInfo,
-      isShowRetired: newPageInfo.retired,
-      maxPoolSize: newPageInfo?.maxPoolSize ? +newPageInfo.maxPoolSize * 10 ** 6 : "",
-      minPoolSize: newPageInfo?.minPoolSize ? +newPageInfo.minPoolSize * 10 ** 6 : ""
-    },
-    false,
-    blockKey
-  );
-  const { error } = fetchData;
-  const fromPath = history.location.pathname as SpecialPath;
-
-  const handleBlankSort = () => {
-    history.replace({ search: stringify({ ...pageInfo, page: 1, sort: undefined }) });
-  };
-
-  const columns: Column<Delegators>[] = [
+  const columns: Column<PoolOverview>[] = [
     {
       title: <div data-testid="poolList.poolNameTitle">{t("glossary.pool")}</div>,
       key: "poolName",
@@ -82,7 +49,7 @@ const DelegationLists: React.FC = () => {
         >
           <PoolName
             data-testid={`poolList.poolNameValue#${idx}`}
-            to={{ pathname: details.delegation(r.poolId), state: { fromPath } }}
+            to={{ pathname: details.delegation(r.poolId) }}
           >
             <Box
               component={"span"}
@@ -110,10 +77,7 @@ const DelegationLists: React.FC = () => {
         <Box component={"span"} data-testid={`poolList.poolSizeValue#${idx}`}>
           {r.poolSize != null ? formatADAFull(r.poolSize) : t("common.N/A")}
         </Box>
-      ),
-      sort: ({ columnKey, sortValue }) => {
-        sortValue ? setSort(`${columnKey},${sortValue}`) : handleBlankSort();
-      }
+      )
     },
     {
       title: (
@@ -127,10 +91,7 @@ const DelegationLists: React.FC = () => {
         <Box component={"span"} data-testid={`poolList.declaredPledgeValue#${idx}`}>
           {formatADAFull(r.pledge)}
         </Box>
-      ),
-      sort: ({ columnKey, sortValue }) => {
-        sortValue ? setSort(`${columnKey},${sortValue}`) : handleBlankSort();
-      }
+      )
     },
     {
       title: (
@@ -147,27 +108,7 @@ const DelegationLists: React.FC = () => {
           </Box>
         ) : (
           t("common.N/A")
-        ),
-      sort: ({ columnKey, sortValue }) => {
-        sortValue ? setSort(`${columnKey},${sortValue}`) : handleBlankSort();
-      }
-    },
-    {
-      title: (
-        <Box component={"span"} data-testid="poolList.blockInEpochTitle">
-          {t("glossary.blocksInEpoch")}
-        </Box>
-      ),
-      key: "epochBlock",
-      minWidth: "120px",
-      render: (r, idx) => (
-        <Box component={"span"} data-testid={`poolList.blockInEpochValue#${idx}`}>
-          {r.epochBlock || 0}
-        </Box>
-      ),
-      sort: ({ columnKey, sortValue }) => {
-        sortValue ? setSort(`${columnKey},${sortValue}`) : handleBlankSort();
-      }
+        )
     },
     {
       title: (
@@ -181,10 +122,7 @@ const DelegationLists: React.FC = () => {
         <Box component={"span"} data-testid={`poolList.blockLifetimeValue#${idx}`}>
           {r.lifetimeBlock || 0}
         </Box>
-      ),
-      sort: ({ columnKey, sortValue }) => {
-        sortValue ? setSort(`${columnKey},${sortValue}`) : handleBlankSort();
-      }
+      )
     },
     {
       title: (
@@ -201,10 +139,7 @@ const DelegationLists: React.FC = () => {
           </CustomTooltip>
         ) : (
           t("common.N/A")
-        ),
-      sort: ({ columnKey, sortValue }) => {
-        sortValue ? setSort(`${columnKey},${sortValue}`) : handleBlankSort();
-      }
+        )
     },
     {
       title: (
@@ -218,41 +153,23 @@ const DelegationLists: React.FC = () => {
         <div data-testid={`poolList.participationRateValue#${idx}`}>
           {r.governanceParticipationRate != null ? `${formatPercent(r.governanceParticipationRate)}` : t("common.N/A")}
         </div>
-      ),
-      sort: ({ columnKey, sortValue }) => {
-        sortValue ? setSort(`${columnKey},${sortValue}`) : handleBlankSort();
-      }
+      )
     }
   ];
 
+  if (loading) return <CircularProgress />;
+
   return (
     <DelegationContainer>
-      {!error && (
-        <TopSearchContainer sx={{ justifyContent: "space-between" }}>
-          <ListOfPools>{t("pool.listOfPools")}</ListOfPools>
-          <Box display="flex" gap="10px">
-            <CustomFilterMultiRange />
-          </Box>
-        </TopSearchContainer>
-      )}
       <Table
         {...fetchData}
         data-testid="delegationList.table"
-        columns={columns.filter((col) => {
-          if (CONWAY_ERE_FEILD.includes(col.key) && !FF_GLOBAL_IS_CONWAY_ERA) {
-            return false;
-          }
-          return true;
-        })}
-        total={{ count: fetchData.total, title: "Total", isDataOverSize: fetchData.isDataOverSize }}
-        onClickRow={(_, r: Delegators) => history.push(details.delegation(r.poolId), { fromPath })}
+        columns={columns}
+        total={{ count: fetchData.total, title: "Total"}}
+        onClickRow={(_, r: Delegators) => history.push(details.delegation(r.poolId))}
         pagination={{
           ...pageInfo,
-          total: fetchData.total,
-          onChange: (page, size) => {
-            history.replace({ search: stringify({ ...pageInfo, page, size }) });
-            tableRef.current?.scrollIntoView();
-          }
+          total: fetchData.total
         }}
       />
     </DelegationContainer>
