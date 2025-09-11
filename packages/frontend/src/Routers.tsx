@@ -13,7 +13,6 @@ import ContractDetail from "./pages/ContractDetail";
 import SmartContractDetail from "./pages/SmartContractDetail";
 import NativeScriptAndSC from "./pages/NativeScriptsAndSC";
 import ContractList from "./pages/ContractList";
-import DelegationDetail from "./pages/DelegationDetail";
 import DelegationPools from "./pages/PoolList";
 import DelegatorLifecycle from "./pages/DelegatorLifecycle";
 import Home from "./pages/Home";
@@ -44,6 +43,7 @@ import { ApiConnector } from "./commons/connector/ApiConnector";
 import { FunctionEnum } from "./commons/connector/types/FunctionEnum";
 import Epoch from "./pages/Epoch";
 import EpochDetail from "./pages/EpochDetail";
+import PoolDetailView from "./pages/PoolDetailView";
 
 const StakeAddressRegistration = () => <Stake stakeAddressType={STAKE_ADDRESS_TYPE.REGISTRATION} />;
 const StakeAddressDeregistration = () => <Stake stakeAddressType={STAKE_ADDRESS_TYPE.DEREREGISTRATION} />;
@@ -119,7 +119,7 @@ const Routes: React.FC = () => {
       <Route
         path={routers.DELEGATION_POOL_DETAIL}
         exact
-        component={isSupportedRoute(DelegationDetail, FunctionEnum.POOL)}
+        component={isSupportedRoute(PoolDetailView, FunctionEnum.POOL)}
       />
       <Route path={routers.TOKEN_LIST} exact component={isSupportedRoute(Tokens, FunctionEnum.TOKENS)} />
       <Route path={routers.TOKEN_DETAIL} exact component={isSupportedRoute(TokenDetail, FunctionEnum.TOKENS)} />

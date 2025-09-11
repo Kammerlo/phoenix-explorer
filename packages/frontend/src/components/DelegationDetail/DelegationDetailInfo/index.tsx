@@ -53,9 +53,10 @@ import {
   TimeDuration
 } from "./styles";
 import ToStakeLifCycleButton from "../../StakingLifeCycle/ToStakeLifeCycleButton";
+import { PoolDetail } from "@shared/dtos/pool.dto";
 
 export interface IDelegationDetailInfo {
-  data: DelegationOverview | null;
+  data: PoolDetail | null;
   loading: boolean;
   poolId: string;
   lastUpdated?: number;

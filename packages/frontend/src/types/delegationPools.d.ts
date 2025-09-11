@@ -30,33 +30,6 @@ interface Delegators {
   kparam: number;
 }
 
-interface DelegationOverview {
-  poolName: string;
-  tickerName: string;
-  poolView: string;
-  poolStatus: PoolStatus;
-  createDate: string;
-  rewardAccounts: string[];
-  ownerAccounts: string[];
-  poolSize: number;
-  stakeLimit: number;
-  delegators: number;
-  saturation: number;
-  totalBalanceOfPoolOwners: number;
-  reward: number;
-  ros: number;
-  pledge: number;
-  cost: number;
-  margin: number;
-  epochBlock: number;
-  lifetimeBlock: number;
-  description?: string;
-  hashView?: string;
-  homepage?: string;
-  iconUrl?: string;
-  logoUrl?: string;
-}
-
 interface DelegationEpoch {
   epoch: number;
   block: number;

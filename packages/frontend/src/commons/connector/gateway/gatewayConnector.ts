@@ -13,7 +13,7 @@ import { ITokenOverview } from "@shared/dtos/token.dto";
 import epoch from "../../../pages/Epoch";
 import { GovernanceActionDetail, GovernanceActionListItem, GovernanceOverview } from "@shared/dtos/GovernanceOverview";
 import { AddressDetail, StakeAddressDetail } from "@shared/dtos/address.dto";
-import { PoolOverview } from "@shared/dtos/pool.dto";
+import { PoolDetail, PoolOverview } from "@shared/dtos/pool.dto";
 
 export class GatewayConnector implements ApiConnector {
   baseUrl: string;
@@ -22,6 +22,10 @@ export class GatewayConnector implements ApiConnector {
   constructor(baseUrl: string) {
     this.baseUrl = baseUrl;
     this.client = applyCaseMiddleware(axios.create());
+  }
+  getPoolDetail(poolId: string): Promise<ApiReturnType<PoolDetail>> {
+    return this.client.get<ApiReturnType<PoolDetail>>(`${this.baseUrl}/pools/${poolId}`)
+      .then(response => response.data);
   }
   getPoolList(pageInfo: any): Promise<ApiReturnType<PoolOverview[]>> {
     return this.client.get<ApiReturnType<PoolOverview[]>>(`${this.baseUrl}/pools`, {
