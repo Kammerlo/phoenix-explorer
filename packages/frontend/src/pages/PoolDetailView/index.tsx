@@ -2,16 +2,13 @@ import { Box, Container, useTheme } from "@mui/material";
 import AccordionDetails from "@mui/material/AccordionDetails";
 import AccordionSummary from "@mui/material/AccordionSummary";
 import QueryString, { parse, stringify } from "qs";
-import React, { useEffect, useMemo, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { IoIosArrowDown } from "react-icons/io";
 import { useSelector } from "react-redux";
 import { useHistory, useLocation, useParams } from "react-router-dom";
 
-import useFetch from "src/commons/hooks/useFetch";
-import useFetchList from "src/commons/hooks/useFetchList";
 import { StakeKeyHistoryIcon, StakingDelegators, TimelineIconComponent, VotesIcon } from "src/commons/resources";
-import { routers } from "src/commons/routers";
 import { API } from "src/commons/utils/api";
 import { VOTE_TYPE, POOL_STATUS, STATUS_VOTE, FF_GLOBAL_IS_CONWAY_ERA } from "src/commons/utils/constants";
 import { getPageInfo } from "src/commons/utils/helper";
@@ -25,12 +22,12 @@ import {
 import DelegationDetailOverview from "src/components/DelegationDetail/DelegationDetailOverview";
 import { StyledAccordion } from "src/components/commons/CustomAccordion/styles";
 import FormNowMessage from "src/components/commons/FormNowMessage";
-import NoRecord from "src/components/commons/NoRecord";
-import { setSpecialPath } from "src/stores/system";
 import DelegationGovernanceVotes from "src/components/GovernanceVotes";
-import FetchDataErr from "src/components/commons/FetchDataErr";
 
 import { TimeDuration, TitleTab } from "./styles";
+import { ApiConnector } from "src/commons/connector/ApiConnector";
+import { ApiReturnType } from "@shared/APIReturnType";
+import { PoolDetail } from "@shared/dtos/pool.dto";
 
 interface Query {
   tab: string | string[] | QueryString.ParsedQs | QueryString.ParsedQs[] | undefined;
@@ -65,6 +62,8 @@ const DelegationDetail: React.FC = () => {
   const tableRef = useRef<HTMLDivElement>(null);
   const theme = useTheme();
   const blockKey = useSelector(({ system }: RootState) => system.blockKey);
+  const [poolDetailData, setPoolDetailData] = useState<ApiReturnType<PoolDetail>>();
+  const [loading, setLoading] = useState(true);
   useEffect(() => {
     if (Object.keys(query).length === 0) {
       setQuery({ tab: "epochs", page: 1, size: 50 });
@@ -84,65 +83,63 @@ const DelegationDetail: React.FC = () => {
     history.replace({ search: stringify(query) }, state);
   };
 
-  const fetchListPools = useFetchList<Delegators>(
-    API.DELEGATION.POOL_LIST,
-    { query: poolId, isShowRetired: true },
-    false,
-    tab === "epochs" ? blockKey : undefined
-  );
-  const poolView = useMemo(() => fetchListPools.data[0]?.poolId, [fetchListPools]);
+  // const fetchListPools = useFetchList<Delegators>(
+  //   API.DELEGATION.POOL_LIST,
+  //   { query: poolId, isShowRetired: true },
+  //   false,
+  //   tab === "epochs" ? blockKey : undefined
+  // );
+  // const poolView = useMemo(() => fetchListPools.data[0]?.poolId, [fetchListPools]);
 
-  const status = useFetch<ListTabResponseSPO>(API.SPO_LIFECYCLE.TABS(poolView || poolId));
+  // const status = useFetch<ListTabResponseSPO>(API.SPO_LIFECYCLE.TABS(poolView || poolId));
 
-  const { data, loading, initialized, error, lastUpdated, statusError } = useFetch<DelegationOverview>(
-    `${API.DELEGATION.POOL_DETAIL_HEADER}/${poolView || poolId}`,
-    undefined,
-    false,
-    blockKey
-  );
+  const apiConnector = ApiConnector.getApiConnector();
+  
+  
+  apiConnector.getPoolDetail(poolId).then((response) => {
+    setLoading(false);
+    setPoolDetailData(response);
+  });
 
-  const fetchDataEpochs = useFetchList<DelegationEpoch>(
-    tab === "epochs" ? API.DELEGATION.POOL_DETAIL("epochs") : "",
-    { poolView: poolView || poolId, ...pageInfo },
-    false,
-    tab === "epochs" ? blockKey : undefined
-  );
+  // const fetchDataEpochs = useFetchList<DelegationEpoch>(
+  //   tab === "epochs" ? API.DELEGATION.POOL_DETAIL("epochs") : "",
+  //   { poolView: poolView || poolId, ...pageInfo },
+  //   false,
+  //   tab === "epochs" ? blockKey : undefined
+  // );
 
-  const fetchDataDelegators = useFetchList<StakingDelegators>(
-    tab === "delegators" ? API.DELEGATION.POOL_DETAIL("delegators") : "",
-    { poolView: poolView || poolId, ...pageInfo },
-    false,
-    tab === "delegators" ? blockKey : undefined
-  );
+  // const fetchDataDelegators = useFetchList<StakingDelegators>(
+  //   tab === "delegators" ? API.DELEGATION.POOL_DETAIL("delegators") : "",
+  //   { poolView: poolView || poolId, ...pageInfo },
+  //   false,
+  //   tab === "delegators" ? blockKey : undefined
+  // );
 
-  const fetchDataCertificatesHistory = useFetchList<CertificateHistory>(
-    tab === "certificatesHistory" ? `${API.POOL_CERTIFICATES_HISTORY}/${poolId}` : "",
-    { ...pageInfo },
-    false,
-    tab === "certificatesHistory" ? blockKey : undefined
-  );
+  // const fetchDataCertificatesHistory = useFetchList<CertificateHistory>(
+  //   tab === "certificatesHistory" ? `${API.POOL_CERTIFICATES_HISTORY}/${poolId}` : "",
+  //   { ...pageInfo },
+  //   false,
+  //   tab === "certificatesHistory" ? blockKey : undefined
+  // );
 
   useEffect(() => {
     document.title = `Delegation Pool ${poolId} | Cardano Blockchain Explorer`;
     window.scrollTo(0, 0);
   }, [poolId]);
 
-  useEffect(() => {
-    if (state?.fromPath) return setSpecialPath(state.fromPath);
-    if (status.data?.isDeRegistration) {
-      if (data?.poolStatus === POOL_STATUS.RETIRED) {
-        return setSpecialPath(routers.POOL_DEREGISTRATION);
-      } else {
-        return setSpecialPath(routers.POOL_CERTIFICATE);
-      }
-    }
-    if (status.data?.isRegistration) return setSpecialPath(routers.POOL_CERTIFICATE);
+  // useEffect(() => {
+  //   if (state?.fromPath) return setSpecialPath(state.fromPath);
+  //   if (status.data?.isDeRegistration) {
+  //     if (data?.poolStatus === POOL_STATUS.RETIRED) {
+  //       return setSpecialPath(routers.POOL_DEREGISTRATION);
+  //     } else {
+  //       return setSpecialPath(routers.POOL_CERTIFICATE);
+  //     }
+  //   }
+  //   if (status.data?.isRegistration) return setSpecialPath(routers.POOL_CERTIFICATE);
 
-    if (status.data) setSpecialPath(routers.DELEGATION_POOLS);
-  }, [state, status, data?.poolStatus]);
-
-  if (error && (statusError || 0) >= 500) return <FetchDataErr />;
-  if ((initialized && !data) || (error && (statusError || 0) < 500)) return <NoRecord />;
+  //   if (status.data) setSpecialPath(routers.DELEGATION_POOLS);
+  // }, [state, status, data?.poolStatus]);
 
   const tabs: {
     icon: React.FC<React.SVGProps<SVGSVGElement>>;

@@ -11,7 +11,7 @@ import CustomTooltip from "src/components/commons/CustomTooltip";
 import { FixedCostBox, Item, StyledContainer, Title, Value } from "./styles";
 
 interface IDelegationDetailOverview {
-  data: DelegationOverview | null;
+  data: DelegationDetail | null;
   loading: boolean;
 }
 

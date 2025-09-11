@@ -55,7 +55,7 @@ import {
 import ToStakeLifCycleButton from "../../StakingLifeCycle/ToStakeLifeCycleButton";
 
 export interface IDelegationDetailInfo {
-  data: DelegationOverview | null;
+  data: DelegationDetail | null;
   loading: boolean;
   poolId: string;
   lastUpdated?: number;
