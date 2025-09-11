@@ -9,9 +9,10 @@ import { CommonSkeleton } from "src/components/commons/CustomSkeleton";
 import CustomTooltip from "src/components/commons/CustomTooltip";
 
 import { FixedCostBox, Item, StyledContainer, Title, Value } from "./styles";
+import { PoolDetail } from "@shared/dtos/pool.dto";
 
 interface IDelegationDetailOverview {
-  data: DelegationDetail | null;
+  data: PoolDetail | null;
   loading: boolean;
 }
 

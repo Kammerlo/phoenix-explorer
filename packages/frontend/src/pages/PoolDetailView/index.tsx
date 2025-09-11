@@ -1,4 +1,4 @@
-import { Box, Container, useTheme } from "@mui/material";
+import { Box, CircularProgress, Container, useTheme } from "@mui/material";
 import AccordionDetails from "@mui/material/AccordionDetails";
 import AccordionSummary from "@mui/material/AccordionSummary";
 import QueryString, { parse, stringify } from "qs";
@@ -141,66 +141,66 @@ const DelegationDetail: React.FC = () => {
   //   if (status.data) setSpecialPath(routers.DELEGATION_POOLS);
   // }, [state, status, data?.poolStatus]);
 
-  const tabs: {
-    icon: React.FC<React.SVGProps<SVGSVGElement>>;
-    label: React.ReactNode;
-    key: TabPoolDetail;
-    errorFetchDataTab: boolean;
-    component: React.ReactNode;
-  }[] = [
-    {
-      icon: StakeKeyHistoryIcon,
-      label: <Box data-testid="delegationDetail.epochTitle">{t("epoch")}</Box>,
-      key: "epochs",
-      errorFetchDataTab: fetchDataEpochs.error,
-      component: (
-        <div ref={tableRef}>
-          <DelegationEpochList {...fetchDataEpochs} scrollEffect={scrollEffect} />
-        </div>
-      )
-    },
-    {
-      icon: StakingDelegators,
-      label: <Box data-testid="delegationDetail.stakingTitle">{t("stakingDelegators")}</Box>,
-      key: "delegators",
-      errorFetchDataTab: fetchDataDelegators.error,
-      component: (
-        <div ref={tableRef}>
-          <DelegationStakingDelegatorsList {...fetchDataDelegators} scrollEffect={scrollEffect} />
-        </div>
-      )
-    },
-    {
-      icon: TimelineIconComponent,
-      label: <Box data-testid="delegationDetail.certificatesHistoryTitle">{t("certificatesHistory")}</Box>,
-      key: "certificatesHistory",
-      errorFetchDataTab: fetchDataCertificatesHistory.error,
-      component: (
-        <div ref={tableRef}>
-          <DelegationCertificatesHistory {...fetchDataCertificatesHistory} scrollEffect={scrollEffect} />
-        </div>
-      )
-    },
-    {
-      icon: VotesIcon,
-      label: <Box data-testid="delegationDetail.governanceTitle">{t("drep.governanceVotes")}</Box>,
-      key: "governanceVotes",
-      component: (
-        <div ref={tableRef}>
-          <DelegationGovernanceVotes hash={poolId || ""} type={VOTE_TYPE.STAKING_POOL_KEY_HASH} />
-        </div>
-      )
-    }
-  ].filter((tab) => !(tab.key === "governanceVotes" && !FF_GLOBAL_IS_CONWAY_ERA));
+  // const tabs: {
+  //   icon: React.FC<React.SVGProps<SVGSVGElement>>;
+  //   label: React.ReactNode;
+  //   key: TabPoolDetail;
+  //   errorFetchDataTab: boolean;
+  //   component: React.ReactNode;
+  // }[] = [
+    // {
+    //   icon: StakeKeyHistoryIcon,
+    //   label: <Box data-testid="delegationDetail.epochTitle">{t("epoch")}</Box>,
+    //   key: "epochs",
+    //   errorFetchDataTab: fetchDataEpochs.error,
+    //   component: (
+    //     <div ref={tableRef}>
+    //       <DelegationEpochList {...fetchDataEpochs} scrollEffect={scrollEffect} />
+    //     </div>
+    //   )
+    // },
+    // {
+    //   icon: StakingDelegators,
+    //   label: <Box data-testid="delegationDetail.stakingTitle">{t("stakingDelegators")}</Box>,
+    //   key: "delegators",
+    //   errorFetchDataTab: fetchDataDelegators.error,
+    //   component: (
+    //     <div ref={tableRef}>
+    //       <DelegationStakingDelegatorsList {...fetchDataDelegators} scrollEffect={scrollEffect} />
+    //     </div>
+    //   )
+    // },
+    // {
+    //   icon: TimelineIconComponent,
+    //   label: <Box data-testid="delegationDetail.certificatesHistoryTitle">{t("certificatesHistory")}</Box>,
+    //   key: "certificatesHistory",
+    //   errorFetchDataTab: fetchDataCertificatesHistory.error,
+    //   component: (
+    //     <div ref={tableRef}>
+    //       <DelegationCertificatesHistory {...fetchDataCertificatesHistory} scrollEffect={scrollEffect} />
+    //     </div>
+    //   )
+    // },
+    // {
+    //   icon: VotesIcon,
+    //   label: <Box data-testid="delegationDetail.governanceTitle">{t("drep.governanceVotes")}</Box>,
+    //   key: "governanceVotes",
+    //   component: (
+    //     <div ref={tableRef}>
+    //       <DelegationGovernanceVotes hash={poolId || ""} type={VOTE_TYPE.STAKING_POOL_KEY_HASH} />
+    //     </div>
+    //   )
+    // }
+  // ].filter((tab) => !(tab.key === "governanceVotes" && !FF_GLOBAL_IS_CONWAY_ERA));
 
-  const indexExpand = tabs.findIndex((item) => item.key === tab);
-  const needBorderRadius = (currentKey: string) => {
-    if (!tab) return "0";
-    const indexCurrent = tabs.findIndex((item) => item.key === currentKey);
-    if (indexExpand - 1 >= 0 && indexExpand - 1 === indexCurrent) return "0 0 12px 12px";
-    if (indexExpand + 1 < tabs.length && indexExpand + 1 === indexCurrent) return "12px 12px 0 0";
-    return "0";
-  };
+  // const indexExpand = tabs.findIndex((item) => item.key === tab);
+  // const needBorderRadius = (currentKey: string) => {
+  //   if (!tab) return "0";
+  //   const indexCurrent = tabs.findIndex((item) => item.key === currentKey);
+  //   if (indexExpand - 1 >= 0 && indexExpand - 1 === indexCurrent) return "0 0 12px 12px";
+  //   if (indexExpand + 1 < tabs.length && indexExpand + 1 === indexCurrent) return "12px 12px 0 0";
+  //   return "0";
+  // };
 
   const handleChangeTab = (panel: string) => (event: React.SyntheticEvent, newExpanded: boolean) => {
     const handleTransitionEnd = () => {
@@ -228,25 +228,25 @@ const DelegationDetail: React.FC = () => {
     });
   };
 
-  const getLastUpdatedTime = () => {
-    switch (tab) {
-      case "epochs":
-        return fetchDataEpochs.lastUpdated;
-      case "delegators":
-        return fetchDataDelegators.lastUpdated;
-      case "certificatesHistory":
-        return fetchDataCertificatesHistory.lastUpdated;
-      default:
-        return null;
-    }
-  };
-
+  // const getLastUpdatedTime = () => {
+  //   switch (tab) {
+  //     case "epochs":
+  //       return fetchDataEpochs.lastUpdated;
+  //     case "delegators":
+  //       return fetchDataDelegators.lastUpdated;
+  //     case "certificatesHistory":
+  //       return fetchDataCertificatesHistory.lastUpdated;
+  //     default:
+  //       return null;
+  //   }
+  // };
+  if(loading) return <CircularProgress />;
   return (
     <Container>
-      <DelegationDetailInfo data={data} loading={loading || !poolView} poolId={poolId} lastUpdated={lastUpdated} />
-      <DelegationDetailOverview data={data} loading={loading || !poolView} />
-      <DelegationDetailChart poolId={poolView || poolId} />
-      <Box ref={tableRef} mt={"30px"} mb={2}>
+      <DelegationDetailInfo data={poolDetailData?.data} loading={loading} poolId={poolId} lastUpdated={poolDetailData?.lastUpdated} />
+      <DelegationDetailOverview data={poolDetailData?.data} loading={loading} />
+      {/* <DelegationDetailChart poolId={poolView || poolId} /> */}
+      {/* <Box ref={tableRef} mt={"30px"} mb={2}>
         {tabs.map(({ key, icon: Icon, label, errorFetchDataTab, component }, index) => (
           <StyledAccordion
             key={key}
@@ -286,7 +286,7 @@ const DelegationDetail: React.FC = () => {
             </AccordionDetails>
           </StyledAccordion>
         ))}
-      </Box>
+      </Box> */}
     </Container>
   );
 };
