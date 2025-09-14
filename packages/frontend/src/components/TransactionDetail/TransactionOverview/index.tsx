@@ -37,10 +37,8 @@ interface Props {
 const TransactionOverview: React.FC<Props> = ({ data, loading }) => {
   const { t } = useTranslation();
 
-  const { blockNo, epochNo } = useSelector(({ system }: RootState) => ({
-    blockNo: system.blockNo,
-    epochNo: system.currentEpoch?.no
-  }));
+  const blockNo = useSelector(({ system }: RootState) => system.blockNo);
+  const epochNo = useSelector(({ system }: RootState) => system.currentEpoch?.no);
 
   const [openListInput, setOpenListInput] = useState(false);
   const [openListOutput, setOpenListOutput] = useState(false);

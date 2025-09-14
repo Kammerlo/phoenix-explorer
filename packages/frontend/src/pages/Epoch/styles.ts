@@ -1,4 +1,5 @@
 import { Box, styled, Container } from "@mui/material";
+import { EpochStatus } from "@shared/dtos/epoch.dto";
 import { Link } from "react-router-dom";
 
 import { EPOCH_STATUS } from "src/commons/utils/constants";
@@ -30,7 +31,7 @@ export const BlueText = styled("span")`
   color: ${(props) => props.theme.palette.secondary.light};
 `;
 
-export const Status = styled("span")<{ status: keyof typeof EPOCH_STATUS }>(({ theme }) => ({
+export const Status = styled("span")<{ status: EpochStatus }>(({ theme }) => ({
   fontFamily: "var(--font-family-title)",
   fontWeight: "var(--font-weight-bold)",
   borderRadius: "2px",

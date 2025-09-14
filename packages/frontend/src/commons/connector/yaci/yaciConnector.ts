@@ -38,7 +38,7 @@ import { Block } from "@shared/dtos/block.dto";
 import { ApiReturnType } from "@shared/APIReturnType";
 import { IDataEpoch } from "@shared/dtos/epoch.dto";
 import { Transaction, TransactionDetail } from "@shared/dtos/transaction.dto";
-import { Date } from "../../../components/commons/Epoch/FirstEpoch/styles";
+import { Date } from "../../../components/commons/FirstEpoch/styles";
 import { ITokenOverview } from "@shared/dtos/token.dto";
 // @ts-ignore
 import * as console from "node:console";

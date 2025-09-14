@@ -15,11 +15,12 @@ import {
 import { formatADAFull, formatNameBlockNo } from "src/commons/utils/helper";
 import { MAX_SLOT_EPOCH } from "src/commons/utils/constants";
 import ADAicon from "src/components/commons/ADAIcon";
-import DetailHeader from "src/components/commons/DetailHeader";
+import DetailHeader, { DetailHeaderType } from "src/components/commons/DetailHeader";
 import CustomTooltip from "src/components/commons/CustomTooltip";
 import DatetimeTypeTooltip from "src/components/commons/DatetimeTypeTooltip";
 
 import { TitleCard } from "./styles";
+import { Block } from "@shared/dtos/block.dto";
 
 interface BlockOverviewProps {
   data: Block | null | undefined;
@@ -161,7 +162,7 @@ const BlockOverview: React.FC<BlockOverviewProps> = ({ data, loading, lastUpdate
       <DetailHeader
         loading={loading}
         listItem={listOverview}
-        type="BLOCK"
+        type={DetailHeaderType.BLOCK}
         hash={data?.hash}
         bookmarkData={`${data?.blockNo || data?.hash}`}
         title={<Box data-testid="block.detail.header">{t("head.page.blockDetails")}</Box>}

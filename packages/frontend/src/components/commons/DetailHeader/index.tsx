@@ -1,4 +1,4 @@
-import React, { memo, useState } from "react";
+import React, { memo, useState, useMemo } from "react";
 import { Backdrop, Box, useTheme } from "@mui/material";
 import { HiArrowLongLeft } from "react-icons/hi2";
 import { useSelector } from "react-redux";
@@ -56,8 +56,16 @@ interface TokenInfo {
   metadata?: { decimals?: number };
 }
 
+export enum DetailHeaderType {
+  EPOCH = "EPOCH",
+  BLOCK = "BLOCK",
+  TRANSACTION = "TRANSACTION",
+  STAKE_KEY = "STAKE_KEY",
+  POOL = "POOL",
+  TOKEN = "TOKEN"
+}
 export interface DetailHeaderProps {
-  type: Bookmark["type"];
+  type: DetailHeaderType;
   bookmarkData?: string;
   loading: boolean;
   title: React.ReactNode;
@@ -106,10 +114,8 @@ const DetailHeader: React.FC<DetailHeaderProps> = (props) => {
   const { isMobile } = useScreen();
   const history = useHistory();
   const theme = useTheme();
-  const { currentEpoch, sidebar } = useSelector(({ system, user }: RootState) => ({
-    currentEpoch: system.currentEpoch,
-    sidebar: user.sidebar
-  }));
+  const currentEpoch = useSelector((state: RootState) => state.system.currentEpoch);
+  const sidebar = useSelector((state: RootState) => state.user.sidebar);
   const [openBackdrop, setOpenBackdrop] = useState<{ [x: string]: boolean }>({
     input: false,
     output: false
@@ -196,7 +202,7 @@ const DetailHeader: React.FC<DetailHeaderProps> = (props) => {
             </BackButton>
           )}
           <HeaderContainer>
-            <HeaderTitle data-testid="detail.page.title">{title}</HeaderTitle>
+            <HeaderTitle key={"detail.page.title"}>{title}</HeaderTitle>
             {transactionStatus && <HeaderStatus status={transactionStatus}>{transactionStatus}</HeaderStatus>}
             {epoch?.status && (
               <HeaderStatus status={epoch.status}>{EPOCH_STATUS_MAPPING[EPOCH_STATUS[epoch.status]]}</HeaderStatus>
@@ -241,7 +247,7 @@ const DetailHeader: React.FC<DetailHeaderProps> = (props) => {
               size={100}
               pathWidth={8}
               percent={
-                type === "EPOCH"
+                type === DetailHeaderType.EPOCH
                   ? currentEpoch && (epoch?.no || 0) === currentEpoch?.no
                     ? (currentEpoch?.syncingProgress || 0) * 100
                     : 100
@@ -359,7 +365,7 @@ const DetailHeader: React.FC<DetailHeaderProps> = (props) => {
                   )}
                 </Box>
                 <Box
-                  data-testid="detailHeader.title"
+                  key="detailHeader.title"
                   sx={{
                     my: 1,
                     [theme.breakpoints.down("md")]: {
@@ -369,7 +375,7 @@ const DetailHeader: React.FC<DetailHeaderProps> = (props) => {
                 >
                   {item.title}
                 </Box>
-                <ValueCard data-testid="detailHeader.value">{item.value}</ValueCard>
+                <ValueCard key="detailHeader.value">{item.value}</ValueCard>
               </CardItem>
             );
           })}

@@ -12,6 +12,7 @@ import DynamicEllipsisText from "src/components/DynamicEllipsisText";
 
 import CustomTooltip from "../CustomTooltip";
 import { CustomSelect, OptionSelect, TokenButton } from "./styles";
+import { Token } from "@shared/dtos/transaction.dto";
 
 export interface IDropdownTokens {
   tokens: Token[];

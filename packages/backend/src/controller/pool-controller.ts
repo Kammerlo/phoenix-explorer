@@ -48,6 +48,14 @@ poolController.get('/:poolId', async (req, res) => {
         const pool = await API.poolsById(poolId);
         const poolMetadata = await API.poolMetadata(poolId);
         const createTx = await getTransactions(pool.registration[0]);
+        let totalBalanceOfPoolOwners = 0;
+        for (const owner of pool.owners) {
+            const addressInfo = await API.accountsAddresses(owner);
+            for (const address of addressInfo) {
+                const addressI = await API.addresses(address.address);
+                totalBalanceOfPoolOwners += Number.parseInt(addressI.amount.find(a => a.unit === 'lovelace')?.quantity || '0');
+            }
+        }
         res.json({
             data: {
                 poolName: poolMetadata.name || 'Unknown Pool',
@@ -61,7 +69,7 @@ poolController.get('/:poolId', async (req, res) => {
                 stakeLimit: Number.parseInt(pool.active_stake || '0'), // Placeholder, Blockfrost does not provide stake limit
                 delegators: pool.live_delegators || 0,
                 saturation: pool.live_saturation || 0,
-                totalBalanceOfPoolOwners: 0, // Placeholder, Blockfrost does not provide this info
+                totalBalanceOfPoolOwners: totalBalanceOfPoolOwners, // Placeholder, Blockfrost does not provide this info
                 reward: pool.margin_cost || '0',
                 ros: 0, // Placeholder, Blockfrost does not provide this info
                 pledge: Number.parseInt(pool.declared_pledge || '0'),

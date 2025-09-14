@@ -6,7 +6,6 @@ import { Box, CircularProgress } from "@mui/material";
 
 import { EPOCH_STATUS } from "src/commons/utils/constants";
 import Card from "src/components/commons/Card";
-import FirstEpoch from "src/components/commons/Epoch/FirstEpoch";
 import Table, { Column } from "src/components/commons/Table";
 import { Capitalize } from "src/components/commons/CustomText/styles";
 import usePageInfo from "src/commons/hooks/usePageInfo";
@@ -18,6 +17,7 @@ import { ApiConnector } from "../../commons/connector/ApiConnector";
 import { ApiReturnType } from "@shared/APIReturnType";
 import { formatDateTimeLocal } from "../../commons/utils/helper";
 import { IDataEpoch } from "@shared/dtos/epoch.dto";
+import FirstEpoch from "src/components/commons/Epoch/FirstEpoch";
 
 const Epoch: React.FC = () => {
   const { t } = useTranslation();

@@ -331,10 +331,9 @@ const TableBody = <T extends ColumnType>({
           return <ExpandedRowContent data={expandedTableRowData} />;
         };
         return (
-          <>
+          <React.Fragment key={rowKey ? (typeof rowKey === "function" ? rowKey(row) : row[rowKey]) : index}>
             <TableRow
               row={row}
-              key={index}
               columns={columns}
               screen={screen}
               index={index}
@@ -370,7 +369,7 @@ const TableBody = <T extends ColumnType>({
                 </td>
               </tr>
             )}
-          </>
+          </React.Fragment>
         );
       })}
     </TBody>

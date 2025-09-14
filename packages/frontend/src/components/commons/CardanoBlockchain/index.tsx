@@ -18,7 +18,7 @@ export const CardanoBlockchain: React.FC<BoxProps> = forwardRef(({ ...props }, b
   return (
     <StyledPolygonShape {...props} ref={boxRef}>
       <CustomIcon
-        data-testid="cardano-system"
+        
         icon={theme.isDark ? CardanoSystemDarkIcon : CardanoSystemIcon}
         height={100}
         width={100}

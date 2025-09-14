@@ -16,6 +16,7 @@ import {Transaction} from "@shared/dtos/transaction.dto";
 const BlockDetail = () => {
   const { blockId } = useParams<{ blockId: string }>();
   const [loading, setLoading] = useState<boolean>(true);
+  const [txLoading, setTxLoading] = useState<boolean>(true);
   const [blockData, setBlockData] = useState<ApiReturnType<Block>>();
   const [transactions, setTransactions] = useState<ApiReturnType<Transaction[]>>();
   const {pageInfo} = usePageInfo();
@@ -32,7 +33,7 @@ const BlockDetail = () => {
     });
     apiConnector.getTransactions(blockId, pageInfo).then((data) => {
       setTransactions(data);
-      setLoading(false);
+      setTxLoading(false);
     });
 
   }, [blockId]);
@@ -49,7 +50,7 @@ const BlockDetail = () => {
   return (
     <StyledContainer>
       <BlockOverview data={blockData?.data} loading={loading} lastUpdated={blockData?.lastUpdated} />
-      <TransactionList transactions={transactions} loading={loading} showTabView />
+      <TransactionList transactions={transactions} loading={txLoading} showTabView />
     </StyledContainer>
   );
 };
