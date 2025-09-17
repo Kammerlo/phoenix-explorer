@@ -9,7 +9,7 @@ import applyCaseMiddleware from "axios-case-converter";
 import { IDataEpoch } from "@shared/dtos/epoch.dto";
 import { Block } from "@shared/dtos/block.dto";
 import { Transaction, TransactionDetail } from "@shared/dtos/transaction.dto";
-import { ITokenOverview } from "@shared/dtos/token.dto";
+import { ITokenOverview, TokenHolder } from "@shared/dtos/token.dto";
 import epoch from "../../../pages/Epoch";
 import { GovernanceActionDetail, GovernanceActionListItem, GovernanceOverview } from "@shared/dtos/GovernanceOverview";
 import { AddressDetail, StakeAddressDetail } from "@shared/dtos/address.dto";
@@ -23,6 +23,23 @@ export class GatewayConnector implements ApiConnector {
     this.baseUrl = baseUrl;
     this.client = applyCaseMiddleware(axios.create());
   }
+
+  async getTokenTransactions(tokenId: string, pageInfo: ParsedUrlQuery): Promise<ApiReturnType<Transaction[]>> {
+    const response = await this.client.get<ApiReturnType<Transaction[]>>(
+      `${this.baseUrl}/tokens/${tokenId}/transactions`,
+      { params: pageInfo }
+    );
+    return response.data;
+  }
+
+  async getTokenHolders(tokenId: string, pageInfo: ParsedUrlQuery): Promise<ApiReturnType<TokenHolder[]>> {
+    const response = await this.client.get<ApiReturnType<TokenHolder[]>>(
+      `${this.baseUrl}/tokens/${tokenId}/holders`,
+      { params: pageInfo }
+    );
+    return response.data;
+  }
+  
   getPoolDetail(poolId: string): Promise<ApiReturnType<PoolDetail>> {
     return this.client.get<ApiReturnType<PoolDetail>>(`${this.baseUrl}/pools/${poolId}`)
       .then(response => response.data);

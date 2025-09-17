@@ -2,7 +2,8 @@ import { Router } from "express";
 import { API } from "../config/blockfrost";
 import { Block } from "@shared/dtos/block.dto";
 import { ApiReturnType } from "@shared/APIReturnType";
-import { ITokenOverview } from "@shared/dtos/token.dto";
+import { ITokenOverview, TokenHolder } from "@shared/dtos/token.dto";
+import { Transaction } from "@shared/dtos/transaction.dto";
 
 
 /**
@@ -121,4 +122,67 @@ tokenController.get('/:tokenId', async (req, res) => {
     currentPage: 0,
     pageSize: 1,
   } as ApiReturnType<ITokenOverview>);
+});
+
+tokenController.get('/:tokenId/holders', async (req, res) => {
+  const pageInfo = req.query;
+  const unixTimestamp = Math.floor(Date.now() / 1000);
+  const assetById = await API.assetsById(req.params.tokenId);
+
+  const assetAddresses = await API.assetsAddresses(req.params.tokenId, {
+    page: Number.parseInt(String(pageInfo.page || 0)),
+    count: Number.parseInt(String(pageInfo.size || 100))
+  });
+
+  const holders = assetAddresses.map((entry) => {
+    return {
+      address: entry.address,
+      amount: entry.quantity ? Number.parseInt(entry.quantity) : 0,
+      ratio: (Number.parseInt(entry.quantity) / (assetById.quantity ? Number.parseInt(assetById.quantity) : 1)) * 100
+    } as TokenHolder;
+  })
+
+  res.json({
+    data: holders,
+    lastUpdated: unixTimestamp,
+    total: holders.length, // TODO need to find the total number of blocks
+    currentPage: Number.parseInt(String(pageInfo.page ?? 0)),
+    pageSize: Number.parseInt(String(pageInfo.size ?? 10)),
+    totalPages: Math.ceil(holders.length / (pageInfo.size ? Number.parseInt(String(pageInfo.size)) : 100)), // TODO need to find the total number of blocks
+  } as ApiReturnType<TokenHolder[]>);
+});
+
+tokenController.get('/:tokenId/transactions', async (req, res) => {
+  const pageInfo = req.query;
+  const unixTimestamp = Math.floor(Date.now() / 1000);
+  const assetById = await API.assetsById(req.params.tokenId);
+  const assetTransactions = await API.assetsTransactions(req.params.tokenId, {
+    page: Number.parseInt(String(pageInfo.page || 0)),
+    count: Number.parseInt(String(pageInfo.size || 100))
+  });
+
+  const transactions : Transaction[] = await Promise.all(assetTransactions.map(async (entry) => {
+    const tx = await API.txs(entry.tx_hash);
+    const block = tx.block_height ? await API.blocks(tx.block_height) : null;
+    return {
+      blockNo: tx.block_height ?? 0,
+      hash: entry.tx_hash,
+      time: tx.block_time.toString(),
+      slot: tx.slot ?? 0,
+      epochNo: block?.epoch ?? 0,
+      epochSlotNo: block?.epoch_slot ?? 0,
+      fee: Number.parseInt(tx.fees ?? '0'),
+      totalOutput: tx.output_amount.filter((amount) => amount.unit === 'lovelace').reduce((acc, amount) => acc + Number.parseInt(amount.quantity), 0),
+      blockHash: block?.hash
+    } as Transaction
+  } ));
+
+  res.json({
+    data: transactions,
+    lastUpdated: unixTimestamp,
+    total: transactions.length, // TODO need to find the total number of blocks
+    currentPage: Number.parseInt(String(pageInfo.page ?? 0)),
+    pageSize: Number.parseInt(String(pageInfo.size ?? 10)),
+    totalPages: Math.ceil(transactions.length / (pageInfo.size ? Number.parseInt(String(pageInfo.size)) : 100)), // TODO need to find the total number of blocks
+  } as ApiReturnType<Transaction[]>);
 });

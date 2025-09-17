@@ -68,3 +68,9 @@ interface INativeScriptDetail {
   isOneTimeMint?: boolean;
   isOpen?: boolean;
 }
+
+export interface TokenHolder {
+  address: string;
+  amount: number;
+  ratio: number;
+}
