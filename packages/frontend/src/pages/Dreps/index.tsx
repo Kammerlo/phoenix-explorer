@@ -11,13 +11,10 @@ const Dreps = () => {
   useEffect(() => {
     document.title = `Delegated Representative | Cardano Blockchain Explorer`;
   }, []);
-  if (!FF_GLOBAL_IS_CONWAY_ERA) {
-    return <NotFound />;
-  }
 
   return (
     <StyledContainer>
-      <OverViews />
+      {/* <OverViews /> */}
       <DrepsList />
     </StyledContainer>
   );

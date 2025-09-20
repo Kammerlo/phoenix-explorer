@@ -62,7 +62,8 @@ export enum DetailHeaderType {
   TRANSACTION = "TRANSACTION",
   STAKE_KEY = "STAKE_KEY",
   POOL = "POOL",
-  TOKEN = "TOKEN"
+  TOKEN = "TOKEN",
+  DREP = "DREP"
 }
 export interface DetailHeaderProps {
   type: DetailHeaderType;

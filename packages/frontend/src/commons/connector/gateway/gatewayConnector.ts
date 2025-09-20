@@ -14,6 +14,7 @@ import epoch from "../../../pages/Epoch";
 import { GovernanceActionDetail, GovernanceActionListItem, GovernanceOverview } from "@shared/dtos/GovernanceOverview";
 import { AddressDetail, StakeAddressDetail } from "@shared/dtos/address.dto";
 import { PoolDetail, PoolOverview } from "@shared/dtos/pool.dto";
+import { Drep } from "@shared/dtos/drep.dto";
 
 export class GatewayConnector implements ApiConnector {
   baseUrl: string;
@@ -64,7 +65,7 @@ export class GatewayConnector implements ApiConnector {
     FunctionEnum.BLOCK,
     FunctionEnum.TRANSACTION,
     FunctionEnum.TOKENS,
-    // FunctionEnum.GOVERNANCE, // For now, we don't support governance actions
+    FunctionEnum.GOVERNANCE, // For now, we don't support governance actions
     FunctionEnum.POOL,
     FunctionEnum.ADDRESS];
   }
@@ -168,6 +169,13 @@ export class GatewayConnector implements ApiConnector {
 
   async getGovernanceOverview(): Promise<ApiReturnType<GovernanceOverview>> {
     const response = await this.client.get<ApiReturnType<GovernanceOverview>>(`${this.baseUrl}/governance`);
+    return response.data;
+  }
+
+  async getDreps(pageInfo: ParsedUrlQuery): Promise<ApiReturnType<Drep[]>> {
+    const response = await this.client.get<ApiReturnType<Drep[]>>(`${this.baseUrl}/governance/dreps`, {
+      params: pageInfo
+    });
     return response.data;
   }
 }

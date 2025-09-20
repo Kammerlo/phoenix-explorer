@@ -47,19 +47,6 @@ interface OverViewDreps {
   totalAdaStaked: number;
 }
 
-interface Drep {
-  activeVoteStake: number;
-  anchorHash: string;
-  anchorUrl: string;
-  createdAt: string;
-  drepHash: string;
-  drepId: string;
-  status: "ACTIVE" | "INACTIVE" | "RETIRED";
-  updatedAt: string;
-  votingPower: number;
-  govParticipationRate?: number;
-}
-
 interface DelegationGovernanceVotesProps {
   hash?: string;
   type: VOTE_TYPE.DREP_KEY_HASH | VOTE_TYPE.STAKING_POOL_KEY_HASH | VOTE_TYPE.CONSTITUTIONAL_COMMITTEE_HOT_KEY_HASH;

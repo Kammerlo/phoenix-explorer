@@ -14,6 +14,7 @@ import { ITokenOverview, TokenHolder } from "@shared/dtos/token.dto";
 import { GovernanceActionDetail, GovernanceActionListItem, GovernanceOverview } from "@shared/dtos/GovernanceOverview";
 import { AddressDetail, StakeAddressDetail } from "@shared/dtos/address.dto";
 import { PoolDetail, PoolOverview } from "@shared/dtos/pool.dto";
+import { Drep } from "@shared/dtos/drep.dto";
 
 const API_URL: string = process.env.REACT_APP_API_URL || "";
 const API_CONNECTOR_TYPE: string = process.env.REACT_APP_API_TYPE || "";
@@ -85,7 +86,9 @@ export abstract class ApiConnector {
 
   abstract getGovernanceDetail(txHash: string, index: string): Promise<ApiReturnType<GovernanceActionDetail>>;
 
-  abstract getPoolList(pageInfo: any): Promise<ApiReturnType<PoolOverview[]>>;
+  abstract getPoolList(pageInfo: ParsedUrlQuery): Promise<ApiReturnType<PoolOverview[]>>;
 
   abstract getPoolDetail(poolId: string): Promise<ApiReturnType<PoolDetail>>;
+
+  abstract getDreps(pageInfo: ParsedUrlQuery): Promise<ApiReturnType<Drep[]>>;
 }

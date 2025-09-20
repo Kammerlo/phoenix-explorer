@@ -18,7 +18,7 @@ import QueryString, { parse, stringify } from "qs";
 import { HiArrowLongLeft } from "react-icons/hi2";
 import { t } from "i18next";
 
-import DetailHeader from "src/components/commons/DetailHeader";
+import DetailHeader, { DetailHeaderType } from "src/components/commons/DetailHeader";
 import {
   DescriptonDrepIcon,
   CreateDrepIcon,
@@ -282,9 +282,7 @@ const DrepDetail = () => {
   ];
   if (error && (statusError || 0) < 500) return <NoRecord />;
   if (error && (statusError || 0) >= 500) return <FetchDataErr />;
-  if (!FF_GLOBAL_IS_CONWAY_ERA) {
-    return <NotFound />;
-  }
+
   if (loading) {
     return (
       <StyledContainer>
@@ -309,7 +307,7 @@ const DrepDetail = () => {
   return (
     <StyledContainer>
       <DetailHeader
-        type="DREP"
+        type={DetailHeaderType.DREP}
         title={
           <TruncateSubTitleContainer mr={isMobile ? 2 : 0}>
             <DynamicEllipsisText
@@ -326,7 +324,7 @@ const DrepDetail = () => {
         subTitle={`Type: ${data?.type || ""}`}
         stakeKeyStatus={data?.status}
       />
-      <DrepAccordion />
+      {/* <DrepAccordion /> */}
     </StyledContainer>
   );
 };

@@ -1,11 +1,11 @@
-import { Box, Button } from "@mui/material";
+import { Box, Button, CircularProgress } from "@mui/material";
 import { pickBy } from "lodash";
 import moment from "moment";
 import { stringify } from "qs";
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { useSelector } from "react-redux";
-import { useHistory } from "react-router-dom";
+import { useHistory, useLocation } from "react-router-dom";
 
 import useFetchList from "src/commons/hooks/useFetchList";
 import usePageInfo from "src/commons/hooks/usePageInfo";
@@ -19,58 +19,65 @@ import CustomTooltip from "src/components/commons/CustomTooltip";
 import DatetimeTypeTooltip from "src/components/commons/DatetimeTypeTooltip";
 import { StakeKeyStatus } from "src/components/commons/DetailHeader/styles";
 import Table, { Column } from "src/components/commons/Table";
+import { Drep } from "@shared/dtos/drep.dto";
 
 import DrepFilter from "../DrepFilter";
 import { ListOfDreps, PoolName, TopSearchContainer } from "./styles";
+import { ApiConnector } from "src/commons/connector/ApiConnector";
+import { ApiReturnType } from "@shared/APIReturnType";
 
 const DrepsList: React.FC = () => {
   const { t } = useTranslation();
   const history = useHistory();
+  const { search } = useLocation();
   const { pageInfo, setSort } = usePageInfo();
   const [metadataUrl, setMetadataUrl] = useState("");
   const tableRef = useRef<HTMLDivElement>(null);
-  const blockKey = useSelector(({ system }: RootState) => system.blockKey);
+  const [fetchData, setFetchData] = useState<ApiReturnType<Drep[]>>({ 
+    data: [], 
+    lastUpdated: 0, 
+    total: 0, 
+    currentPage: 1 
+  });
+  const [loading, setLoading] = useState<boolean>(true);
   const handleBlankSort = () => {
     history.replace({ search: stringify({ ...pageInfo, page: 1, sort: undefined }) });
   };
-  const timeZone = localStorage.getItem("userTimezone")
-    ? `${localStorage.getItem("userTimezone")}` === "utc"
-      ? "UTC"
-      : localStorage.getItem("userTimezone") || "UTC"
-    : sessionStorage.getItem("timezone")?.replace(/"/g, "") || "UTC";
 
-  const fetchData = useFetchList<Drep>(
-    API.DREPS_LIST.DREPS_LIST,
+  const apiConnector = ApiConnector.getApiConnector();
+  
+  const fetchDreps = useCallback(async () => {
+    setLoading(true);
+    try {
+      const data = await apiConnector.getDreps(pageInfo);
+      setFetchData(data);
+    } catch (error) {
+      console.error('Error fetching dreps:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, [search]);
+
+  useEffect(() => {
+    fetchDreps();
+  }, [fetchDreps]);
+
+
+  const columns: Column<Drep>[] = [
     {
-      ...pickBy(
-        {
-          ...pageInfo,
-          fromDate: pageInfo?.fromDate
-            ? moment
-                .utc(pageInfo?.fromDate)
-                .subtract(timeZone == "UTC" ? 0 : moment().utcOffset(), "minutes")
-                .format(DATETIME_PARTTEN)
-            : "",
-          toDate: pageInfo?.toDate
-            ? moment
-                .utc(pageInfo?.toDate)
-                .endOf("D")
-                .subtract(timeZone == "UTC" ? 0 : moment().utcOffset(), "minutes")
-                .format(DATETIME_PARTTEN)
-            : "",
-          activeStakeTo: pageInfo?.maxActiveVoteStake ? +pageInfo.maxActiveVoteStake * 10 ** 6 : "",
-          activeStakeFrom: pageInfo?.minActiveVoteStake ? +pageInfo?.minActiveVoteStake * 10 ** 6 : "",
-          votingPowerTo: pageInfo?.maxVotingPower ? +pageInfo.maxVotingPower * 10 ** 6 : "",
-          votingPowerFrom: pageInfo?.minVotingPower ? +pageInfo?.minVotingPower * 10 ** 6 : ""
-        },
-        (value) => value !== "" && value !== undefined
+      title: <div data-testid="drepList.drepGivenName">{t("dreps.givenName")}</div>,
+      key: "givenName",
+      minWidth: "100px",
+      render: (r) => (
+        <CustomTooltip title={r.givenName ? r.givenName : undefined}>
+          <PoolName data-testid="drepList.drepGivenNameValue" to={{ pathname: details.drep(r.drepId) }}>
+            <Box component={"span"} textOverflow={"ellipsis"} whiteSpace={"nowrap"} overflow={"hidden"}>
+              {r.givenName}
+            </Box>
+          </PoolName>
+        </CustomTooltip>
       )
     },
-    false,
-    blockKey
-  );
-  const { error } = fetchData;
-  const columns: Column<Drep>[] = [
     {
       title: <div data-testid="drepList.drepIdTitle">{t("dreps.id")}</div>,
       key: "id",
@@ -109,8 +116,11 @@ const DrepsList: React.FC = () => {
               whiteSpace={"nowrap"}
               overflow={"hidden"}
               color={(theme) => `${theme.palette.primary.main} !important`}
-              onClick={() => {
-                r.anchorUrl.includes("http") ? setMetadataUrl(r.anchorUrl) : setMetadataUrl(`//${r.anchorUrl}`);
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const url = r.anchorUrl.includes("http") ? r.anchorUrl : `https://${r.anchorUrl}`;
+                window.open(url, '_blank', 'noopener,noreferrer');
               }}
               disableRipple={true}
               sx={{ ":hover": { background: "none" }, textAlign: "left" }}
@@ -264,28 +274,41 @@ const DrepsList: React.FC = () => {
       }
     }
   ];
+  if (loading) return <CircularProgress />;
+  
   return (
     <>
-      {!error && (
+      {!fetchData.error && (
         <TopSearchContainer
           sx={{
             justifyContent: "space-between"
           }}
         >
           <ListOfDreps>{t("dreps.listOfDreps")}</ListOfDreps>
-          <Box display="flex" gap="10px">
-            <DrepFilter loading={fetchData.loading} />
-          </Box>
         </TopSearchContainer>
       )}
       <Table
-        {...fetchData}
+        data={fetchData.data}
+        loading={loading}
+        error={fetchData.error}
         data-testid="drepList.table"
         columns={columns}
-        total={{ count: fetchData.total, title: "Total", isDataOverSize: fetchData.isDataOverSize }}
-        onClickRow={(_, r: Drep) => history.push(details.drep(r.drepId))}
+        total={{ count: fetchData.total, title: "Total" }}
+        onClickRow={(e, r: Drep) => {
+          // Prevent navigation if clicking on a link or button
+          if (e.target instanceof HTMLAnchorElement || 
+              (e.target instanceof Element && e.target.closest("a")) ||
+              e.target instanceof HTMLButtonElement ||
+              (e.target instanceof Element && e.target.closest("button"))) {
+            e.preventDefault();
+            e.stopPropagation();
+            return;
+          }
+          history.push(details.drep(r.drepId));
+        }}
         pagination={{
-          ...pageInfo,
+          page: pageInfo.page,
+          size: pageInfo.size,
           total: fetchData.total,
           onChange: (page, size) => {
             history.replace({ search: stringify({ ...pageInfo, page, size }) });

@@ -348,6 +348,7 @@
   "glossary.retiredDReps": "Retired DReps",
   "glossary.inactiveDReps": "Inactive DReps",
   "dreps.id": "DRep ID",
+  "dreps.givenName": "Given Name",
   "dreps.anchorLink": "Anchor Link",
   "dreps.anchorHash": "Anchor Hash",
   "dreps.votingPower": "Voting Power",
