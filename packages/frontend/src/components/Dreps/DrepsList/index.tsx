@@ -21,7 +21,6 @@ import { StakeKeyStatus } from "src/components/commons/DetailHeader/styles";
 import Table, { Column } from "src/components/commons/Table";
 import { Drep } from "@shared/dtos/drep.dto";
 
-import DrepFilter from "../DrepFilter";
 import { ListOfDreps, PoolName, TopSearchContainer } from "./styles";
 import { ApiConnector } from "src/commons/connector/ApiConnector";
 import { ApiReturnType } from "@shared/APIReturnType";

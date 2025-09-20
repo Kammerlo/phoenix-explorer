@@ -81,10 +81,6 @@ governanceController.get('/dreps', async (req, res) => {
         } catch (e) {
             console.error("Error fetching drep details for drep id:", drep.drep_id);
         }
-        console.log("--------");
-        console.log(jsonMetadata);
-        console.log("--------");
-
         dreps.push({
             activeVoteStake: drepDetails ? drepDetails.amount : 0,
             anchorHash: drepMetadata ? drepMetadata?.hash : "",
