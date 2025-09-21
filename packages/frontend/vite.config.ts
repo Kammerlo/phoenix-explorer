@@ -13,6 +13,7 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "REACT_");
   return {
     define: {
+      global: "globalThis",
       "process.env.REACT_APP_API_TYPE": JSON.stringify(env.REACT_APP_API_TYPE),
       "process.env.REACT_APP_API_URL": JSON.stringify(env.REACT_APP_API_URL),
       "process.env.REACT_APP_NETWORK": JSON.stringify(env.REACT_APP_NETWORK),
@@ -22,13 +23,15 @@ export default defineConfig(({ mode }) => {
     base: "/",
     optimizeDeps: {
       exclude: ["util"],
+      include: ["process"],
       esbuildOptions: {
         define: {
           global: "globalThis"
         },
         plugins: [
           NodeGlobalsPolyfillPlugin({
-            buffer: true
+            buffer: true,
+            process: true
           })
         ]
       }
@@ -39,7 +42,8 @@ export default defineConfig(({ mode }) => {
         "src/": resolve(__dirname, "./src/$1"),
         crypto: "crypto-browserify",
         stream: "stream-browserify",
-        buffer: "buffer/"
+        buffer: "buffer/",
+        process: "process/browser"
       }
     },
     plugins: [
@@ -65,7 +69,11 @@ export default defineConfig(({ mode }) => {
       minify: false,
       assetsInlineLimit: 0,
       rollupOptions: {
-        plugins: [rollupNodePolyFill()] as any
+        plugins: [
+          rollupNodePolyFill({
+            include: ['node_modules/**/*.js', new RegExp('node_modules/.vite/.*js')]
+          })
+        ] as any
       },
       outDir: "build",
       target: "esnext"
