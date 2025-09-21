@@ -23,15 +23,13 @@ export default defineConfig(({ mode }) => {
     base: "/",
     optimizeDeps: {
       exclude: ["util"],
-      include: ["process"],
       esbuildOptions: {
         define: {
           global: "globalThis"
         },
         plugins: [
           NodeGlobalsPolyfillPlugin({
-            buffer: true,
-            process: true
+            buffer: true
           })
         ]
       }
@@ -42,8 +40,7 @@ export default defineConfig(({ mode }) => {
         "src/": resolve(__dirname, "./src/$1"),
         crypto: "crypto-browserify",
         stream: "stream-browserify",
-        buffer: "buffer/",
-        process: "process/browser"
+        buffer: "buffer/"
       }
     },
     plugins: [
