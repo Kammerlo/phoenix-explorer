@@ -1,5 +1,1 @@
-declare global {
-  interface Window {
-    Buffer: typeof Buffer;
-  }
-}
+// Browser-only global types

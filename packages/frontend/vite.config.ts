@@ -4,9 +4,6 @@ import react from "@vitejs/plugin-react";
 import viteTsconfigPaths from "vite-tsconfig-paths";
 import svgr from "vite-plugin-svgr";
 import { resolve } from "path";
-import NodeGlobalsPolyfillPlugin from "@esbuild-plugins/node-globals-polyfill";
-import rollupNodePolyFill from "rollup-plugin-polyfill-node";
-import wasm from "vite-plugin-wasm";
 
 // @ts-ignore
 export default defineConfig(({ mode }) => {
@@ -22,25 +19,12 @@ export default defineConfig(({ mode }) => {
     },
     base: "/",
     optimizeDeps: {
-      exclude: ["util"],
-      esbuildOptions: {
-        define: {
-          global: "globalThis"
-        },
-        plugins: [
-          NodeGlobalsPolyfillPlugin({
-            buffer: true
-          })
-        ]
-      }
+      exclude: ["util"]
     },
     // base: "/en/",
     resolve: {
       alias: {
-        "src/": resolve(__dirname, "./src/$1"),
-        crypto: "crypto-browserify",
-        stream: "stream-browserify",
-        buffer: "buffer/"
+        "src/": resolve(__dirname, "./src/$1")
       }
     },
     plugins: [
@@ -50,7 +34,6 @@ export default defineConfig(({ mode }) => {
           plugins: ["@emotion/babel-plugin"]
         }
       }),
-      wasm(),
       viteTsconfigPaths(),
       svgr({
         svgrOptions: {
@@ -63,15 +46,6 @@ export default defineConfig(({ mode }) => {
       open: true
     },
     build: {
-      minify: false,
-      assetsInlineLimit: 0,
-      rollupOptions: {
-        plugins: [
-          rollupNodePolyFill({
-            include: ['node_modules/**/*.js', new RegExp('node_modules/.vite/.*js')]
-          })
-        ] as any
-      },
       outDir: "build",
       target: "esnext"
     }

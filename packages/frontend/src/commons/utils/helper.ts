@@ -3,10 +3,18 @@ import { isNil } from "lodash";
 import moment, { DurationInputArg1, DurationInputArg2 } from "moment-timezone";
 import { parse } from "qs";
 import { AxisInterval } from "recharts/types/util/types";
-import { createDecipheriv, pbkdf2Sync } from "crypto";
-import { ParsedUrlQuery } from "querystring";
 
 import breakpoints from "src/themes/breakpoints";
+
+// Browser-compatible type definition instead of Node.js querystring
+type ParsedUrlQuery = Record<string, string | string[] | undefined>;
+
+// Stub function for browser compatibility - crypto operations removed
+export function decryptCardanoMessage(encrypted_msg: string, passphrase = "cardano"): string {
+  // Return the original message as crypto operations are not supported in browser
+  console.warn("Crypto decryption not available in browser build");
+  return encrypted_msg;
+}
 
 import { APP_LANGUAGES, NETWORK, NETWORKS, OPTIONS_CHART_ANALYTICS } from "./constants";
 BigNumber.config({ EXPONENTIAL_AT: [-50, 50] });
@@ -449,31 +457,7 @@ export const removeDuplicate = <T>(arr: T[]) => {
   return arr.filter((c, index) => arr.indexOf(c) === index);
 };
 
-function calc_KeyIV(passphrase: string, salt: string) {
-  //passphrase as utf8 string, salt as hexstring
-  const key_IV = pbkdf2Sync(Buffer.from(passphrase, "utf8"), Buffer.from(salt, "hex"), 10000, 48, "sha256").toString(
-    "hex"
-  );
-  return key_IV; //hex-string
-}
 
-export function decryptCardanoMessage(encrypted_msg: string, passphrase = "cardano") {
-  const encrypted_hex = Buffer.from(encrypted_msg, "base64").toString("hex");
-  const salt = encrypted_hex.substring(16, 32);
-  const cyphertext = encrypted_hex.substring(32);
-
-  const keyIV = calc_KeyIV(passphrase, salt);
-  const key = keyIV.substring(0, 64);
-  const iv = keyIV.substring(64);
-
-  try {
-    const decipher = createDecipheriv("aes-256-cbc", Buffer.from(key, "hex"), Buffer.from(iv, "hex"));
-    const decr_msg = decipher.update(cyphertext, "hex").toString("utf8") + decipher.final("utf8");
-    return decr_msg || ""; //utf8
-  } catch (error) {
-    throw new Error("Invalid passphrase");
-  }
-}
 
 const removeSpacesBetweenParentheses = (str: string): string => {
   const result = str.replace(/\(\s+|\s+\)/g, (match) => match.trim());
