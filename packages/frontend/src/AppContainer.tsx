@@ -25,7 +25,11 @@ const AppContainer: React.FC<Props> = (props) => {
   ];
   return (
     <ThemeProvider theme={themes[theme]}>
-      <Box bgcolor={theme === "light" ? themes[theme].palette.primary[100] : themes[theme].palette.secondary[100]}>
+      <Box 
+        bgcolor={theme === "light" ? themes[theme].palette.primary[100] : themes[theme].palette.secondary[100]}
+        minHeight="100vh"
+        width="100%"
+      >
         <div data-theme={theme}>
           {excludedRoutes.includes(location.pathname) ? <>{children}</> : <CustomLayout>{children}</CustomLayout>}
         </div>

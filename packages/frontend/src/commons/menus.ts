@@ -7,12 +7,11 @@ import {
   BrowseIcon,
   DashboardIcon,
   GovernanceHome,
-  MicarIcon,
-  NetworkMonitoringIcon,
   OperationalIcon,
   ProtocolIcon,
   StakingLifecycleIcon,
-  TwitterX
+  TwitterX,
+  Catalyst
 } from "./resources";
 import { details, lists, routers } from "./routers";
 import { ApiConnector } from "./connector/ApiConnector";
@@ -32,7 +31,7 @@ interface Menu {
 interface Social {
   title: string;
   href: string;
-  icon: IconType | string;
+  icon: IconType | string | React.FunctionComponent<React.SVGProps<SVGSVGElement>>;
 }
 
 const supportedFunctions = ApiConnector.getApiConnector().getSupportedFunctions();
@@ -185,25 +184,12 @@ export const menus: Menu[] = [
         hidden: !supportedFunctions.includes(FunctionEnum.GOVERNANCE)
       }
     ]
-  },
-  {
-    title: "Network Monitoring",
-    key: "glossary.networkMonitoring",
-    icon: NetworkMonitoringIcon,
-    href: routers.NETWORK_MONITORING,
-    hidden: !supportedFunctions.includes(FunctionEnum.NETWORK_MONITORING)
-  },
-  {
-    title: "Micar",
-    key: "glossary.micar",
-    icon: MicarIcon,
-    href: routers.MICAR,
-    hidden: !supportedFunctions.includes(FunctionEnum.SUSTAINABILITY_INDICATORS)
   }
 ];
 
 export const socials: Social[] = [
-  { href: "https://github.com/Kammerlo/cardano-explorer", title: "GitHub", icon: FaGithub }
+  { href: "https://github.com/Kammerlo/cardano-explorer", title: "GitHub", icon: FaGithub },
+  { href: "https://projectcatalyst.io/funds/14/cardano-open-developers/phoenix-explorer-reviving-an-open-source-explorer", title: "Project Catalyst", icon: Catalyst },
 ];
 
 export const footerMenus: Menu[] = [
@@ -221,7 +207,7 @@ export const footerMenus: Menu[] = [
       },
       { href: "https://docs.cardano.org/", title: "Cardano Docs", key: "site.cardanoDocs", hidden: false },
       {
-        href: "https://education.cardanofoundation.org/",
+        href: "https://cardanofoundation.org/academy/",
         title: "Cardano Academy",
         key: "site.cardanoAcademy",
         hidden: false

@@ -1,73 +1,120 @@
-# Cardano Explorer Frontend
-This repository houses an open source Cardano Explorer. It is based on the [Cardano Foundation Explorer](https://github.com/cardano-foundation/cf-explorer-frontend). 
-The idea behind this repository is to maintain and continue the development of this open source project. Currently there is no other open source Explorer available in the Cardano Ecosystem. 
-We want to keep this running and develop it further with the community.
+# Phoenix Explorer - Community Cardano Explorer 🚀
 
-Currently this explorer is deployed here: [Cardano Explorer](https://cardano-explorer.xyz)
-We are still in heavy development and will add more features in the future. 
+## 🚧 Development Notice - Community Project 🚧
 
-This explorer is a frontend only application. We will implement different API connectors to plug it on top of already existing publics APIs. 
-Currently we ony support [Yaci-Store](https://github.com/bloxbean/yaci-store) API. We will add more API connectors in the future. 
-For example Blockfrost is planned to be added soon.
+**This explorer is currently under heavy development.** I'm actively seeking funding and have applied to [Project Catalyst Fund 14](https://projectcatalyst.io/funds/14/cardano-open-developers/phoenix-explorer-reviving-an-open-source-explorer) to support this initiative.
 
-Relying only on public APIs comes with a downside as well. We are not able to provide all the features that are available in the official Cardano Beta Explorer, since we don't have aggregated data.
-In this application we will only show what is available in the respective APIs.
+My goal is to build this explorer **for the community and as open source** so it can be reused by everyone. It's unfortunate that this valuable piece of software was about to be discontinued, which is why I decided to pick it up and continue its development.
 
-### Contributing is appreciated
-If you need any new features or have any ideas, feel free to open an issue or create a pull request. 
-We are happy to work with you on this project, since we want to keep this project alive and running in collaboration with everyone from the Cardano Ecosystem.
+## 🎯 Mission & Vision
+
+This repository houses an open source Cardano Explorer, originally based on the [Cardano Foundation Explorer](https://github.com/cardano-foundation/cf-explorer-frontend). When this important piece of infrastructure was about to be discontinued, I stepped in to **revive, maintain and extend it for the entire Cardano ecosystem**.
+
+**Why Phoenix Explorer?**
+- 🌟 **Community-Driven**: Built by the community, for the community
+- 🔓 **Fully Open Source**: Available for everyone to use, modify, and contribute
+- 🔄 **Continuous Development**: Actively maintained and improved
+- 🤝 **Collaborative**: Welcoming contributions from all Cardano developers
+
+## 🌐 Live Deployment
+
+Currently deployed at: **[phoenix-explorer.org](https://phoenix-explorer.org)**
+
+*Please note: There's still a lot of work to do, and you may encounter bugs along the way. Thank you for your patience! 🙏*
+
+## 🏗️ Architecture & API Support
+
+**Currently Work-in-progress:**
+- 🔄 Blockfrost - as an API Gateway
+
+**Planned API Connectors:**
+- 🔄 [Yaci-Store](https://github.com/bloxbean/yaci-store) API
+- 🔄 Additional APIs based on community needs
+
+**Important Note:** Since we rely on public APIs, we can only display the data available through these services. This may differ from aggregated data available in proprietary explorers.
+
+## 🤝 Community Contributions Welcome!
+
+Your contributions help keep this project alive! Here's how you can help:
+
+- 🐛 **Report Bugs**: Found an issue? Please open an issue
+- 💡 **Suggest Features**: Have ideas? We'd love to hear them
+- 🔧 **Submit PRs**: Code contributions are greatly appreciated
+- 📖 **Improve Docs**: Help make the documentation better
+- ⭐ **Star the Repo**: Show your support for the project
+
+**Let's build the future of Cardano exploration together!**
 
 
-## Prerequisites
+## 🛠️ Prerequisites
 
-In order to build and run everything you will need:
+Before you begin, ensure you have the following installed:
 
-- Node version: ^v14.19.0 ([^v16.16.0](https://nodejs.org/en/blog/release/v16.16.0/) recommended)
-- npm: ^6.14.17
+- **Node.js**: `^v18.16.0` or higher (Node 20+ recommended)
+- **npm**: `^9.5.1` or higher
+- **Git**: For cloning the repository
 
-## Install and run
+## 🚀 Quick Start Guide
 
-Install the app with npm (it's work well with `yarn` but we using npm in here):
+### Step 1: Clone & Install
 
-**Step 1**: Install packages
-Open terminal and run commad: `npm install`
+```bash
+# Clone the repository
+git clone https://github.com/Kammerlo/phoenix-explorer.git
+cd phoenix-explorer
 
-**Step 2**: Create .env file from .env.example
-In the terminal run command: `cp .env.example .env`
+# Install dependencies
+npm install
+```
 
-**Step 3** Update env variables:
+### Step 2: Environment Configuration
 
-- Update port for application.
+```bash
+# Create environment file from template
+cp packages/frontend/.env.example packages/frontend/.env
+cp packages/backend/.env.example packages/backend/.env
+```
 
-  > Example: `PORT=3000`
+### Step 3: Configure Environment Variables
 
-- Update API Connector Type. Currently we only support `YACI` API. We will add more API connectors in the future.
+Edit `packages/frontend/.env` with your settings:
 
-  > Example: `REACT_APP_API_TYPE=YACI`
+```env
+# Application Configuration
+PORT=3000
+REACT_APP_NETWORK=mainnet  # Options: mainnet, preprod, preview
 
-- Update API URL for the Basi API Service you want to use.
+# API Configuration
+REACT_APP_API_TYPE=GATEWAY    # Currently supported: GATEWAY
+REACT_APP_API_URL=http://localhost:8080  # Your Gateway backend
+```
 
-  > Example: `REACT_APP_API_URL=http://localhost:8080`
+**Supported Networks:**
+- `mainnet` - Cardano Mainnet
+- `preprod` - Cardano Pre-Production Testnet  
+- `preview` - Cardano Preview Testnet
 
-- Update application network (`mainnet`, `preprod` or `preview`)
+### Step 4: Development Server
 
-  > Example: `REACT_APP_NETWORK=mainnet`
+```bash
+# Start the development servers - will start backend and frontend
+npm run dev
+```
 
-**Step 4** Run on localhost
+The application will be available at [http://localhost:3000](http://localhost:3000)
 
-Runs the app in the development mode.
-Open terminal and run command: `npm start`
+## 📁 Project Structure
 
-The application will run by default on port 3000. If you want to run the application on another port, please change the `PORT` in the .env file.
+```
+phoenix-explorer/
+├── packages/
+│   ├── frontend/     # React frontend application
+│   ├── backend/      # Backend API services (if applicable)
+│   └── shared/       # Shared utilities and types
+├── docs/            # Documentation
+└── README.md        # This file
+```
 
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+---
 
-## Build into production
-
-Execute `npm run build`
-
-Builds the app for production to the `build` folder.
-It correctly bundles React in production mode and optimizes the build for the best performance.
-
-The build is minified and the filenames include the hashes.
-Your app is ready to be deployed!
+**Built with ❤️ for the Cardano ecosystem**

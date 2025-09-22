@@ -1,18 +1,14 @@
-import { Box, Button, useTheme, useMediaQuery, List } from "@mui/material";
+import { Box, useTheme, useMediaQuery, List } from "@mui/material";
 import { t } from "i18next";
 import { useEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import { useHistory } from "react-router-dom";
 
 import { useScreen } from "src/commons/hooks/useScreen";
-import { Notice } from "src/commons/resources";
-import { NETWORK, NETWORKS } from "src/commons/utils/constants";
 import { RootState } from "src/stores/types";
 import { setOnDetailView, setSidebar } from "src/stores/user";
-import { routers } from "src/commons/routers";
 
 import StyledModal from "../StyledModal";
-import Footer from "./Footer";
 import Header from "./Header";
 import Sidebar from "./Sidebar";
 import ToggleSidebar from "./ToggleSidebar";
@@ -31,31 +27,6 @@ const CustomLayout: React.FC<Props> = ({ children }) => {
   const theme = useTheme();
   const mainRef = useRef<HTMLDivElement | null>(null);
   const matchesBreakpoint = useMediaQuery(theme.breakpoints.down("md"));
-  const [currentLanguage, setCurrentLanguage] = useState(window.navigator.language);
-  const [currentTimeZone, setCurrentTimeZone] = useState(Intl.DateTimeFormat().resolvedOptions().timeZone);
-  // reload page when change language and timezone
-  useEffect(() => {
-    const checkLanguageChange = setInterval(() => {
-      if (window.navigator.language !== currentLanguage) {
-        setCurrentLanguage(window.navigator.language);
-        window.location.reload();
-      }
-    }, 1000);
-
-    return () => clearInterval(checkLanguageChange);
-  }, [currentLanguage]);
-
-  useEffect(() => {
-    const checkTimeZoneChange = setInterval(() => {
-      const newTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-      if (newTimeZone !== currentTimeZone) {
-        setCurrentTimeZone(newTimeZone);
-        window.location.reload();
-      }
-    }, 1000);
-
-    return () => clearInterval(checkTimeZoneChange);
-  }, [currentTimeZone]);
 
   useEffect(() => {
     const unlisten = history.listen(() => {
@@ -95,44 +66,15 @@ const CustomLayout: React.FC<Props> = ({ children }) => {
         <Main
           ref={mainRef}
           open={sidebar ? 1 : 0}
-          // To dos
           bgcolor={
-            routers.BOLNISI_LANDING === history.location.pathname || routers.MICAR === history.location.pathname
-              ? theme.isDark
-                ? "#131316"
-                : "#fff"
-              : ""
+            theme.isDark ? "#131316" : "#F6F9FF"
           }
         >
-          {NETWORK === NETWORKS.sanchonet && (
-            <Box
-              alignItems={"center"}
-              justifyContent={"center"}
-              width={"100%"}
-              bgcolor={theme.palette.warning[100]}
-              py={2}
-              display={"flex"}
-              component={Button}
-              onClick={() => setOpenNoticeModal(true)}
-              sx={{
-                ":hover": {
-                  bgcolor: theme.palette.warning[100]
-                }
-              }}
-              textTransform={"capitalize"}
-              fontSize={16}
-            >
-              <Notice fill={theme.palette.warning[700]} />
-              <Box ml={1} fontWeight={"bold"} color={theme.palette.warning[800]}>
-                {t("notice")}
-              </Box>
-            </Box>
-          )}
           <Header />
           <Box flexGrow={matchesBreakpoint ? 1 : undefined}>{children}</Box>
-          {matchesBreakpoint && <Footer />}
+          {/* {matchesBreakpoint && <Footer />} */}
         </Main>
-        {!matchesBreakpoint && <Footer />}
+        {/* {!matchesBreakpoint && <Footer />} */}
         <NoticeModal open={openNoticeModal} handleCloseModal={() => setOpenNoticeModal(false)} />
       </MainContainer>
     </Layout>

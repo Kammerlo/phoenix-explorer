@@ -286,6 +286,7 @@ import SearchMicarIcon from "./icons/search-icon.svg?react";
 // eslint-disable-next-line import/order
 import TotalOutput from "./icons/totalOutput.svg?react";
 export {
+  Catalyst,
   LogoFullIcon,
   LogoIcon,
   WalletIcon,
@@ -632,6 +633,7 @@ import PoolCert from "./icons/Staking/PoolCert.svg?react";
 import CertUpdate from "./icons/Staking/CertUpdate.svg?react";
 import ChangeIcon from "./icons/Staking/changeIcon.svg?react";
 import DownloadGreenIcon from "./icons/download-green.svg?react";
+import Catalyst from "./icons/catalyst.svg?react";
 import BgCardWhite from "./images/BgCardWhite.svg?react";
 import PoolsizeIcon from "./images/poolsize-ic.svg?react";
 import StatusIC from "./images/status-ic.svg?react";
