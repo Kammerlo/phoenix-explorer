@@ -10,6 +10,13 @@ export interface Drep {
     updatedAt?: string;
     votingPower?: number;
     govParticipationRate?: number;
+    delegators?: number;
+    votes?: {
+        total: number;
+        abstain: number;
+        no: number;
+        yes: number;
+    }
 }
 
 export interface DrepDetail {
@@ -27,4 +34,10 @@ export interface DrepDetail {
     numberOfAbstainVotes: number | null;
     numberOfNoVotes: number | null;
     numberOfYesVote: number | null;
+}
+
+export interface DrepDelegates {
+    address: string;
+    amount: number;
+    stakeKeyHash?: string;
 }

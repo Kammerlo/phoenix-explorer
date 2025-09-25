@@ -1,22 +1,14 @@
 import { Box, Button, CircularProgress } from "@mui/material";
-import { pickBy } from "lodash";
-import moment from "moment";
 import { stringify } from "qs";
 import { useRef, useState, useEffect, useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import { useSelector } from "react-redux";
 import { useHistory, useLocation } from "react-router-dom";
 
-import useFetchList from "src/commons/hooks/useFetchList";
 import usePageInfo from "src/commons/hooks/usePageInfo";
 import { details } from "src/commons/routers";
-import { API } from "src/commons/utils/api";
-import { formatADAFull, formatDateTimeLocal, formatPercent, getShortHash } from "src/commons/utils/helper";
-import { ActionMetadataModalConfirm } from "src/components/GovernanceVotes";
+import { formatADAFull, getShortHash } from "src/commons/utils/helper";
 import ADAicon from "src/components/commons/ADAIcon";
-import { DATETIME_PARTTEN } from "src/components/commons/CustomFilter/DateRangeModal";
 import CustomTooltip from "src/components/commons/CustomTooltip";
-import DatetimeTypeTooltip from "src/components/commons/DatetimeTypeTooltip";
 import { StakeKeyStatus } from "src/components/commons/DetailHeader/styles";
 import Table, { Column } from "src/components/commons/Table";
 import { Drep } from "@shared/dtos/drep.dto";
@@ -30,7 +22,6 @@ const DrepsList: React.FC = () => {
   const history = useHistory();
   const { search } = useLocation();
   const { pageInfo, setSort } = usePageInfo();
-  const [metadataUrl, setMetadataUrl] = useState("");
   const tableRef = useRef<HTMLDivElement>(null);
   const [fetchData, setFetchData] = useState<ApiReturnType<Drep[]>>({ 
     data: [], 
@@ -177,46 +168,6 @@ const DrepsList: React.FC = () => {
       }
     },
     {
-      title: (
-        <Box data-testid="drepList.votingPowerTitle" component={"span"}>
-          {t("dreps.votingPower")}
-        </Box>
-      ),
-      minWidth: "120px",
-      key: "votingPower",
-      render: (r) =>
-        r.votingPower != null ? (
-          <Box data-testid="drepList.votingPowerValue" component={"span"} mr={1}>
-            {formatPercent(r.votingPower / 100) || `0%`}
-          </Box>
-        ) : (
-          t("common.N/A")
-        ),
-      sort: ({ columnKey, sortValue }) => {
-        sortValue ? setSort(`${columnKey},${sortValue}`) : handleBlankSort();
-      }
-    },
-    {
-      title: (
-        <Box data-testid="drepList.participationRate" component={"span"}>
-          {t("governanceParticipationRate")}
-        </Box>
-      ),
-      minWidth: "120px",
-      key: "govParticipationRate",
-      render: (r) =>
-        r.govParticipationRate != null ? (
-          <Box data-testid="drepList.ParticipationValue" component={"span"} mr={1}>
-            {formatPercent(r.govParticipationRate) || `0%`}
-          </Box>
-        ) : (
-          t("common.N/A")
-        ),
-      sort: ({ columnKey, sortValue }) => {
-        sortValue ? setSort(`${columnKey},${sortValue}`) : handleBlankSort();
-      }
-    },
-    {
       title: <div data-testid="drepList.statusTitle">{t("common.status")}</div>,
       key: "status",
       minWidth: "120px",
@@ -233,44 +184,6 @@ const DrepsList: React.FC = () => {
             : t("status.retired")}
         </StakeKeyStatus>
       )
-    },
-    {
-      title: (
-        <Box data-testid="drepList.registrationDateTitle" component={"span"}>
-          {t("dreps.registrationDate")}
-        </Box>
-      ),
-      minWidth: "100px",
-      key: "createdAt",
-      render: (r) => (
-        <DatetimeTypeTooltip>
-          <Box data-testid="drepList.registrationDateValue" component={"span"}>
-            {formatDateTimeLocal(r.createdAt)}
-          </Box>
-        </DatetimeTypeTooltip>
-      ),
-      sort: ({ columnKey, sortValue }) => {
-        sortValue ? setSort(`${columnKey},${sortValue}`) : handleBlankSort();
-      }
-    },
-    {
-      title: (
-        <Box data-testid="drepList.lastUpdatedTitle" component={"span"}>
-          {t("dreps.lastUpdated")}
-        </Box>
-      ),
-      key: "updatedAt",
-      minWidth: "120px",
-      render: (r) => (
-        <DatetimeTypeTooltip>
-          <Box data-testid="drepList.lastUpdatedValue" component={"span"}>
-            {formatDateTimeLocal(r.updatedAt)}
-          </Box>
-        </DatetimeTypeTooltip>
-      ),
-      sort: ({ columnKey, sortValue }) => {
-        sortValue ? setSort(`${columnKey},${sortValue}`) : handleBlankSort();
-      }
     }
   ];
   if (loading) return <CircularProgress />;
@@ -302,8 +215,9 @@ const DrepsList: React.FC = () => {
             e.preventDefault();
             e.stopPropagation();
             return;
+          } else {
+            history.push(details.drep(r.drepId));
           }
-          history.push(details.drep(r.drepId));
         }}
         pagination={{
           page: pageInfo.page,
@@ -315,7 +229,6 @@ const DrepsList: React.FC = () => {
           }
         }}
       />
-      <ActionMetadataModalConfirm onClose={() => setMetadataUrl("")} open={!!metadataUrl} anchorUrl={metadataUrl} />
     </>
   );
 };

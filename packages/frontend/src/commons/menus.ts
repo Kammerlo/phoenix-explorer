@@ -92,7 +92,7 @@ export const menus: Menu[] = [
         key: "head.page.drep",
         href: routers.DREPS,
         isSpecialPath: true,
-        hidden: !supportedFunctions.includes(FunctionEnum.GOVERNANCE)
+        hidden: !supportedFunctions.includes(FunctionEnum.DREP)
       }
     ]
   },

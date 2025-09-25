@@ -14,7 +14,7 @@ import epoch from "../../../pages/Epoch";
 import { GovernanceActionDetail, GovernanceActionListItem, GovernanceOverview } from "@shared/dtos/GovernanceOverview";
 import { AddressDetail, StakeAddressDetail } from "@shared/dtos/address.dto";
 import { PoolDetail, PoolOverview } from "@shared/dtos/pool.dto";
-import { Drep } from "@shared/dtos/drep.dto";
+import { Drep, DrepDelegates } from "@shared/dtos/drep.dto";
 
 export class GatewayConnector implements ApiConnector {
   baseUrl: string;
@@ -65,6 +65,7 @@ export class GatewayConnector implements ApiConnector {
     FunctionEnum.BLOCK,
     FunctionEnum.TRANSACTION,
     FunctionEnum.TOKENS,
+    FunctionEnum.DREP,
     // FunctionEnum.GOVERNANCE, // For now, we don't support governance actions
     FunctionEnum.POOL,
     FunctionEnum.ADDRESS];
@@ -174,6 +175,25 @@ export class GatewayConnector implements ApiConnector {
 
   async getDreps(pageInfo: ParsedUrlQuery): Promise<ApiReturnType<Drep[]>> {
     const response = await this.client.get<ApiReturnType<Drep[]>>(`${this.baseUrl}/governance/dreps`, {
+      params: pageInfo
+    });
+    return response.data;
+  }
+
+  async getDrep(drepId: string): Promise<ApiReturnType<Drep>> {
+    const response = await this.client.get<ApiReturnType<Drep>>(`${this.baseUrl}/governance/dreps/${drepId}`);
+    return response.data;
+  }
+
+  async getDrepVotes(drepId: string, pageInfo: ParsedUrlQuery): Promise<ApiReturnType<GovernanceActionListItem[]>> {
+    const response = await this.client.get<ApiReturnType<GovernanceActionListItem[]>>(`${this.baseUrl}/governance/dreps/${drepId}/votes`, {
+      params: pageInfo
+    });
+    return response.data;
+  }
+
+  async getDrepDelegates(drepId: string, pageInfo: ParsedUrlQuery): Promise<ApiReturnType<DrepDelegates[]>> {
+    const response = await this.client.get<ApiReturnType<DrepDelegates[]>>(`${this.baseUrl}/governance/dreps/${drepId}/delegates`, {
       params: pageInfo
     });
     return response.data;

@@ -23,8 +23,8 @@ export interface GovernanceActionListItem {
     // govActionName: string;
     txHash: string;
     index: number;
-    type: string;
-    // vote: null;
+    type?: string;
+    vote?: 'yes' | 'no' | 'abstain';
     // status: string;
     // votingPower: number;
     // indexType: number;

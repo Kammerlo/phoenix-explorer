@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Box, Grid, useTheme } from "@mui/material";
 import moment from "moment";
 import { useSelector } from "react-redux";
@@ -34,17 +34,20 @@ import {
   StyledSkeleton,
   TimeDuration
 } from "./styles";
+import { ApiConnector } from "src/commons/connector/ApiConnector";
+import { ApiReturnType } from "@shared/APIReturnType";
+import { Drep } from "@shared/dtos/drep.dto";
 
 const DrepsOverview: React.FC = () => {
   const { t } = useTranslation();
   const { currentEpoch, blockNo } = useSelector(({ system }: RootState) => system);
   const theme = useTheme();
-  const { data, loading, lastUpdated } = useFetch<OverViewDreps>(
-    API.DREPS_LIST.DREPS_OVERVIEW,
-    undefined,
-    false,
-    blockNo
-  );
+  const apiConnector = ApiConnector.getApiConnector();
+
+  const [drepOverview, setDrepOverview] = useState<ApiReturnType<Drep>>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+
+//  apiConnector.getDreps()
 
   if (loading) {
     return (
