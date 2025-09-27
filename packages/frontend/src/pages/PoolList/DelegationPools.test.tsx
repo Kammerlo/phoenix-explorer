@@ -5,7 +5,7 @@ import { Router } from "react-router";
 import { render } from "src/test-utils";
 import Table, { Column } from "src/components/commons/Table";
 import useFetchList from "src/commons/hooks/useFetchList";
-import DelegationLists from "src/components/PoolList";
+import PoolList from "src/components/PoolList";
 import { details } from "src/commons/routers";
 
 const mockData = {
@@ -28,7 +28,7 @@ describe("Delegation pools view", () => {
   it("should render Delegation pools page", async () => {
     const mockUseFetch = useFetchList as jest.Mock;
     await mockUseFetch.mockReturnValue({ data: [] });
-    render(<DelegationLists />);
+    render(<PoolList />);
     expect(useFetchList).toBeCalled();
   });
 
@@ -59,7 +59,7 @@ describe("Delegation pools view", () => {
 
     render(
       <Router history={history}>
-        <DelegationLists />
+        <PoolList />
       </Router>
     );
 

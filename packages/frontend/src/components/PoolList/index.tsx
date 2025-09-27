@@ -14,8 +14,9 @@ import { DelegationContainer, PoolName } from "./styles";
 import { ApiConnector } from "src/commons/connector/ApiConnector";
 import { ApiReturnType } from "@shared/APIReturnType";
 import { useHistory } from "react-router";
+import { CheckLightGreen } from "src/commons/resources";
 
-const DelegationLists: React.FC = () => {
+const PoolList: React.FC = () => {
   const { t } = useTranslation();
   const { pageInfo } = usePageInfo();
   const [ fetchData, setFetchData] = useState<ApiReturnType<PoolOverview[]>>();
@@ -75,7 +76,7 @@ const DelegationLists: React.FC = () => {
       minWidth: "120px",
       render: (r, idx) => (
         <Box component={"span"} data-testid={`poolList.poolSizeValue#${idx}`}>
-          {r.poolSize != null ? formatADAFull(r.poolSize) : t("common.N/A")}
+          {r.poolSize != null ? formatADAFull(r.poolSize) : t("common.N/A")} <ADAicon />
         </Box>
       )
     },
@@ -85,11 +86,11 @@ const DelegationLists: React.FC = () => {
           {t("glossary.declaredPledge")} (<ADAicon />)
         </Box>
       ),
-      key: "pu.pledge",
+      key: "declaredPledge",
       minWidth: "120px",
       render: (r, idx) => (
         <Box component={"span"} data-testid={`poolList.declaredPledgeValue#${idx}`}>
-          {formatADAFull(r.pledge)}
+          {formatADAFull(r.declaredPledge)} <ADAicon />
         </Box>
       )
     },
@@ -104,7 +105,7 @@ const DelegationLists: React.FC = () => {
       render: (r, idx) =>
         r.saturation != null ? (
           <Box component={"span"} mr={1} data-testid={`poolList.saturationValue#${idx}`}>
-            {formatPercent(r.saturation / 100) || `0%`}
+            {formatPercent(r.saturation) || `0%`}
           </Box>
         ) : (
           t("common.N/A")
@@ -122,37 +123,6 @@ const DelegationLists: React.FC = () => {
         <Box component={"span"} data-testid={`poolList.blockLifetimeValue#${idx}`}>
           {r.lifetimeBlock || 0}
         </Box>
-      )
-    },
-    {
-      title: (
-        <Box component={"span"} data-testid="poolList.votingPowerTitle">
-          {t("votingPower")}
-        </Box>
-      ),
-      key: "votingPower",
-      minWidth: "120px",
-      render: (r, idx) =>
-        r.votingPower != null ? (
-          <CustomTooltip data-testid={`poolList.votingPowerValue#${idx}`} title={`${r.votingPower * 100}%`}>
-            <Box component={"span"}>{formatPercent(r.votingPower)}</Box>
-          </CustomTooltip>
-        ) : (
-          t("common.N/A")
-        )
-    },
-    {
-      title: (
-        <Box component={"span"} data-testid="poolList.participationRateTitle">
-          {t("governanceParticipationRate")}
-        </Box>
-      ),
-      key: "governanceParticipationRate",
-      minWidth: "120px",
-      render: (r, idx) => (
-        <div data-testid={`poolList.participationRateValue#${idx}`}>
-          {r.governanceParticipationRate != null ? `${formatPercent(r.governanceParticipationRate)}` : t("common.N/A")}
-        </div>
       )
     }
   ];
@@ -176,4 +146,4 @@ const DelegationLists: React.FC = () => {
   );
 };
 
-export default DelegationLists;
+export default PoolList;

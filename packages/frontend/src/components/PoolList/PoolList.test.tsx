@@ -5,7 +5,7 @@ import { fireEvent, render, screen } from "src/test-utils";
 import useFetchList from "src/commons/hooks/useFetchList";
 import { details } from "src/commons/routers";
 
-import DelegationLists from "./index";
+import PoolList from "./index";
 
 const mockData: Delegators = {
   poolId: "mock-pool-id",
@@ -32,7 +32,7 @@ describe("DelegationList component", () => {
     });
   });
   it("should component render", () => {
-    render(<DelegationLists />);
+    render(<PoolList />);
     expect(screen.getByRole("link", { name: /mock pool/i })).toBeInTheDocument();
   });
 
@@ -40,7 +40,7 @@ describe("DelegationList component", () => {
     const history = createBrowserHistory();
     render(
       <Router history={history}>
-        <DelegationLists />
+        <PoolList />
       </Router>
     );
     fireEvent.click(screen.getByText(/mock pool/i));

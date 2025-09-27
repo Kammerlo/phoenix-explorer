@@ -1,19 +1,19 @@
 import { useEffect } from "react";
 
-import DelegationLists from "src/components/PoolList";
+import PoolList from "src/components/PoolList";
 
 import { StyledContainer } from "./styles";
 
-const PoolList = () => {
+const PoolListPage = () => {
   useEffect(() => {
     document.title = `Pools | Cardano Blockchain Explorer`;
   }, []);
 
   return (
     <StyledContainer>
-      <DelegationLists />
+      <PoolList />
     </StyledContainer>
   );
 };
 
-export default PoolList;
+export default PoolListPage;

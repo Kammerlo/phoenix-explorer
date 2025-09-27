@@ -5,15 +5,9 @@ export interface PoolOverview {
     poolName: string;
     tickerName: string;
     poolSize: number;
-    pledge: number;
+    declaredPledge: number;
     saturation: number;
-    stakeLimit: number;
-    reserves: number;
     lifetimeBlock: number;
-    votingPower: number;
-    governanceParticipationRate: number;
-    retired: boolean;
-    kparam: number;
 }
 export enum POOL_STATUS {
     ACTIVE = "ACTIVE",
