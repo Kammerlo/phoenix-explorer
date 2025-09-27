@@ -1,3 +1,4 @@
+/// <reference types="../../../vite-env-override.d.ts" />
 /* eslint-disable import/order */
 /* eslint-disable import/no-duplicates */
 
@@ -583,7 +584,7 @@ import FilterIcon from "./icons/filter.svg?react";
 import ListOfReportsIC from "./icons/list-of-report.svg?react";
 import WatchlistIC from "./icons/watchlist.svg?react";
 import ReceidvedRewardsIC from "./icons/received-rewards-ic.svg?react";
-import ADAsymbol from "./icons/ADAsymbol.svg?react";
+import ADAsymbol from "./icons/AIcon.svg?react";
 import ProtocolUpdateIcon from "./icons/protocolUpdate.svg?react";
 import StakeCertificates from "./icons/stakeCertificate.svg?react";
 import DelegationIcon from "./icons/Staking/DelegationIcon.svg?react";

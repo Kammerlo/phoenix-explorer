@@ -161,6 +161,7 @@ const DrepsList: React.FC = () => {
       render: (r) => (
         <Box data-testid="drepList.activeStakeValue" component={"span"}>
           {r.activeVoteStake != null ? formatADAFull(r.activeVoteStake) : t("common.N/A")}
+          <ADAicon/>
         </Box>
       ),
       sort: ({ columnKey, sortValue }) => {
