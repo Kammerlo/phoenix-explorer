@@ -8,10 +8,8 @@ import {
   CubeIconComponent,
   ExchageIcon,
   OutputIcon,
-  RewardIconComponent,
   SlotIcon,
   TimeIconComponent,
-  User2Component
 } from "src/commons/resources";
 import { MAX_SLOT_EPOCH } from "src/commons/utils/constants";
 import { formatADAFull, formatDateTimeLocal } from "src/commons/utils/helper";
@@ -20,14 +18,15 @@ import DatetimeTypeTooltip from "src/components/commons/DatetimeTypeTooltip";
 import DetailHeader from "src/components/commons/DetailHeader";
 
 import { Subtext, TitleCard } from "./styles";
+import { EpochOverview } from "@shared/dtos/epoch.dto";
 
 interface EpochOverviewProps {
-  data: IDataEpoch | null | undefined;
+  data: EpochOverview | null | undefined;
   loading: boolean;
   lastUpdated?: number;
 }
 
-const EpochOverview: React.FC<EpochOverviewProps> = ({ data, loading, lastUpdated }) => {
+const EpochOverviewView: React.FC<EpochOverviewProps> = ({ data, loading, lastUpdated }) => {
   const { t } = useTranslation();
   const { currentEpoch } = useSelector(({ system }: RootState) => system);
   const slot = data && data?.no === currentEpoch?.no ? currentEpoch.slot : MAX_SLOT_EPOCH;
@@ -163,4 +162,4 @@ const EpochOverview: React.FC<EpochOverviewProps> = ({ data, loading, lastUpdate
   );
 };
 
-export default EpochOverview;
+export default EpochOverviewView;

@@ -6,7 +6,7 @@ import { POOL_TYPE } from "src/pages/RegistrationPools";
 import { FunctionEnum } from "src/commons/connector/types/FunctionEnum";
 import { ApiReturnType } from "@shared/APIReturnType";
 import applyCaseMiddleware from "axios-case-converter";
-import { IDataEpoch } from "@shared/dtos/epoch.dto";
+import { EpochOverview } from "@shared/dtos/epoch.dto";
 import { Block } from "@shared/dtos/block.dto";
 import { Transaction, TransactionDetail } from "@shared/dtos/transaction.dto";
 import { ITokenOverview, TokenHolder } from "@shared/dtos/token.dto";
@@ -71,13 +71,13 @@ export class GatewayConnector implements ApiConnector {
     FunctionEnum.ADDRESS];
   }
 
-  async getEpoch(epochId: number): Promise<ApiReturnType<IDataEpoch>> {
-    const response = await this.client.get<ApiReturnType<IDataEpoch>>(`${this.baseUrl}/epochs/${epochId}`);
+  async getEpoch(epochId: number): Promise<ApiReturnType<EpochOverview>> {
+    const response = await this.client.get<ApiReturnType<EpochOverview>>(`${this.baseUrl}/epochs/${epochId}`);
     return response.data;
   }
 
-  async getEpochs(pageInfo: ParsedUrlQuery): Promise<ApiReturnType<IDataEpoch[]>> {
-    const response = await this.client.get<ApiReturnType<IDataEpoch[]>>(`${this.baseUrl}/epochs`, {
+  async getEpochs(pageInfo: ParsedUrlQuery): Promise<ApiReturnType<EpochOverview[]>> {
+    const response = await this.client.get<ApiReturnType<EpochOverview[]>>(`${this.baseUrl}/epochs`, {
       params: pageInfo,
     });
     return response.data;

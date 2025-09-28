@@ -36,7 +36,7 @@ import { protocolParamsToTProtocolParam } from "./mapper/ProtocolParamsToTProtoc
 import { ParsedUrlQuery } from "querystring";
 import { Block } from "@shared/dtos/block.dto";
 import { ApiReturnType } from "@shared/APIReturnType";
-import { IDataEpoch } from "@shared/dtos/epoch.dto";
+import { EpochOverview } from "@shared/dtos/epoch.dto";
 import { Transaction, TransactionDetail } from "@shared/dtos/transaction.dto";
 import { Date } from "../../../components/commons/FirstEpoch/styles";
 import { ITokenOverview } from "@shared/dtos/token.dto";
@@ -283,13 +283,13 @@ export class YaciConnector implements ApiConnector {
       });
   }
 
-  async getEpochs(pageInfo: ParsedUrlQuery): Promise<ApiReturnType<IDataEpoch[]>> {
+  async getEpochs(pageInfo: ParsedUrlQuery): Promise<ApiReturnType<EpochOverview[]>> {
     return this.client
       .get<EpochsPage>(`${this.baseUrl}/epochs`, {
         params: pageInfo
       })
       .then((response) => {
-        const epochs: IDataEpoch[] = response.data.epochs!.map((epoch) => {
+        const epochs: EpochOverview[] = response.data.epochs!.map((epoch) => {
           return epochToIEpochData(epoch);
         });
         return {
@@ -297,32 +297,32 @@ export class YaciConnector implements ApiConnector {
           totalPage: response.data.totalPages || 0,
           total: response.data.total || 0,
           lastUpdated: Date.now()
-        } as ApiReturnType<IDataEpoch[]>;
+        } as ApiReturnType<EpochOverview[]>;
       })
       .catch((error: AxiosError) => {
         return {
           data: [],
           error: error.message,
           lastUpdated: Date.now()
-        } as ApiReturnType<IDataEpoch[]>;
+        } as ApiReturnType<EpochOverview[]>;
       });
   }
 
-  async getEpoch(epochId: number): Promise<ApiReturnType<IDataEpoch>> {
+  async getEpoch(epochId: number): Promise<ApiReturnType<EpochOverview>> {
     return this.client
       .get<Epoch>(`${this.baseUrl}/epochs/${epochId}`)
       .then((response) => {
         return {
           data: epochToIEpochData(response.data),
           lastUpdated: Date.now()
-        } as ApiReturnType<IDataEpoch>;
+        } as ApiReturnType<EpochOverview>;
       })
       .catch((error: AxiosError) => {
         return {
           data: null,
           error: error.message,
           lastUpdated: Date.now()
-        } as ApiReturnType<IDataEpoch>;
+        } as ApiReturnType<EpochOverview>;
       });
   }
 

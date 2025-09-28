@@ -5,7 +5,7 @@ import { POOL_TYPE } from "src/pages/RegistrationPools";
 import { TProtocolParam } from "../../types/protocol";
 import { ParsedUrlQuery } from "querystring";
 import { GatewayConnector } from "./gateway/gatewayConnector";
-import { IDataEpoch } from "@shared/dtos/epoch.dto";
+import { EpochOverview } from "@shared/dtos/epoch.dto";
 import { Block } from "@shared/dtos/block.dto";
 import { ApiReturnType } from "@shared/APIReturnType";
 import { Transaction, TransactionDetail } from "@shared/dtos/transaction.dto";
@@ -43,9 +43,9 @@ export abstract class ApiConnector {
   }
   abstract getSupportedFunctions(): FunctionEnum[];
 
-  abstract getEpochs(pageInfo: ParsedUrlQuery): Promise<ApiReturnType<IDataEpoch[]>>;
+  abstract getEpochs(pageInfo: ParsedUrlQuery): Promise<ApiReturnType<EpochOverview[]>>;
 
-  abstract getEpoch(epochId: number): Promise<ApiReturnType<IDataEpoch>>;
+  abstract getEpoch(epochId: number): Promise<ApiReturnType<EpochOverview>>;
 
   abstract getBlocksPage(pageInfo: ParsedUrlQuery): Promise<ApiReturnType<Block[]>>;
 

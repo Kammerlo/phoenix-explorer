@@ -20,11 +20,10 @@ const Transactions = () => {
 
   const [loading, setLoading] = useState(true);
   const [transactions, setTransactions] = useState<ApiReturnType<Transaction[]> | undefined>();
-  const {pageInfo} = usePageInfo();
   const apiConnector: ApiConnector = ApiConnector.getApiConnector();
 
   function updateData() {
-    apiConnector.getTransactions(undefined, pageInfo).then((data) => {
+    apiConnector.getTransactions(undefined, {size: 50}).then((data) => {
       setTransactions(data);
       setLoading(false);
     });

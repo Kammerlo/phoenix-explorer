@@ -21,6 +21,8 @@ import DatetimeTypeTooltip from "src/components/commons/DatetimeTypeTooltip";
 
 import { TitleCard } from "./styles";
 import { Block } from "@shared/dtos/block.dto";
+import { StyledLink } from "src/components/share/styled";
+import { details } from "src/commons/routers";
 
 interface BlockOverviewProps {
   data: Block | null | undefined;
@@ -154,7 +156,7 @@ const BlockOverview: React.FC<BlockOverviewProps> = ({ data, loading, lastUpdate
           </CustomTooltip>
         </Box>
       ),
-      value: <Box data-testid="block.detail.overview.value.slot">{data?.slotLeader}</Box>
+      value: <Box data-testid="block.detail.overview.value.slot"><StyledLink to={details.delegation(data?.slotLeader)}>{data?.slotLeader}</StyledLink></Box>
     }
   ];
   return (

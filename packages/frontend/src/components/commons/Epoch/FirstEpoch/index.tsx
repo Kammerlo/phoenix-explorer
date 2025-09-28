@@ -12,11 +12,11 @@ import { Container, Content, EpochNumber, EpochProgress, SubContent, TitleCard }
 import ProgressCircle from "../../ProgressCircle";
 import DetailHeader from "../../DetailHeader";
 import DatetimeTypeTooltip from "../../DatetimeTypeTooltip";
-import { IDataEpoch } from "@shared/dtos/epoch.dto";
+import { EpochOverview } from "@shared/dtos/epoch.dto";
 
 interface IProps {
-  data: IDataEpoch;
-  onClick: (e: React.MouseEvent, record: IDataEpoch) => void;
+  data: EpochOverview;
+  onClick: (e: React.MouseEvent, record: EpochOverview) => void;
 }
 
 export default function FirstEpoch({ data: currentEpochData, onClick }: IProps) {

@@ -27,7 +27,7 @@ import {Actions, TimeDuration} from "../TransactionLists/styles";
 
 interface BlockListComponentProps {
   fetchData?: ApiReturnType<Block[]>;
-  updateData: (page: number) => void;
+  updateData: ({page, size}: {page: number, size?: number}) => void;
   loading?: boolean;
 }
 const BlockListComponent: React.FC<BlockListComponentProps> = ({fetchData, updateData, loading}) => {
@@ -149,30 +149,40 @@ const BlockListComponent: React.FC<BlockListComponentProps> = ({fetchData, updat
         </TimeDuration>
       </Actions>
       <Table
-        data={fetchData?.data}
+        data={fetchData?.data || []}
         columns={columns}
         total={{ title: t("common.totalBlocks"), count: fetchData?.total || 0 }}
         onClickRow={handleOpenDetail}
         rowKey={(r: Block) => r.blockNo || r.hash}
         selected={selected}
         showTabView
-        tableWrapperProps={{ sx: (theme) => ({ [theme.breakpoints.between("sm", "md")]: { minHeight: "60vh" } }) }}
+        tableWrapperProps={{ 
+          sx: (theme) => ({ 
+            minHeight: "70vh",
+            maxHeight: "85vh",
+            [theme.breakpoints.down("md")]: { 
+              minHeight: "60vh",
+              maxHeight: "80vh"
+            },
+            [theme.breakpoints.down("sm")]: { 
+              minHeight: "50vh",
+              maxHeight: "75vh"
+            }
+          }) 
+        }}
         onClickExpandedRow={handleExpandedRow}
         expandedTable
         expandedRowData={expandedBlockRowData}
-        pagination={
-          true
-            ? {
-              ...pageInfo,
-              total: fetchData.total || 0,
-              onChange: (page) => {
-                updateData(page);
-              },
-              hideLastPage: true,
-              paginated: true
-            }
-            : undefined
-        }
+        pagination={{
+          ...pageInfo,
+          total: fetchData?.total || 0,
+          page: fetchData?.currentPage || 0,
+          size: fetchData?.pageSize || pageInfo.size,
+          onChange: (page, size) => {
+            updateData({page: page, size: size});
+          },
+          hideLastPage: true
+        }}
       />
     </>
   );

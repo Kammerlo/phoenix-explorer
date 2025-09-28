@@ -8,7 +8,7 @@ import breakpoints from "src/themes/breakpoints";
 import CopyButton from "../CopyButton";
 import { CommonSkeleton } from "../CustomSkeleton";
 import {TRANSACTION_STATUS, TransactionStatus} from "@shared/dtos/transaction.dto";
-import {IDataEpoch} from "@shared/dtos/epoch.dto";
+import {EpochOverview} from "@shared/dtos/epoch.dto";
 interface CardItemProps {
   length: number;
   wide?: number;
@@ -81,7 +81,7 @@ export const HeaderTitleSkeleton = styled(CommonSkeleton)`
   border-radius: 4px;
 `;
 
-export const HeaderStatus = styled("small")<{ status?: TransactionStatus | IDataEpoch["status"] }>`
+export const HeaderStatus = styled("small")<{ status?: TransactionStatus | EpochOverview["status"] }>`
   color: ${({ status, theme }) => {
     switch (status) {
       case TRANSACTION_STATUS.FAILED:

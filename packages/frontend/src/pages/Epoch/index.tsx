@@ -16,7 +16,7 @@ import { Blocks, BlueText, EpochNumber, StatusTableRow, StyledContainer, StyledL
 import { ApiConnector } from "../../commons/connector/ApiConnector";
 import { ApiReturnType } from "@shared/APIReturnType";
 import { formatDateTimeLocal } from "../../commons/utils/helper";
-import { IDataEpoch } from "@shared/dtos/epoch.dto";
+import { EpochOverview } from "@shared/dtos/epoch.dto";
 import FirstEpoch from "src/components/commons/Epoch/FirstEpoch";
 
 const Epoch: React.FC = () => {
@@ -26,7 +26,7 @@ const Epoch: React.FC = () => {
   const { onDetailView } = useSelector(({ user }: RootState) => user);
   const epochNo = useSelector(({ system }: RootState) => system.currentEpoch?.no);
   const { pageInfo, setSort } = usePageInfo();
-  const [epochData, setEpochData] = useState<ApiReturnType<IDataEpoch[]>>();
+  const [epochData, setEpochData] = useState<ApiReturnType<EpochOverview[]>>();
   const [loading, setLoading] = useState(true);
   const [key, setKey] = useState(0);
 
@@ -34,7 +34,7 @@ const Epoch: React.FC = () => {
 
   function updateData(page: number) {
     pageInfo.page = page;
-    apiConnector.getEpochs(pageInfo).then((data: ApiReturnType<IDataEpoch[]>) => {
+    apiConnector.getEpochs(pageInfo).then((data: ApiReturnType<EpochOverview[]>) => {
       setLoading(false);
       setEpochData(data);
     });
@@ -52,7 +52,7 @@ const Epoch: React.FC = () => {
   };
 
   // @ts-ignore
-  const columns: Column<IDataEpoch>[] = [
+  const columns: Column<EpochOverview>[] = [
     {
       title: <Capitalize data-testid="epoch.table.epochTitle">{t("glossary.epoch")}</Capitalize>,
       key: "epochNumber",
@@ -108,11 +108,11 @@ const Epoch: React.FC = () => {
     document.title = t("head.page.epochsList");
   }, [t]);
 
-  const handleOpenDetail = (_: React.MouseEvent, r: IDataEpoch) => {
+  const handleOpenDetail = (_: React.MouseEvent, r: EpochOverview) => {
     history.push(details.epoch(r.no));
   };
 
-  const handleExpandedRow = (data: IDataEpoch) => {
+  const handleExpandedRow = (data: EpochOverview) => {
     setSelected((prev) => {
       const isSelected = prev.includes(Number(data.no));
 

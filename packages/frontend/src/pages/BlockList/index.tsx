@@ -17,20 +17,21 @@ const BlockList: React.FC = () => {
   const [fetchData, setFetchData] = useState<ApiReturnType<Block[]>>();
   const apiConnector = ApiConnector.getApiConnector();
 
-  function updateData(page: number) {
+  function updateData(pageInfo: {page: number, size?: number}) {
+    console.log("updateData page:", pageInfo.page);
     setLoading(true);
-    apiConnector.getBlocksPage({...pageInfo, page}).then((data: ApiReturnType<Block[]>) => {
+    apiConnector.getBlocksPage(pageInfo).then((data: ApiReturnType<Block[]>) => {
       setLoading(false);
       setFetchData(data);
     });
   }
 
   useEffect(() => {
-    updateData(0);
+    updateData({page: 1, size: 10});
   }, []);
 
   useEffect(() => {
-    document.title = `Blocks List | Cardano Blockchain Explorer`;
+    document.title = `Latest Blocks List | Cardano Blockchain Explorer`;
   }, []);
 
   return (

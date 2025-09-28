@@ -4,7 +4,7 @@ export enum EpochStatus {
   IN_PROGRESS = "In Progress",
   SYNCING = "Syncing"
 }
-export interface IDataEpoch {
+export interface EpochOverview {
   no: number;
   status: EpochStatus;
   blkCount: number;

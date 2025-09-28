@@ -39,7 +39,7 @@ blockController.get('', async (req, res) => {
   res.json({
     data: blocksData.reverse(), // Reverse to show the latest block first
     lastUpdated: unixTimestamp,
-    total: blocksData.length, // TODO need to find the total number of blocks
+    total: latestBlock.height, // TODO need to find the total number of blocks
     currentPage: Number.parseInt(String(pageInfo.page ?? 0)),
     pageSize: Number.parseInt(String(pageInfo.size ?? 10)),
     totalPages: Math.ceil(blocksData.length / (pageInfo.size ? Number.parseInt(String(pageInfo.size)) : 100)),

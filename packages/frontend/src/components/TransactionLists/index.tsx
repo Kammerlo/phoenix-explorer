@@ -32,7 +32,6 @@ interface TransactionListProps {
 const TransactionList: React.FC<TransactionListProps> = ({ underline = false, transactions, loading, updateData, paginated = true }) => {
   const { t } = useTranslation();
   const history = useHistory();
-  const { pageInfo, setSort } = usePageInfo();
 
   const onClickRow = (e: MouseEvent<Element, globalThis.MouseEvent>, r: Transaction) => {
     if (e.target instanceof HTMLAnchorElement || (e.target instanceof Element && e.target.closest("a"))) {
@@ -133,10 +132,7 @@ const TransactionList: React.FC<TransactionListProps> = ({ underline = false, tr
           <Box mr={1}>{formatADAFull(r.fee)}</Box>
           <ADAicon />
         </Box>
-      ),
-      sort: ({ columnKey, sortValue }) => {
-        sortValue ? setSort(`${columnKey},${sortValue}`) : setSort("");
-      }
+      )
     }
   ];
 
@@ -147,7 +143,7 @@ const TransactionList: React.FC<TransactionListProps> = ({ underline = false, tr
   return (
     <Card
       data-testid="transactions-card"
-      title={pathname?.includes("/transactions") ? "Last Transactions" : ""}
+      title={pathname?.includes("/transactions") ? "Latest Transactions" : ""}
       underline={underline}
     >
       {!error && (
@@ -160,24 +156,22 @@ const TransactionList: React.FC<TransactionListProps> = ({ underline = false, tr
       <Table
         data={transactions?.data || []}
         columns={columns}
-        maxHeight={"unset"}
-        total={{ count: transactions?.total || 0, title: t("common.totalTxs") }}
-        pagination={
-          paginated
-            ? {
-              ...pageInfo,
-              total: transactions?.total || 0,
-              onChange: (page) => {
-                updateData(page);
-              },
-              hideLastPage: true,
-              paginated: true
-            }
-            : undefined
-        }
         onClickRow={onClickRow}
         rowKey="hash"
-        tableWrapperProps={{ sx: (theme) => ({ [theme.breakpoints.between("sm", "md")]: { minHeight: "60vh" } }) }}
+        tableWrapperProps={{ 
+          sx: (theme) => ({ 
+            minHeight: "70vh",
+            maxHeight: "85vh",
+            [theme.breakpoints.down("md")]: { 
+              minHeight: "60vh",
+              maxHeight: "80vh"
+            },
+            [theme.breakpoints.down("sm")]: { 
+              minHeight: "50vh",
+              maxHeight: "75vh"
+            }
+          }) 
+        }}
       />
     </Card>
   );

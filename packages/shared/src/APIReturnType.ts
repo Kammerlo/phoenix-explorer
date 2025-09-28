@@ -5,4 +5,5 @@ export interface ApiReturnType<T> {
   totalPage?: number;
   currentPage?: number;
   lastUpdated: number;
+  pageSize?: number;
 }

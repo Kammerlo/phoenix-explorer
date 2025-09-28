@@ -12,7 +12,7 @@ transactionController.get("", async (req, res) => {
   const txs = await fetchLatestTransactions(size);
 
   const response: ApiReturnType<Transaction[]> = {
-    total: txs.length,
+    total: 10000,
     data: txs,
     lastUpdated: Math.floor(Date.now() / 1000)
   };
