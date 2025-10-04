@@ -20,16 +20,8 @@ const voterType = {
   CC: "CONSTITUTIONAL_COMMITTEE_HOT_KEY_HASH"
 };
 
-type Props = {
-  allowedVoteByCC: boolean | undefined;
-  allowedVoteBySPO: boolean | undefined;
-};
-
-export default function VoteSubmitted({ allowedVoteByCC, allowedVoteBySPO }: Props) {
-  const checkVoterType = () => {
-    if (allowedVoteBySPO) return "SPOs";
-    return "DReps";
-  };
+export default function VoteSubmitted() {
+  
   const [selectVote, setSelectVote] = useState<VoteType | "">(checkVoterType());
 
   const { txHash, index } = useParams<{ txHash: string; index: string }>();

@@ -4,6 +4,7 @@ import { GovernanceActionDetail, GovernanceActionListItem } from "@shared/dtos/G
 import { ApiReturnType } from "@shared/APIReturnType";
 import { Drep, DrepDelegates } from "@shared/dtos/drep.dto";
 import { json } from "stream/consumers";
+import { cache, getTransactions } from "src/config/cache";
 
 export const governanceController = Router();
 
@@ -35,28 +36,60 @@ governanceController.get('/actions', async (req, res) => {
 governanceController.get('/actions/:txHash/:indexStr', async (req, res) => {
     const { txHash, indexStr } = req.params;
     const index = Number.parseInt(indexStr);
-    const proposal = await API.governance.proposal(txHash, index);
-    console.log(proposal);
-    const metadata = await API.governance.proposalMetadata(txHash, index);
-    console.log(metadata);
-    // const jsonMetadata = JSON.parse((metadata.json_metadata as string) || "{}");
-    const governanceDetail: GovernanceActionDetail = {
-        txHash: txHash,
-        index: indexStr,
-        dateCreated: "",
-        actionType: proposal.governance_type,
-        status: "", // TODO
-        motivation: typeof proposal.governance_description === "string" ? proposal.governance_description : JSON.stringify(proposal.governance_description ?? ""),
-        rationale: "",
-        isValidHash: true, // Assuming the hash is valid
-        anchorHash: "",
-        anchorUrl: "",
-        abstract: "",
-        allowedVoteByCC: true,
-        allowedVoteBySPO: true,
-    };
+    let governanceDetail = undefined;
+    let error = undefined;
+    try {
+        const proposal = await API.governance.proposal(txHash, index);
+        const metadata = await API.governance.proposalMetadata(txHash, index);
+        const votes = await API.governance.proposalVotesAll(txHash, index);
+
+        const transaction = await getTransactions(txHash);
+        // const jsonMetadata = JSON.parse((metadata.json_metadata as string) || "{}");
+        const status = proposal.expired_epoch ? 'EXPIRED' : proposal.enacted_epoch ? 'ENACTED' : 'ACTIVE';
+        governanceDetail = {
+            txHash: txHash,
+            index: indexStr,
+            status: status,
+            dateCreated: transaction.block_time || "",
+            actionType: proposal.governance_type,
+            expiredEpoch: proposal.expired_epoch,
+            enactedEpoch: proposal.enacted_epoch,
+            motivation: typeof proposal.governance_description === "string" ? proposal.governance_description : JSON.stringify(proposal.governance_description ?? ""),
+            rationale: "",
+            isValidHash: true, // Assuming the hash is valid
+            anchorHash: "",
+            anchorUrl: "",
+            abstract: "",
+            allowedVoteByCC: true,
+            allowedVoteBySPO: true,
+            votesStats: {
+                committeeVotes: {
+                    yes: votes.filter(v => v.vote === "yes" && v.voter_role === "constitutional_committee").length,
+                    no: votes.filter(v => v.vote === "no" && v.voter_role === "constitutional_committee").length,
+                    abstain: votes.filter(v => v.vote === "abstain" && v.voter_role === "constitutional_committee").length,
+                    total: votes.filter(v => v.voter_role === "constitutional_committee").length,
+                },
+                drepsVotes: {
+                    yes: votes.filter(v => v.vote === "yes" && v.voter_role === "drep").length,
+                    no: votes.filter(v => v.vote === "no" && v.voter_role === "drep").length,
+                    abstain: votes.filter(v => v.vote === "abstain" && v.voter_role === "drep").length,
+                    total: votes.filter(v => v.voter_role === "drep").length,
+                },
+                sposVotes: {
+                    yes: votes.filter(v => v.vote === "yes" && v.voter_role === "spo").length,
+                    no: votes.filter(v => v.vote === "no" && v.voter_role === "spo").length,
+                    abstain: votes.filter(v => v.vote === "abstain" && v.voter_role === "spo").length,
+                    total: votes.filter(v => v.voter_role === "spo").length,
+                }
+            }
+        } as GovernanceActionDetail;
+    } catch (e) {
+        error = "Governance action not found";
+        console.error("Error fetching governance action:", e);
+    }
     res.json({
         data: governanceDetail,
+        error: error,
         lastUpdated: Math.floor(Date.now() / 1000),
     } as ApiReturnType<GovernanceActionDetail>);
 });

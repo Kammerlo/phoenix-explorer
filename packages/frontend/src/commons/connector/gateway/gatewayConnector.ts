@@ -66,7 +66,7 @@ export class GatewayConnector implements ApiConnector {
     FunctionEnum.TRANSACTION,
     FunctionEnum.TOKENS,
     FunctionEnum.DREP,
-    // FunctionEnum.GOVERNANCE, // For now, we don't support governance actions
+    FunctionEnum.GOVERNANCE,
     FunctionEnum.POOL,
     FunctionEnum.ADDRESS];
   }

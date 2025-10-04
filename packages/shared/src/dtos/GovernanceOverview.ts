@@ -38,13 +38,33 @@ export interface GovernanceActionDetail {
     index: string;
     dateCreated: string;
     actionType: string;
-    status: string;
+    status: 'EXPIRED' | 'ENACTED' | 'ACTIVE';
+    expiredEpoch: number | null;
+    enactedEpoch: number | null;
     motivation: string | null;
     rationale: string | null;
     isValidHash: boolean;
     anchorHash: string | null;
     anchorUrl: string | null;
     abstract: string | null;
-    allowedVoteByCC: boolean;
-    allowedVoteBySPO: boolean;
+    votesStats: {
+        committeeVotes: {
+            yes: number;
+            no: number;
+            abstain: number;
+            total: number;
+        }, 
+        drepsVotes: {
+            yes: number;
+            no: number;
+            abstain: number;
+            total: number;
+        },
+        sposVotes: {
+            yes: number;
+            no: number;
+            abstain: number;
+            total: number;
+        }
+    };
 }

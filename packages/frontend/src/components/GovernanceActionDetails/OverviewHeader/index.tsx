@@ -8,7 +8,7 @@ import CustomIcon from "src/components/commons/CustomIcon";
 import DynamicEllipsisText from "src/components/DynamicEllipsisText";
 import { TruncateSubTitleContainer } from "src/components/share/styled";
 import DatetimeTypeTooltip from "src/components/commons/DatetimeTypeTooltip";
-import { formatDateLocal } from "src/commons/utils/helper";
+import { formatDateLocal, formatDateTimeLocal } from "src/commons/utils/helper";
 import { actionTypeListDrep } from "src/components/commons/CardGovernanceVotes";
 
 import VoteSubmitted from "./VoteSubmitted";
@@ -32,7 +32,7 @@ export default function OverviewHeader({ data }: Props) {
   const history = useHistory();
   const theme = useTheme();
   const actionsType = actionTypeListDrep.find((el) => el.value === data?.actionType)?.text;
-
+  console.log(data);
   const { t } = useTranslation();
   return (
     <Box sx={{ marginBottom: "20px" }}>
@@ -88,7 +88,7 @@ export default function OverviewHeader({ data }: Props) {
                   />
                   <StyledCard.Title>{t("govAction.dateCreated")}</StyledCard.Title>
                   <StyledCard.Value>
-                    <DatetimeTypeTooltip>{formatDateLocal(data?.dateCreated ?? "")}</DatetimeTypeTooltip>
+                    <DatetimeTypeTooltip>{formatDateTimeLocal(data?.dateCreated ?? "")}</DatetimeTypeTooltip>
                   </StyledCard.Value>
                 </StyledCard.Container>
               </Grid>
@@ -102,7 +102,10 @@ export default function OverviewHeader({ data }: Props) {
                     width={24}
                   />
                   <StyledCard.Title>{t("govAction.status")}</StyledCard.Title>
-                  {/* <StyledCard.Value>{statusOverview.find((el) => el.value === data?.status)?.text}</StyledCard.Value> */}
+                  <StyledCard.Value>{t(`glossary.${data?.status.toLowerCase()}`)}</StyledCard.Value>
+                  {data?.status !== "ACTIVE" && 
+                    <StyledCard.Item>{`Epoch ${data?.expiredEpoch ?? data?.enactedEpoch}`}</StyledCard.Item>
+                  }
                 </StyledCard.Container>
               </Grid>
             </Grid>
@@ -110,7 +113,7 @@ export default function OverviewHeader({ data }: Props) {
         </Grid>
         <Grid item container lg={6} md={12} sm={12}>
           <StyledCard.Container>
-            <VoteSubmitted allowedVoteByCC={data?.allowedVoteByCC} allowedVoteBySPO={data?.allowedVoteBySPO} />
+            
           </StyledCard.Container>
         </Grid>
       </Grid>

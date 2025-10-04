@@ -27,6 +27,12 @@ export const StyledCard = {
     font-weight: 700;
     line-height: 21.09px;
     color: ${(props) => props.theme.palette.secondary.main};
+  `,
+  Item: styled(Box)`
+    font-size: 16px;
+    font-weight: 300;
+    line-height: 21.09px;
+    color: ${(props) => props.theme.palette.secondary.main};
   `
 };
 
