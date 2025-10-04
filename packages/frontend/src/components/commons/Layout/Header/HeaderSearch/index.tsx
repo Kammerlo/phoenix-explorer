@@ -78,6 +78,24 @@ const options: Option[] = [
     label: "filter.tokens",
     path: "/token/",
     placeholder: "filter.placeholder.token"
+  },
+  {
+    value: "address",
+    label: "filter.addresses",
+    path: "/address/",
+    placeholder: "filter.placeholder.address"
+  },
+  {
+    value: "pool",
+    label: "filter.pools",
+    path: "/pool/",
+    placeholder: "filter.placeholder.pool"
+  },
+  {
+    value: "drep",
+    label: "filter.dreps",
+    path: "/drep/",
+    placeholder: "filter.placeholder.drep"
   }
 ];
 
@@ -85,7 +103,8 @@ enum SearchType {
   ALL = "all",
   EPOCHS = "epochs",
   BLOCKS = "blocks",
-  TRANSACTIONS = "transactions"
+  TRANSACTIONS = "transactions",
+  ADDRESS = "address",
 }
 
 interface SearchResult {
