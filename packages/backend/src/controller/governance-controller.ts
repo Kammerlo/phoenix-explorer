@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { API } from "../config/blockfrost";
-import { GovernanceActionDetail, GovernanceActionListItem } from "@shared/dtos/GovernanceOverview";
+import { GovernanceActionDetail, GovernanceActionListItem, VoteData } from "@shared/dtos/GovernanceOverview";
 import { ApiReturnType } from "@shared/APIReturnType";
 import { Drep, DrepDelegates } from "@shared/dtos/drep.dto";
 import { json } from "stream/consumers";
@@ -44,7 +44,22 @@ governanceController.get('/actions/:txHash/:indexStr', async (req, res) => {
         const votes = await API.governance.proposalVotesAll(txHash, index);
 
         const transaction = await getTransactions(txHash);
-        // const jsonMetadata = JSON.parse((metadata.json_metadata as string) || "{}");
+        
+        // Safely parse metadata.json_metadata
+        let jsonMetadata: any = {};
+        try {
+            if (metadata.json_metadata) {
+                if (typeof metadata.json_metadata === 'string') {
+                    jsonMetadata = JSON.parse(metadata.json_metadata);
+                } else {
+                    // Already parsed object
+                    jsonMetadata = metadata.json_metadata;
+                }
+            }
+        } catch (e) {
+            console.error('Error parsing json_metadata:', e);
+            jsonMetadata = {};
+        }
         const status = proposal.expired_epoch ? 'EXPIRED' : proposal.enacted_epoch ? 'ENACTED' : 'ACTIVE';
         governanceDetail = {
             txHash: txHash,
@@ -54,34 +69,33 @@ governanceController.get('/actions/:txHash/:indexStr', async (req, res) => {
             actionType: proposal.governance_type,
             expiredEpoch: proposal.expired_epoch,
             enactedEpoch: proposal.enacted_epoch,
-            motivation: typeof proposal.governance_description === "string" ? proposal.governance_description : JSON.stringify(proposal.governance_description ?? ""),
-            rationale: "",
-            isValidHash: true, // Assuming the hash is valid
-            anchorHash: "",
-            anchorUrl: "",
-            abstract: "",
+            rationale: jsonMetadata.body.rationale || "",
+            abstract: jsonMetadata.body.abstract || "",
+            motivation: jsonMetadata.body.motivation || "",
+            title: jsonMetadata.body.title || "",
+            authors: jsonMetadata.authors.map((author: any) => author.name) || [],
             allowedVoteByCC: true,
             allowedVoteBySPO: true,
             votesStats: {
-                committeeVotes: {
+                committee: {
                     yes: votes.filter(v => v.vote === "yes" && v.voter_role === "constitutional_committee").length,
                     no: votes.filter(v => v.vote === "no" && v.voter_role === "constitutional_committee").length,
                     abstain: votes.filter(v => v.vote === "abstain" && v.voter_role === "constitutional_committee").length,
                     total: votes.filter(v => v.voter_role === "constitutional_committee").length,
                 },
-                drepsVotes: {
+                drep: {
                     yes: votes.filter(v => v.vote === "yes" && v.voter_role === "drep").length,
                     no: votes.filter(v => v.vote === "no" && v.voter_role === "drep").length,
                     abstain: votes.filter(v => v.vote === "abstain" && v.voter_role === "drep").length,
                     total: votes.filter(v => v.voter_role === "drep").length,
                 },
-                sposVotes: {
+                spo: {
                     yes: votes.filter(v => v.vote === "yes" && v.voter_role === "spo").length,
                     no: votes.filter(v => v.vote === "no" && v.voter_role === "spo").length,
                     abstain: votes.filter(v => v.vote === "abstain" && v.voter_role === "spo").length,
                     total: votes.filter(v => v.voter_role === "spo").length,
                 }
-            }
+            } as VoteData,
         } as GovernanceActionDetail;
     } catch (e) {
         error = "Governance action not found";
@@ -110,7 +124,22 @@ governanceController.get('/dreps', async (req, res) => {
         try {
             drepDetails = await API.governance.drepsById(drep.drep_id);
             drepMetadata = await API.governance.drepsByIdMetadata(drep.drep_id);
-            jsonMetadata = drepMetadata.json_metadata
+            
+            // Safely parse DRep metadata
+            if (drepMetadata?.json_metadata) {
+                if (typeof drepMetadata.json_metadata === 'string') {
+                    try {
+                        jsonMetadata = JSON.parse(drepMetadata.json_metadata);
+                    } catch (parseError) {
+                        console.error("Error parsing DRep json_metadata:", parseError);
+                        jsonMetadata = {};
+                    }
+                } else {
+                    jsonMetadata = drepMetadata.json_metadata;
+                }
+            } else {
+                jsonMetadata = {};
+            }
         } catch (e) {
             console.error("Error fetching drep details for drep id:", drep.drep_id);
         }
@@ -150,7 +179,23 @@ governanceController.get('/dreps/:drepId', async (req, res) => {
     try {
         drepDetails = await API.governance.drepsById(drepId);
         drepMetadata = await API.governance.drepsByIdMetadata(drepId);
-        jsonMetadata = drepMetadata.json_metadata
+        
+        // Safely parse DRep metadata
+        if (drepMetadata?.json_metadata) {
+            if (typeof drepMetadata.json_metadata === 'string') {
+                try {
+                    jsonMetadata = JSON.parse(drepMetadata.json_metadata);
+                } catch (parseError) {
+                    console.error("Error parsing DRep json_metadata:", parseError);
+                    jsonMetadata = {};
+                }
+            } else {
+                jsonMetadata = drepMetadata.json_metadata;
+            }
+        } else {
+            jsonMetadata = {};
+        }
+        
         delegators = await API.governance.drepsByIdDelegatorsAll(drepId);
         updates = await API.governance.drepsByIdUpdatesAll(drepId);
         if(updates && updates.length > 0) {

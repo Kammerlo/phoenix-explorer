@@ -1,4 +1,4 @@
-import { Box, styled } from "@mui/material";
+import { Box, Chip, styled } from "@mui/material";
 
 import Card from "src/components/commons/Card";
 import breakpoints from "src/themes/breakpoints";
@@ -64,7 +64,16 @@ export const TitleContainer = styled(Box)`
 `;
 
 export const HeaderDetailContainer = styled(Box)`
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
   text-align: left;
+  gap: 24px;
+  
+  ${({ theme }) => theme.breakpoints.down("md")} {
+    flex-direction: column;
+    gap: 16px;
+  }
 `;
 
 export const SlotLeaderValue = styled("span")<{ sidebar?: boolean }>`
@@ -105,4 +114,54 @@ export const SlotLeaderTitle = styled("small")`
   margin-right: 8px;
   padding-top: 7px;
   white-space: nowrap;
+`;
+
+export const HeaderInfoSection = styled(Box)`
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-items: flex-end;
+`;
+
+export const DateSection = styled(Box)`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: ${(props) => props.theme.palette.secondary.main};
+  font-size: 14px;
+`;
+
+export const StatusChip = styled(Chip)`
+  font-weight: 600;
+  font-size: 12px;
+  height: 28px;
+  
+  &.MuiChip-colorSuccess {
+    background-color: ${(props) => props.theme.palette.success.main}20;
+    color: ${(props) => props.theme.palette.success.main};
+    border: 1px solid ${(props) => props.theme.palette.success.main}40;
+  }
+  
+  &.MuiChip-colorWarning {
+    background-color: ${(props) => props.theme.palette.warning.main}20;
+    color: ${(props) => props.theme.palette.warning.main};
+    border: 1px solid ${(props) => props.theme.palette.warning.main}40;
+  }
+  
+  &.MuiChip-colorError {
+    background-color: ${(props) => props.theme.palette.error.main}20;
+    color: ${(props) => props.theme.palette.error.main};
+    border: 1px solid ${(props) => props.theme.palette.error.main}40;
+  }
+  
+  &.MuiChip-colorInfo {
+    background-color: ${(props) => props.theme.palette.info.main}20;
+    color: ${(props) => props.theme.palette.info.main};
+    border: 1px solid ${(props) => props.theme.palette.info.main}40;
+  }
+`;
+
+export const FixedSizeContainer = styled(Box)`
+  height: 500px;
+  width: 100%;
 `;
