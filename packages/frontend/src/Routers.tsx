@@ -77,7 +77,7 @@ const Routes: React.FC = () => {
     <Switch>
       <Route path={routers.HOME} exact component={Home} />
 
-      <Route path={routers.GOVERNANCE_OVERVIEW} exact
+      <Route path={routers.GOVERNANCE_ACTION_LIST} exact
         component={isSupportedRoute(GovernanceOverview, FunctionEnum.GOVERNANCE)} />
 
       <Route
@@ -197,7 +197,7 @@ const Routes: React.FC = () => {
         component={isSupportedRoute(ConstitutionalCommittees, FunctionEnum.GOVERNANCE)}
       />
       <Route
-        path={routers.OVERVIEW_GOVERNANCE_ACTION}
+        path={routers.GOVERNANCE_ACTION}
         exact
         component={isSupportedRoute(GovernanceActionDetails, FunctionEnum.GOVERNANCE)}
       />

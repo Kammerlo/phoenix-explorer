@@ -11,7 +11,7 @@ import { Block } from "@shared/dtos/block.dto";
 import { Transaction, TransactionDetail } from "@shared/dtos/transaction.dto";
 import { ITokenOverview, TokenHolder } from "@shared/dtos/token.dto";
 import epoch from "../../../pages/Epoch";
-import { GovernanceActionDetail, GovernanceActionListItem, GovernanceOverview } from "@shared/dtos/GovernanceOverview";
+import { GovActionVote, GovernanceActionDetail, GovernanceActionListItem, GovernanceOverview } from "@shared/dtos/GovernanceOverview";
 import { AddressDetail, StakeAddressDetail } from "@shared/dtos/address.dto";
 import { PoolDetail, PoolOverview } from "@shared/dtos/pool.dto";
 import { Drep, DrepDelegates } from "@shared/dtos/drep.dto";
@@ -170,6 +170,11 @@ export class GatewayConnector implements ApiConnector {
 
   async getGovernanceOverview(): Promise<ApiReturnType<GovernanceOverview>> {
     const response = await this.client.get<ApiReturnType<GovernanceOverview>>(`${this.baseUrl}/governance`);
+    return response.data;
+  }
+
+  async getGovernanceActionVotes(txHash: string, index: string): Promise<ApiReturnType<GovActionVote[]>> {
+    const response = await this.client.get<ApiReturnType<GovActionVote[]>>(`${this.baseUrl}/governance/actions/${txHash}/${index}/votes`);
     return response.data;
   }
 

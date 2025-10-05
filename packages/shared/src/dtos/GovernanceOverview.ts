@@ -49,9 +49,18 @@ export interface GovernanceActionDetail {
     votesStats: VoteData;
 }
 
+export interface GovActionVote {
+    voter: string;
+    voterType: VoteType;
+    vote: 'yes' | 'no' | 'abstain';
+    txHash: string;
+    certIndex: number;
+    voteTime: string;
+}
+
 export type GovActionStatus = 'EXPIRED' | 'ENACTED' | 'ACTIVE';
 
-export type VoteType = 'committee' | 'drep' | 'spo';
+export type VoteType = 'constitutional_committee' | 'drep' | 'spo';
 
 export interface VoteData {
     committee?: {

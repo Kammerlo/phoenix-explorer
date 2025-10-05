@@ -69,7 +69,7 @@ export default function OverviewHeader({ data }: Props) {
             </BackButton>
 
             <TitleContainer>
-              <HeaderTitle>{actionsType}</HeaderTitle>
+              <HeaderTitle>{data?.title}</HeaderTitle>
             </TitleContainer>
             {data?.txHash && (
               <SlotLeader>

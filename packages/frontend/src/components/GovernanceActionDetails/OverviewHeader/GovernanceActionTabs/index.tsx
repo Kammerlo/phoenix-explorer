@@ -81,17 +81,6 @@ export default function GovernanceActionTabs({ data, actionsType }: Props) {
             </Box>
           </Box>
         </ActionTypeSection>
-        
-        {data?.title && (
-          <TitleSection>
-            <Box sx={{ fontSize: '14px', color: theme.palette.secondary.light, mb: 0.5 }}>
-              {t("govAction.title") || "Title"}
-            </Box>
-            <Box sx={{ fontSize: '16px', fontWeight: '600', color: theme.palette.secondary.main }}>
-              {data.title}
-            </Box>
-          </TitleSection>
-        )}
       </HeaderSection>
 
       {/* Tabs section */}

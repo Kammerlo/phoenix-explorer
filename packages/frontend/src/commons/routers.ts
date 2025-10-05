@@ -23,9 +23,9 @@ export const routers = {
   TOKEN_DETAIL: "/token/:tokenId/:tabActive?",
   STAKE_ADDRESS_REGISTRATION: "/stake-address-registrations",
   CONSTITUIONAL_COMMITTEES: "/constitutional-committees/:tabActive?",
-  GOVERNANCE_OVERVIEW: "/governance-overview",
+  GOVERNANCE_ACTION_LIST: "/governance-actions",
   GOVERNANCE_LIST: "/governance-list",
-  OVERVIEW_GOVERNANCE_ACTION: "/overview/:txHash/:index/:tabActive?",
+  GOVERNANCE_ACTION: "/governance-action/:txHash/:index",
   CONSTITUIONAL_COMMITTEE_DETAIL: "/constitutional-committee/:CCid/:tabActive?",
   NETWORK_MONITORING: "/network-monitoring",
   STAKE_ADDRESS_DEREGISTRATION: "/stake-address-de-registrations",
@@ -71,7 +71,7 @@ export const details = {
       .replace(":tabActive?", tab)
       .replace(":wineryId?", wineryId),
   epoch: (epochId?: number | string) => routers.EPOCH_DETAIL.replace(":epochId", `${epochId ?? ""}`),
-  delegation: (poolId?: number | string) => routers.DELEGATION_POOL_DETAIL.replace(":poolId", `${poolId}` ?? ""),
+  delegation: (poolId?: number | string) => routers.DELEGATION_POOL_DETAIL.replace(":poolId", `${poolId}`),
   story: (storyId?: string) => routers.STORY_DETAIL.replace(":storyId", storyId ?? ""),
   address: (address?: string) => routers.ADDRESS_DETAIL.replace(":address", address ?? ""),
   token: (tokenId?: string, tab = "transactions") =>
@@ -106,10 +106,10 @@ export const details = {
     routers.NATIVE_SCRIPTS_AND_SC.replace(":address", address ?? "").replace(":tabActive?", tab),
   drep: (drepId: string) => routers.DREP_DETAILS.replace(":drepId", drepId ?? ""),
   constitutionalCommittees: (tab: string) => routers.CONSTITUIONAL_COMMITTEES.replace(":tabActive", tab ?? ""),
-  overviews: (tab: string) => routers.GOVERNANCE_OVERVIEW.replace(":tabActive", tab ?? ""),
-  overviewGovernanceAction: (txHash: string, index: string) =>
-    routers.OVERVIEW_GOVERNANCE_ACTION.replace(":txHash", txHash)
-      .replace(":index", index).replace(":tabActive", ""),
+  governanceActionList: () => routers.GOVERNANCE_ACTION_LIST,
+  governanceAction: (txHash: string, index: string) =>
+    routers.GOVERNANCE_ACTION.replace(":txHash", txHash)
+      .replace(":index", index),
   constitutionalCommitteeDetail: (id: string, tab?: string) =>
     routers.CONSTITUIONAL_COMMITTEE_DETAIL.replace(":CCid", id ?? "").replace(":tabActive", tab ?? "")
 };

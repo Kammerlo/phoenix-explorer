@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { API } from "../config/blockfrost";
-import { GovernanceActionDetail, GovernanceActionListItem, VoteData } from "@shared/dtos/GovernanceOverview";
+import { GovActionVote, GovernanceActionDetail, GovernanceActionListItem, VoteData } from "@shared/dtos/GovernanceOverview";
 import { ApiReturnType } from "@shared/APIReturnType";
 import { Drep, DrepDelegates } from "@shared/dtos/drep.dto";
 import { json } from "stream/consumers";
@@ -106,6 +106,30 @@ governanceController.get('/actions/:txHash/:indexStr', async (req, res) => {
         error: error,
         lastUpdated: Math.floor(Date.now() / 1000),
     } as ApiReturnType<GovernanceActionDetail>);
+});
+
+governanceController.get('/actions/:txHash/:indexStr/votes', async (req, res) => {
+    const { txHash, indexStr } = req.params;
+    const index = Number.parseInt(indexStr);
+    const votes = await API.governance.proposalVotesAll(txHash, index);
+
+    const govActionVote: GovActionVote[] = await Promise.all(votes.map(async (vote) => {
+            const transaction = await getTransactions(vote.tx_hash);
+            return {
+                voter: vote.voter,
+                voterType: vote.voter_role as any,
+                vote: vote.vote,
+                txHash: vote.tx_hash,
+                certIndex: vote.cert_index,
+                voteTime: transaction.block_time || "",
+            } as GovActionVote;
+            }));
+    res.json({
+        data: govActionVote,
+        lastUpdated: Math.floor(Date.now() / 1000),
+        total: govActionVote.length,
+        pageSize: govActionVote.length,
+    } as ApiReturnType<GovActionVote[]>);
 });
 
 governanceController.get('/dreps', async (req, res) => {
