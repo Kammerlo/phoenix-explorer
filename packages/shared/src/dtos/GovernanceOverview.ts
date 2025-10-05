@@ -38,13 +38,44 @@ export interface GovernanceActionDetail {
     index: string;
     dateCreated: string;
     actionType: string;
-    status: string;
+    status: GovActionStatus;
+    expiredEpoch: number | null;
+    enactedEpoch: number | null;
     motivation: string | null;
     rationale: string | null;
-    isValidHash: boolean;
-    anchorHash: string | null;
-    anchorUrl: string | null;
+    title: string | null;
+    authors: string[] | null;
     abstract: string | null;
-    allowedVoteByCC: boolean;
-    allowedVoteBySPO: boolean;
+    votesStats: VoteData;
+}
+
+export interface GovActionVote {
+    voter: string;
+    voterType: VoteType;
+    vote: 'yes' | 'no' | 'abstain';
+    txHash: string;
+    certIndex: number;
+    voteTime: string;
+}
+
+export type GovActionStatus = 'EXPIRED' | 'ENACTED' | 'ACTIVE';
+
+export type VoteType = 'constitutional_committee' | 'drep' | 'spo';
+
+export interface VoteData {
+    committee?: {
+        yes: number;
+        no: number;
+        abstain: number;
+    };
+    drep?: {
+        yes: number;
+        no: number;
+        abstain: number;
+    };
+    spo?: {
+        yes: number;
+        no: number;
+        abstain: number;
+    };
 }

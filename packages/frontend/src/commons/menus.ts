@@ -26,6 +26,7 @@ interface Menu {
   tooltip?: string;
   isSpecialPath?: boolean;
   hidden: boolean;
+  collapsable?: boolean;
 }
 
 interface Social {
@@ -49,6 +50,7 @@ export const menus: Menu[] = [
     key: "glossary.blockchain",
     icon: BlockChainMenuIcon,
     hidden: false,
+    collapsable: false,
     children: [
       {
         title: "Epochs",
@@ -93,6 +95,12 @@ export const menus: Menu[] = [
         href: routers.DREPS,
         isSpecialPath: true,
         hidden: !supportedFunctions.includes(FunctionEnum.DREP)
+      }, 
+      {
+        title: "Governance Actions",
+        key: "glossary.governanceActions",
+        href: details.governanceActionList(),
+        hidden: !supportedFunctions.includes(FunctionEnum.GOVERNANCE)
       }
     ]
   },
@@ -164,26 +172,6 @@ export const menus: Menu[] = [
     href: lists.protocolParameters(),
     hidden: !supportedFunctions.includes(FunctionEnum.PROTOCOL_PARAMETER),
     children: []
-  },
-  {
-    title: "Governance",
-    key: "glossary.governance",
-    icon: GovernanceHome,
-    hidden: !supportedFunctions.includes(FunctionEnum.GOVERNANCE),
-    children: [
-      {
-        title: "Overview",
-        key: "glossary.menu.overview",
-        href: details.overviews(""),
-        hidden: !supportedFunctions.includes(FunctionEnum.GOVERNANCE)
-      },
-      {
-        title: "Constitutional Committee",
-        key: "glossary.constitutionalCommittee",
-        href: details.constitutionalCommittees("listMembers"),
-        hidden: !supportedFunctions.includes(FunctionEnum.GOVERNANCE)
-      }
-    ]
   }
 ];
 

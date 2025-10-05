@@ -11,7 +11,7 @@ import { ApiReturnType } from "@shared/APIReturnType";
 import { Transaction, TransactionDetail } from "@shared/dtos/transaction.dto";
 import { ITokenOverview, TokenHolder } from "@shared/dtos/token.dto";
 // Import GovernanceOverview type (adjust the path as needed)
-import { GovernanceActionDetail, GovernanceActionListItem, GovernanceOverview } from "@shared/dtos/GovernanceOverview";
+import { GovActionVote, GovernanceActionDetail, GovernanceActionListItem, GovernanceOverview } from "@shared/dtos/GovernanceOverview";
 import { AddressDetail, StakeAddressDetail } from "@shared/dtos/address.dto";
 import { PoolDetail, PoolOverview } from "@shared/dtos/pool.dto";
 import { Drep, DrepDelegates } from "@shared/dtos/drep.dto";
@@ -85,6 +85,8 @@ export abstract class ApiConnector {
   abstract getGovernanceOverviewList(pageInfo: ParsedUrlQuery): Promise<ApiReturnType<GovernanceActionListItem[]>>;
 
   abstract getGovernanceDetail(txHash: string, index: string): Promise<ApiReturnType<GovernanceActionDetail>>;
+
+  abstract getGovernanceActionVotes(txHash: string, index: string): Promise<ApiReturnType<GovActionVote[]>>;
 
   abstract getPoolList(pageInfo: ParsedUrlQuery): Promise<ApiReturnType<PoolOverview[]>>;
 

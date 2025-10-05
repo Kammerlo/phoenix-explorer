@@ -1,9 +1,10 @@
 import { Router } from "express";
 import { API } from "../config/blockfrost";
-import { GovernanceActionDetail, GovernanceActionListItem } from "@shared/dtos/GovernanceOverview";
+import { GovActionVote, GovernanceActionDetail, GovernanceActionListItem, VoteData } from "@shared/dtos/GovernanceOverview";
 import { ApiReturnType } from "@shared/APIReturnType";
 import { Drep, DrepDelegates } from "@shared/dtos/drep.dto";
 import { json } from "stream/consumers";
+import { cache, getTransactions } from "src/config/cache";
 
 export const governanceController = Router();
 
@@ -35,30 +36,100 @@ governanceController.get('/actions', async (req, res) => {
 governanceController.get('/actions/:txHash/:indexStr', async (req, res) => {
     const { txHash, indexStr } = req.params;
     const index = Number.parseInt(indexStr);
-    const proposal = await API.governance.proposal(txHash, index);
-    console.log(proposal);
-    const metadata = await API.governance.proposalMetadata(txHash, index);
-    console.log(metadata);
-    // const jsonMetadata = JSON.parse((metadata.json_metadata as string) || "{}");
-    const governanceDetail: GovernanceActionDetail = {
-        txHash: txHash,
-        index: indexStr,
-        dateCreated: "",
-        actionType: proposal.governance_type,
-        status: "", // TODO
-        motivation: typeof proposal.governance_description === "string" ? proposal.governance_description : JSON.stringify(proposal.governance_description ?? ""),
-        rationale: "",
-        isValidHash: true, // Assuming the hash is valid
-        anchorHash: "",
-        anchorUrl: "",
-        abstract: "",
-        allowedVoteByCC: true,
-        allowedVoteBySPO: true,
-    };
+    let governanceDetail = undefined;
+    let error = undefined;
+    try {
+        const proposal = await API.governance.proposal(txHash, index);
+        const metadata = await API.governance.proposalMetadata(txHash, index);
+        const votes = await API.governance.proposalVotesAll(txHash, index);
+
+        const transaction = await getTransactions(txHash);
+        
+        // Safely parse metadata.json_metadata
+        let jsonMetadata: any = {};
+        try {
+            if (metadata.json_metadata) {
+                if (typeof metadata.json_metadata === 'string') {
+                    jsonMetadata = JSON.parse(metadata.json_metadata);
+                } else {
+                    // Already parsed object
+                    jsonMetadata = metadata.json_metadata;
+                }
+            }
+        } catch (e) {
+            console.error('Error parsing json_metadata:', e);
+            jsonMetadata = {};
+        }
+        const status = proposal.expired_epoch ? 'EXPIRED' : proposal.enacted_epoch ? 'ENACTED' : 'ACTIVE';
+        governanceDetail = {
+            txHash: txHash,
+            index: indexStr,
+            status: status,
+            dateCreated: transaction.block_time || "",
+            actionType: proposal.governance_type,
+            expiredEpoch: proposal.expired_epoch,
+            enactedEpoch: proposal.enacted_epoch,
+            rationale: jsonMetadata.body.rationale || "",
+            abstract: jsonMetadata.body.abstract || "",
+            motivation: jsonMetadata.body.motivation || "",
+            title: jsonMetadata.body.title || "",
+            authors: jsonMetadata.authors.map((author: any) => author.name) || [],
+            allowedVoteByCC: true,
+            allowedVoteBySPO: true,
+            votesStats: {
+                committee: {
+                    yes: votes.filter(v => v.vote === "yes" && v.voter_role === "constitutional_committee").length,
+                    no: votes.filter(v => v.vote === "no" && v.voter_role === "constitutional_committee").length,
+                    abstain: votes.filter(v => v.vote === "abstain" && v.voter_role === "constitutional_committee").length,
+                    total: votes.filter(v => v.voter_role === "constitutional_committee").length,
+                },
+                drep: {
+                    yes: votes.filter(v => v.vote === "yes" && v.voter_role === "drep").length,
+                    no: votes.filter(v => v.vote === "no" && v.voter_role === "drep").length,
+                    abstain: votes.filter(v => v.vote === "abstain" && v.voter_role === "drep").length,
+                    total: votes.filter(v => v.voter_role === "drep").length,
+                },
+                spo: {
+                    yes: votes.filter(v => v.vote === "yes" && v.voter_role === "spo").length,
+                    no: votes.filter(v => v.vote === "no" && v.voter_role === "spo").length,
+                    abstain: votes.filter(v => v.vote === "abstain" && v.voter_role === "spo").length,
+                    total: votes.filter(v => v.voter_role === "spo").length,
+                }
+            } as VoteData,
+        } as GovernanceActionDetail;
+    } catch (e) {
+        error = "Governance action not found";
+        console.error("Error fetching governance action:", e);
+    }
     res.json({
         data: governanceDetail,
+        error: error,
         lastUpdated: Math.floor(Date.now() / 1000),
     } as ApiReturnType<GovernanceActionDetail>);
+});
+
+governanceController.get('/actions/:txHash/:indexStr/votes', async (req, res) => {
+    const { txHash, indexStr } = req.params;
+    const index = Number.parseInt(indexStr);
+    const votes = await API.governance.proposalVotesAll(txHash, index);
+
+    const govActionVote: GovActionVote[] = await Promise.all(votes.map(async (vote) => {
+            const transaction = await getTransactions(vote.tx_hash);
+            return {
+                voter: vote.voter,
+                voterType: vote.voter_role as any,
+                vote: vote.vote,
+                txHash: vote.tx_hash,
+                certIndex: vote.cert_index,
+                voteTime: transaction.block_time || "",
+            } as GovActionVote;
+            }));
+    res.json({
+        data: govActionVote,
+        lastUpdated: Math.floor(Date.now() / 1000),
+        total: govActionVote.length,
+        pageSize: govActionVote.length,
+    } as ApiReturnType<GovActionVote[]>);
 });
 
 governanceController.get('/dreps', async (req, res) => {
@@ -77,7 +148,22 @@ governanceController.get('/dreps', async (req, res) => {
         try {
             drepDetails = await API.governance.drepsById(drep.drep_id);
             drepMetadata = await API.governance.drepsByIdMetadata(drep.drep_id);
-            jsonMetadata = drepMetadata.json_metadata
+            
+            // Safely parse DRep metadata
+            if (drepMetadata?.json_metadata) {
+                if (typeof drepMetadata.json_metadata === 'string') {
+                    try {
+                        jsonMetadata = JSON.parse(drepMetadata.json_metadata);
+                    } catch (parseError) {
+                        console.error("Error parsing DRep json_metadata:", parseError);
+                        jsonMetadata = {};
+                    }
+                } else {
+                    jsonMetadata = drepMetadata.json_metadata;
+                }
+            } else {
+                jsonMetadata = {};
+            }
         } catch (e) {
             console.error("Error fetching drep details for drep id:", drep.drep_id);
         }
@@ -117,7 +203,23 @@ governanceController.get('/dreps/:drepId', async (req, res) => {
     try {
         drepDetails = await API.governance.drepsById(drepId);
         drepMetadata = await API.governance.drepsByIdMetadata(drepId);
-        jsonMetadata = drepMetadata.json_metadata
+        
+        // Safely parse DRep metadata
+        if (drepMetadata?.json_metadata) {
+            if (typeof drepMetadata.json_metadata === 'string') {
+                try {
+                    jsonMetadata = JSON.parse(drepMetadata.json_metadata);
+                } catch (parseError) {
+                    console.error("Error parsing DRep json_metadata:", parseError);
+                    jsonMetadata = {};
+                }
+            } else {
+                jsonMetadata = drepMetadata.json_metadata;
+            }
+        } else {
+            jsonMetadata = {};
+        }
+        
         delegators = await API.governance.drepsByIdDelegatorsAll(drepId);
         updates = await API.governance.drepsByIdUpdatesAll(drepId);
         if(updates && updates.length > 0) {
