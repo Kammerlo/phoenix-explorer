@@ -13,6 +13,7 @@ import GovernanceVotesTable from "./GovernanceVotesTable";
 import { ApiConnector } from "src/commons/connector/ApiConnector";
 import { GovActionVote, GovernanceActionDetail } from "@shared/dtos/GovernanceOverview";
 import { useEffect, useState } from "react";
+import NotFound from "src/pages/NotFound";
 
 export default function GovernanceActionDetailsComponent() {
   const history = useHistory();
@@ -23,12 +24,14 @@ export default function GovernanceActionDetailsComponent() {
   const [votesLoading, setVotesLoading] = useState(true);
   const [data, setData] = useState<GovernanceActionDetail | null>(null);
   const [votesData, setVotesData] = useState<GovActionVote[] | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const { txHash, index } = useParams<{ txHash: string; index: string }>();
   useEffect(() => {
     apiConnector.getGovernanceDetail(txHash, index).then((response) => {
       setData(response.data);
       setLoading(false);
+      setError(response.error);
     });
     apiConnector.getGovernanceActionVotes(txHash, index).then((response) => {
       setVotesLoading(false);
@@ -41,6 +44,15 @@ export default function GovernanceActionDetailsComponent() {
         <CircularProgress />
       </Box>
     );
+
+  if (error || !data) {
+    return (
+      <Box width={"100%"} height={"100%"}>
+        <NotFound />
+      </Box>
+    );
+  }
+
   
   return (
     <Box>
