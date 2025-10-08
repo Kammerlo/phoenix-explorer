@@ -42,10 +42,8 @@ import {
   CIPHeader,
   CIPHeaderTitle,
   CIPLabel,
-  ContentIdentifiers,
   DecryptButton,
   Header,
-  ItemBolnisi,
   MetaDataJSONValue,
   MetaDataJSONValueText,
   MetaDataValue,
@@ -55,12 +53,8 @@ import {
   MetadataTitle,
   MetadataWrapper,
   ViewAllButton,
-  ViewWineButton,
   Wrapper
 } from "./styles";
-import DefaultImageWine from "./DefaultImageWine";
-import BolnisiWineDrawer from "./BolnisiWineDrawer";
-import BolnisiWineDrawerConformity from "./BolnisiWineDrawerConformity";
 
 interface MetadataProps {
   data?: TransactionDetail["metadata"];
@@ -222,92 +216,7 @@ const Metadata: React.FC<MetadataProps> = ({ hash, data }) => {
     }
   };
 
-  // Bolnisi Metadata
-  const renderBolnisi = (data?: TransactionDetail["metadata"][number]["metadataBolnisi"]) => {
-    if (!data) return <Box>data not found</Box>;
-    return (
-      <Box>
-        <MetadataContent
-          alignItems={"center"}
-          flexWrap={"wrap"}
-          sx={{
-            [theme.breakpoints.down("md")]: {
-              alignItems: "baseline"
-            }
-          }}
-        >
-          <MetadataJSONTitle
-            display={"flex"}
-            minWidth={180}
-            gap={2}
-            sx={{
-              [theme.breakpoints.down("md")]: {
-                width: "100% !important"
-              }
-            }}
-          >
-            {t("bolsini.contentIdentifiers")}
-          </MetadataJSONTitle>
-          <MetaDataValue
-            display={"flex"}
-            alignItems={"center"}
-            gap={1}
-            flexWrap={"wrap"}
-            sx={{
-              [theme.breakpoints.down("md")]: {
-                mt: 1,
-                width: "100%"
-              }
-            }}
-          >
-            {data.cid && (
-              <ContentIdentifiers>
-                <DynamicEllipsisText
-                  value={data.cid || ""}
-                  isTooltip
-                  sxFirstPart={{
-                    [theme.breakpoints.up("sm")]: { maxWidth: "calc(100% - 60px)" },
-                    [theme.breakpoints.down("sm")]: { maxWidth: "calc(100% - 100px)" }
-                  }}
-                />
-              </ContentIdentifiers>
-            )}
-            {data.externalApiAvailable && (
-              <Box>
-                <VerifyBadge status={data.cidVerified} />
-              </Box>
-            )}
-            {!data.externalApiAvailable && (
-              <CustomTooltip
-                title={
-                  <Box width={"max-content"} maxWidth={"75vw"}>
-                    {t("bolnisi.verifyErrorTooltip")}
-                    <br />
-                    {t("bolnisi.verifyErrorTooltipTryAgain")}
-                  </Box>
-                }
-              >
-                <BadgeContainerVerify type="Warning" fontWeight={500}>
-                  <Box
-                    width={23}
-                    height={23}
-                    display={"flex"}
-                    alignItems={"center"}
-                    justifyContent={"center"}
-                    bgcolor={theme.palette.warning[700]}
-                    borderRadius={"50%"}
-                  >
-                    <InvalidIcon fill={theme.palette.secondary.main} />
-                  </Box>
-                  <Box width={"max-content"}>{t("bolnisi.verifyError")}</Box>
-                </BadgeContainerVerify>
-              </CustomTooltip>
-            )}
-          </MetaDataValue>
-        </MetadataContent>
-      </Box>
-    );
-  };
+
 
   return (
     <Box>
@@ -478,7 +387,6 @@ const Metadata: React.FC<MetadataProps> = ({ hash, data }) => {
               metadata?.metadataCIP83.valid &&
               !textRaw &&
               renderButtonDecrypt(metadata?.metadataCIP83?.requiredProperties)}
-            {/*{String(metadata.label) === String(CIPLabel1904) && renderBolnisi(metadata?.metadataBolnisi)}*/}
           </MetadataWrapper>
         );
       })}

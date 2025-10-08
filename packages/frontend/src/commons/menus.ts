@@ -3,7 +3,6 @@ import { IconType } from "react-icons/lib";
 
 import {
   BlockChainMenuIcon,
-  BolnisiDashboard,
   BrowseIcon,
   DashboardIcon,
   GovernanceHome,

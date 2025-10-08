@@ -14,19 +14,13 @@ import SmartContractDetail from "./pages/SmartContractDetail";
 import NativeScriptAndSC from "./pages/NativeScriptsAndSC";
 import ContractList from "./pages/ContractList";
 import DelegationPools from "./pages/PoolList";
-import DelegatorLifecycle from "./pages/DelegatorLifecycle";
 import Home from "./pages/Home";
-import InstantRewards from "./pages/InstantRewards";
 import NotFound from "./pages/NotFound";
 import PolicyDetail from "./pages/PolicyDetail";
 import ProtocolParameter from "./pages/ProtocolParameter";
 import FAQ from "./pages/Reference/FAQ";
-import RegistrationPools, { POOL_TYPE } from "./pages/RegistrationPools";
-import SPOLifecycle from "./pages/SPOLifecycle";
 import SearchResult from "./pages/SearchResult";
-import Stake, { STAKE_ADDRESS_TYPE } from "./pages/Stake";
 import StakeDetail from "./pages/StakeDetail";
-import StakingLifecycle from "./pages/StakingLifecycle";
 import Tokens from "./pages/Token";
 import TokenDetail from "./pages/TokenDetail";
 import TransactionDetailView from "./pages/TransactionDetail";
@@ -34,22 +28,13 @@ import TransactionList from "./pages/TransactionListPage";
 import NativeScriptsDetailPage from "./pages/NativeScriptDetail";
 import DrepDetail from "./pages/DrepDetail";
 import Dreps from "./pages/Dreps";
-import ConstitutionalCommittees from "./pages/ConstitutionalCommittees";
-import ConstitutionalCommitteeDetail from "./pages/ConstitutionalCommitteeDetail";
 import GovernanceOverview from "./pages/GovernanceOverview";
-import NetworkMonitoring from "./pages/NetworkMonitoring";
 import GovernanceActionDetails from "./pages/GovernanceActionDetails";
 import { ApiConnector } from "./commons/connector/ApiConnector";
 import { FunctionEnum } from "./commons/connector/types/FunctionEnum";
 import Epoch from "./pages/Epoch";
 import EpochDetail from "./pages/EpochDetail";
 import PoolDetailView from "./pages/PoolDetailView";
-
-const StakeAddressRegistration = () => <Stake stakeAddressType={STAKE_ADDRESS_TYPE.REGISTRATION} />;
-const StakeAddressDeregistration = () => <Stake stakeAddressType={STAKE_ADDRESS_TYPE.DEREREGISTRATION} />;
-const StakeAddressDelegations = () => <Stake stakeAddressType={STAKE_ADDRESS_TYPE.DELEGATION} />;
-const PoolsCertificate = () => <RegistrationPools poolType={POOL_TYPE.REGISTRATION} />;
-const PoolsDeregistration = () => <RegistrationPools poolType={POOL_TYPE.DEREREGISTRATION} />;
 
 const Routes: React.FC = () => {
   const history = useHistory();
@@ -80,14 +65,6 @@ const Routes: React.FC = () => {
       <Route path={routers.GOVERNANCE_ACTION_LIST} exact
         component={isSupportedRoute(GovernanceOverview, FunctionEnum.GOVERNANCE)} />
 
-      <Route
-        path={routers.STAKING_LIFECYCLE}
-        exact
-        component={isSupportedRoute(StakingLifecycle, FunctionEnum.STAKING_LIFECYCLE)}
-      />
-      <Route path={routers.DELEGATOR_LIFECYCLE} exact component={DelegatorLifecycle} />
-      <Route path={routers.SPO_LIFECYCLE} exact component={SPOLifecycle} />
-
       <Route path={routers.SEARCH} exact component={SearchResult} />
       <Route path={routers.FAQ} exact component={FAQ} />
 
@@ -109,11 +86,6 @@ const Routes: React.FC = () => {
         path={routers.ADDRESS_DETAIL}
         exact
         component={isSupportedRoute(AddressWalletDetail, FunctionEnum.ADDRESS)}
-      />
-      <Route
-        path={routers.STAKE_ADDRESS_DELEGATIONS}
-        exact
-        component={isSupportedRoute(StakeAddressDelegations, FunctionEnum.ADDRESS)}
       />
       <Route path={routers.DELEGATION_POOLS} exact component={isSupportedRoute(DelegationPools, FunctionEnum.POOL)} />
       <Route
@@ -149,62 +121,21 @@ const Routes: React.FC = () => {
         exact
         component={isSupportedRoute(NativeScriptsDetailPage, FunctionEnum.SMART_CONTRACT)}
       />
-
-      <Route
-        path={routers.INSTANTANEOUS_REWARDS}
-        exact
-        component={isSupportedRoute(InstantRewards, FunctionEnum.REWARDS)}
-      />
-      <Route
-        path={routers.STAKE_ADDRESS_REGISTRATION}
-        exact
-        component={isSupportedRoute(StakeAddressRegistration, FunctionEnum.STAKE_ADDRESS_REGISTRATION)}
-      />
-      <Route
-        path={routers.STAKE_ADDRESS_DEREGISTRATION}
-        exact
-        component={isSupportedRoute(StakeAddressDeregistration, FunctionEnum.STAKE_ADDRESS_REGISTRATION)}
-      />
       <Route
         path={routers.STAKE_DETAIL}
         exact
         component={isSupportedRoute(StakeDetail, FunctionEnum.STAKE_ADDRESS_REGISTRATION)}
       />
       <Route
-        path={routers.POOL_CERTIFICATE}
-        exact
-        component={isSupportedRoute(PoolsCertificate, FunctionEnum.POOL_REGISTRATION)}
-      />
-      <Route
-        path={routers.POOL_DEREGISTRATION}
-        exact
-        component={isSupportedRoute(PoolsDeregistration, FunctionEnum.POOL_REGISTRATION)}
-      />
-      <Route
         path={routers.PROTOCOL_PARAMETER}
         exact
         component={isSupportedRoute(ProtocolParameter, FunctionEnum.PROTOCOL_PARAMETER)}
       />
-      <Route
-        path={routers.NETWORK_MONITORING}
-        exact
-        component={isSupportedRoute(NetworkMonitoring, FunctionEnum.NETWORK_MONITORING)}
-      />
       <Route path={routers.DREPS} exact component={isSupportedRoute(Dreps, FunctionEnum.DREP)} />
-      <Route
-        path={routers.CONSTITUIONAL_COMMITTEES}
-        exact
-        component={isSupportedRoute(ConstitutionalCommittees, FunctionEnum.GOVERNANCE)}
-      />
       <Route
         path={routers.GOVERNANCE_ACTION}
         exact
         component={isSupportedRoute(GovernanceActionDetails, FunctionEnum.GOVERNANCE)}
-      />
-      <Route
-        path={routers.CONSTITUIONAL_COMMITTEE_DETAIL}
-        exact
-        component={isSupportedRoute(ConstitutionalCommitteeDetail, FunctionEnum.GOVERNANCE)}
       />
       <Route path={routers.DREP_DETAILS} exact component={isSupportedRoute(DrepDetail, FunctionEnum.DREP)} />
 

@@ -79,7 +79,7 @@ const Header: React.FC<RouteComponentProps> = (props) => {
               flexDirection={isMobile ? "column" : "row"}
             ></Box>
           </Title>
-          {pathname !== routers.BOLNISI_LANDING && pathname !== routers.MICAR && (
+          {pathname !== routers.MICAR && (
             <HeaderSearchContainer home={+home}>{!pathMatched && <HeaderSearch home={home} />}</HeaderSearchContainer>
           )}
         </HeaderMain>

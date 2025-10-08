@@ -317,41 +317,6 @@ export const BadgeContainerVerify = styled(Box)<{ type: "Verified" | "Invalid" |
     }};
 `;
 
-export const ItemBolnisi = styled(Card)`
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  padding: ${({ theme }) => theme.spacing(2)};
-  position: relative;
-  background: ${({ theme }) => (theme.isDark ? theme.palette.secondary[100] : theme.palette.secondary[700])};
-  box-shadow: 2px 2px 10px 0px #43465633;
-  &:hover {
-    box-shadow: ${({ theme }) =>
-      theme.isDark ? ` 2px 2px 10px 0px ${theme.palette.secondary[100]}` : theme.shadow.cardHover};
-  }
-`;
-
-export const ViewWineButton = styled(Button)(({ theme }) => ({
-  width: "100%",
-  textTransform: "capitalize",
-  fontWeight: "bold",
-  fontSize: 16,
-  borderRadius: "8px",
-  color: theme.isDark ? theme.palette.secondary[100] : theme.palette.primary[100],
-  background: theme.palette.primary.main,
-  ":hover": {
-    background: theme.palette.primary.dark
-  },
-  ":disabled": {
-    background: theme.palette.secondary[600],
-    color: theme.palette.secondary[100]
-  }
-}));
-
-export const ContentIdentifiers = styled(Box)`
-  overflow: hidden;
-  text-overflow: ellipsis;
-`;
 
 export const ViewAllButton = styled(Box)`
   display: flex;
