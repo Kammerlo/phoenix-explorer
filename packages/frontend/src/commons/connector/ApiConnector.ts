@@ -15,6 +15,7 @@ import { GovActionVote, GovernanceActionDetail, GovernanceActionListItem, Govern
 import { AddressDetail, StakeAddressDetail } from "@shared/dtos/address.dto";
 import { PoolDetail, PoolOverview } from "@shared/dtos/pool.dto";
 import { Drep, DrepDelegates } from "@shared/dtos/drep.dto";
+import { ProtocolParameters } from "@shared/dtos/protocolParams.dto";
 
 const API_URL: string = process.env.REACT_APP_API_URL || "";
 const API_CONNECTOR_TYPE: string = process.env.REACT_APP_API_TYPE || "";
@@ -99,4 +100,8 @@ export abstract class ApiConnector {
   abstract getDrepVotes(drepId: string, pageInfo: ParsedUrlQuery): Promise<ApiReturnType<GovernanceActionListItem[]>>;
 
   abstract getDrepDelegates(drepId: string, pageInfo: ParsedUrlQuery): Promise<ApiReturnType<DrepDelegates[]>>;
+
+  abstract getProtocolParametersByEpoch(epoch: number): Promise<ApiReturnType<ProtocolParameters>>;
+
+  abstract getLatestProtocolParameters(): Promise<ApiReturnType<ProtocolParameters>>;
 }

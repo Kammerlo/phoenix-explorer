@@ -15,6 +15,7 @@ import { GovActionVote, GovernanceActionDetail, GovernanceActionListItem, Govern
 import { AddressDetail, StakeAddressDetail } from "@shared/dtos/address.dto";
 import { PoolDetail, PoolOverview } from "@shared/dtos/pool.dto";
 import { Drep, DrepDelegates } from "@shared/dtos/drep.dto";
+import { ProtocolParameters } from "@shared/dtos/protocolParams.dto";
 
 export class GatewayConnector implements ApiConnector {
   baseUrl: string;
@@ -201,6 +202,16 @@ export class GatewayConnector implements ApiConnector {
     const response = await this.client.get<ApiReturnType<DrepDelegates[]>>(`${this.baseUrl}/governance/dreps/${drepId}/delegates`, {
       params: pageInfo
     });
+    return response.data;
+  }
+
+  async getProtocolParametersByEpoch(epoch: number): Promise<ApiReturnType<ProtocolParameters>> {
+    const response = await this.client.get<ApiReturnType<ProtocolParameters>>(`${this.baseUrl}/protocol-parameters/${epoch}`);
+    return response.data;
+  }
+
+  async getLatestProtocolParameters(): Promise<ApiReturnType<ProtocolParameters>> {
+    const response = await this.client.get<ApiReturnType<ProtocolParameters>>(`${this.baseUrl}/protocol-parameters`);
     return response.data;
   }
 }

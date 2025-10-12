@@ -7,6 +7,7 @@ import { tokenController } from "./controller/token-controller";
 import { governanceController } from "./controller/governance-controller";
 import { addressController } from "./controller/address-controller";
 import { poolController } from "./controller/pool-controller";
+import { protocolParameterController } from "./controller/protocol-parameter-controller";
 // optional, for typing
 
 const app = express();
@@ -21,5 +22,6 @@ app.use("/api/tokens", tokenController);
 app.use("/api/governance", governanceController);
 app.use("/api/addresses", addressController);
 app.use("/api/pools", poolController);
+app.use("/api/protocol-parameters", protocolParameterController); // Add this line for protocol parameters
 
 export default app;
