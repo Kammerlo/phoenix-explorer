@@ -8,9 +8,7 @@ export const setStoreSystem = (store: Store) => {
 
 const initialState: SystemStoreType = {
   currentEpoch: null,
-  specialPath: null,
-  wineryName: null,
-  wineryNameLoading: false
+  specialPath: null
 };
 
 const store = createSlice({
@@ -32,14 +30,6 @@ const store = createSlice({
     setSpecialPath: (state, action: PayloadAction<SpecialPath>) => ({
       ...state,
       specialPath: action.payload
-    }),
-    setWineryName: (state, action: PayloadAction<Record<string, Record<"name", string>>>) => ({
-      ...state,
-      wineryName: action.payload
-    }),
-    setWineryNameLoading: (state, action: PayloadAction<boolean>) => ({
-      ...state,
-      wineryNameLoading: action.payload
     })
   }
 });
@@ -58,13 +48,6 @@ export const setBlockKey = (blockKey: number | string) => {
 
 export const setSpecialPath = (specialPath: SpecialPath) => {
   systemStore?.dispatch(store.actions.setSpecialPath(specialPath));
-};
-
-export const setWineryName = (wineryName: Record<string, Record<"name", string>>) => {
-  systemStore?.dispatch(store.actions.setWineryName(wineryName));
-};
-export const setWineryNameLoading = (wineryNameLoading: boolean) => {
-  systemStore?.dispatch(store.actions.setWineryNameLoading(wineryNameLoading));
 };
 
 export default store.reducer;

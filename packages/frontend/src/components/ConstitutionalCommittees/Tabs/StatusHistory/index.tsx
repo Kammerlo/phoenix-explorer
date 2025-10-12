@@ -41,7 +41,7 @@ import {
   ApplyFilterButton,
   FilterContainer,
   FilterWrapper
-} from "src/pages/NativeScriptsAndSC/styles";
+} from "src/components/share/FilterStyles";
 import DateRangeModal, { DATETIME_PARTTEN, DateRange } from "src/components/commons/CustomFilter/DateRangeModal";
 import { StyledInput } from "src/components/share/styled";
 import FetchDataErr from "src/components/commons/FetchDataErr";

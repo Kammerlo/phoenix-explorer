@@ -34,7 +34,7 @@ import {
   ApplyFilterButton,
   FilterContainer,
   FilterWrapper
-} from "src/pages/NativeScriptsAndSC/styles";
+} from "src/components/share/FilterStyles";
 
 import { Input } from "./styles";
 

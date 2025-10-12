@@ -3,7 +3,7 @@ import { Box, useTheme } from "@mui/material";
 import { t } from "i18next";
 
 import { NativeOneMint, NativeSig, NativeTimelock, NativeType } from "src/commons/resources";
-import { ChipContainer, MultiSigChip, TimeLockChip } from "src/pages/NativeScriptsAndSC/Card";
+import { ChipContainer, MultiSigChip, TimeLockChip } from "src/components/share/ChipContainer";
 import { formatDateTimeLocal } from "src/commons/utils/helper";
 import CustomModal from "src/components/commons/CustomModal";
 import DynamicEllipsisText from "src/components/DynamicEllipsisText";

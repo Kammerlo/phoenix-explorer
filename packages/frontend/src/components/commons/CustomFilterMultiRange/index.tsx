@@ -26,7 +26,7 @@ import {
   truncateDecimals,
   truncateToTwoDecimals
 } from "src/commons/utils/helper";
-import { FilterWrapper } from "src/pages/NativeScriptsAndSC/styles";
+import { FilterWrapper } from "src/components/share/FilterStyles";
 import usePageInfo from "src/commons/hooks/usePageInfo";
 import { FF_GLOBAL_IS_CONWAY_ERA } from "src/commons/utils/constants";
 import { AntSwitch } from "src/components/PoolList/styles";

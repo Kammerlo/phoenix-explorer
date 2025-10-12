@@ -7,8 +7,6 @@ declare interface SystemStoreType {
   blockNo?: number;
   blockKey?: number | string;
   specialPath: SpecialPath | null;
-  wineryName?: Record<string, Record<"name" | "address", string>> | null;
-  wineryNameLoading?: boolean;
 }
 
 declare type EventData =

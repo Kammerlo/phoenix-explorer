@@ -11,7 +11,7 @@ import {
   multiNoneIcon,
   multiYesIcon
 } from "src/commons/resources";
-import { ChipContainer } from "src/pages/NativeScriptsAndSC/Card";
+import { ChipContainer } from "src/components/share/ChipContainer";
 import { POOLS_ACTION_TYPE, STATUS_VOTE } from "src/commons/utils/constants";
 import { GovernanceVote } from "src/components/GovernanceVotes";
 import { useScreen } from "src/commons/hooks/useScreen";
