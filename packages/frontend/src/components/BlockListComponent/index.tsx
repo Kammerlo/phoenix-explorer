@@ -33,7 +33,7 @@ interface BlockListComponentProps {
 const BlockListComponent: React.FC<BlockListComponentProps> = ({fetchData, updateData, loading}) => {
   const { t } = useTranslation();
   const history = useHistory();
-  const { onDetailView } = useSelector(({ user }: RootState) => user);
+  const { onDetailView } = useSelector(({ system }: RootState) => system);
   const { pageInfo } = usePageInfo();
   const [selected, setSelected] = useState<(number | string | null)[]>([]);
 

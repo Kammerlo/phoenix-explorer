@@ -11,18 +11,14 @@ import BlockDetail from "./pages/BlockDetail";
 import BlockList from "./pages/BlockList";
 import Home from "./pages/Home";
 import NotFound from "./pages/NotFound";
-import PolicyDetail from "./pages/PolicyDetail";
 import DrepDetail from "./pages/DrepDetail";
 import Dreps from "./pages/Dreps";
-import ConstitutionalCommittees from "./pages/ConstitutionalCommittees";
-import ConstitutionalCommitteeDetail from "./pages/ConstitutionalCommitteeDetail";
 import GovernanceOverview from "./pages/GovernanceOverview";
 import GovernanceActionDetails from "./pages/GovernanceActionDetails";
 import { ApiConnector } from "./commons/connector/ApiConnector";
 import { FunctionEnum } from "./commons/connector/types/FunctionEnum";
 import Epoch from "./pages/Epoch";
 import EpochDetail from "./pages/EpochDetail";
-import PoolDetailView from "./pages/PoolDetailView";
 import Tokens from "./pages/Token";
 import TokenDetail from "./pages/TokenDetail";
 import TransactionDetailView from "./pages/TransactionDetail";
@@ -78,29 +74,15 @@ const Routes: React.FC = () => {
         component={isSupportedRoute(AddressWalletDetail, FunctionEnum.ADDRESS)}
       />
       <Route path={routers.DELEGATION_POOLS} exact component={isSupportedRoute(DelegationPools, FunctionEnum.POOL)} />
-      <Route
-        path={routers.DELEGATION_POOL_DETAIL}
-        exact
-        component={isSupportedRoute(PoolDetailView, FunctionEnum.POOL)}
-      />
+      
       <Route path={routers.TOKEN_LIST} exact component={isSupportedRoute(Tokens, FunctionEnum.TOKENS)} />
       <Route path={routers.TOKEN_DETAIL} exact component={isSupportedRoute(TokenDetail, FunctionEnum.TOKENS)} />
-      <Route path={routers.POLICY_DETAIL} exact component={isSupportedRoute(PolicyDetail, FunctionEnum.TOKENS)} />
       <Route path={routers.DREPS} exact component={isSupportedRoute(Dreps, FunctionEnum.DREP)} />
-      <Route
-        path={routers.CONSTITUIONAL_COMMITTEES}
-        exact
-        component={isSupportedRoute(ConstitutionalCommittees, FunctionEnum.GOVERNANCE)}
-      />
+      
       <Route
         path={routers.GOVERNANCE_ACTION}
         exact
         component={isSupportedRoute(GovernanceActionDetails, FunctionEnum.GOVERNANCE)}
-      />
-      <Route
-        path={routers.CONSTITUIONAL_COMMITTEE_DETAIL}
-        exact
-        component={isSupportedRoute(ConstitutionalCommitteeDetail, FunctionEnum.GOVERNANCE)}
       />
       <Route path={routers.DREP_DETAILS} exact component={isSupportedRoute(DrepDetail, FunctionEnum.DREP)} />
 

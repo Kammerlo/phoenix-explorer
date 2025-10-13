@@ -86,7 +86,7 @@ export const LineArrow: React.FC<LineArrowProps> = (props) => {
   const { width } = useWindowSize(0);
   const ref = useRef<SVGPathElement | null>(null);
   const theme = useTheme();
-  const { sidebar } = useSelector(({ user }: RootState) => user);
+  const { sidebar } = useSelector(({ system }: RootState) => system);
 
   useEffect(() => {
     setMount(0);

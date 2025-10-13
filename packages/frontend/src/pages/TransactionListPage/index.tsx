@@ -3,7 +3,7 @@ import {Container} from "@mui/material";
 import {useEffect, useState} from "react";
 
 import TransactionList from "src/components/TransactionLists";
-import {setOnDetailView} from "src/stores/user";
+import {setOnDetailView} from "src/stores/system";
 import {ApiReturnType} from "@shared/APIReturnType";
 import {Transaction} from "@shared/dtos/transaction.dto";
 import {ApiConnector} from "../../commons/connector/ApiConnector";

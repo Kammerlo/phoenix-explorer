@@ -6,7 +6,7 @@ export const SAMSUNG_FOLD_SMALL_WIDTH = 355;
 export const IPAD_PRO = 1270;
 
 export const useScreen = () => {
-  const { sidebar } = useSelector(({ user }: RootState) => user);
+  const { sidebar } = useSelector(({ system }: RootState) => system);
   const theme = useTheme();
   const [width, setWidth] = useState(window.innerWidth);
 

@@ -19,7 +19,7 @@ import SidebarMenu from "./SidebarMenu";
 import { HeaderTop, LogoLink, NavBarLogo, NavbarContainer, WrapButtonSelect } from "./styles";
 
 const Sidebar: React.FC = () => {
-  const { sidebar } = useSelector(({ user }: RootState) => user);
+  const { sidebar } = useSelector(({ system }: RootState) => system);
   const { theme } = useSelector(({ theme }: RootState) => theme);
   const [loading, setLoading] = useState(false);
   const { height } = useWindowSize();

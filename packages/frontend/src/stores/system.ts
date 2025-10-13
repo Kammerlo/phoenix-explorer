@@ -1,53 +1,51 @@
 import { createSlice, PayloadAction, Store } from "@reduxjs/toolkit";
 
+import breakpoints from "../themes/breakpoints";
+import { EpochCurrentType } from "@shared/dtos/epoch.dto";
+
 let systemStore: Store | undefined;
 
 export const setStoreSystem = (store: Store) => {
   systemStore = store;
 };
 
-const initialState: SystemStoreType = {
+export interface SystemState {
+  currentEpoch: EpochCurrentType | null;
+  specialPath: string | null;
+  sidebar: boolean;
+  onDetailView: boolean;
+  blockNo?: number;
+  blockKey?: number | string;
+}
+
+const initialState: SystemState = {
   currentEpoch: null,
-  specialPath: null
+  specialPath: null,
+  sidebar: window.innerWidth >= breakpoints.values.md,
+  onDetailView: false
 };
 
 const store = createSlice({
   name: "storeSystem",
   initialState,
   reducers: {
-    setCurrentEpoch: (state, action: PayloadAction<EpochCurrentType>) => ({
+    setSidebar: (state, action: PayloadAction<boolean>) => ({
       ...state,
-      currentEpoch: action.payload
+      sidebar: action.payload
     }),
-    setBlockNo: (state, action: PayloadAction<number>) => ({
+    setOnDetailView: (state, action: PayloadAction<boolean>) => ({
       ...state,
-      blockNo: action.payload
-    }),
-    setBlockKey: (state, action: PayloadAction<number | string>) => ({
-      ...state,
-      blockKey: action.payload
-    }),
-    setSpecialPath: (state, action: PayloadAction<SpecialPath>) => ({
-      ...state,
-      specialPath: action.payload
+      onDetailView: action.payload
     })
   }
 });
 
-export const setCurrentEpoch = (currentEpoch: EpochCurrentType) => {
-  systemStore?.dispatch(store.actions.setCurrentEpoch(currentEpoch));
+export const setSidebar = (sidebar: boolean) => {
+  systemStore?.dispatch(store.actions.setSidebar(sidebar));
 };
 
-export const setBlockNo = (blockNo: number) => {
-  systemStore?.dispatch(store.actions.setBlockNo(blockNo));
-};
-
-export const setBlockKey = (blockKey: number | string) => {
-  systemStore?.dispatch(store.actions.setBlockKey(blockKey));
-};
-
-export const setSpecialPath = (specialPath: SpecialPath) => {
-  systemStore?.dispatch(store.actions.setSpecialPath(specialPath));
+export const setOnDetailView = (onDetailView: boolean) => {
+  systemStore?.dispatch(store.actions.setOnDetailView(onDetailView));
 };
 
 export default store.reducer;

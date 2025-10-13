@@ -6,7 +6,7 @@ import { useSelector } from "react-redux";
 import { socials } from "src/commons/menus";
 import CustomTooltip from "src/components/commons/CustomTooltip";
 import { RootState } from "src/stores/types";
-import { setSidebar } from "src/stores/user";
+import { setSidebar } from "src/stores/system";
 import { ThemeType } from "src/types/theme";
 
 export const Menu = styled(List)<{ open: number; bottom: number; thememode: ThemeType }>`
@@ -92,7 +92,7 @@ type TProps = {
   bottom?: boolean;
 };
 const FooterMenu = ({ bottom = false }: TProps) => {
-  const { sidebar } = useSelector(({ user }: RootState) => user);
+  const { sidebar } = useSelector(({ system }: RootState) => system);
   const { theme } = useSelector(({ theme }: RootState) => theme);
   return (
     <Menu open={+sidebar} bottom={+bottom} thememode={theme}>

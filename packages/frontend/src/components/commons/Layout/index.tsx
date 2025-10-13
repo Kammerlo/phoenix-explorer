@@ -6,7 +6,7 @@ import { useHistory } from "react-router-dom";
 
 import { useScreen } from "src/commons/hooks/useScreen";
 import { RootState } from "src/stores/types";
-import { setOnDetailView, setSidebar } from "src/stores/user";
+import { setOnDetailView, setSidebar } from "src/stores/system";
 
 import StyledModal from "../StyledModal";
 import Header from "./Header";
@@ -18,7 +18,7 @@ interface Props {
   children: React.ReactNode;
 }
 const CustomLayout: React.FC<Props> = ({ children }) => {
-  const { sidebar } = useSelector(({ user }: RootState) => user);
+  const { sidebar } = useSelector(({ system }: RootState) => system);
   const [openNoticeModal, setOpenNoticeModal] = useState<boolean>(false);
   const history = useHistory();
   const lastPath = useRef<string>(history.location.pathname);

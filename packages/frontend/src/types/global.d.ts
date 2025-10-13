@@ -1,1 +1,0 @@
-// Browser-only global types

@@ -9,7 +9,7 @@ import { useScreen } from "src/commons/hooks/useScreen";
 import { footerMenus, menus } from "src/commons/menus";
 import { isExternalLink } from "src/commons/utils/helper";
 import { RootState } from "src/stores/types";
-import { setSidebar } from "src/stores/user";
+import { setSidebar } from "src/stores/system";
 
 import FooterMenu from "../FooterMenu";
 import {
@@ -40,7 +40,7 @@ interface MenuItem {
 const SidebarMenu: React.FC<RouteComponentProps> = ({ history }) => {
   const { t } = useTranslation();
   const pathname = history.location.pathname;
-  const { sidebar } = useSelector(({ user }: RootState) => user);
+  const { sidebar } = useSelector(({ system }: RootState) => system);
   const specialPath = useSelector(({ system }: RootState) => system.specialPath);
   const { isTablet } = useScreen();
 

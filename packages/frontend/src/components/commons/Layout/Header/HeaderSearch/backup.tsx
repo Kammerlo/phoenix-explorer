@@ -95,7 +95,7 @@ const HeaderSearch: React.FC<Props> = ({ home, callback, setShowErrorMobile, his
   const [showOption, setShowOption] = useState(false);
   const theme = useTheme();
   const [error, setError] = useState("");
-  const { sidebar } = useSelector(({ user }: RootState) => user);
+  const { sidebar } = useSelector(({ system }: RootState) => system);
   const [dataSearchAll, setDataSearchAll] = useState<IResponseSearchAll | undefined>();
   const [dataSearchTokensAndPools, setDataSearchTokensAndPools] = useState<
     TokensSearch[] | DelegationPool[] | undefined

@@ -12,7 +12,7 @@ import {
   SearchIcon
 } from "src/commons/resources";
 import { lists, routers } from "src/commons/routers";
-import { setOnDetailView, setSidebar } from "src/stores/user";
+import { setOnDetailView, setSidebar } from "src/stores/system";
 import { setTheme } from "src/stores/theme";
 
 import CustomIcon from "../../CustomIcon";
@@ -34,6 +34,7 @@ import {
   Title,
   WrapButtonSelect
 } from "./styles";
+import { RootState } from "src/stores/types";
 
 const HIDDEN_HEADER_SEARCH_PATHS: string[] = [lists.dashboard()];
 
@@ -43,7 +44,7 @@ const Header: React.FC<RouteComponentProps> = (props) => {
   const { pathname } = useLocation();
 
   const home = history.location.pathname === "/";
-  const { sidebar } = useSelector(({ user }: RootState) => user);
+  const { sidebar } = useSelector(({ system }: RootState) => system);
   const { theme: themeMode } = useSelector(({ theme }: RootState) => theme);
   const [openSearch, setOpenSearch] = React.useState(false);
   const handleToggle = () => setSidebar(!sidebar);
@@ -79,9 +80,6 @@ const Header: React.FC<RouteComponentProps> = (props) => {
               flexDirection={isMobile ? "column" : "row"}
             ></Box>
           </Title>
-          {pathname !== routers.BOLNISI_LANDING && (
-            <HeaderSearchContainer home={+home}>{!pathMatched && <HeaderSearch home={home} />}</HeaderSearchContainer>
-          )}
         </HeaderMain>
         <HeaderTop data-testid="header-top" ref={refElement}>
           <HeaderLogoLink to="/" data-testid="header-logo">

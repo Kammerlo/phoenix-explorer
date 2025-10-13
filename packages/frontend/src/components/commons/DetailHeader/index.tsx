@@ -116,7 +116,7 @@ const DetailHeader: React.FC<DetailHeaderProps> = (props) => {
   const history = useHistory();
   const theme = useTheme();
   const currentEpoch = useSelector((state: RootState) => state.system.currentEpoch);
-  const sidebar = useSelector((state: RootState) => state.user.sidebar);
+  const sidebar = useSelector((state: RootState) => state.system.sidebar);
   const [openBackdrop, setOpenBackdrop] = useState<{ [x: string]: boolean }>({
     input: false,
     output: false
