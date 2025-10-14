@@ -13,7 +13,7 @@ import {
   TwitterX,
   Catalyst
 } from "./resources";
-import { details, lists, routers } from "./routers";
+import { details, routers } from "./routers";
 import { ApiConnector } from "./connector/ApiConnector";
 import { FunctionEnum } from "./connector/types/FunctionEnum";
 
@@ -77,15 +77,9 @@ export const menus: Menu[] = [
         hidden: !supportedFunctions.includes(FunctionEnum.TOKENS)
       },
       {
-        title: "Native Scripts & Smart Contracts",
-        key: "glossary.nativeScriptAndSC",
-        href: details.nativeScriptsAndSC(),
-        hidden: !supportedFunctions.includes(FunctionEnum.SMART_CONTRACT)
-      },
-      {
         title: "Pools",
         key: "head.page.pool",
-        href: routers.DELEGATION_POOLS,
+        href: routers.POOLS,
         isSpecialPath: true,
         hidden: !supportedFunctions.includes(FunctionEnum.POOL)
       },
@@ -103,75 +97,6 @@ export const menus: Menu[] = [
         hidden: !supportedFunctions.includes(FunctionEnum.GOVERNANCE)
       }
     ]
-  },
-  {
-    title: "Operational Certificates",
-    key: "glossary.operationalCertificates",
-    icon: OperationalIcon,
-    hidden: !(
-      supportedFunctions.includes(FunctionEnum.STAKE_ADDRESS_REGISTRATION) ||
-      supportedFunctions.includes(FunctionEnum.POOL_REGISTRATION) ||
-      supportedFunctions.includes(FunctionEnum.REWARDS)
-    ),
-    children: [
-      {
-        title: "Stake Address Registration",
-        key: "glossary.takeAddressRegistrations",
-        href: routers.STAKE_ADDRESS_REGISTRATION,
-        isSpecialPath: true,
-        hidden: !supportedFunctions.includes(FunctionEnum.STAKE_ADDRESS_REGISTRATION)
-      },
-      {
-        title: "Stake Address Deregistration",
-        key: "glossary.stakeAddressDeregistration",
-        href: routers.STAKE_ADDRESS_DEREGISTRATION,
-        isSpecialPath: true,
-        hidden: !supportedFunctions.includes(FunctionEnum.STAKE_ADDRESS_REGISTRATION)
-      },
-      {
-        title: "Stake Delegation(s)",
-        key: "glossary.stakeDelegations",
-        href: routers.STAKE_ADDRESS_DELEGATIONS,
-        isSpecialPath: true,
-        hidden: !supportedFunctions.includes(FunctionEnum.STAKE_ADDRESS_REGISTRATION)
-      },
-      {
-        title: "Pool Certificate",
-        key: "glossary.poolCertificate",
-        href: routers.POOL_CERTIFICATE,
-        isSpecialPath: true,
-        hidden: !supportedFunctions.includes(FunctionEnum.POOL_REGISTRATION)
-      },
-      {
-        title: "Pool Deregistration",
-        key: "glossary.poolDeregistration",
-        href: routers.POOL_DEREGISTRATION,
-        isSpecialPath: true,
-        hidden: !supportedFunctions.includes(FunctionEnum.POOL_REGISTRATION)
-      },
-      {
-        title: "Instantaneous Rewards",
-        key: "glossary.instantaneousRewards",
-        href: routers.INSTANTANEOUS_REWARDS,
-        isSpecialPath: true,
-        hidden: !supportedFunctions.includes(FunctionEnum.REWARDS)
-      }
-    ]
-  },
-  {
-    title: "Staking Lifecycle",
-    key: "glossary.stakingLifecycle",
-    icon: StakingLifecycleIcon,
-    href: lists.dashboard(),
-    hidden: !supportedFunctions.includes(FunctionEnum.STAKING_LIFECYCLE)
-  },
-  {
-    title: "Protocol Parameters",
-    key: "glossary.protocolParameters",
-    icon: ProtocolIcon,
-    href: lists.protocolParameters(),
-    hidden: !supportedFunctions.includes(FunctionEnum.PROTOCOL_PARAMETER),
-    children: []
   }
 ];
 

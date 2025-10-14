@@ -36,8 +36,6 @@ import {
 } from "./styles";
 import { RootState } from "src/stores/types";
 
-const HIDDEN_HEADER_SEARCH_PATHS: string[] = [lists.dashboard()];
-
 const Header: React.FC<RouteComponentProps> = (props) => {
   const { history } = props;
   const { isMobile } = useScreen();
@@ -48,7 +46,6 @@ const Header: React.FC<RouteComponentProps> = (props) => {
   const [openSearch, setOpenSearch] = React.useState(false);
   const handleToggle = () => setSidebar(!sidebar);
   const theme = useTheme();
-  const pathMatched = HIDDEN_HEADER_SEARCH_PATHS.find((subPath: string) => history.location.pathname.includes(subPath));
 
   const refElement = useRef<HTMLDivElement>(null);
 
@@ -79,7 +76,7 @@ const Header: React.FC<RouteComponentProps> = (props) => {
               flexDirection={isMobile ? "column" : "row"}
             ></Box>
           </Title>
-          <HeaderSearchContainer home={+home}>{!pathMatched && <HeaderSearch home={home} />}</HeaderSearchContainer>
+          <HeaderSearchContainer home={+home}><HeaderSearch home={home} /></HeaderSearchContainer>
         </HeaderMain>
         <HeaderTop data-testid="header-top" ref={refElement}>
           <HeaderLogoLink to="/" data-testid="header-logo">
