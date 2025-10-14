@@ -41,7 +41,6 @@ const HIDDEN_HEADER_SEARCH_PATHS: string[] = [lists.dashboard()];
 const Header: React.FC<RouteComponentProps> = (props) => {
   const { history } = props;
   const { isMobile } = useScreen();
-  const { pathname } = useLocation();
 
   const home = history.location.pathname === "/";
   const { sidebar } = useSelector(({ system }: RootState) => system);
@@ -80,6 +79,7 @@ const Header: React.FC<RouteComponentProps> = (props) => {
               flexDirection={isMobile ? "column" : "row"}
             ></Box>
           </Title>
+          <HeaderSearchContainer home={+home}>{!pathMatched && <HeaderSearch home={home} />}</HeaderSearchContainer>
         </HeaderMain>
         <HeaderTop data-testid="header-top" ref={refElement}>
           <HeaderLogoLink to="/" data-testid="header-logo">

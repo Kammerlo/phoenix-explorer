@@ -24,6 +24,7 @@ import TokenDetail from "./pages/TokenDetail";
 import TransactionDetailView from "./pages/TransactionDetail";
 import TransactionList from "./pages/TransactionListPage";
 import DelegationPools from "./pages/PoolList";
+import PoolDetailView from "./pages/PoolDetailView";
 
 const Routes: React.FC = () => {
   const history = useHistory();
@@ -73,8 +74,12 @@ const Routes: React.FC = () => {
         exact
         component={isSupportedRoute(AddressWalletDetail, FunctionEnum.ADDRESS)}
       />
-      <Route path={routers.DELEGATION_POOLS} exact component={isSupportedRoute(DelegationPools, FunctionEnum.POOL)} />
-      
+      <Route path={routers.POOLS} exact component={isSupportedRoute(DelegationPools, FunctionEnum.POOL)} />
+      <Route
+        path={routers.POOL_DETAIL}
+        exact
+        component={isSupportedRoute(PoolDetailView, FunctionEnum.POOL)}
+      />
       <Route path={routers.TOKEN_LIST} exact component={isSupportedRoute(Tokens, FunctionEnum.TOKENS)} />
       <Route path={routers.TOKEN_DETAIL} exact component={isSupportedRoute(TokenDetail, FunctionEnum.TOKENS)} />
       <Route path={routers.DREPS} exact component={isSupportedRoute(Dreps, FunctionEnum.DREP)} />
