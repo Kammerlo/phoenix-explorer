@@ -10,35 +10,22 @@ import {
   SelectChangeEvent,
   useTheme
 } from "@mui/material";
-import axios from "axios";
-import { isEmpty, isNil, isObject, omitBy } from "lodash";
-import { stringify } from "qs";
-import React, { FormEvent, useCallback, useEffect, useState } from "react";
+import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { BiChevronDown } from "react-icons/bi";
-import { GoChevronRight } from "react-icons/go";
-import { useSelector } from "react-redux";
-import { RouteComponentProps, useHistory, withRouter } from "react-router-dom";
+import { RouteComponentProps, withRouter } from "react-router-dom";
 
-import { useScreen } from "src/commons/hooks/useScreen";
 import { HeaderSearchIconComponent } from "src/commons/resources";
-import { details, routers } from "src/commons/routers";
-import { API } from "src/commons/utils/api";
-import { API_ADA_HANDLE_API, FF_GLOBAL_IS_CONWAY_ERA } from "src/commons/utils/constants";
-import { getShortHash } from "src/commons/utils/helper";
 import CustomIcon from "src/components/commons/CustomIcon";
 
 import {
   Form,
   Option,
-  OptionsWrapper,
   SelectOption,
   StyledInput,
   StyledSelect,
   SubmitButton,
-  ValueOption
 } from "./style";
-import { OptionsSearch } from "./backup";
 
 interface Props extends RouteComponentProps {
   home: boolean;

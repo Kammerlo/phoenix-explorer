@@ -6,7 +6,17 @@ export const setStoreToast = (store: Store) => {
   toastStore = store;
 };
 
-const initialState: ToastStoreType = {
+export interface ToastItem {
+  id: number;
+  message: string;
+  type?: "success" | "error" | "info" | "warning";
+}
+
+export interface ToastState {
+  toasts: Required<ToastItem>[];
+}
+
+const initialState: ToastState = {
   toasts: []
 };
 

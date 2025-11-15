@@ -52,7 +52,6 @@ import {
   StyledTitle,
   TimeDuration
 } from "./styles";
-import ToStakeLifCycleButton from "../../StakingLifeCycle/ToStakeLifeCycleButton";
 import { PoolDetail } from "@shared/dtos/pool.dto";
 
 export interface IDelegationDetailInfo {
@@ -105,9 +104,6 @@ const DelegationDetailInfo: React.FC<IDelegationDetailInfo> = ({ data, loading, 
         <Box display="flex" alignItems="center" width={"100%"}>
           <Box marginLeft={width < 400 ? 0 : 1}>
             <HeaderStatus status={data?.poolStatus}>{data?.poolStatus}</HeaderStatus>
-          </Box>
-          <Box marginLeft={"auto"}>
-            <ToStakeLifCycleButton address={data?.poolView || poolId} from={"poolDetail"} />
           </Box>
         </Box>
       </Box>

@@ -57,7 +57,7 @@ import {
   ButtonSort,
   FilterContainer,
   FilterWrapper
-} from "src/pages/NativeScriptsAndSC/styles";
+} from "src/components/share/FilterStyles";
 import { StyledInput } from "src/components/share/styled";
 import DateRangeModal, { DATETIME_PARTTEN, DateRange } from "src/components/commons/CustomFilter/DateRangeModal";
 import FormNowMessage from "src/components/commons/FormNowMessage";

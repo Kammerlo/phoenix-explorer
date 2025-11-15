@@ -39,7 +39,6 @@ const AddressWalletDetail = () => {
   }, [address]);
 
   function updateTxPage(page: number = 1) {
-    console.log(page)
     apiConnector.getAddressTxsFromAddress(address, { ...pageInfo, page }).then((data) => {
       setTxData(data);
       setTxDataLoading(false);

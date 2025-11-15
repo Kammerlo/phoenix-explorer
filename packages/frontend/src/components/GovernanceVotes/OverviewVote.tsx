@@ -15,7 +15,7 @@ import {
   historyIcon
 } from "src/commons/resources";
 import { formatDateTimeLocal, getShortHash } from "src/commons/utils/helper";
-import { ChipContainer } from "src/pages/NativeScriptsAndSC/Card";
+import { ChipContainer } from "src/components/share/ChipContainer";
 
 import {
   DataContainer,

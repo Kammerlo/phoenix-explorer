@@ -5,13 +5,11 @@ import { persistReducer, persistStore } from "redux-persist";
 import storage from "redux-persist/lib/storage";
 import { PersistPartial } from "redux-persist/es/persistReducer";
 
-import { UserStoreType } from "src/types/user";
 import { ThemeStoreType } from "src/types/theme";
 
-import systemReducer, { setStoreSystem } from "./system";
-import toastReducer, { setStoreToast } from "./toast";
+import systemReducer, { setStoreSystem, SystemState } from "./system";
+import toastReducer, { setStoreToast, ToastState } from "./toast";
 import { RootState } from "./types";
-import userReducer, { setStoreUser } from "./user";
 import themeReducer, { setStoreTheme } from "./theme";
 
 let customStore: Store | undefined;
@@ -24,12 +22,6 @@ const persistConfig = {
   key: "root",
   storage: storage,
   whitelist: []
-};
-
-const userPersistConfig = {
-  key: "user",
-  storage: storage,
-  blacklist: ["onDetailView", "openModal", "modalSignMessage", "modalRegister"]
 };
 
 const themePersistConfig = {
@@ -46,7 +38,6 @@ export const getStore = (): Store<RootState> => {
 };
 
 const appReducer = combineReducers({
-  user: persistReducer(userPersistConfig, userReducer),
   system: systemReducer,
   toast: toastReducer,
   theme: persistReducer(themePersistConfig, themeReducer)
@@ -54,9 +45,8 @@ const appReducer = combineReducers({
 
 const rootReducer = (
   state?: CombinedState<{
-    user: UserStoreType & PersistPartial;
-    system: SystemStoreType;
-    toast: ToastStoreType;
+    system: SystemState;
+    toast: ToastState;
     theme: ThemeStoreType & PersistPartial;
   }>,
   action?: Action
@@ -73,7 +63,6 @@ export const store = createStore(pReducer, enhancer);
 export const persistor = persistStore(store, {});
 
 setStore(store);
-setStoreUser(store);
 setStoreSystem(store);
 setStoreToast(store);
 setStoreTheme(store);

@@ -23,7 +23,7 @@ export const DrawPath: React.FC<Props> = ({ paths, lineStyle, style }) => {
   const [size, setSize] = useState<[number, number]>([0, 0]);
   const { width } = useWindowSize(0);
   const ref = useRef<SVGSVGElement | null>(null);
-  const { sidebar } = useSelector(({ user }: RootState) => user);
+  const { sidebar } = useSelector(({ system }: RootState) => system);
 
   useEffect(() => {
     const parent = ref.current?.parentElement;

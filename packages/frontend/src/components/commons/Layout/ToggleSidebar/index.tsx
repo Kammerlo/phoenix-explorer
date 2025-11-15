@@ -14,7 +14,7 @@ interface Props {
 }
 
 const ToggleSidebar: React.FC<Props> = ({ handleToggle }) => {
-  const { sidebar } = useSelector(({ user }: RootState) => user);
+  const { sidebar } = useSelector(({ system }: RootState) => system);
   const [show, setShow] = useState(false);
   const theme = useTheme();
   const handleClick = () => {

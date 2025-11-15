@@ -1,10 +1,12 @@
 # Phoenix Explorer - Community Cardano Explorer 🚀
 
-## 🚧 Development Notice - Community Project 🚧
+## 🚧 Community Project - Development Continues 🚧
 
-**This explorer is currently under heavy development.** I'm actively seeking funding and have applied to [Project Catalyst Fund 14](https://projectcatalyst.io/funds/14/cardano-open-developers/phoenix-explorer-reviving-an-open-source-explorer) to support this initiative.
+**I'm still committed to pushing this project forward**, but progress will be slower than anticipated due to the lack of funding. Unfortunately, my application to [Project Catalyst Fund 14](https://projectcatalyst.io/funds/14/cardano-open-developers/phoenix-explorer-reviving-an-open-source-explorer) was not successful, which means development will continue at a reduced pace as this remains a volunteer effort.
 
-My goal is to build this explorer **for the community and as open source** so it can be reused by everyone. It's unfortunate that this valuable piece of software was about to be discontinued, which is why I decided to pick it up and continue its development.
+Despite these constraints, my goal remains the same: to build this explorer **for the community and as open source** so it can be reused by everyone. It's unfortunate that this valuable piece of software was about to be discontinued, which is why I decided to pick it up and continue its development.
+
+**Development will progress as time permits.** Any contributions, whether code, feedback, or support, are greatly appreciated!
 
 ## 🎯 Mission & Vision
 

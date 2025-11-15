@@ -31,7 +31,7 @@ import {
   VotingPowerIcon
 } from "src/commons/resources";
 import { formatADA, formatADAFull, formatDateTimeLocal, formatPercent, getShortHash } from "src/commons/utils/helper";
-import { ChipContainer } from "src/pages/NativeScriptsAndSC/Card";
+import { ChipContainer } from "src/components/share/ChipContainer";
 import useFetch from "src/commons/hooks/useFetch";
 import { API } from "src/commons/utils/api";
 import { VOTE_TYPE } from "src/commons/utils/constants";

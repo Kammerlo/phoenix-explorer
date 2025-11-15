@@ -1,131 +1,76 @@
 export const routers = {
   HOME: "/",
-  SIGN_IN: "/sign-in",
-  SIGN_UP: "/sign-up",
-  VERIFY_EMAIL: "/verify-email",
-  FORGOT_PASSWORD: "/forgot-password",
-  RESET_PASSWORD: "/reset-password",
   BLOCK_LIST: "/blocks",
   BLOCK_DETAIL: "/block/:blockId",
   TRANSACTION_LIST: "/transactions",
-  TRANSACTION_DETAIL: "/transaction/:trxHash/:tabActive?",
+  TRANSACTION_DETAIL: "/transaction/:trxHash",
   EPOCH_LIST: "/epochs",
   EPOCH_DETAIL: "/epoch/:epochId",
-  DELEGATION_POOLS: "/pools",
+  POOLS: "/pools",
   DREPS: "/dreps",
-  DELEGATION_POOL_DETAIL: "/pool/:poolId",
-  POOL_CERTIFICATE: "/pool-certificates",
-  POOL_DEREGISTRATION: "/pool-de-registrations",
-  STORY_LIST: "/stories",
-  STORY_DETAIL: "/story/:storyId",
+  POOL_DETAIL: "/pool/:poolId",
   ADDRESS_DETAIL: "/address/:address",
   TOKEN_LIST: "/tokens",
-  TOKEN_DETAIL: "/token/:tokenId/:tabActive?",
-  STAKE_ADDRESS_REGISTRATION: "/stake-address-registrations",
-  CONSTITUIONAL_COMMITTEES: "/constitutional-committees/:tabActive?",
-  GOVERNANCE_ACTION_LIST: "/governance-actions",
-  GOVERNANCE_LIST: "/governance-list",
-  GOVERNANCE_ACTION: "/governance-action/:txHash/:index",
-  CONSTITUIONAL_COMMITTEE_DETAIL: "/constitutional-committee/:CCid/:tabActive?",
-  NETWORK_MONITORING: "/network-monitoring",
-  STAKE_ADDRESS_DEREGISTRATION: "/stake-address-de-registrations",
-  STAKE_ADDRESS_DELEGATIONS: "/stake-address-delegations",
-  INSTANTANEOUS_REWARDS: "/instantaneous-rewards",
-  STAKE_DETAIL: "/stake-address/:stakeId/:tabActive?",
-  CONTRACT_LIST: "/contracts",
-  CONTRACT_DETAIL: "/contracts/:address/:tabActive?",
-  SMART_CONTRACT: "/smart-contract/:address/:tabActive?",
-  NATIVE_SCRIPTS_AND_SC: "/native-scripts-sc/:tabActive?",
-  NATIVE_SCRIPT_DETAIL: "/native-script/:id/:tabActive?",
+  TOKEN_DETAIL: "/token/:tokenId",
+  STAKE_DETAIL: "/stake-address/:stakeId",
+  CONTRACT_DETAIL: "/contracts/:address",
+  SMART_CONTRACT: "/smart-contract/:address",
+  NATIVE_SCRIPTS_AND_SC: "/native-scripts-sc",
+  NATIVE_SCRIPT_DETAIL: "/native-script/:id",
   POLICY_DETAIL: "/policy/:policyId",
-  NFT_DETAIL: "/nft/:nftId",
-  TOP_DELEGATOR: "/top-delegator",
-  SEARCH: "/search",
-  ACCOUNT: "/account",
-  MY_PROFILE: "/account/profile",
-  BOOKMARK: "/account/bookmark",
-  PRIVATE_NOTES: "/account/notes",
-  PROTOCOL_PARAMETER: "/protocol-parameters/:histories?",
   STAKING_LIFECYCLE: "/staking-lifecycle/:tab?",
   DELEGATOR_LIFECYCLE: "/staking-lifecycle/delegator/:stakeId/:mode?/:tab?/:txHash?",
   SPO_LIFECYCLE: "/staking-lifecycle/spo/:poolId/:mode?/:tab?/:txHash?",
-  REPORT_GENERATED_STAKING_DETAIL: "/staking-lifecycle/staking-report-generated/:reportId/:tabActive?",
-  REPORT_GENERATED_POOL_DETAIL: "/staking-lifecycle/pool-report-generated/:reportId/:tabActive?",
-  POLICY: "/privacy-policy",
-  FAQ: "/faq",
-  TERMS_OF_SERVICE: "/terms-of-service",
-  SMARTCONTRACT_DETAIL: "/smartcontract/:id",
+  REPORT_GENERATED_STAKING_DETAIL: "/staking-lifecycle/staking-report-generated/:reportId",
+  REPORT_GENERATED_POOL_DETAIL: "/staking-lifecycle/pool-report-generated/:reportId",
+  GOVERNANCE_ACTION_LIST: "/governance-actions",
+  GOVERNANCE_ACTION: "/governance-action/:txHash/:index",
+  CONSTITUIONAL_COMMITTEES: "/constitutional-committees",
+  CONSTITUIONAL_COMMITTEE_DETAIL: "/constitutional-committee/:CCid",
   DREP_DETAILS: "/drep/:drepId",
   NOT_FOUND: "/*"
 } as const;
 
-export const lists = {
-  dashboard: (tab?: LifecycleReportType) => routers.STAKING_LIFECYCLE.replace(":tab?", tab || ""),
-  protocolParameters: (histories?: "histories") => routers.PROTOCOL_PARAMETER.replace(":histories?", histories || "")
-};
-
 export const details = {
   block: (blockId?: number | string) => routers.BLOCK_DETAIL.replace(":blockId", `${blockId ?? ""}`),
-  transaction: (trxHash?: string, tab = "summary", wineryId = "") =>
-    routers.TRANSACTION_DETAIL.replace(":trxHash", trxHash ?? "")
-      .replace(":tabActive?", tab)
-      .replace(":wineryId?", wineryId),
+  transaction: (trxHash?: string) => routers.TRANSACTION_DETAIL.replace(":trxHash", trxHash ?? ""),
   epoch: (epochId?: number | string) => routers.EPOCH_DETAIL.replace(":epochId", `${epochId ?? ""}`),
-  delegation: (poolId?: number | string) => routers.DELEGATION_POOL_DETAIL.replace(":poolId", `${poolId}`),
-  story: (storyId?: string) => routers.STORY_DETAIL.replace(":storyId", storyId ?? ""),
+  delegation: (poolId?: number | string) => routers.POOL_DETAIL.replace(":poolId", `${poolId}`),
   address: (address?: string) => routers.ADDRESS_DETAIL.replace(":address", address ?? ""),
-  token: (tokenId?: string, tab = "transactions") =>
-    routers.TOKEN_DETAIL.replace(":tokenId", tokenId ?? "").replace(":tabActive?", tab),
-  stake: (stakeId?: string, tab = "delegation") =>
-    routers.STAKE_DETAIL.replace(":stakeId", stakeId ?? "").replace(":tabActive?", tab),
-  nft: (nftId?: string) => routers.NFT_DETAIL.replace(":nftId", nftId ?? ""),
+  token: (tokenId?: string) => routers.TOKEN_DETAIL.replace(":tokenId", tokenId ?? ""),
+  stake: (stakeId?: string) => routers.STAKE_DETAIL.replace(":stakeId", stakeId ?? ""),
   policyDetail: (policyId?: string) => routers.POLICY_DETAIL.replace(":policyId", policyId ?? ""),
-  contract: (address?: string, tab = "transaction") =>
-    routers.CONTRACT_DETAIL.replace(":address", address ?? "").replace(":tabActive?", tab),
-  smartContract: (address?: string, tab = "transactions") =>
-    routers.SMART_CONTRACT.replace(":address", address ?? "").replace(":tabActive?", tab),
-  nativeScriptsAndSC: (tab = "native-scripts") => routers.NATIVE_SCRIPTS_AND_SC.replace(":tabActive?", tab),
-  nativeScriptDetail: (id?: string, tabActive = "mintingBurningPolicy") =>
-    routers.NATIVE_SCRIPT_DETAIL.replace(":id", id ?? "").replace(":tabActive", tabActive),
-  staking: (stakeId: string, mode: ViewMode = "timeline", tab: DelegationStep = "registration", txHash?: string) =>
+  contract: (address?: string) => routers.CONTRACT_DETAIL.replace(":address", address ?? ""),
+  smartContract: (address?: string) => routers.SMART_CONTRACT.replace(":address", address ?? ""),
+  nativeScriptsAndSC: () => routers.NATIVE_SCRIPTS_AND_SC,
+  nativeScriptDetail: (id?: string) => routers.NATIVE_SCRIPT_DETAIL.replace(":id", id ?? ""),
+  staking: (stakeId: string, mode = "timeline", tab = "registration", txHash?: string) =>
     routers.DELEGATOR_LIFECYCLE.replace(":stakeId", stakeId)
       .replace(":mode?", mode)
       .replace(":tab?", tab)
       .replace(":txHash?", txHash ?? ""),
-  spo: (poolId: string, mode: ViewMode = "timeline", tab: SPOStep = "registration", txHash?: string) =>
+  spo: (poolId: string, mode = "timeline", tab = "registration", txHash?: string) =>
     routers.SPO_LIFECYCLE.replace(":poolId", poolId)
       .replace(":mode?", mode)
       .replace(":tab?", tab)
       .replace(":txHash?", txHash ?? ""),
-  generated_staking_detail: (reportId: string, tabActive = "registration") =>
-    routers.REPORT_GENERATED_STAKING_DETAIL.replace(":reportId", reportId).replace(":tabActive", tabActive),
-  generated_pool_detail: (reportId: string, tabActive = "registration") =>
-    routers.REPORT_GENERATED_POOL_DETAIL.replace(":reportId", reportId).replace(":tabActive", tabActive),
-  smartcontractDetail: (id: string) => routers.SMARTCONTRACT_DETAIL.replace(":id", id),
-  nativeScript: (address?: string, tab = "transaction") =>
-    routers.NATIVE_SCRIPTS_AND_SC.replace(":address", address ?? "").replace(":tabActive?", tab),
+  generated_staking_detail: (reportId: string) =>
+    routers.REPORT_GENERATED_STAKING_DETAIL.replace(":reportId", reportId),
+  generated_pool_detail: (reportId: string) =>
+    routers.REPORT_GENERATED_POOL_DETAIL.replace(":reportId", reportId),
   drep: (drepId: string) => routers.DREP_DETAILS.replace(":drepId", drepId ?? ""),
-  constitutionalCommittees: (tab: string) => routers.CONSTITUIONAL_COMMITTEES.replace(":tabActive", tab ?? ""),
+  constitutionalCommittees: () => routers.CONSTITUIONAL_COMMITTEES,
   governanceActionList: () => routers.GOVERNANCE_ACTION_LIST,
   governanceAction: (txHash: string, index: string) =>
-    routers.GOVERNANCE_ACTION.replace(":txHash", txHash)
-      .replace(":index", index),
-  constitutionalCommitteeDetail: (id: string, tab?: string) =>
-    routers.CONSTITUIONAL_COMMITTEE_DETAIL.replace(":CCid", id ?? "").replace(":tabActive", tab ?? "")
+    routers.GOVERNANCE_ACTION.replace(":txHash", txHash).replace(":index", index),
+  constitutionalCommitteeDetail: (id: string) =>
+    routers.CONSTITUIONAL_COMMITTEE_DETAIL.replace(":CCid", id ?? "")
 };
 
 export const listRouters = [
   routers.BLOCK_LIST,
   routers.TRANSACTION_LIST,
   routers.EPOCH_LIST,
-  routers.DELEGATION_POOLS,
-  routers.POOL_CERTIFICATE,
-  routers.POOL_DEREGISTRATION,
-  routers.TOKEN_LIST,
-  routers.STAKE_ADDRESS_REGISTRATION,
-  routers.STAKE_ADDRESS_DEREGISTRATION,
-  routers.STAKE_ADDRESS_DELEGATIONS,
-  routers.CONTRACT_LIST,
-  routers.TOP_DELEGATOR,
-  routers.NETWORK_MONITORING
+  routers.POOLS,
+  routers.TOKEN_LIST
 ];

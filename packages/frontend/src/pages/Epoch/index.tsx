@@ -23,7 +23,7 @@ const Epoch: React.FC = () => {
   const { t } = useTranslation();
   const [selected, setSelected] = useState<(number | string | null)[]>([]);
   const history = useHistory();
-  const { onDetailView } = useSelector(({ user }: RootState) => user);
+  const { onDetailView } = useSelector(({ system }: RootState) => system);
   const epochNo = useSelector(({ system }: RootState) => system.currentEpoch?.no);
   const { pageInfo, setSort } = usePageInfo();
   const [epochData, setEpochData] = useState<ApiReturnType<EpochOverview[]>>();
