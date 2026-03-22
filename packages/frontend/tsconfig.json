@@ -6,6 +6,7 @@
       "@shared/*": ["../shared/src/*"]
     },
     "allowSyntheticDefaultImports": true,
+    "skipLibCheck": true,
     "module": "ESNext",
     "target": "ESNext",
     "moduleResolution": "Node",

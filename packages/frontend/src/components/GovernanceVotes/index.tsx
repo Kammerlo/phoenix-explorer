@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { ParsedQs, parse, stringify } from "qs";
-import { useHistory, useLocation, useParams } from "react-router-dom";
+import { useNavigate, useLocation, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
   AccordionSummary,
@@ -24,7 +24,7 @@ import {
   Link
 } from "@mui/material";
 import { IoIosArrowDown, IoIosArrowUp } from "react-icons/io";
-import moment from "moment";
+import { parse as parseDateFns, startOfDay, endOfDay, format as formatDateFns } from "date-fns";
 import { isEmpty, isUndefined, omitBy } from "lodash";
 import { JsonViewer } from "@textea/json-viewer";
 import { BsFillCheckCircleFill } from "react-icons/bs";
@@ -78,7 +78,7 @@ import { DataCardBox } from "../Contracts/common/styles";
 
 const DelegationGovernanceVotes: React.FC<DelegationGovernanceVotesProps> = ({ hash, type }) => {
   const { search } = useLocation();
-  const history = useHistory();
+  const navigate = useNavigate();
   const query = parse(search.split("?")[1]);
   const [params, setParams] = useState({});
   const [index, setIndex] = useState<number | undefined>();
@@ -111,7 +111,7 @@ const DelegationGovernanceVotes: React.FC<DelegationGovernanceVotesProps> = ({ h
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const setQuery = (query: any) => {
-    history.replace({ search: stringify(query) }, history.location.state);
+    navigate({ search: stringify(query) }, { replace: true });
   };
 
   if (query.voteId) {
@@ -132,7 +132,7 @@ const DelegationGovernanceVotes: React.FC<DelegationGovernanceVotesProps> = ({ h
       return (
         <Box component={Grid} container spacing={2}>
           {[...new Array(+(query?.voteSize || "") || 6).fill(0)].map((_, idx) => (
-            <Grid item width={"100%"} lg={4} md={6} sm={6} xs={12} key={idx}>
+            <Grid width={"100%"} size={{ xs: 12, sm: 6, md: 6, lg: 4 }} key={idx}>
               <Box component={Skeleton} variant="rectangular" height={"190px"} borderRadius={2} />
             </Grid>
           ))}
@@ -155,17 +155,14 @@ const DelegationGovernanceVotes: React.FC<DelegationGovernanceVotesProps> = ({ h
             onClick={() => {
               setIndex(value.index);
               setVoterHash(value.voterHash);
-              history.push(
-                {
-                  search: stringify({
-                    tab: query.tab,
-                    voteId: value.txHash,
-                    page: Number(query.page),
-                    voteSize: Number(query.size)
-                  })
-                },
-                history.location.state
-              );
+              navigate({
+                search: stringify({
+                  tab: query.tab,
+                  voteId: value.txHash,
+                  page: Number(query.page),
+                  voteSize: Number(query.size)
+                })
+              });
             }}
           >
             <CardGovernanceVotes data-testid="governance.card" data={value} />
@@ -191,7 +188,7 @@ const DelegationGovernanceVotes: React.FC<DelegationGovernanceVotesProps> = ({ h
           size: Number(query.voteSize || 6),
           page: query.page ? Number(query.page || 1) - 1 : 0,
           total,
-          onChange: (page, size) => history.replace({ search: stringify({ ...query, page, voteSize: size }) })
+          onChange: (page, size) => navigate({ search: stringify({ ...query, page, voteSize: size }) }, { replace: true })
         }}
         total={{ count: total || 0, title: "" }}
         loading={false}
@@ -215,7 +212,7 @@ const GovernanceVotesDetail: React.FC<{
   const { isGalaxyFoldSmall } = useScreen();
   const { drepId, poolId } = useParams<{ drepId: string; poolId: string }>();
 
-  const history = useHistory();
+  const navigate = useNavigate();
 
   const { data, loading, initialized } = useFetch<GovernanceVoteDetail>(
     `${API.POOL_CERTIFICATE.POOL_DETAIL(hash || "")}?${stringify({
@@ -268,7 +265,7 @@ const GovernanceVotesDetail: React.FC<{
               data-testid="governance.back"
               sx={{ position: "absolute", top: isGalaxyFoldSmall ? -2 : -9, minHeight: "unset", cursor: "pointer" }}
               onClick={() => {
-                history.goBack();
+                navigate(-1);
                 setTab("pool");
               }}
             >
@@ -656,7 +653,7 @@ export interface FilterParams {
 const FilterGovernanceVotes: React.FC<FilterGovernanceVotes> = ({ query, setQuery, voterType }) => {
   const theme = useTheme();
   const { t } = useTranslation();
-  const history = useHistory();
+  const navigate = useNavigate();
   const [expanded, setExpanded] = useState<string | false>("");
   const [openDateRange, setOpenDateRange] = useState<boolean>(false);
   const [open, setOpen] = useState<boolean>(false);
@@ -687,7 +684,7 @@ const FilterGovernanceVotes: React.FC<FilterGovernanceVotes> = ({ query, setQuer
     setParams(filterValue);
     setParamsFilter(filterValue);
     setDateRange({ fromDate: "", toDate: "" });
-    history.replace({
+    navigate({ replace: true, 
       search: stringify({
         page: 1,
         size: 6,
@@ -1116,8 +1113,8 @@ const FilterGovernanceVotes: React.FC<FilterGovernanceVotes> = ({ query, setQuer
                   }}
                   onDateRangeChange={({ fromDate, toDate }) => {
                     setDateRange({
-                      fromDate: moment(fromDate, DATETIME_PARTTEN).startOf("d").utc().format(DATETIME_PARTTEN),
-                      toDate: moment(toDate, DATETIME_PARTTEN).endOf("d").utc().format(DATETIME_PARTTEN)
+                      fromDate: fromDate ? formatDateFns(startOfDay(parseDateFns(fromDate, DATETIME_PARTTEN, new Date())), DATETIME_PARTTEN) : undefined,
+                      toDate: toDate ? formatDateFns(endOfDay(parseDateFns(toDate, DATETIME_PARTTEN, new Date())), DATETIME_PARTTEN) : undefined
                     });
                   }}
                   onClose={() => setOpenDateRange(false)}

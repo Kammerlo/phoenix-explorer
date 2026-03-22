@@ -2,8 +2,6 @@ import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { useSessionStorage, useWindowSize } from "react-use";
 import { Box, Button, ButtonGroup, useTheme } from "@mui/material";
-import moment from "moment";
-
 import {
   DarkModeMobile,
   LightModeMobile,
@@ -25,7 +23,9 @@ const Sidebar: React.FC = () => {
   const { height } = useWindowSize();
 
   const zoneName = Intl.DateTimeFormat().resolvedOptions().timeZone;
-  const zoneNameShort = moment.tz(zoneName).format("z");
+  const zoneNameShort = new Intl.DateTimeFormat("en-US", { timeZone: zoneName, timeZoneName: "short" })
+    .formatToParts(new Date())
+    .find((p) => p.type === "timeZoneName")?.value || zoneName;
   const [timezoneLS, setTimezoneLS] = useSessionStorage("timezone", window.navigator.language);
   const [selectedTimeZone, setSelectedTimeZone] = useState("UTC");
 

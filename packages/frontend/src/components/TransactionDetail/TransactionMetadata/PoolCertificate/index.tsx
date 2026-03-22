@@ -38,7 +38,7 @@ const PoolCertificate: React.FC<IProps> = ({ data }) => {
                 {t("title.poolDeregistrations")}
               </CardHeader>
               <WrapRightSide py={2}>
-                <Grid item xs={12} md={6}>
+                <Grid size={{ xs: 12, md: 6 }}>
                   <Box display="flex" flexDirection="column" gap="15px">
                     <Box display="flex" alignItems="center">
                       <TextLabel data-testid="transactionMetadata.poolCertificate.poolIdTitle">

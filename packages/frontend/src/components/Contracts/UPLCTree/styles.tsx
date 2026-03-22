@@ -1,8 +1,8 @@
 import { alpha, styled } from "@mui/material";
-import { TreeView } from "@mui/x-tree-view";
+import { SimpleTreeView } from "@mui/x-tree-view";
 import { TreeItem, treeItemClasses } from "@mui/x-tree-view/TreeItem";
 
-export const TreeContainer = styled(TreeView)`
+export const TreeContainer = styled(SimpleTreeView)`
   overflow: auto;
   max-height: 50vh;
   padding-bottom: 10px;

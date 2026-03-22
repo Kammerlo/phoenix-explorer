@@ -16,6 +16,9 @@ export function blockDTOToBlock(input: BlockDto): Block {
     poolName: "",
     poolTicker: "",
     poolView: "",
-    description: ""
+    description: "",
+    size: input.size,
+    previousBlock: input.previousBlock,
+    blockVrf: input.blockVrf
   };
 }

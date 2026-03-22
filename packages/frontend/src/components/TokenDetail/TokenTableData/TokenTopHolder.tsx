@@ -1,5 +1,5 @@
 import React from "react";
-import { useHistory, useLocation } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { stringify } from "qs";
 import { useTranslation } from "react-i18next";
 import { useSelector } from "react-redux";
@@ -24,7 +24,7 @@ interface ITokenTopHolder {
 const TokenTopHolder: React.FC<ITokenTopHolder> = ({ tabActive, tokenId, totalSupply, decimal }) => {
   const { t } = useTranslation();
   const { search } = useLocation();
-  const history = useHistory();
+  const navigate = useNavigate();
   const pageInfo = getPageInfo(search);
   const blockKey = useSelector(({ system }: RootState) => system.blockKey);
 
@@ -86,10 +86,10 @@ const TokenTopHolder: React.FC<ITokenTopHolder> = ({ tabActive, tokenId, totalSu
         pagination={{
           ...pageInfo,
           total: fetchData.total,
-          onChange: (page, size) => history.replace({ search: stringify({ page, size }) })
+          onChange: (page, size) => navigate({ search: stringify({ page, size }) }, { replace: true })
         }}
         onClickRow={(_, r: ITokenTopHolderTable) =>
-          history.push(r.addressType === "PAYMENT_ADDRESS" ? details.address(r.address) : details.stake(r.address))
+          navigate(r.addressType === "PAYMENT_ADDRESS" ? details.address(r.address) : details.stake(r.address))
         }
       />
     </>

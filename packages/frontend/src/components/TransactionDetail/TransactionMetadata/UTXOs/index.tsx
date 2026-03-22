@@ -322,7 +322,7 @@ const Card = ({
           color={({ palette }) => (isFailed ? theme.palette.secondary[600] : palette.secondary.main)}
           sx={{ textWrap: "nowrap", marginRight: 1 }}
         >
-          {t("common.total")} {type === "down" ? t("drawer.input") : t("drawer.ouput")}
+          {t("common.total")} {type === "down" ? t("drawer.input") : t("drawer.output")}
         </Box>
         <div>
           <Box

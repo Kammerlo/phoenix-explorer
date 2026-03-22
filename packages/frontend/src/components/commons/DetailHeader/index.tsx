@@ -2,7 +2,7 @@ import React, { memo, useState, useMemo } from "react";
 import { Backdrop, Box, useTheme } from "@mui/material";
 import { HiArrowLongLeft } from "react-icons/hi2";
 import { useSelector } from "react-redux";
-import { useHistory } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { BiChevronDown } from "react-icons/bi";
 import { useTranslation } from "react-i18next";
 
@@ -113,7 +113,7 @@ const DetailHeader: React.FC<DetailHeaderProps> = (props) => {
   } = props;
 
   const { isMobile } = useScreen();
-  const history = useHistory();
+  const navigate = useNavigate();
   const theme = useTheme();
   const currentEpoch = useSelector((state: RootState) => state.system.currentEpoch);
   const sidebar = useSelector((state: RootState) => state.system.sidebar);
@@ -142,14 +142,14 @@ const DetailHeader: React.FC<DetailHeaderProps> = (props) => {
   const itemOnRow = isDetailToken ? 5 : 4;
 
   const handleClickItem = (link: string) => {
-    history.push(link);
+    navigate(link);
   };
 
   if (loading) {
     return (
       <HeaderDetailContainer>
         {isHideButtonBack === true ? null : (
-          <BackButton onClick={history.goBack}>
+          <BackButton onClick={() => navigate(-1)}>
             <HiArrowLongLeft color={theme.palette.secondary.light} />
             <BackText>{t("common.back")}</BackText>
           </BackButton>
@@ -163,10 +163,11 @@ const DetailHeader: React.FC<DetailHeaderProps> = (props) => {
           {new Array(numberOfItems).fill(0).map((_, index) => {
             return (
               <CardItem
-                item
-                xs={isDetailToken && index === 0 ? 12 : 6}
-                md={4}
-                lg={numberOfItems > 6 ? 12 / itemOnRow : true}
+                size={{
+                  xs: isDetailToken && index === 0 ? 12 : 6,
+                  md: 4,
+                  lg: numberOfItems > 6 ? Math.round(12 / itemOnRow) : undefined
+                }}
                 length={numberOfItems}
                 key={index}
                 wide={+isDetailToken}
@@ -197,7 +198,7 @@ const DetailHeader: React.FC<DetailHeaderProps> = (props) => {
       <WrapHeader>
         <Box width="100%">
           {isHideButtonBack === true ? null : (
-            <BackButton onClick={history.goBack}>
+            <BackButton onClick={() => navigate(-1)}>
               <HiArrowLongLeft color={theme.palette.secondary.light} />
               <BackText>{t("common.back")}</BackText>
             </BackButton>
@@ -271,11 +272,12 @@ const DetailHeader: React.FC<DetailHeaderProps> = (props) => {
             const keyItem = item.key || "";
             return (
               <CardItem
-                item
-                xs={isDetailToken && index === 0 ? 12 : 6}
-                sm={isDetailToken && index === 0 ? 12 : 6}
-                md={numberOfItems === 4 ? 3 : 4}
-                lg={numberOfItems > 6 ? 12 / itemOnRow : true}
+                size={{
+                  xs: isDetailToken && index === 0 ? 12 : 6,
+                  sm: isDetailToken && index === 0 ? 12 : 6,
+                  md: numberOfItems === 4 ? 3 : 4,
+                  lg: numberOfItems > 6 ? Math.round(12 / itemOnRow) : undefined
+                }}
                 length={numberOfItems}
                 key={index}
                 wide={+isDetailToken}
@@ -413,10 +415,11 @@ const BufferList = memo(({ numberOfItems, wide, children, itemOnRow }: BufferLis
         {new Array(numberOfBuffer).fill(0).map((_, index) => {
           return (
             <CardItem
-              item
-              xs={6}
-              md={numberOfItems === 4 ? 3 : 4}
-              lg={numberOfItems > 6 ? 12 / itemOnRow : true}
+              size={{
+                xs: 6,
+                md: numberOfItems === 4 ? 3 : 4,
+                lg: numberOfItems > 6 ? Math.round(12 / itemOnRow) : undefined
+              }}
               length={numberOfItems + numberOfBuffer}
               key={index}
               wide={wide}

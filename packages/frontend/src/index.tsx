@@ -1,3 +1,6 @@
+// Must be first import — registers the connector factory before any
+// module-level code calls ApiConnector.getApiConnector()
+import "src/commons/connector/ConnectorFactory";
 import React from "react";
 import ReactDOM from "react-dom/client";
 

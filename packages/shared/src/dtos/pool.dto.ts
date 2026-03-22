@@ -40,4 +40,13 @@ export interface PoolDetail {
     homepage?: string;
     iconUrl?: string;
     logoUrl?: string;
+    vrfKey?: string;
+    livePledge?: number;
+    relays?: Array<{
+        ipv4?: string;
+        ipv6?: string;
+        dns?: string;
+        dnsSrv?: string;
+        port?: number;
+    }>;
 }

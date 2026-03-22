@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useHistory } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Box, useTheme } from "@mui/material";
 import { HiArrowLongLeft } from "react-icons/hi2";
 import { useTranslation } from "react-i18next";
@@ -30,14 +30,14 @@ interface Props {
 const PolicyOverview: React.FC<Props> = ({ data, loading }) => {
   const [openModal, setOpenModal] = useState(false);
   const theme = useTheme();
-  const history = useHistory();
+  const navigate = useNavigate();
   const { t } = useTranslation();
 
   return (
     <Box data-testid="container">
       <OverViewContainer display={"flex"} justifyContent="space-between" alignItems={"center"}>
         <Box>
-          <BackButton onClick={history.goBack}>
+          <BackButton onClick={() => navigate(-1)}>
             <HiArrowLongLeft color={theme.palette.secondary.light} />
             <BackText>{t("common.back")}</BackText>
           </BackButton>

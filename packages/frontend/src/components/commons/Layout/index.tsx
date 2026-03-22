@@ -2,7 +2,7 @@ import { Box, useTheme, useMediaQuery, List } from "@mui/material";
 import { t } from "i18next";
 import { useEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
-import { useHistory } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 
 import { useScreen } from "src/commons/hooks/useScreen";
 import { RootState } from "src/stores/types";
@@ -12,6 +12,7 @@ import StyledModal from "../StyledModal";
 import Header from "./Header";
 import Sidebar from "./Sidebar";
 import ToggleSidebar from "./ToggleSidebar";
+import ToastNotifications from "../ToastNotifications";
 import { BackDrop, Drawer, Layout, Main, MainContainer } from "./styles";
 
 interface Props {
@@ -20,8 +21,7 @@ interface Props {
 const CustomLayout: React.FC<Props> = ({ children }) => {
   const { sidebar } = useSelector(({ system }: RootState) => system);
   const [openNoticeModal, setOpenNoticeModal] = useState<boolean>(false);
-  const history = useHistory();
-  const lastPath = useRef<string>(history.location.pathname);
+  const location = useLocation();
 
   const { isTablet } = useScreen();
   const theme = useTheme();
@@ -29,15 +29,9 @@ const CustomLayout: React.FC<Props> = ({ children }) => {
   const matchesBreakpoint = useMediaQuery(theme.breakpoints.down("md"));
 
   useEffect(() => {
-    const unlisten = history.listen(() => {
-      lastPath.current = history.location.pathname;
-      setOnDetailView(false);
-      mainRef.current?.scrollTo(0, 0);
-    });
-    return () => {
-      unlisten();
-    };
-  }, [history]);
+    setOnDetailView(false);
+    mainRef.current?.scrollTo(0, 0);
+  }, [location.pathname]);
 
   useEffect(() => {
     if (sidebar) {
@@ -48,7 +42,7 @@ const CustomLayout: React.FC<Props> = ({ children }) => {
   const handleToggle = () => {
     setSidebar(!sidebar);
   };
-  // const isLanding =
+
   return (
     <Layout sidebar={+sidebar}>
       <BackDrop isShow={+sidebar} onClick={handleToggle} />
@@ -58,6 +52,8 @@ const CustomLayout: React.FC<Props> = ({ children }) => {
         open={sidebar}
         ModalProps={{ keepMounted: true }}
         anchor={isTablet ? "right" : "left"}
+        role="navigation"
+        aria-label="Main navigation"
       >
         <ToggleSidebar handleToggle={handleToggle} />
         <Sidebar />
@@ -77,6 +73,7 @@ const CustomLayout: React.FC<Props> = ({ children }) => {
         {/* {!matchesBreakpoint && <Footer />} */}
         <NoticeModal open={openNoticeModal} handleCloseModal={() => setOpenNoticeModal(false)} />
       </MainContainer>
+      <ToastNotifications />
     </Layout>
   );
 };

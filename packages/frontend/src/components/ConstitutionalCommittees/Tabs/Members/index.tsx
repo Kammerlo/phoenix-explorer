@@ -1,7 +1,7 @@
 import { Box, useTheme } from "@mui/material";
 import { t } from "i18next";
 import { stringify } from "qs";
-import { Link, useHistory, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 
 import { details } from "src/commons/routers";
 import useFetchList from "src/commons/hooks/useFetchList";
@@ -13,7 +13,7 @@ import { Column } from "src/types/table";
 const Members = () => {
   const { pageInfo } = usePageInfo();
   const { tabActive } = useParams<{ tabActive?: string }>();
-  const history = useHistory();
+  const navigate = useNavigate();
 
   const { data, loading, error, total, initialized, statusError } = useFetchList<CCMember>(
     tabActive === "listMembers" ? API.COMMITTEE.MEMBERS : "",
@@ -81,7 +81,7 @@ const Members = () => {
       initialized={initialized}
       pagination={{
         onChange: (page, size) => {
-          history.replace({ search: stringify({ ...pageInfo, page, size }) });
+          navigate({ search: stringify({ ...pageInfo, page, size }) }, { replace: true });
         },
         page: 1,
         total: total,

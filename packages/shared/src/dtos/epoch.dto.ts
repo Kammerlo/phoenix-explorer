@@ -17,6 +17,8 @@ export interface EpochOverview {
   rewardsDistributed: number;
   account: number;
   syncingProgress: number;
+  fees?: number;       // total fees collected in this epoch (in lovelace)
+  activeStake?: number; // total active stake in this epoch (in lovelace)
 }
 
 export interface EpochCurrentType {

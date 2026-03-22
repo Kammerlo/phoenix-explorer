@@ -30,7 +30,6 @@ const EpochDetail: React.FC = () => {
   }, [epochId]);
 
   function updateBlocks(pageInfo: { page: number, size?: number }) {
-    console.log("updateBlocks page:", pageInfo.page);
     setBlocksLoading(true);
     apiConnector.getBlocksByEpoch(Number(epochId), pageInfo).then((data) => {
       setFetchData(data);

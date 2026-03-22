@@ -37,7 +37,7 @@ const Withdrawals: React.FC<WithdrawalsProps> = ({ data }) => {
   return (
     <Wrapper>
       <Header>
-        <Box>{t("glassary.walletAddresses")}</Box>
+        <Box>{t("glossary.walletAddresses")}</Box>
         <AmountTextHeader>{t("glossary.amount")}</AmountTextHeader>
       </Header>
       {data?.map((item) => (

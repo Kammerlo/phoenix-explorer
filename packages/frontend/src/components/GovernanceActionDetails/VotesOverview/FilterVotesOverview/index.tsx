@@ -16,7 +16,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { BsFillCheckCircleFill } from "react-icons/bs";
 import { IoIosArrowDown, IoIosArrowUp } from "react-icons/io";
-import { useHistory, useLocation, useParams } from "react-router-dom";
+import { useNavigate, useLocation, useParams } from "react-router-dom";
 
 import useFetch from "src/commons/hooks/useFetch";
 import usePageInfo from "src/commons/hooks/usePageInfo";
@@ -74,7 +74,7 @@ export default function FilterVotesOverview() {
   }>({ fromDate: query?.fromDate as string, toDate: query?.toDate as string });
   const theme = useTheme();
   const { t } = useTranslation();
-  const history = useHistory();
+  const navigate = useNavigate();
 
   const { pageInfo } = usePageInfo();
 
@@ -153,7 +153,7 @@ export default function FilterVotesOverview() {
     setOpen(false);
     setFilterParams({ ...initParams });
     setDateRange({});
-    history.replace({
+    navigate({ replace: true, 
       search: stringify(
         pickBy(
           {
@@ -190,7 +190,7 @@ export default function FilterVotesOverview() {
     setExpanded(false);
     setOpen(false);
     setFilterParams({ ...filterParams });
-    history.replace({
+    navigate({ replace: true, 
       search: stringify(
         pickBy(
           {

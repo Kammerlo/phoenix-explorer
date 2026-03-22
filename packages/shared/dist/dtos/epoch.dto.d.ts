@@ -17,6 +17,8 @@ export interface EpochOverview {
     rewardsDistributed: number;
     account: number;
     syncingProgress: number;
+    fees?: number;
+    activeStake?: number;
 }
 export interface EpochCurrentType {
     no: number;

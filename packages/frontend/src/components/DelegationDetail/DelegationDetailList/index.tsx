@@ -1,6 +1,6 @@
 import React from "react";
 import QueryString, { parse, stringify } from "qs";
-import { useHistory, useLocation } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Box, useTheme } from "@mui/material";
 
@@ -58,11 +58,11 @@ const DelegationEpochList = ({
   scrollEffect: () => void;
 }) => {
   const { t } = useTranslation();
-  const history = useHistory();
+  const navigate = useNavigate();
   const { search } = useLocation();
   const query = parse(search.split("?")[1]);
   const setQuery = (query: Query) => {
-    history.replace({ search: stringify(query) }, history.location.state);
+    navigate({ search: stringify(query) }, history.location.state, { replace: true });
   };
   const columns: Column<DelegationEpoch>[] = [
     {
@@ -166,9 +166,9 @@ const DelegationStakingDelegatorsList = ({
   const { t } = useTranslation();
   const { search } = useLocation();
   const query = parse(search.split("?")[1]);
-  const history = useHistory();
+  const navigate = useNavigate();
   const setQuery = (query: Query) => {
-    history.replace({ search: stringify(query) }, history.location.state);
+    navigate({ search: stringify(query) }, history.location.state, { replace: true });
   };
   const columns: Column<StakingDelegators>[] = [
     {
@@ -253,7 +253,7 @@ const DelegationStakingDelegatorsList = ({
         total: total
       }}
       onClickRow={(e, r) => {
-        history.push(details.stake(r.view || r.stakeAddress));
+        navigate(details.stake(r.view || r.stakeAddress));
       }}
     />
   );
@@ -278,11 +278,11 @@ const DelegationCertificatesHistory = ({
   const { t } = useTranslation();
   const { search } = useLocation();
   const query = parse(search.split("?")[1]);
-  const history = useHistory();
+  const navigate = useNavigate();
   const theme = useTheme();
 
   const setQuery = (query: Query) => {
-    history.replace({ search: stringify(query) }, history.location.state);
+    navigate({ search: stringify(query) }, history.location.state, { replace: true });
   };
 
   const renderAction = (type: POOL_ACTION_TYPE | DREP_ACTION_TYPE) => {

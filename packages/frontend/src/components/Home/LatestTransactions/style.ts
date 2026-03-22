@@ -1,6 +1,6 @@
 import { Box, styled, Card, alpha } from "@mui/material";
 
-import { TRANSACTION_STATUS } from "src/commons/utils/constants";
+import { TRANSACTION_STATUS } from "@shared/dtos/transaction.dto";
 
 export const TransactionContainer = styled(Box)`
   margin-bottom: 24px;

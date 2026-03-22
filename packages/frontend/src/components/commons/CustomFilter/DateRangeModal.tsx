@@ -1,18 +1,18 @@
 import React, { useEffect, useState } from "react";
 import { Button } from "@mui/material";
-import moment from "moment";
+import { parse as parseDateFns, format as formatDateFns } from "date-fns";
 import { useTranslation } from "react-i18next";
 
 import CustomModal from "../CustomModal";
 import { DatePickerFooter, Container, WrapButton } from "./styles";
 import CustomDatePicker, { IDateRange } from "../CustomDatePicker";
 
-export const DATETIME_PARTTEN = `YYYY/MM/DD HH:mm:ss`;
+export const DATETIME_PARTTEN = `yyyy/MM/dd HH:mm:ss`;
 
-const toLocalTime = (date?: string): Date | null => (date ? moment(date, DATETIME_PARTTEN).local().toDate() : null);
+const toLocalTime = (date?: string): Date | null => (date ? parseDateFns(date, DATETIME_PARTTEN, new Date()) : null);
 
 const toTimeFormat = (date: Date | null): string | undefined =>
-  date ? moment(date).format(DATETIME_PARTTEN) : undefined;
+  date ? formatDateFns(date, DATETIME_PARTTEN) : undefined;
 
 export interface DateRange {
   fromDate?: string;

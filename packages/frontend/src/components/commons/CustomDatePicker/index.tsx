@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Box, IconButton, alpha, useTheme } from "@mui/material";
 import { range } from "lodash";
-import moment from "moment";
+import { format, addMonths, getYear } from "date-fns";
 import { BsFillCaretDownFill } from "react-icons/bs";
 import { IoIosArrowBack, IoIosArrowForward, IoMdClose } from "react-icons/io";
 import { ReactDatePickerProps } from "react-datepicker";
@@ -42,7 +42,7 @@ const CustomDatePicker = (props: ICustomDatePicker) => {
   const toggleRef = useRef<HTMLButtonElement | null>();
   const activeYearRef = useRef<HTMLInputElement>();
 
-  const years = range(1990, hideFuture ? moment().year() + 1 : 2999);
+  const years = range(1990, hideFuture ? getYear(new Date()) + 1 : 2999);
 
   useEffect(() => {
     if (yearModal) {
@@ -76,7 +76,7 @@ const CustomDatePicker = (props: ICustomDatePicker) => {
     !endDate && setDateRange([null, null]);
     setOpen(false);
   };
-  const excludeDateIntervals = hideFuture ? [{ start: moment().toDate(), end: moment().add(2, "month").toDate() }] : [];
+  const excludeDateIntervals = hideFuture ? [{ start: new Date(), end: addMonths(new Date(), 2) }] : [];
 
   return (
     <DatePickerContainer open={+open}>
@@ -88,7 +88,7 @@ const CustomDatePicker = (props: ICustomDatePicker) => {
         endDate={endDate}
         onCalendarOpen={() => setOpen(true)}
         onInputClick={() => setOpen(!open)}
-        maxDate={hideFuture ? moment().toDate() : undefined}
+        maxDate={hideFuture ? new Date() : undefined}
         excludeDateIntervals={excludeDateIntervals}
         onChange={onChange}
         onClickOutside={onClose}
@@ -98,7 +98,7 @@ const CustomDatePicker = (props: ICustomDatePicker) => {
         customInput={
           startDate ? (
             <Value>
-              {moment(startDate).format("MM/DD/YYYY")} - {endDate ? moment(endDate).format("MM/DD/YYYY") : ""}
+              {format(startDate, "MM/dd/yyyy")} - {endDate ? format(endDate, "MM/dd/yyyy") : ""}
             </Value>
           ) : (
             <PlaceHolder>MM/DD/YYYY - MM/DD/YYYY</PlaceHolder>
@@ -117,7 +117,7 @@ const CustomDatePicker = (props: ICustomDatePicker) => {
               <IoMdClose size={20} color={theme.palette.secondary.light} />
             </CloseButton>
             <YearSelect>
-              {moment(date).format("MMMM YYYY")}
+              {format(date, "MMMM yyyy")}
               <IconButton
                 ref={(ref) => (toggleRef.current = ref)}
                 onClick={() => setYearModal(!yearModal)}
@@ -130,7 +130,7 @@ const CustomDatePicker = (props: ICustomDatePicker) => {
               <HiddenScroll ref={yearModalRef}>
                 <YearList>
                   {years.map((year) => {
-                    const isActive = year === moment(date).year();
+                    const isActive = year === getYear(date);
                     return (
                       <SelectYear
                         isActive={+isActive}

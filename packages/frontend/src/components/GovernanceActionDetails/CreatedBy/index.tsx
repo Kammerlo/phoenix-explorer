@@ -1,7 +1,7 @@
 import { Box, useTheme } from "@mui/material";
 import { t } from "i18next";
 import { stringify } from "qs";
-import { useHistory } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 import useFetch from "src/commons/hooks/useFetch";
 import usePageInfo from "src/commons/hooks/usePageInfo";
@@ -32,7 +32,7 @@ export default function CreatedBy({ anchorHash, anchorUrl }: Props) {
   const { pageInfo } = usePageInfo();
   const { page, size } = pageInfo;
 
-  const history = useHistory();
+  const navigate = useNavigate();
   const { data, statusError, error } = useFetch<Data>(
     API.OVERVIEW_GOV_ACTIONS.CREATE_BY(anchorUrl, anchorHash, page, size)
   );
@@ -100,7 +100,7 @@ export default function CreatedBy({ anchorHash, anchorUrl }: Props) {
           ...pageInfo,
           total: data?.totalItems,
           onChange: (page, size) => {
-            history.replace({ search: stringify({ page, size }) });
+            navigate({ search: stringify({ page, size }) }, { replace: true });
           }
         }}
       />

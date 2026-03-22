@@ -1,6 +1,6 @@
 import { stringify } from "qs";
 import React from "react";
-import { useHistory, useLocation } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useSelector } from "react-redux";
 
@@ -24,7 +24,7 @@ interface ITokenMinting {
 const TokenMinting: React.FC<ITokenMinting> = ({ tabActive, tokenId, metadata }) => {
   const { t } = useTranslation();
   const { search } = useLocation();
-  const history = useHistory();
+  const navigate = useNavigate();
   const pageInfo = getPageInfo(search);
   const blockKey = useSelector(({ system }: RootState) => system.blockKey);
 
@@ -84,9 +84,9 @@ const TokenMinting: React.FC<ITokenMinting> = ({ tabActive, tokenId, metadata })
         pagination={{
           ...pageInfo,
           total: fetchData.total,
-          onChange: (page, size) => history.replace({ search: stringify({ page, size }) })
+          onChange: (page, size) => navigate({ search: stringify({ page, size }) }, { replace: true })
         }}
-        onClickRow={(_, r: ITokenMintingTable) => history.push(details.transaction(r.txHash))}
+        onClickRow={(_, r: ITokenMintingTable) => navigate(details.transaction(r.txHash))}
       />
     </>
   );

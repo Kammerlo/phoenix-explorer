@@ -1,7 +1,7 @@
-import { useHistory } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 import { render, screen } from "src/test-utils";
-import { TRANSACTION_STATUS } from "src/commons/utils/constants";
+import { TRANSACTION_STATUS } from "@shared/dtos/transaction.dto";
 
 import DetailHeader, { DetailHeaderProps } from "./index";
 

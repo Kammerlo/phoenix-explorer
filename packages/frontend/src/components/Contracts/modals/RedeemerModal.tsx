@@ -40,7 +40,7 @@ const RedeemerModal: React.FC<RedeemerModalProps> = ({ open = false, onClose, da
             {data &&
               data.length > 0 &&
               data.map((item) => (
-                <Grid item xs={12} md={6} key={item.title}>
+                <Grid size={{ xs: 12, md: 6 }} key={item.title}>
                   <DataCard title={item.title} value={item.value} />
                 </Grid>
               ))}

@@ -119,7 +119,32 @@ const DelegationDetailOverview: React.FC<IDelegationDetailOverview> = ({ data, l
         <Box data-testid="delegationDetailOverview.lifetimeBlocksValue">{numberWithCommas(data?.lifetimeBlock)}</Box>
       ),
       tooltip: ""
-    }
+    },
+    {
+      title: <Box data-testid="delegationDetailOverview.rosTitle">{"Return on Stake (ROS)"}</Box>,
+      value: (
+        <Box data-testid="delegationDetailOverview.rosValue">
+          {formatPercent(data?.ros ? data.ros / 100 : 0)}
+        </Box>
+      ),
+      tooltip: ""
+    },
+    ...(data?.livePledge !== undefined ? [{
+      title: (
+        <Box data-testid="delegationDetailOverview.livePledgeTitle" component="span" display="flex" gap="4px" flexWrap="wrap" justifyContent="center">
+          {"Live Pledge"}{" "}
+          <FixedCostBox>
+            (<ADAicon />)
+          </FixedCostBox>
+        </Box>
+      ),
+      value: (
+        <Box data-testid="delegationDetailOverview.livePledgeValue" display={"flex"} alignItems={"center"} gap={1}>
+          {formatADAFull(data.livePledge)} <ADAicon />
+        </Box>
+      ),
+      tooltip: ""
+    }] : [])
   ];
 
   if (loading) {
@@ -128,7 +153,7 @@ const DelegationDetailOverview: React.FC<IDelegationDetailOverview> = ({ data, l
         <Grid container columns={24} spacing={2}>
           {overviewData.map((i, ii) => {
             return (
-              <Grid item xs={24} sm={12} md={8} key={ii} xl={6}>
+              <Grid size={{ xs: 24, sm: 12, md: 8 }} key={ii}>
                 <Box borderRadius={10} overflow="hidden">
                   <CommonSkeleton variant="rectangular" height={115} />
                 </Box>
@@ -144,7 +169,7 @@ const DelegationDetailOverview: React.FC<IDelegationDetailOverview> = ({ data, l
       <Grid container columns={60} spacing={2}>
         {overviewData.map((item, ii) => {
           return (
-            <Grid item xs={30} sm={20} md={15} xl={12} key={ii}>
+            <Grid size={{ xs: 30, sm: 20, md: 15 }} key={ii}>
               <Item>
                 <CustomTooltip title={item.tooltip}>
                   <Title>{item.title}</Title>

@@ -9,10 +9,11 @@ export interface ITokenOverview {
   createdOn?: string;
   metadata?: ITokenMetadata;
   analytics?: { date: number; value: number }[];
-  // volumeIn24h: number;
-  // totalVolume: string;
-  // numberOfHolders: number;
-  // tokenType?: string;
+  volumeIn24h?: number;
+  totalVolume?: string;
+  numberOfHolders?: number;
+  tokenType?: string; // 'FT' | 'NFT' | 'unknown'
+  mintOrBurnCount?: number;
   tokenLastActivity?: string;
   metadataJson?: string;
   // policyIsNativeScript: boolean;

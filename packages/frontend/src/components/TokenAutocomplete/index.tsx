@@ -2,7 +2,7 @@ import { Autocomplete, Box, Button, StandardTextFieldProps, useTheme } from "@mu
 import { useEffect, useState } from "react";
 import { BiChevronDown } from "react-icons/bi";
 import { useTranslation } from "react-i18next";
-import { useHistory } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 import useFetchList from "src/commons/hooks/useFetchList";
 import { useScreen } from "src/commons/hooks/useScreen";
@@ -33,7 +33,7 @@ const TokenAutocomplete = ({ address }: { address: string }) => {
   const [search, setSearch] = useState("");
   const [searchProps, setSearchProps] = useState("");
   const theme = useTheme();
-  const history = useHistory();
+  const navigate = useNavigate();
   const urlFetch = `${API.ADDRESS.TOKENS}?displayName=${search}`.replace(":address", address);
   const [initialized, setInitialized] = useState(false);
   const [totalOption, setTotalOption] = useState(0);
@@ -50,7 +50,7 @@ const TokenAutocomplete = ({ address }: { address: string }) => {
   }, [data]);
 
   const handleClickItem = (link: string) => {
-    history.push(link);
+    navigate(link);
   };
 
   if (!data?.length && !search && !initialized) return null;

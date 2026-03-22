@@ -7,7 +7,7 @@ import {
   Box,
   useTheme
 } from "@mui/material";
-import { useHistory } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
 import { GovActionVote } from "@shared/dtos/GovernanceOverview";
@@ -36,7 +36,7 @@ const VOTES_PER_PAGE = 10;
 export default function GovernanceVotesTable({ votes }: Props) {
   const { t } = useTranslation();
   const theme = useTheme();
-  const history = useHistory();
+  const navigate = useNavigate();
   const [page, setPage] = useState(1);
 
   const handlePageChange = (_event: React.ChangeEvent<unknown>, value: number) => {
@@ -46,14 +46,14 @@ export default function GovernanceVotesTable({ votes }: Props) {
   const handleVoterClick = (vote: GovActionVote) => {
     switch (vote.voterType) {
       case 'drep':
-        history.push(details.drep(vote.voter));
+        navigate(details.drep(vote.voter));
         break;
     // TODO add route for committee member details
     //   case 'constitutional_committee':
-    //     history.push(details.constitutionalCommitteeDetail(vote.voter));
+    //     navigate(details.constitutionalCommitteeDetail(vote.voter));
     //     break;
       case 'spo':
-        history.push(details.delegation(vote.voter));
+        navigate(details.delegation(vote.voter));
         break;
     }
   };

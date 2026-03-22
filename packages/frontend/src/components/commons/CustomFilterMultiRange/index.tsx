@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { Box, Button, ClickAwayListener, Typography, useTheme, AccordionSummary } from "@mui/material";
 import { useTranslation } from "react-i18next";
 import { IoIosArrowDown, IoIosArrowUp } from "react-icons/io";
-import { useHistory, useLocation } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { stringify, parse } from "qs";
 import BigNumber from "bignumber.js";
 
@@ -69,7 +69,7 @@ const CustomFilterMultiRange: React.FC = () => {
     /iPad|iPhone|iPod/.test(navigator.platform) || (navigator.userAgent.includes("Mac") && "ontouchend" in document);
 
   const query = parse(search.split("?")[1]);
-  const history = useHistory<{ tickerNameSearch?: string; fromPath?: SpecialPath }>();
+  const navigate = useNavigate<{ tickerNameSearch?: string; fromPath?: SpecialPath }>();
   const [expanded, setExpanded] = useState<string | false>("");
   const [open, setOpen] = useState<boolean>(false);
   const [fixMax, setFixMax] = useState<number>(2);
@@ -197,14 +197,14 @@ const CustomFilterMultiRange: React.FC = () => {
     setExpanded(false);
     setOpen(false);
     setFilterParams({ ...initParams });
-    history.replace({ search: stringify(defaultParams), state: undefined });
+    navigate({ search: stringify(defaultParams), state: undefined }, { replace: true });
   };
 
   const handleFilter = () => {
     setExpanded(false);
     setOpen(false);
     setFilterParams({ ...filterParams });
-    history.replace({
+    navigate({ replace: true, 
       search: stringify({
         ...filterParams,
         size: pageInfo.size,
@@ -498,7 +498,7 @@ const CustomFilterMultiRange: React.FC = () => {
                 <Box width={"100%"} display={"flex"} alignItems={"center"} justifyContent={"space-between"}>
                   <Box display={"flex"} alignItems={"center"}>
                     <Box color={({ palette }) => palette.secondary.main} data-testid="delegationList.retiredPoolsTitle">
-                      {t("glassary.showRetiredPools")}
+                      {t("glossary.showRetiredPools")}
                     </Box>
                   </Box>
 

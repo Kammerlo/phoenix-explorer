@@ -1,6 +1,5 @@
 import { Box } from "@mui/material";
 import { useSelector } from "react-redux";
-import moment from "moment";
 import { useTranslation } from "react-i18next";
 
 import { CubeIconComponent, ExchangeIcon, SlotIcon, TimeIconComponent } from "src/commons/resources";

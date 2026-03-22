@@ -2,7 +2,7 @@ import { Collapse, ListItem } from "@mui/material";
 import React, { useEffect, useMemo, useState } from "react";
 import { BiChevronDown, BiChevronUp } from "react-icons/bi";
 import { useSelector } from "react-redux";
-import { Link, RouteComponentProps, withRouter } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
 import { useScreen } from "src/commons/hooks/useScreen";
@@ -37,9 +37,9 @@ interface MenuItem {
   collapsable?: boolean;
 }
 
-const SidebarMenu: React.FC<RouteComponentProps> = ({ history }) => {
+const SidebarMenu: React.FC = () => {
   const { t } = useTranslation();
-  const pathname = history.location.pathname;
+  const { pathname } = useLocation();
   const { sidebar } = useSelector(({ system }: RootState) => system);
   const specialPath = useSelector(({ system }: RootState) => system.specialPath);
   const { isTablet } = useScreen();
@@ -229,4 +229,4 @@ const SidebarMenu: React.FC<RouteComponentProps> = ({ history }) => {
   );
 };
 
-export default withRouter(SidebarMenu);
+export default SidebarMenu;

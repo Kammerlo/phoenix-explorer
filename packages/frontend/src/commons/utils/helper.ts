@@ -1,6 +1,6 @@
 import BigNumber from "bignumber.js";
 import { isNil } from "lodash";
-import moment, { DurationInputArg1, DurationInputArg2 } from "moment-timezone";
+import { fromUnixTime, addDays as addDaysFn } from "date-fns";
 import { parse } from "qs";
 import { AxisInterval } from "recharts/types/util/types";
 
@@ -191,10 +191,12 @@ export function getPageInfo<T = ParsedUrlQuery>(
   return { ...query, retired, page, size, sort } as T & { page: number; size: number; sort: string; retired: string };
 }
 
-export const formatDateTimeLocal = (date: string, addDays: number = 0) => {
+export const formatDateTimeLocal = (date: string, addDaysCount: number = 0) => {
   if (!date) return "";
   if (!sessionStorage.getItem("timezone")) {
-    return moment(moment.utc(`${date}`)).toISOString();
+    const ts = Number(date);
+    const d = isNaN(ts) ? new Date(date) : new Date(ts * 1000);
+    return isNaN(d.getTime()) ? date : d.toISOString();
   }
   const timeZone = localStorage.getItem("userTimezone")
     ? `${localStorage.getItem("userTimezone")}` === "utc"
@@ -213,9 +215,9 @@ export const formatDateTimeLocal = (date: string, addDays: number = 0) => {
     timeZone: timeZone == "UTC" ? "UTC" : Intl.DateTimeFormat().resolvedOptions().timeZone
   });
 
-  return dateFormat.format(
-    moment(moment.utc(moment.unix(+date).add(addDays, "days"), "YYYY-MM-DDTHH:mm:ssZ")) as never as Date
-  );
+  const baseDate = fromUnixTime(+date);
+  const adjusted = addDaysCount > 0 ? addDaysFn(baseDate, addDaysCount) : baseDate;
+  return dateFormat.format(adjusted);
 };
 
 export const formatDateLocal = (date: string) => {
@@ -230,12 +232,28 @@ export const formatDateLocal = (date: string) => {
     timeZone: timeZone == "UTC" ? "UTC" : Intl.DateTimeFormat().resolvedOptions().timeZone
   });
 
-  return dateFormat.format(moment(moment.utc(date, "YYYY-MM-DDTHH:mm:ssZ")) as never as Date);
+  return dateFormat.format(new Date(date));
+};
+
+/** Get short timezone abbreviation and UTC offset from Intl API */
+const getTimezoneInfo = (zoneName: string) => {
+  const now = new Date();
+  // Get short timezone abbreviation (e.g., "EST", "CET")
+  const shortFormat = new Intl.DateTimeFormat("en-US", { timeZone: zoneName, timeZoneName: "short" });
+  const shortParts = shortFormat.formatToParts(now);
+  const zoneNameShort = shortParts.find((p) => p.type === "timeZoneName")?.value || zoneName;
+
+  // Get UTC offset (e.g., "+05:00", "-08:00")
+  const longFormat = new Intl.DateTimeFormat("en-US", { timeZone: zoneName, timeZoneName: "longOffset" });
+  const longParts = longFormat.formatToParts(now);
+  const offset = longParts.find((p) => p.type === "timeZoneName")?.value?.replace("GMT", "") || "+00:00";
+
+  return { zoneNameShort, offset };
 };
 
 export const formatTypeDate = () => {
   if (!sessionStorage.getItem("timezone")) {
-    return moment(moment("2023/08/03 21:44:51+0000").utc())
+    return new Date("2023-08-03T21:44:51Z")
       .toISOString()
       .replace("2023", "YYYY")
       .replace("08", "MM")
@@ -246,8 +264,7 @@ export const formatTypeDate = () => {
   }
 
   const zoneName = Intl.DateTimeFormat().resolvedOptions().timeZone;
-  const zoneNameShort = moment.tz(zoneName).format("z");
-  const timezone = moment.tz(zoneName).format("Z");
+  const { zoneNameShort, offset: timezone } = getTimezoneInfo(zoneName);
   const timeZone = localStorage.getItem("userTimezone")
     ? `${localStorage.getItem("userTimezone")}` === "utc"
       ? "UTC"
@@ -259,10 +276,11 @@ export const formatTypeDate = () => {
     month: "2-digit",
     year: "numeric"
   });
+  const sampleDate = new Date("2023-08-03");
   const timeZoneText =
     timeZone == "UTC" ? "(UTC)" : `${zoneNameShort.indexOf("+") != -1 ? zoneName : zoneNameShort} (UTC ${timezone})`;
   return `Date format ${dateFormat
-    .format(moment("2023/08/03", "YYYY-MM-DDTHH:mm:ssZ") as never as Date)
+    .format(sampleDate)
     .replace("2023", "YYYY")
     .replace("08", "MM")
     .replace("03", "DD")} ${timeZoneText}`;
@@ -270,7 +288,7 @@ export const formatTypeDate = () => {
 
 export const formatTypeDateTime = () => {
   if (!sessionStorage.getItem("timezone")) {
-    return moment(moment("2023/08/03 21:44:51+0000").utc())
+    return new Date("2023-08-03T21:44:51Z")
       .toISOString()
       .replace("2023", "yyyy")
       .replace("08", "MM")
@@ -296,8 +314,9 @@ export const formatTypeDateTime = () => {
     timeZone: "UTC"
   });
 
+  const sampleDate = new Date("2023-08-03T09:44:51Z");
   return `${dateFormat
-    .format(moment("2023/08/03 09:44:51+0000").utc() as never as Date)
+    .format(sampleDate)
     .replace("2023", "yyyy")
     .replace("08", "MM")
     .replace("03", "dd")}`
@@ -358,12 +377,12 @@ export const isJson = (str: string) => {
   return true;
 };
 
-export const getDurationUnits = (inp: DurationInputArg1, unit: DurationInputArg2) => {
-  const duration = moment.duration(inp, unit);
-  const d = duration.days();
-  const h = duration.hours();
-  const m = duration.minutes();
-  const s = duration.seconds();
+export const getDurationUnits = (totalSeconds: number) => {
+  const absSeconds = Math.abs(Math.floor(totalSeconds));
+  const d = Math.floor(absSeconds / 86400);
+  const h = Math.floor((absSeconds % 86400) / 3600);
+  const m = Math.floor((absSeconds % 3600) / 60);
+  const s = absSeconds % 60;
 
   let humanized = "";
   if (d > 1) {
@@ -389,7 +408,6 @@ export const getDurationUnits = (inp: DurationInputArg1, unit: DurationInputArg2
 type blockEpochNoType = number | null | undefined;
 
 export const handleChangeLanguage = (newLang: APP_LANGUAGES, currentLanguage: APP_LANGUAGES | undefined) => {
-  moment.locale(newLang);
   const pattern = /^\/([a-z]{2})\//;
   if (currentLanguage) {
     window.location.pathname = window.location.pathname.replace(pattern, `/${newLang}/`);

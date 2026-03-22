@@ -28,6 +28,8 @@ export const routers = {
   CONSTITUIONAL_COMMITTEES: "/constitutional-committees",
   CONSTITUIONAL_COMMITTEE_DETAIL: "/constitutional-committee/:CCid",
   DREP_DETAILS: "/drep/:drepId",
+  PLUGINS: "/plugins",
+  PROTOCOL_PARAMETERS: "/protocol-parameters",
   NOT_FOUND: "/*"
 } as const;
 

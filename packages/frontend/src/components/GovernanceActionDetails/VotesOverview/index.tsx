@@ -1,5 +1,5 @@
 import { Grid, Box, CircularProgress } from "@mui/material";
-import { useHistory, useLocation, useParams } from "react-router-dom";
+import { useNavigate, useLocation, useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { parse, stringify } from "qs";
 
@@ -36,7 +36,7 @@ export default function VotesOverview() {
   };
 
   const { txHash, index } = useParams<{ txHash: string; index: string }>();
-  const history = useHistory();
+  const navigate = useNavigate();
   const { search } = useLocation();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [params, setParams] = useState<any>(initParams);
@@ -99,7 +99,7 @@ export default function VotesOverview() {
           size: +params.size || 6,
           total: total,
           onChange: (page, size) => {
-            history.replace({ search: stringify({ ...params, page, size }) });
+            navigate({ search: stringify({ ...params, page, size }) }, { replace: true });
           }
         }}
         total={{ count: total || 0, title: "", isDataOverSize }}

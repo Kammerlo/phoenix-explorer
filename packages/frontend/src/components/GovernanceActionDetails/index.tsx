@@ -1,5 +1,5 @@
 import { Box, CircularProgress } from "@mui/material";
-import { useHistory, useParams } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 
 import { details } from "src/commons/routers";
 import { CCGorvernanceVote, DescriptionIcon, PencilIcon } from "src/commons/resources";
@@ -16,9 +16,9 @@ import { useEffect, useState } from "react";
 import NotFound from "src/pages/NotFound";
 
 export default function GovernanceActionDetailsComponent() {
-  const history = useHistory();
-
-  const pathArray = history.location.pathname.split("/").filter(Boolean);
+  const navigate = useNavigate();
+  const { pathname } = useLocation();
+  const pathArray = pathname.split("/").filter(Boolean);
   const apiConnector = ApiConnector.getApiConnector();
   const [loading, setLoading] = useState(true);
   const [votesLoading, setVotesLoading] = useState(true);

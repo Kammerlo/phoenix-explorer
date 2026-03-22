@@ -1,6 +1,6 @@
 import { Box, Grid, useTheme, Chip, Tooltip } from "@mui/material";
 import { HiArrowLongLeft } from "react-icons/hi2";
-import { useHistory } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
 import { ActionIcon, DateIcon, FeedbackIcon } from "src/commons/resources";
@@ -34,7 +34,7 @@ interface Props {
 }
 
 export default function OverviewHeader({ data }: Props) {
-  const history = useHistory();
+  const navigate = useNavigate();
   const theme = useTheme();
   const actionsType = actionTypeListDrep.find((el) => el.value === data?.actionType)?.text;
   const { t } = useTranslation();
@@ -63,7 +63,7 @@ export default function OverviewHeader({ data }: Props) {
       <Box width="100%" marginBottom={"48px"}>
         <HeaderDetailContainer>
           <Box sx={{ flex: 1 }}>
-            <BackButton onClick={history.goBack}>
+            <BackButton onClick={() => navigate(-1)}>
               <HiArrowLongLeft color={theme.palette.secondary.light} />
               <BackText>{t("common.back")}</BackText>
             </BackButton>
@@ -81,6 +81,40 @@ export default function OverviewHeader({ data }: Props) {
                     <DynamicEllipsisText value={`${data?.txHash}#${data.index}`} isCopy />
                   </TruncateSubTitleContainer>
                 </SlotLeaderValue>
+              </SlotLeader>
+            )}
+            {data?.anchorUrl && (
+              <SlotLeader>
+                <Box sx={{ paddingTop: "1.5px", color: theme.palette.secondary.light, whiteSpace: "nowrap" }}>
+                  {"Anchor URL:"}
+                </Box>
+                <SlotLeaderValue>
+                  <Box
+                    component="a"
+                    href={data.anchorUrl.includes("http") ? data.anchorUrl : `//${data.anchorUrl}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    sx={{ color: theme.palette.primary.main, wordBreak: "break-all" }}
+                  >
+                    {data.anchorUrl}
+                  </Box>
+                </SlotLeaderValue>
+              </SlotLeader>
+            )}
+            {data?.expiredEpoch != null && (
+              <SlotLeader>
+                <Box sx={{ paddingTop: "1.5px", color: theme.palette.secondary.light, whiteSpace: "nowrap" }}>
+                  {"Expired Epoch:"}
+                </Box>
+                <SlotLeaderValue>{data.expiredEpoch}</SlotLeaderValue>
+              </SlotLeader>
+            )}
+            {data?.enactedEpoch != null && (
+              <SlotLeader>
+                <Box sx={{ paddingTop: "1.5px", color: theme.palette.secondary.light, whiteSpace: "nowrap" }}>
+                  {"Enacted Epoch:"}
+                </Box>
+                <SlotLeaderValue>{data.enactedEpoch}</SlotLeaderValue>
               </SlotLeader>
             )}
           </Box>
@@ -107,14 +141,14 @@ export default function OverviewHeader({ data }: Props) {
         </HeaderDetailContainer>
       </Box>
       <Grid spacing={3} container>
-        <Grid item lg={6} md={12} sm={12}>
+        <Grid size={{ sm: 12, md: 12, lg: 6 }}>
           <FixedSizeContainer>
             <StyledCard.Container sx={{ height: '100%' }}>
               <GovernanceActionTabs data={data} actionsType={actionsType} />
             </StyledCard.Container>
           </FixedSizeContainer>
         </Grid>
-        <Grid item lg={6} md={12} sm={12}>
+        <Grid size={{ sm: 12, md: 12, lg: 6 }}>
           <FixedSizeContainer>
             <StyledCard.Container sx={{ height: '100%' }}>
               <VoteChart voteData={data?.votesStats} />

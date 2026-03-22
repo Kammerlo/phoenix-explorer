@@ -1,7 +1,6 @@
-import { Store } from "@reduxjs/toolkit";
-import { composeWithDevTools } from "redux-devtools-extension";
-import { Action, CombinedState, Middleware, applyMiddleware, combineReducers, createStore } from "redux";
-import { persistReducer, persistStore } from "redux-persist";
+import { configureStore } from "@reduxjs/toolkit";
+import { combineReducers } from "redux";
+import { persistReducer, persistStore, FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER } from "redux-persist";
 import storage from "redux-persist/lib/storage";
 import { PersistPartial } from "redux-persist/es/persistReducer";
 
@@ -9,13 +8,32 @@ import { ThemeStoreType } from "src/types/theme";
 
 import systemReducer, { setStoreSystem, SystemState } from "./system";
 import toastReducer, { setStoreToast, ToastState } from "./toast";
-import { RootState } from "./types";
 import themeReducer, { setStoreTheme } from "./theme";
+import providerReducer, { setStoreProvider, ProviderState } from "./provider";
 
-let customStore: Store | undefined;
+const themePersistConfig = {
+  key: "theme",
+  storage: storage,
+  blacklist: ["isDark"]
+};
 
-const setStore = (store: Store) => {
-  customStore = store;
+const providerPersistConfig = {
+  key: "provider",
+  storage: storage
+};
+
+const rootReducer = combineReducers({
+  system: systemReducer,
+  toast: toastReducer,
+  theme: persistReducer(themePersistConfig, themeReducer),
+  provider: persistReducer(providerPersistConfig, providerReducer)
+});
+
+export type RootReducerState = {
+  system: SystemState;
+  toast: ToastState;
+  theme: ThemeStoreType & PersistPartial;
+  provider: ProviderState & PersistPartial;
 };
 
 const persistConfig = {
@@ -24,47 +42,25 @@ const persistConfig = {
   whitelist: []
 };
 
-const themePersistConfig = {
-  key: "theme",
-  storage: storage,
-  blacklist: ["isDark"]
-};
-
-export const getStore = (): Store<RootState> => {
-  if (!customStore) {
-    throw new Error("Please implement setStore before using this function");
-  }
-  return customStore;
-};
-
-const appReducer = combineReducers({
-  system: systemReducer,
-  toast: toastReducer,
-  theme: persistReducer(themePersistConfig, themeReducer)
-});
-
-const rootReducer = (
-  state?: CombinedState<{
-    system: SystemState;
-    toast: ToastState;
-    theme: ThemeStoreType & PersistPartial;
-  }>,
-  action?: Action
-) => appReducer(state, action as Action);
-
-const middleWares: Middleware[] = [];
-
-const enhancer = composeWithDevTools(applyMiddleware(...middleWares));
-
 const pReducer = persistReducer(persistConfig, rootReducer);
 
-export const store = createStore(pReducer, enhancer);
+export const store = configureStore({
+  reducer: pReducer,
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware({
+      serializableCheck: {
+        ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER]
+      }
+    })
+});
 
-export const persistor = persistStore(store, {});
+export const persistor = persistStore(store);
 
-setStore(store);
 setStoreSystem(store);
 setStoreToast(store);
 setStoreTheme(store);
+setStoreProvider(store);
+
+export const getStore = () => store;
 
 export default store;

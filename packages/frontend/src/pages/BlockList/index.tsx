@@ -18,7 +18,6 @@ const BlockList: React.FC = () => {
   const apiConnector = ApiConnector.getApiConnector();
 
   function updateData(pageInfo: {page: number, size?: number}) {
-    console.log("updateData page:", pageInfo.page);
     setLoading(true);
     apiConnector.getBlocksPage(pageInfo).then((data: ApiReturnType<Block[]>) => {
       setLoading(false);

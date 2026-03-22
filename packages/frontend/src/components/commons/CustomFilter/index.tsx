@@ -1,9 +1,9 @@
 import { Box, Button, ClickAwayListener, MenuList, useTheme } from "@mui/material";
-import moment from "moment";
+import { parse as parseDateFns, startOfDay, endOfDay, format as formatDateFns } from "date-fns";
 import React, { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { BsFillCheckCircleFill } from "react-icons/bs";
-import { useHistory } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { stringify } from "qs";
 import { omit, pick } from "lodash";
 
@@ -62,7 +62,7 @@ const CustomFilter: React.FC<Props> = (props) => {
   const timeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const theme = useTheme();
   const { isMobile } = useScreen();
-  const history = useHistory();
+  const navigate = useNavigate();
 
   const options: Option[] = [
     {
@@ -170,7 +170,7 @@ const CustomFilter: React.FC<Props> = (props) => {
     }
     setOpen(false);
     setSearch("");
-    history.replace({ search: stringify(pick({ page, size }, ["page", "size", "retired"])) });
+    navigate({ search: stringify(pick({ page, size }, ["page", "size", "retired"])) }, { replace: true });
   };
 
   const filterOptions = options.filter((item) => !excludes.includes(item.value));
@@ -219,8 +219,8 @@ const CustomFilter: React.FC<Props> = (props) => {
                 onDateRangeChange={({ fromDate, toDate }) => {
                   setParams?.({
                     ...params,
-                    fromDate: moment(fromDate, DATETIME_PARTTEN).startOf("d").utc().format(DATETIME_PARTTEN),
-                    toDate: moment(toDate, DATETIME_PARTTEN).endOf("d").utc().format(DATETIME_PARTTEN)
+                    fromDate: fromDate ? formatDateFns(startOfDay(parseDateFns(fromDate, DATETIME_PARTTEN, new Date())), DATETIME_PARTTEN) : undefined,
+                    toDate: toDate ? formatDateFns(endOfDay(parseDateFns(toDate, DATETIME_PARTTEN, new Date())), DATETIME_PARTTEN) : undefined
                   });
                 }}
                 onClearValue={() => setParams(omit(params, ["fromDate", "toDate"]))}

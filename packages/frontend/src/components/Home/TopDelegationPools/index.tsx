@@ -1,4 +1,4 @@
-import { useHistory } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Box } from "@mui/material";
 import { get } from "lodash";
 import { useTranslation } from "react-i18next";
@@ -37,7 +37,7 @@ const TopDelegationPools = () => {
     false,
     blockNo
   );
-  const history = useHistory();
+  const navigate = useNavigate();
 
   const columns: Column<DelegationPool>[] = [
     {
@@ -107,7 +107,7 @@ const TopDelegationPools = () => {
           <TimeDuration>
             <FormNowMessage time={lastUpdated} />
           </TimeDuration>
-          <ViewAllButtonExternal to={routers.DELEGATION_POOLS} />
+          <ViewAllButtonExternal to={routers.POOLS} />
         </Actions>
       </Header>
       <TimeDurationSm>
@@ -120,7 +120,7 @@ const TopDelegationPools = () => {
         initialized={initialized}
         columns={columns}
         data={data || []}
-        onClickRow={(_, r: DelegationPool) => history.push(details.delegation(r.poolId))}
+        onClickRow={(_, r: DelegationPool) => navigate(details.delegation(r.poolId))}
       />
     </TopDelegateContainer>
   );

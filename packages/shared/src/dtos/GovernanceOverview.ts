@@ -47,6 +47,9 @@ export interface GovernanceActionDetail {
     authors: string[] | null;
     abstract: string | null;
     votesStats: VoteData;
+    anchorUrl?: string;
+    anchorHash?: string;
+    depositReturn?: string; // bech32 return address for the deposit
 }
 
 export interface GovActionVote {

@@ -42,6 +42,7 @@ poolController.get('/:poolId', async (req, res) => {
     try {
         const pool = await API.poolsById(poolId);
         const poolMetadata = await API.poolMetadata(poolId);
+        const relays = await API.poolsByIdRelays(poolId);
         const createTx = await getTransactions(pool.registration[0]);
         let totalBalanceOfPoolOwners = 0;
         for (const owner of pool.owners) {
@@ -77,6 +78,15 @@ poolController.get('/:poolId', async (req, res) => {
                 homepage: poolMetadata.homepage || '',
                 // iconUrl: poolMetadata.url || '',
                 // logoUrl: poolMetadata.url || '',
+                vrfKey: (pool as any).vrf_key,
+                livePledge: Number.parseInt((pool as any).live_pledge ?? '0'),
+                relays: relays.map((r: any) => ({
+                    ipv4: r.ipv4 ?? undefined,
+                    ipv6: r.ipv6 ?? undefined,
+                    dns: r.dns ?? undefined,
+                    dnsSrv: r.dns_srv ?? undefined,
+                    port: r.port ?? undefined
+                })),
             } as PoolDetail,
             lastUpdated: Math.floor(Date.now() / 1000),
             total: 1,

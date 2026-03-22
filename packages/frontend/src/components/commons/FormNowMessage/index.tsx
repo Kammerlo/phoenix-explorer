@@ -1,4 +1,4 @@
-import moment from "moment";
+import { formatDistanceToNow, fromUnixTime } from "date-fns";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -8,12 +8,13 @@ type Props = {
 
 const FormNowMessage = ({ time }: Props) => {
   const { t } = useTranslation();
-  const [message, setMessage] = useState(time ? `${t("common.lastUpdated")} ${moment.unix(time).fromNow()}` : "");
+  const getFromNow = (ts: number) => formatDistanceToNow(fromUnixTime(ts), { addSuffix: true });
+  const [message, setMessage] = useState(time ? `${t("common.lastUpdated")} ${getFromNow(time)}` : "");
   useEffect(() => {
     if (time) {
-      setMessage(`${t("common.lastUpdated")} ${moment.unix(time).fromNow()}`);
+      setMessage(`${t("common.lastUpdated")} ${getFromNow(time)}`);
       const interval = setInterval(() => {
-        setMessage(`${t("common.lastUpdated")} ${moment.unix(time).fromNow()}`);
+        setMessage(`${t("common.lastUpdated")} ${getFromNow(time)}`);
       }, 1000);
 
       return () => clearInterval(interval);

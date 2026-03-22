@@ -1,11 +1,7 @@
-import { Box, useTheme } from "@mui/material";
-import AccordionDetails from "@mui/material/AccordionDetails";
-import AccordionSummary from "@mui/material/AccordionSummary";
+import { Box, Tab, Tabs, useTheme } from "@mui/material";
 // @ts-ignore
-import React, { useMemo, useRef } from "react";
+import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { IoIosArrowDown } from "react-icons/io";
-import { useHistory, useParams } from "react-router-dom";
 
 import {
   CollateralIcon,
@@ -14,8 +10,6 @@ import {
   InstantaneousHistoryIcon,
   MetadataIconTx,
   MintingIcon,
-  NoteIcon,
-  ProtocolUpdateIcon,
   RewardsDistributionIcon,
   StakeCertificates,
   SummaryIcon,
@@ -23,26 +17,22 @@ import {
   UtxoIcon,
   WithdrawalIcon
 } from "src/commons/resources";
-import { details } from "src/commons/routers";
 import ContractsList from "src/components/Contracts";
 import { CustomNumberBadge } from "src/components/commons/CustomNumberBadge";
-import { StyledAccordion } from "src/components/commons/CustomAccordion/styles";
 
 import Collaterals from "./Collaterals";
 import Delegations from "./Delegations";
 import InstantaneousRewards from "./InstantaneousRewards";
-import Metadata from "./Metadata";
+import MetadataDecoder from "../MetadataDecoder";
 import Minting from "./Minting";
 import PoolCertificate from "./PoolCertificate";
-import ProtocolUpdate from "./ProtocolUpdate";
 import StakeCertificate from "./StakeCertificate";
 import Summary from "./Summary";
 import TransactionSignatories from "./TransactionSignatories";
 import UTXO from "./UTXOs";
 import Withdrawals from "./Withdrawals";
-import "./index.css";
 import { TitleTab } from "./styles";
-import {TProtocol, TRANSACTION_STATUS, TransactionDetail} from "@shared/dtos/transaction.dto";
+import { TRANSACTION_STATUS, TransactionDetail } from "@shared/dtos/transaction.dto";
 
 interface TransactionMetadataProps {
   data: TransactionDetail | null | undefined;
@@ -58,68 +48,8 @@ interface TTab {
 
 const TransactionMetadata: React.FC<TransactionMetadataProps> = ({ data }) => {
   const { t } = useTranslation();
-  const { tabActive = false } = useParams<{ tabActive: keyof TransactionDetail }>();
-  const history = useHistory();
   const theme = useTheme();
-  const tabRef = useRef<HTMLDivElement>(null);
-
-  const handleChangeTab = (panel: string) => (event: React.SyntheticEvent, newExpanded: boolean) => {
-    const handleTransitionEnd = () => {
-      if (newExpanded) {
-        setTimeout(() => {
-          tabRef?.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
-        }, 0);
-        tabRef?.current?.removeEventListener("transitionend", handleTransitionEnd);
-      }
-    };
-    tabRef?.current?.addEventListener("transitionend", handleTransitionEnd);
-    history.replace(details.transaction(data?.tx?.hash, newExpanded ? panel : ""));
-  };
-
-  // const protocolsMergeData: TProtocolMerge[] = useMemo(() => {
-  //   const result = [];
-  //   const protocols = data?.protocols;
-  //   const previousProtocols = data?.previousProtocols;
-  //   for (const [key, value] of Object.entries(protocols || {})) {
-  //     if (previousProtocols) {
-  //       const oldValue = previousProtocols[key as keyof TProtocol];
-  //       const pItem: TProtocolMerge = {
-  //         protocol: key,
-  //         oldValue,
-  //         value
-  //       };
-  //       result.push(pItem);
-  //     }
-  //   }
-  //   return result;
-  // }, [data?.protocols, data?.previousProtocols]);
-  const _dataProposing = data?.contracts?.map((item) => ({
-    ...item,
-    purpose: "PROPOSING",
-    governanceAction: "Treasury Withdrawal",
-    submissionDate: "03/19/2024 15:40:11",
-    expireDate: "04/19/2024 15:40:11",
-    proposalPolicy: "1234567443445141436541256435236342",
-    governanceActionMetadata: "1111111111111111111111111111111111",
-    voterType: "DRep",
-    vote: "YES",
-    dRepId: "12345678901234567890123456789012345678912551324456932154",
-    proposalLink: "https://hornan7.github.io/proposal.txt"
-  }));
-  const _dataVoting = data?.contracts?.map((item) => ({
-    ...item,
-    purpose: "VOTING",
-    governanceAction: "Treasury Withdrawal",
-    submissionDate: "03/19/2024 15:40:11",
-    expireDate: "04/19/2024 15:40:11",
-    proposalPolicy: "1234567443445141436541256435236342",
-    governanceActionMetadata: "1111111111111111111111111111111111",
-    voterType: "DRep",
-    vote: "YES",
-    dRepId: "312413245213123456789012345678901234567890123456789125513244569321543332143543535345"
-  }));
-  const _data = _dataProposing?.concat(_dataVoting);
-  const dataContract = _data?.concat(data?.contracts);
+  const [activeTab, setActiveTab] = useState(0);
 
   const tabs: TTab[] = [
     {
@@ -142,10 +72,10 @@ const TransactionMetadata: React.FC<TransactionMetadataProps> = ({ data }) => {
       label: (
         <Box display={"flex"} alignItems={"center"} data-testid="contract-tab">
           {t("glossary.contracts")}
-          <CustomNumberBadge value={dataContract?.length} />
+          <CustomNumberBadge value={data?.contracts?.length} />
         </Box>
       ),
-      children: <ContractsList data={dataContract} />
+      children: <ContractsList data={data?.contracts} />
     },
     {
       key: "collaterals",
@@ -215,12 +145,6 @@ const TransactionMetadata: React.FC<TransactionMetadataProps> = ({ data }) => {
       ),
       children: <StakeCertificate data={data?.stakeCertificates} />
     },
-    // {
-    //   key: "protocols",
-    //   icon: ProtocolUpdateIcon,
-    //   label: t("tab.protocolUpdate"),
-    //   children: <ProtocolUpdate data={protocolsMergeData} />
-    // },
     {
       key: "instantaneousRewards",
       icon: InstantaneousHistoryIcon,
@@ -242,55 +166,78 @@ const TransactionMetadata: React.FC<TransactionMetadataProps> = ({ data }) => {
       key: "metadata",
       icon: MetadataIconTx,
       label: <Box data-testid="metadata-tab">{t("glossary.metadata")}</Box>,
-      children: <Metadata data={data?.metadata} hash={data?.metadataHash} />
+      children: <MetadataDecoder txData={data} />
     }
   ];
 
-  const items = tabs.filter((item) => data?.[item.key]);
-  const indexExpand = items.findIndex((item) => item.key === tabActive);
+  const items = tabs.filter((item) => {
+    if (!data) return false;
+    if (item.key === "summary" || item.key === "utxOs" || item.key === "metadata") return true;
+    if (item.key === "collaterals") {
+      const c = data.collaterals;
+      return (c?.collateralInputResponses?.length ?? 0) > 0 || (c?.collateralOutputResponses?.length ?? 0) > 0;
+    }
+    if (item.key === "contracts") return (data?.contracts?.length ?? 0) > 0;
+    const value = data[item.key];
+    return Array.isArray(value) ? value.length > 0 : !!value;
+  });
+  const safeTab = Math.min(activeTab, Math.max(0, items.length - 1));
 
-  const needBorderRadius = (currentKey: string) => {
-    if (!tabActive) return "0";
-    const indexCurrent = items.findIndex((item) => item.key === currentKey);
-    if (indexExpand - 1 >= 0 && indexExpand - 1 === indexCurrent) return "0 0 12px 12px";
-    if (indexExpand + 1 < items.length && indexExpand + 1 === indexCurrent) return "12px 12px 0 0";
-    return "0";
-  };
+  if (items.length === 0) return null;
 
   return (
-    <Box mt={4} ref={tabRef}>
-      {items?.map(({ key, icon: Icon, label, children }, index) => (
-        <StyledAccordion
-          key={key}
-          expanded={tabActive === key}
-          customborderradius={needBorderRadius(key)}
-          isdisplaybordertop={tabActive !== key && key !== items[0].key && index !== indexExpand + 1}
-          onChange={handleChangeTab(key)}
+    <Box mt={4}>
+      <Box
+        sx={{
+          borderBottom: 1,
+          borderColor: "divider",
+          borderRadius: "12px 12px 0 0",
+          background: theme.palette.secondary[0],
+          boxShadow: "0px 4px 4px rgba(0,0,0,0.05)"
+        }}
+      >
+        <Tabs
+          value={safeTab}
+          onChange={(_e, val) => setActiveTab(val)}
+          variant="scrollable"
+          scrollButtons="auto"
+          sx={{
+            "& .MuiTab-root": { minHeight: 64, textTransform: "none" },
+            "& .MuiTabs-indicator": { backgroundColor: theme.palette.primary.main }
+          }}
         >
-          <AccordionSummary
-            data-testid={`transactionMetadata.${key}`}
-            expandIcon={
-              <IoIosArrowDown
-                style={{
-                  width: "21px",
-                  height: "21px"
-                }}
-                color={key === tabActive ? theme.palette.primary.main : theme.palette.secondary.light}
-              />
-            }
-            sx={{
-              paddingX: theme.spacing(3),
-              paddingY: theme.spacing(1)
-            }}
-          >
-            {" "}
-            <Icon fill={key === tabActive ? theme.palette.primary.main : theme.palette.secondary.light} />
-            <TitleTab data-testid={`transactionMetadata.${key}Title`} pl={1} active={+(key === tabActive)}>
-              {label}
-            </TitleTab>
-          </AccordionSummary>
-          <AccordionDetails data-testid={`transactionMetadata.${key}Value`}>{children}</AccordionDetails>
-        </StyledAccordion>
+          {items.map(({ key, icon: Icon, label }, idx) => (
+            <Tab
+              key={key}
+              data-testid={`transactionMetadata.${key}`}
+              icon={
+                <Icon
+                  fill={safeTab === idx ? theme.palette.primary.main : theme.palette.secondary.light}
+                  style={{ width: 20, height: 20 }}
+                />
+              }
+              iconPosition="start"
+              label={<TitleTab active={+(safeTab === idx)}>{label}</TitleTab>}
+              sx={{ gap: 1 }}
+            />
+          ))}
+        </Tabs>
+      </Box>
+      {items.map(({ key, children }, idx) => (
+        <Box
+          key={key}
+          role="tabpanel"
+          hidden={safeTab !== idx}
+          data-testid={`transactionMetadata.${key}Value`}
+          sx={{
+            background: theme.palette.secondary[0],
+            borderRadius: "0 0 12px 12px",
+            boxShadow: "0px 4px 4px rgba(0,0,0,0.05)",
+            p: 3
+          }}
+        >
+          {safeTab === idx && children}
+        </Box>
       ))}
     </Box>
   );

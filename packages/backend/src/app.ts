@@ -7,7 +7,8 @@ import { tokenController } from "./controller/token-controller";
 import { governanceController } from "./controller/governance-controller";
 import { addressController } from "./controller/address-controller";
 import { poolController } from "./controller/pool-controller";
-// optional, for typing
+import { protocolParamsController } from "./controller/protocol-params-controller";
+import { dashboardController } from "./controller/dashboard-controller";
 
 const app = express();
 
@@ -21,5 +22,7 @@ app.use("/api/tokens", tokenController);
 app.use("/api/governance", governanceController);
 app.use("/api/addresses", addressController);
 app.use("/api/pools", poolController);
+app.use("/api/protocol-params", protocolParamsController);
+app.use("/api/dashboard", dashboardController);
 
 export default app;

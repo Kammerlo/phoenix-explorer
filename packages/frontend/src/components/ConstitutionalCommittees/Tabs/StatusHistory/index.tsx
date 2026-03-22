@@ -15,9 +15,9 @@ import {
 } from "@mui/material";
 import { t } from "i18next";
 import { parse, stringify, ParsedQs } from "qs";
-import { Link, useHistory, useLocation, useParams } from "react-router-dom";
+import { Link, useNavigate, useLocation, useParams } from "react-router-dom";
 import { IoIosArrowDown, IoIosArrowUp } from "react-icons/io";
-import moment from "moment";
+import { parse as parseDateFns, startOfDay, endOfDay, format as formatDateFns } from "date-fns";
 import { isEmpty, isUndefined, omitBy } from "lodash";
 import { BsFillCheckCircleFill } from "react-icons/bs";
 
@@ -51,7 +51,7 @@ import { Chip, Item, Row, Title } from "./style";
 const StatusHistory = () => {
   const { tabActive } = useParams<{ tabActive?: string }>();
   const { search } = useLocation();
-  const history = useHistory();
+  const navigate = useNavigate();
   const query = parse(search.split("?")[1]);
   const [params, setParams] = useState({});
 
@@ -74,14 +74,14 @@ const StatusHistory = () => {
   );
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const setQuery = (query: any) => {
-    history.replace({ search: stringify(query) }, history.location.state);
+    navigate({ search: stringify(query) }, history.location.state, { replace: true });
   };
 
   if (loading) {
     return (
       <Box component={Grid} container spacing={2}>
         {[...new Array(+(query?.voteSize || "") || 6).fill(0)].map((_, idx) => (
-          <Grid item width={"100%"} lg={4} md={6} sm={6} xs={12} key={idx}>
+          <Grid width={"100%"} size={{ xs: 12, sm: 6, md: 6, lg: 4 }} key={idx}>
             <Box component={Skeleton} variant="rectangular" height={"190px"} borderRadius={2} />
           </Grid>
         ))}
@@ -109,7 +109,7 @@ const StatusHistory = () => {
       {error && (statusError || 0) >= 500 && <FetchDataErr m="80px 0px" padding={`0 !important`} />}
       <Box component={Grid} container spacing={2} mt={1}>
         {data?.map((item, idx) => (
-          <Grid item width={"100%"} lg={4} md={6} sm={6} xs={12} key={idx}>
+          <Grid width={"100%"} size={{ xs: 12, sm: 6, md: 6, lg: 4 }} key={idx}>
             <Box height={"100%"}>
               <StatusHistoryCard item={item} />
             </Box>
@@ -123,7 +123,7 @@ const StatusHistory = () => {
             size: Number(query.voteSize || 6),
             page: query.page ? Number(query.page || 1) - 1 : 0,
             total,
-            onChange: (page, size) => history.replace({ search: stringify({ ...query, page, voteSize: size }) })
+            onChange: (page, size) => navigate({ search: stringify({ ...query, page, voteSize: size }) }, { replace: true })
           }}
           total={{ count: total || 0, title: "" }}
           loading={false}
@@ -211,7 +211,7 @@ export interface FilterParams {
 export const FilterGovernanceVotes: React.FC<FilterGovernanceVotes> = ({ query, setQuery, voterType }) => {
   const theme = useTheme();
   const { t } = useTranslation();
-  const history = useHistory();
+  const navigate = useNavigate();
   const [expanded, setExpanded] = useState<string | false>("");
   const [openDateRange, setOpenDateRange] = useState<boolean>(false);
   const [open, setOpen] = useState<boolean>(false);
@@ -241,7 +241,7 @@ export const FilterGovernanceVotes: React.FC<FilterGovernanceVotes> = ({ query, 
     setParams(filterValue);
     setParamsFilter(filterValue);
     setDateRange({ fromDate: "", toDate: "" });
-    history.replace({
+    navigate({ replace: true, 
       search: stringify({
         page: 1,
         size: 6,
@@ -463,8 +463,8 @@ export const FilterGovernanceVotes: React.FC<FilterGovernanceVotes> = ({ query, 
                   }}
                   onDateRangeChange={({ fromDate, toDate }) => {
                     setDateRange({
-                      fromDate: moment(fromDate, DATETIME_PARTTEN).startOf("d").utc().format(DATETIME_PARTTEN),
-                      toDate: moment(toDate, DATETIME_PARTTEN).endOf("d").utc().format(DATETIME_PARTTEN)
+                      fromDate: fromDate ? formatDateFns(startOfDay(parseDateFns(fromDate, DATETIME_PARTTEN, new Date())), DATETIME_PARTTEN) : undefined,
+                      toDate: toDate ? formatDateFns(endOfDay(parseDateFns(toDate, DATETIME_PARTTEN, new Date())), DATETIME_PARTTEN) : undefined
                     });
                   }}
                   onClose={() => setOpenDateRange(false)}

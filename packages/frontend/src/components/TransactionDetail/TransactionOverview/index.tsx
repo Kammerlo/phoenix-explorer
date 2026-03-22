@@ -1,33 +1,61 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
-import { Box, IconButton, useTheme } from "@mui/material";
-import { BiShowAlt } from "react-icons/bi";
+import { Box, Chip } from "@mui/material";
+import { alpha } from "@mui/material/styles";
 import { useTranslation } from "react-i18next";
 
 import {
-  TxInputIcon,
-  TxOutputIcon,
   TimeIconComponent,
   TotalOutput,
   ExchageAltIcon,
   CubeIconComponent,
   SlotIcon,
-  TooltipIcon
+  TooltipIcon,
+  ActionTypeIcon
 } from "src/commons/resources";
 import { formatADAFull, formatNameBlockNo } from "src/commons/utils/helper";
 import { MAX_SLOT_EPOCH } from "src/commons/utils/constants";
 import { details } from "src/commons/routers";
 import { RootState } from "src/stores/types";
-import { useScreen } from "src/commons/hooks/useScreen";
 import DetailHeader from "src/components/commons/DetailHeader";
-import DropdownDetail from "src/components/commons/DropdownDetail";
 import CustomTooltip from "src/components/commons/CustomTooltip";
 import ADAicon from "src/components/commons/ADAIcon";
-import DynamicEllipsisText from "src/components/DynamicEllipsisText";
 import DatetimeTypeTooltip from "src/components/commons/DatetimeTypeTooltip";
 
 import { StyledLink, TitleCard } from "./styles";
-import {TransactionDetail} from "@shared/dtos/transaction.dto";
+import { TransactionDetail, TxTag } from "@shared/dtos/transaction.dto";
+
+// ─── Tag config ────────────────────────────────────────────────────────────────
+
+const TAG_META: Record<TxTag, { label: string; color: string }> = {
+  transfer:   { label: "Transfer",   color: "#3B82F6" },
+  token:      { label: "Token",      color: "#8B5CF6" },
+  mint:       { label: "Mint",       color: "#F59E0B" },
+  stake:      { label: "Stake",      color: "#06B6D4" },
+  pool:       { label: "Pool",       color: "#6366F1" },
+  script:     { label: "Script",     color: "#F97316" },
+  governance: { label: "Governance", color: "#A855F7" },
+};
+
+const TAG_ORDER: TxTag[] = ["transfer", "script", "token", "mint", "stake", "pool", "governance"];
+
+function deriveTagsFromDetail(data: TransactionDetail | null | undefined): TxTag[] {
+  if (!data) return [];
+
+  // Prefer pre-computed tags from the backend (same logic as the list view)
+  if (data.tx.tags?.length) return TAG_ORDER.filter((t) => data.tx.tags!.includes(t));
+
+  // Fallback: derive from populated arrays (for connectors that don't compute tags)
+  const tags: TxTag[] = [];
+  if ((data.contracts?.length ?? 0) > 0) tags.push("script");
+  if ((data.mints?.length ?? 0) > 0 || (data.utxOs?.outputs?.some((o) => (o.tokens?.length ?? 0) > 0) ?? false)) tags.push("token");
+  if ((data.mints?.length ?? 0) > 0) tags.push("mint");
+  if ((data.delegations?.length ?? 0) > 0 || (data.withdrawals?.length ?? 0) > 0 || (data.stakeCertificates?.length ?? 0) > 0 || (data.instantaneousRewards?.length ?? 0) > 0) tags.push("stake");
+  if ((data.poolCertificates?.length ?? 0) > 0) tags.push("pool");
+  if (tags.length === 0) tags.push("transfer");
+
+  return TAG_ORDER.filter((t) => tags.includes(t));
+}
 
 interface Props {
   data: TransactionDetail | null | undefined;
@@ -40,134 +68,46 @@ const TransactionOverview: React.FC<Props> = ({ data, loading }) => {
   const blockNo = useSelector(({ system }: RootState) => system.blockNo);
   const epochNo = useSelector(({ system }: RootState) => system.currentEpoch?.no);
 
-  const [openListInput, setOpenListInput] = useState(false);
-  const [openListOutput, setOpenListOutput] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<number>();
-
-  const theme = useTheme();
-  const { isMobile } = useScreen();
 
   useEffect(() => {
     if (data) setLastUpdated(Date.now());
   }, [data, blockNo]);
 
-  // const confirmation = Math.max(0, (blockNo ? blockNo - (data?.tx?.blockNo || 0) : data?.tx?.confirmation) || 0);
-
-  const inputTransaction = useMemo(() => {
-    const result = [];
-    if (data?.utxOs && data?.utxOs?.inputs?.length > 0) {
-      // eslint-disable-next-line no-unsafe-optional-chaining
-      for (const item of data?.utxOs.inputs) {
-        if (item.tokens.length) {
-          result.push(...item.tokens);
-        }
-      }
-    }
-    return result;
-  }, [data?.utxOs]);
-
-  const outputTransaction = useMemo(() => {
-    const result = [];
-    if (data?.utxOs && data?.utxOs?.outputs?.length > 0) {
-      // eslint-disable-next-line no-unsafe-optional-chaining
-      for (const item of data?.utxOs.outputs) {
-        if (item.tokens.length) {
-          result.push(...item.tokens);
-        }
-      }
-    }
-    return result;
-  }, [data?.utxOs]);
+  const txTags = useMemo(() => deriveTagsFromDetail(data), [data]);
 
   const listOverview = [
     {
-      icon: TxInputIcon,
+      icon: ActionTypeIcon,
       title: (
-        <Box display={"flex"} alignItems="center">
-          <TitleCard data-testid="transactionOverview.inputTitle" mr={1} height={24}>
-            {t("glossary.input")}{" "}
-            {data?.utxOs && data?.utxOs?.inputs?.length > 1 && (
-              <IconButton
-                style={{ padding: 0 }}
-                onClick={() => {
-                  setOpenListOutput(false);
-                  setOpenListInput(!openListInput);
+        <Box display="flex" alignItems="center">
+          <TitleCard mr={1}>Type</TitleCard>
+        </Box>
+      ),
+      value: (
+        <Box display="flex" flexWrap="wrap" gap={0.5}>
+          {txTags.map((tag) => {
+            const meta = TAG_META[tag];
+            return (
+              <Chip
+                key={tag}
+                label={meta.label}
+                size="small"
+                sx={{
+                  height: 20,
+                  fontSize: "0.65rem",
+                  fontWeight: 700,
+                  letterSpacing: "0.04em",
+                  bgcolor: alpha(meta.color, 0.12),
+                  color: meta.color,
+                  border: `1px solid ${alpha(meta.color, 0.3)}`,
+                  "& .MuiChip-label": { px: 0.9 }
                 }}
-              >
-                <BiShowAlt color={openListInput ? theme.palette.secondary.light : theme.palette.secondary[600]} />
-              </IconButton>
-            )}
-          </TitleCard>
+              />
+            );
+          })}
         </Box>
-      ),
-      value: data?.utxOs && data?.utxOs?.inputs?.length > 0 && (
-        <Box position={"relative"} data-testid="transactionOverview.inputValue">
-          <StyledLink to={details.address(data?.utxOs?.inputs[0]?.address || "")}>
-            <DynamicEllipsisText
-              value={data?.utxOs?.inputs[0]?.address || ""}
-              isCopy
-              isTooltip
-              postfix={isMobile ? 6 : 8}
-            />
-          </StyledLink>
-          {openListInput && (
-            <DropdownDetail
-              minWidth={isMobile ? 160 : 200}
-              title={t("glossary.addressList")}
-              value={data?.utxOs?.inputs.map((i) => i.address) || []}
-              close={() => setOpenListInput(false)}
-            />
-          )}
-        </Box>
-      ),
-      allowSearch: inputTransaction.length === 0 ? false : true,
-      isSent: true,
-      dataSearch: inputTransaction,
-      key: "input"
-    },
-    {
-      icon: TxOutputIcon,
-      title: (
-        <Box display={"flex"} alignItems="center">
-          <TitleCard data-testid="transactionOverview.outputTitle" mr={1} height={24}>
-            {t("glossary.output")}{" "}
-            {data?.utxOs && data?.utxOs?.outputs?.length > 1 && (
-              <IconButton
-                style={{ padding: 0 }}
-                onClick={() => {
-                  setOpenListOutput(!openListOutput);
-                  setOpenListInput(false);
-                }}
-              >
-                <BiShowAlt color={openListOutput ? theme.palette.secondary.light : theme.palette.secondary[600]} />
-              </IconButton>
-            )}
-          </TitleCard>
-        </Box>
-      ),
-      value: data?.utxOs && data?.utxOs?.outputs?.length > 0 && (
-        <Box position={"relative"} data-testid="transactionOverview.outputValue">
-          <StyledLink to={details.address(data?.utxOs?.outputs[0]?.address || "")}>
-            <DynamicEllipsisText
-              value={data?.utxOs?.outputs[0]?.address || ""}
-              isCopy
-              isTooltip
-              postfix={isMobile ? 6 : 8}
-            />
-          </StyledLink>
-          {openListOutput && (
-            <DropdownDetail
-              minWidth={isMobile ? 160 : 200}
-              title={t("glossary.addressList")}
-              value={data?.utxOs?.outputs.map((i) => i.address) || []}
-              close={() => setOpenListOutput(false)}
-            />
-          )}
-        </Box>
-      ),
-      allowSearch: outputTransaction.length === 0 ? false : true,
-      dataSearch: outputTransaction,
-      key: "output"
+      )
     },
     {
       icon: TimeIconComponent,
@@ -180,16 +120,6 @@ const TransactionOverview: React.FC<Props> = ({ data, loading }) => {
         <DatetimeTypeTooltip data-testid="transactionOverview.createdAtValue">{data?.tx?.time}</DatetimeTypeTooltip>
       )
     },
-    // TODO need to implement
-    // {
-    //   icon: TxConfirm,
-    //   title: (
-    //     <Box data-testid="transactionOverview.comfirmationsTitle" display={"flex"} alignItems="center">
-    //       <TitleCard mr={1}>{confirmation > 1 ? t("glossary.comfirmations") : t("glossary.comfirmation")}</TitleCard>
-    //     </Box>
-    //   ),
-    //   value: <Box data-testid="transactionOverview.comfirmationsValue">{confirmation}</Box>
-    // },
     {
       icon: TotalOutput,
       title: (
@@ -208,7 +138,7 @@ const TransactionOverview: React.FC<Props> = ({ data, loading }) => {
       title: (
         <Box display={"flex"} alignItems="center">
           <TitleCard mr={1} data-testid="transactionOverview.transactionFeesTitle">
-            {t("glossary.transactionfees")}{" "}
+            {t("glossary.transactionfees")}
           </TitleCard>
         </Box>
       ),
@@ -242,7 +172,7 @@ const TransactionOverview: React.FC<Props> = ({ data, loading }) => {
       icon: SlotIcon,
       title: (
         <Box data-testid="transactionOverview.slotTitle" display={"flex"} alignItems="center">
-          <TitleCard mr={1}>{`${t("common.slot")} - ${t("glossary.absoluteSlot")}`}</TitleCard>
+          <TitleCard mr={1}>{t("common.slot")}</TitleCard>
           <CustomTooltip
             title={
               <Box sx={{ textAlign: "left" }}>
@@ -258,12 +188,18 @@ const TransactionOverview: React.FC<Props> = ({ data, loading }) => {
         </Box>
       ),
       value: (
-        <Box data-testid="transactionOverview.slotValue">{`${data?.tx?.epochSlot || ""} - ${
-          data?.tx?.slotNo || ""
-        }`}</Box>
+        <Box data-testid="transactionOverview.slotValue">
+          {data?.tx?.epochSlot ?? "—"}{" "}
+          {data?.tx?.slotNo ? (
+            <Box component="span" sx={{ color: "secondary.light", fontSize: "0.85em" }}>
+              / {data.tx.slotNo}
+            </Box>
+          ) : null}
+        </Box>
       )
     }
   ];
+
   return (
     <DetailHeader
       data-testid="transactionOverview.detailHeader"

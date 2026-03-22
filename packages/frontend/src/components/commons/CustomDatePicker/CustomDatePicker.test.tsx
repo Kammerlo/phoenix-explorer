@@ -1,4 +1,4 @@
-import moment from "moment";
+import { format } from "date-fns";
 
 import { render, screen } from "src/test-utils";
 
@@ -21,7 +21,7 @@ describe("CustomDatePicker component", () => {
     render(<CustomDatePicker {...mockProps} />);
     const [startDate, endDate] = mockProps.dateRange;
     expect(
-      screen.getByText(`${moment(startDate).format("MM/DD/YYYY")} - ${moment(endDate).format("MM/DD/YYYY")}`)
+      screen.getByText(`${format(startDate as Date, "MM/dd/yyyy")} - ${format(endDate as Date, "MM/dd/yyyy")}`)
     ).toBeInTheDocument();
     expect(screen.getByLabelText(/close/i)).toBeInTheDocument();
   });

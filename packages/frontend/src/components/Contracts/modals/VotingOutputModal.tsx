@@ -39,20 +39,20 @@ const VotingOutputModal: React.FC<VotingOutputModalProps> = ({ open = false, onC
         </ExplainationDropdown>
         <SlotContainer>
           <Grid container spacing={2}>
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <DataCard title={t("contract.voterType")} value={data?.voterType} />
             </Grid>
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <DataCardEllipsisText
                 title={t("dreps.id")}
                 value={data?.dRepId as string}
                 purpose={data?.purpose as string}
               />
             </Grid>
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <DataCard title={t("pool.vote")} value={data?.vote} />
             </Grid>
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <ViewGorvernanceVotes title={t("contract.viewGovernanceVotes")} />
             </Grid>
           </Grid>

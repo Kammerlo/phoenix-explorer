@@ -38,7 +38,7 @@ const CompiledCodeModal: React.FC<CompiledCodeModalProps> = ({ open = false, onC
             {data &&
               data.length > 0 &&
               data.map((item) => (
-                <Grid item xs={12} key={item.title}>
+                <Grid size={{ xs: 12 }} key={item.title}>
                   <CompiledCodeDataCard title={item.title} value={item.value} />
                 </Grid>
               ))}

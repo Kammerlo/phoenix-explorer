@@ -1,6 +1,6 @@
 import {API} from "../config/blockfrost";
 import {getBlock, getTransactions, getTxDetail, getUtxos} from "../config/cache";
-import {Token, TPoolCertificated, Transaction, TransactionDetail} from "@shared/dtos/transaction.dto";
+import {Token, TPoolCertificated, Transaction, TransactionDetail, TxTag} from "@shared/dtos/transaction.dto";
 
 export async function fetchLatestTransactions(minTransactionCount : number = 10): Promise<Transaction[]> {
   const latestBlockTransactions = await API.blocksLatestTxs();
@@ -17,6 +17,16 @@ export async function fetchLatestTransactions(minTransactionCount : number = 10)
   const transactions : Transaction[] = [];
   for(const txHash of latestBlockTransactions) {
     const tx = await getTransactions(txHash);
+
+    const tags: TxTag[] = [];
+    const hasNativeTokens = tx.output_amount.some((a: any) => a.unit !== "lovelace");
+    if (hasNativeTokens || (tx.asset_mint_or_burn_count ?? 0) > 0) tags.push("token");
+    if ((tx.asset_mint_or_burn_count ?? 0) > 0) tags.push("mint");
+    if ((tx.delegation_count ?? 0) > 0 || (tx.stake_cert_count ?? 0) > 0 || (tx.withdrawal_count ?? 0) > 0 || (tx.mir_cert_count ?? 0) > 0) tags.push("stake");
+    if ((tx.pool_update_count ?? 0) > 0 || (tx.pool_retire_count ?? 0) > 0) tags.push("pool");
+    if ((tx.redeemer_count ?? 0) > 0) tags.push("script");
+    if (tags.length === 0) tags.push("transfer");
+
     transactions.push({
       blockNo: tx.block_height ?? 0,
       hash: txHash,
@@ -26,9 +36,10 @@ export async function fetchLatestTransactions(minTransactionCount : number = 10)
       epochSlotNo: latestBlock.epoch_slot ?? 0,
       fee: parseInt(tx.fees ?? "0"),
       totalOutput: tx.output_amount
-        .filter((amount) => amount.unit === "lovelace")
-        .reduce((acc, a) => acc + parseInt(a.quantity), 0),
+        .filter((amount: any) => amount.unit === "lovelace")
+        .reduce((acc: number, a: any) => acc + parseInt(a.quantity), 0),
       blockHash: tx.block,
+      tags,
     } as Transaction);
   }
   return transactions;
@@ -128,6 +139,15 @@ export async function fetchTransactionDetail(txHash: string): Promise<Transactio
   const { utxo: inputUtxos, collateral: inputCollaterals } = await convertUtxosAndCollateral(utxos.inputs, txHash);
   const { utxo: outputUtxos, collateral: outputCollaterals } = await convertUtxosAndCollateral(utxos.outputs, txHash);
 
+  const detailTags: TxTag[] = [];
+  const hasNativeTokensDetail = tx.output_amount.some((a: any) => a.unit !== "lovelace");
+  if (hasNativeTokensDetail || (tx.asset_mint_or_burn_count ?? 0) > 0) detailTags.push("token");
+  if ((tx.asset_mint_or_burn_count ?? 0) > 0) detailTags.push("mint");
+  if ((tx.delegation_count ?? 0) > 0 || (tx.stake_cert_count ?? 0) > 0 || (tx.withdrawal_count ?? 0) > 0 || (tx.mir_cert_count ?? 0) > 0) detailTags.push("stake");
+  if ((tx.pool_update_count ?? 0) > 0 || (tx.pool_retire_count ?? 0) > 0) detailTags.push("pool");
+  if ((tx.redeemer_count ?? 0) > 0) detailTags.push("script");
+  if (detailTags.length === 0) detailTags.push("transfer");
+
   const txDetail: TransactionDetail = {
     tx: {
       hash: tx.hash,
@@ -144,6 +164,7 @@ export async function fetchTransactionDetail(txHash: string): Promise<Transactio
         .reduce((acc, a) => acc + parseInt(a.quantity), 0),
       maxEpochSlot: block.epoch_slot ?? 0,
       slotNo: tx.slot ?? 0,
+      tags: detailTags,
     },
     summary: {
       stakeAddress: Object.values(summaryMap),
@@ -158,8 +179,8 @@ export async function fetchTransactionDetail(txHash: string): Promise<Transactio
     },
     metadata: metadata.length > 0 ? metadata.map((m: any) => {
       return {
-        label: m.label,
-        value: JSON.stringify(m.json_metadata)
+        label: parseInt(m.label, 10),
+        value: m.json_metadata != null ? JSON.stringify(m.json_metadata) : (m.cbor_metadata ?? "null")
       }
     }) : undefined,
     metadataHash: "",

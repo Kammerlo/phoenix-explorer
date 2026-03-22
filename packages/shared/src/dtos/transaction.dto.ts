@@ -1,3 +1,5 @@
+export type TxTag = "transfer" | "token" | "mint" | "stake" | "pool" | "script" | "governance";
+
 export interface Transaction {
   hash: string;
   blockNo: number;
@@ -12,6 +14,7 @@ export interface Transaction {
   time: string;
   balance: number;
   tokens: TransactionToken[];
+  tags?: TxTag[];
 }
 
 export interface TransactionToken {
@@ -46,6 +49,7 @@ export interface TransactionDetail {
     totalOutput: number;
     maxEpochSlot: number;
     slotNo: number;
+    tags?: TxTag[];
   };
   summary: {
     stakeAddress: {

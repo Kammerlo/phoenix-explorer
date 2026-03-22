@@ -149,7 +149,7 @@ const ContractBytecode = ({ item }: IContractDiagramProps) => {
   const { t } = useTranslation();
   return (
     <CardDiagram>
-      <TabLabel>{t("glassary.contractBytecode")}</TabLabel>
+      <TabLabel>{t("glossary.contractBytecode")}</TabLabel>
       <TabElement>{item.scriptBytes}</TabElement>
     </CardDiagram>
   );

@@ -1,5 +1,5 @@
 import { styled, Box, InputBase } from "@mui/material";
-import { TextareaAutosize as BaseTextareaAutosize } from "@mui/base/TextareaAutosize";
+import { TextareaAutosize as BaseTextareaAutosize } from "@mui/material/TextareaAutosize";
 
 export const TitleTab = styled(Box)<{ active: number }>(({ active, theme }) => ({
   fontWeight: "bold",

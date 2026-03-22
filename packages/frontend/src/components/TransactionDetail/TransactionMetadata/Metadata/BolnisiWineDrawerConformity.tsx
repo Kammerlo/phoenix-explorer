@@ -2,7 +2,7 @@ import { Box, useTheme, IconButton, styled, Grid, AccordionSummary, Drawer } fro
 import MuiAccordion, { AccordionProps } from "@mui/material/Accordion";
 import { Dispatch, SetStateAction } from "react";
 import { IoMdClose } from "react-icons/io";
-import { useHistory, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
 import { AvatarIcon, InvalidIcon, ShowMore, VerifiedIcon } from "src/commons/resources";
 import CustomIcon from "src/components/commons/CustomIcon";
@@ -41,7 +41,7 @@ export default function BolnisiWineDrawerConformity({
   const { trxHash } = useParams<{ trxHash: string }>();
 
   const theme = useTheme();
-  const history = useHistory();
+  const navigate = useNavigate();
   const { data: dataConformity, loading } = useFetch<CertificateData>(
     openDrawer ? API.TRANSACTION.CERTIFICATE_DETAIL(trxHash, certNo) : ""
   );
@@ -63,7 +63,7 @@ export default function BolnisiWineDrawerConformity({
       variant="temporary"
       onClose={() => {
         setOpenDrawer(false);
-        history.push(details.transaction(trxHash, "metadata"));
+        navigate(details.transaction(trxHash, "metadata"));
       }}
     >
       {loading ? (
@@ -82,7 +82,7 @@ export default function BolnisiWineDrawerConformity({
           <CloseButton
             onClick={() => {
               setOpenDrawer(false);
-              history.push(details.transaction(trxHash, "metadata"));
+              navigate(details.transaction(trxHash, "metadata"));
             }}
             data-testid="close-modal-button"
           >
@@ -155,8 +155,7 @@ export default function BolnisiWineDrawerConformity({
                 <Grid container sx={{ border: "1px solid #CCCCCC", borderRadius: "16px", padding: "0 16px" }}>
                   {infoFields.map((field, index) => (
                     <Grid
-                      item
-                      xs={12}
+                      size={{ xs: 12 }}
                       key={index}
                       sx={{
                         borderBottom: index !== infoFields.length - 1 ? "1px dashed #ccc" : "none",
@@ -164,10 +163,10 @@ export default function BolnisiWineDrawerConformity({
                       }}
                     >
                       <Grid container justifyContent="space-between">
-                        <Grid item>
+                        <Grid>
                           <TitleItem>{field.label}</TitleItem>
                         </Grid>
-                        <Grid item>
+                        <Grid>
                           <ValueItem>{field.value}</ValueItem>
                         </Grid>
                       </Grid>
@@ -220,18 +219,17 @@ export default function BolnisiWineDrawerConformity({
                                   <Grid
                                     container
                                     padding={"0 16px"}
-                                    item
-                                    xs={12}
+                                    size={{ xs: 12 }}
                                     key={index}
                                     sx={{
                                       borderBottom: index === dataMapping.length - 1 ? "none:" : "1px dashed #ccc",
                                       padding: "17.5px 0px"
                                     }}
                                   >
-                                    <Grid item xs={6}>
+                                    <Grid size={{ xs: 6 }}>
                                       <ItemListProduct>{itemMapping.label}</ItemListProduct>
                                     </Grid>
-                                    <Grid item xs={6}>
+                                    <Grid size={{ xs: 6 }}>
                                       <ValueItemListProduct>{returnValue(itemMapping.key)}</ValueItemListProduct>
                                     </Grid>
                                   </Grid>
