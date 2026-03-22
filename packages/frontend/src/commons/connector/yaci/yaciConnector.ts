@@ -75,6 +75,32 @@ export class YaciConnector implements ApiConnector {
     ];
   }
 
+  /** Batch-fetch pool names for unique slot leaders and mutate blocks in-place. */
+  private async _enrichBlocksWithPoolNames(blocks: Block[]): Promise<void> {
+    const uniqueLeaders = [...new Set(blocks.map((b) => b.slotLeader).filter(Boolean))] as string[];
+    if (uniqueLeaders.length === 0) return;
+    const poolNames = new Map<string, { name: string; ticker: string }>();
+    await Promise.all(
+      uniqueLeaders.map(async (leader) => {
+        try {
+          const resp = await this.client.get<any>(`${this.baseUrl}/pools/${leader}`);
+          const p = resp.data;
+          poolNames.set(leader, {
+            name: p.metadata?.name || p.poolId || leader,
+            ticker: p.metadata?.ticker || ""
+          });
+        } catch { /* no metadata or pool not found */ }
+      })
+    );
+    blocks.forEach((b) => {
+      if (b.slotLeader && poolNames.has(b.slotLeader)) {
+        const info = poolNames.get(b.slotLeader)!;
+        b.poolName = info.name;
+        b.poolTicker = info.ticker;
+      }
+    });
+  }
+
   async getBlocksPage(pageInfo: ParsedUrlQuery): Promise<ApiReturnType<Block[]>> {
     try {
       const response = await this.client.get<BlocksPage>(`${this.baseUrl}/blocks`, {
@@ -85,6 +111,7 @@ export class YaciConnector implements ApiConnector {
       for (const block of response.data.blocks!) {
         blocks.push((await this.getBlockDetail(block.number!)).data as Block);
       }
+      await this._enrichBlocksWithPoolNames(blocks);
 
       const latestBlockResponse = await this.client.get<BlockDto>(`${this.baseUrl}/blocks/latest`);
       return {
@@ -110,6 +137,7 @@ export class YaciConnector implements ApiConnector {
       for (const block of response.data.blocks!) {
         blocks.push((await this.getBlockDetail(block.number!)).data as Block);
       }
+      await this._enrichBlocksWithPoolNames(blocks);
       return {
         data: blocks,
         total: response.data.total,

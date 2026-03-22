@@ -3,7 +3,7 @@ import {API} from "../config/blockfrost";
 import {Block} from "@shared/dtos/block.dto";
 import {ApiReturnType} from "@shared/APIReturnType";
 import {getBlock, getTransactions} from "../config/cache";
-import {Transaction} from "@shared/dtos/transaction.dto";
+import {Transaction, TxTag} from "@shared/dtos/transaction.dto";
 
 
 export const blockController = Router();
@@ -18,7 +18,22 @@ blockController.get('', async (req, res) => {
     count: Number.parseInt(String(pageInfo.size || 100))
   });
   // blocks.push(latestBlock); // Add the latest block to the list
+  // Batch-fetch pool metadata for unique slot leaders
+  const uniqueLeaders = [...new Set(blocks.map(b => b.slot_leader).filter(Boolean))] as string[];
+  const poolMeta = new Map<string, { name: string; ticker: string }>();
+  await Promise.all(
+    uniqueLeaders
+      .filter(l => l.startsWith("pool"))  // skip genesis/Byron keys
+      .map(async (leader) => {
+        try {
+          const meta = await API.poolMetadata(leader);
+          poolMeta.set(leader, { name: meta.name ?? "", ticker: meta.ticker ?? "" });
+        } catch { /* no metadata */ }
+      })
+  );
+
   const blocksData: Block[] = blocks.map((block) => {
+    const meta = block.slot_leader ? poolMeta.get(block.slot_leader) : undefined;
     return {
       blockNo: block.height ?? 0,
       epochNo: block.epoch ?? 0,
@@ -36,6 +51,8 @@ blockController.get('', async (req, res) => {
       nextBlock: block.next_block ?? undefined,
       size: block.size,
       slotLeader: block.slot_leader ?? undefined,
+      poolName: meta?.name ?? "",
+      poolTicker: meta?.ticker ?? "",
       confirmations: (block as any).confirmations,
       blockVrf: block.block_vrf ?? undefined,
     };
@@ -87,6 +104,16 @@ blockController.get('/:blockId/transactions', async (req, res) => {
   const txs : Transaction[] = [];
   for(const txHash of blockTransactions) {
     const tx = await getTransactions(txHash);
+
+    const tags: TxTag[] = [];
+    const hasNativeTokens = tx.output_amount.some((a: any) => a.unit !== 'lovelace');
+    if (hasNativeTokens || (tx.asset_mint_or_burn_count ?? 0) > 0) tags.push('token');
+    if ((tx.asset_mint_or_burn_count ?? 0) > 0) tags.push('mint');
+    if ((tx.delegation_count ?? 0) > 0 || (tx.stake_cert_count ?? 0) > 0 || (tx.withdrawal_count ?? 0) > 0 || (tx.mir_cert_count ?? 0) > 0) tags.push('stake');
+    if ((tx.pool_update_count ?? 0) > 0 || (tx.pool_retire_count ?? 0) > 0) tags.push('pool');
+    if ((tx.redeemer_count ?? 0) > 0) tags.push('script');
+    if (tags.length === 0) tags.push('transfer');
+
     txs.push({
       blockNo: tx.block_height ?? 0,
       hash: txHash,
@@ -96,7 +123,8 @@ blockController.get('/:blockId/transactions', async (req, res) => {
       epochSlotNo: block.epoch_slot ?? 0,
       fee: Number.parseInt(tx.fees ?? '0'),
       totalOutput: tx.output_amount.filter((amount) => amount.unit === 'lovelace').reduce((acc, amount) => acc + Number.parseInt(amount.quantity), 0),
-      blockHash: block.hash
+      blockHash: block.hash,
+      tags,
     } as Transaction);
   }
   res.json({

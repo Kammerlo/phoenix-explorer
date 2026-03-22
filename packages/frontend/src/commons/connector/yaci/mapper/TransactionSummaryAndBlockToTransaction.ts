@@ -15,7 +15,8 @@ export function transactionSummaryAndBlockToTransaction(txSummary: TransactionSu
     addressesOutput: txSummary.outputAddresses || [],
     addressesInput: txSummary.inputAddresses || [],
     balance: 0,
-    tokens: [] // TODO: need to implement
+    tokens: [], // TODO: need to implement
+    tags: ["transfer"] // default; yaci summary doesn't expose tx type counts
   };
   return tx;
 }

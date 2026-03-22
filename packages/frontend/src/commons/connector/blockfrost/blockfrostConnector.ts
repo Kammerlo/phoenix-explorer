@@ -9,7 +9,7 @@ import { FunctionEnum, POOL_TYPE } from "../types/FunctionEnum";
 import { ApiReturnType } from "@shared/APIReturnType";
 import { EpochOverview, EpochStatus } from "@shared/dtos/epoch.dto";
 import { Block } from "@shared/dtos/block.dto";
-import { Transaction, TransactionDetail, TRANSACTION_STATUS } from "@shared/dtos/transaction.dto";
+import { Transaction, TransactionDetail, TRANSACTION_STATUS, TxTag } from "@shared/dtos/transaction.dto";
 import { ITokenOverview, TokenHolder } from "@shared/dtos/token.dto";
 import { AddressDetail, StakeAddressDetail } from "@shared/dtos/address.dto";
 import { PoolDetail, PoolOverview } from "@shared/dtos/pool.dto";
@@ -187,6 +187,15 @@ export class BlockfrostConnector extends ApiConnector {
         ? (metaResp as any).data.map((m: any) => ({ label: m.label, value: JSON.stringify(m.json_metadata) }))
         : undefined;
 
+      const detailTags: TxTag[] = [];
+      const hasNativeTokensDetail = (tx.output_amount ?? []).some((a: any) => a.unit !== "lovelace");
+      if (hasNativeTokensDetail || (tx.asset_mint_or_burn_count ?? 0) > 0) detailTags.push("token");
+      if ((tx.asset_mint_or_burn_count ?? 0) > 0) detailTags.push("mint");
+      if ((tx.delegation_count ?? 0) > 0 || (tx.stake_cert_count ?? 0) > 0 || (tx.withdrawal_count ?? 0) > 0 || (tx.mir_cert_count ?? 0) > 0) detailTags.push("stake");
+      if ((tx.pool_update_count ?? 0) > 0 || (tx.pool_retire_count ?? 0) > 0) detailTags.push("pool");
+      if ((tx.redeemer_count ?? 0) > 0) detailTags.push("script");
+      if (detailTags.length === 0) detailTags.push("transfer");
+
       const detail: TransactionDetail = {
         tx: {
           hash: tx.hash,
@@ -200,7 +209,8 @@ export class BlockfrostConnector extends ApiConnector {
           fee: parseInt(tx.fees ?? "0"),
           totalOutput: tx.output_amount?.filter((a: any) => a.unit === "lovelace").reduce((s: number, a: any) => s + parseInt(a.quantity), 0) ?? 0,
           maxEpochSlot: 0,
-          slotNo: tx.slot ?? 0
+          slotNo: tx.slot ?? 0,
+          tags: detailTags
         },
         summary: { stakeAddress: [] },
         utxOs: {
@@ -220,6 +230,16 @@ export class BlockfrostConnector extends ApiConnector {
   private async _fetchTxSummary(hash: string, block: Block): Promise<Transaction> {
     const txResp = await this.client.get<BfTx>(`/txs/${hash}`);
     const tx = txResp.data;
+
+    const tags: TxTag[] = [];
+    const hasNativeTokens = (tx.output_amount ?? []).some((a: any) => a.unit !== "lovelace");
+    if (hasNativeTokens || (tx.asset_mint_or_burn_count ?? 0) > 0) tags.push("token");
+    if ((tx.asset_mint_or_burn_count ?? 0) > 0) tags.push("mint");
+    if ((tx.delegation_count ?? 0) > 0 || (tx.stake_cert_count ?? 0) > 0 || (tx.withdrawal_count ?? 0) > 0 || (tx.mir_cert_count ?? 0) > 0) tags.push("stake");
+    if ((tx.pool_update_count ?? 0) > 0 || (tx.pool_retire_count ?? 0) > 0) tags.push("pool");
+    if ((tx.redeemer_count ?? 0) > 0) tags.push("script");
+    if (tags.length === 0) tags.push("transfer");
+
     return {
       hash,
       blockNo: block.blockNo,
@@ -230,7 +250,8 @@ export class BlockfrostConnector extends ApiConnector {
       fee: parseInt(tx.fees ?? "0"),
       totalOutput: tx.output_amount?.filter((a: any) => a.unit === "lovelace").reduce((s: number, a: any) => s + parseInt(a.quantity), 0) ?? 0,
       blockHash: tx.block,
-      status: TRANSACTION_STATUS.SUCCESS
+      status: TRANSACTION_STATUS.SUCCESS,
+      tags
     } as Transaction;
   }
 

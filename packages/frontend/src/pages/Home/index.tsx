@@ -20,6 +20,7 @@ import {
   Typography,
   styled,
 } from "@mui/material";
+import { alpha } from "@mui/material/styles";
 import { useTheme } from "@mui/material/styles";
 import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -29,7 +30,7 @@ import useFetch from "src/commons/hooks/useFetch";
 import { details, routers } from "src/commons/routers";
 import { formatADA, getShortHash, numberWithCommas } from "src/commons/utils/helper";
 import { Block } from "@shared/dtos/block.dto";
-import { Transaction } from "@shared/dtos/transaction.dto";
+import { Transaction, TxTag } from "@shared/dtos/transaction.dto";
 import { PoolOverview } from "@shared/dtos/pool.dto";
 import { ApiReturnType } from "@shared/APIReturnType";
 
@@ -70,6 +71,22 @@ interface DashboardStats {
     active: string;
   };
 }
+
+// ---------------------------------------------------------------------------
+// Tag config (matches TransactionLists/index.tsx)
+// ---------------------------------------------------------------------------
+
+const TX_TAG_META: Record<TxTag, { label: string; color: string }> = {
+  transfer:   { label: "Transfer",   color: "#3B82F6" },
+  token:      { label: "Token",      color: "#8B5CF6" },
+  mint:       { label: "Mint",       color: "#F59E0B" },
+  stake:      { label: "Stake",      color: "#06B6D4" },
+  pool:       { label: "Pool",       color: "#6366F1" },
+  script:     { label: "Script",     color: "#F97316" },
+  governance: { label: "Governance", color: "#A855F7" },
+};
+
+const TX_TAG_ORDER: TxTag[] = ["transfer", "script", "token", "mint", "stake", "pool", "governance"];
 
 // ---------------------------------------------------------------------------
 // Styled components — disclaimer
@@ -508,44 +525,87 @@ const Home: React.FC = () => {
                 <TableHead>
                   <TableRow>
                     <TableCell sx={headCellSx}>Hash</TableCell>
-                    <TableCell sx={headCellSx} align="right">
-                      Fee (₳)
-                    </TableCell>
-                    <TableCell sx={headCellSx} align="right">
-                      Time
-                    </TableCell>
+                    <TableCell sx={headCellSx}>Block</TableCell>
+                    <TableCell sx={headCellSx}>Type</TableCell>
+                    <TableCell sx={headCellSx} align="right">Output (₳)</TableCell>
+                    <TableCell sx={headCellSx} align="right">Fee (₳)</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
                   {txsLoading ? (
-                    <TableSkeleton rows={8} cols={3} />
+                    <TableSkeleton rows={8} cols={5} />
                   ) : (
-                    txs.map((tx) => (
-                      <TableRow
-                        key={tx.hash}
-                        hover
-                        sx={{ cursor: "pointer" }}
-                        onClick={() => navigate(details.transaction(tx.hash))}
-                      >
-                        <TableCell sx={cellSx}>
-                          <Link
-                            to={details.transaction(tx.hash)}
-                            style={{ color: theme.palette.primary.main, textDecoration: "none", fontFamily: "monospace" }}
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            {getShortHash(tx.hash, 8, 6)}
-                          </Link>
-                        </TableCell>
-                        <TableCell sx={cellSx} align="right">
-                          {formatADA(tx.fee)}
-                        </TableCell>
-                        <TableCell sx={cellSx} align="right">
-                          <Typography variant="caption" color="text.secondary">
-                            {formatDistanceToNow(new Date(Number(tx.time) * 1000), { addSuffix: true })}
-                          </Typography>
-                        </TableCell>
-                      </TableRow>
-                    ))
+                    txs.map((tx) => {
+                      const tags = tx.tags?.length ? TX_TAG_ORDER.filter((t) => tx.tags!.includes(t)) : ["transfer" as TxTag];
+                      return (
+                        <TableRow
+                          key={tx.hash}
+                          hover
+                          sx={{ cursor: "pointer" }}
+                          onClick={() => navigate(details.transaction(tx.hash))}
+                        >
+                          <TableCell sx={cellSx}>
+                            <Box>
+                              <Link
+                                to={details.transaction(tx.hash)}
+                                style={{ color: theme.palette.primary.main, textDecoration: "none", fontFamily: "monospace", fontWeight: 600 }}
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                {getShortHash(tx.hash, 8, 6)}
+                              </Link>
+                              <Typography variant="caption" display="block" color="text.secondary">
+                                {formatDistanceToNow(new Date(Number(tx.time) * 1000), { addSuffix: true })}
+                              </Typography>
+                            </Box>
+                          </TableCell>
+                          <TableCell sx={cellSx}>
+                            <Link
+                              to={details.block(tx.blockNo)}
+                              style={{ color: theme.palette.primary.main, textDecoration: "none", fontWeight: 600 }}
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              {tx.blockNo?.toLocaleString()}
+                            </Link>
+                            <Typography variant="caption" display="block" color="text.secondary">
+                              Epoch {tx.epochNo}
+                            </Typography>
+                          </TableCell>
+                          <TableCell sx={cellSx}>
+                            <Box display="flex" flexWrap="wrap" gap={0.3}>
+                              {tags.map((tag) => {
+                                const meta = TX_TAG_META[tag];
+                                return (
+                                  <Box
+                                    key={tag}
+                                    sx={{
+                                      display: "inline-block",
+                                      fontSize: "0.6rem",
+                                      fontWeight: 700,
+                                      px: 0.7,
+                                      py: 0.2,
+                                      borderRadius: "4px",
+                                      bgcolor: alpha(meta.color, 0.12),
+                                      color: meta.color,
+                                      border: `1px solid ${alpha(meta.color, 0.3)}`,
+                                      letterSpacing: "0.03em",
+                                      lineHeight: 1.4,
+                                    }}
+                                  >
+                                    {meta.label}
+                                  </Box>
+                                );
+                              })}
+                            </Box>
+                          </TableCell>
+                          <TableCell sx={cellSx} align="right">
+                            {formatADA(tx.totalOutput)}
+                          </TableCell>
+                          <TableCell sx={cellSx} align="right">
+                            {formatADA(tx.fee)}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })
                   )}
                 </TableBody>
               </Table>

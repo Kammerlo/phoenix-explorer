@@ -86,21 +86,43 @@ epochController.get('/:epochNo/blocks', async (req, res) => {
     page: Number.parseInt(String(pageInfo.page ?? 0)),
     count: Number.parseInt(String(pageInfo.size ?? 100)),
   });
-  const blocks: Block[] = [];
-  for (const blockHash of epochBlocks) {
-    const block = await getBlock(blockHash);
-    blocks.push({
+
+  // Fetch full block data for each hash
+  const rawBlocks = await Promise.all(epochBlocks.map(hash => getBlock(hash)));
+
+  // Batch-fetch pool metadata for unique slot leaders
+  const uniqueLeaders = [...new Set(rawBlocks.map(b => b.slot_leader).filter(Boolean))] as string[];
+  const poolMeta = new Map<string, { name: string; ticker: string }>();
+  await Promise.all(
+    uniqueLeaders
+      .filter(l => l.startsWith('pool'))
+      .map(async (leader) => {
+        try {
+          const meta = await API.poolMetadata(leader);
+          poolMeta.set(leader, { name: meta.name ?? '', ticker: meta.ticker ?? '' });
+        } catch { /* no metadata */ }
+      })
+  );
+
+  const blocks: Block[] = rawBlocks.map((block) => {
+    const meta = block.slot_leader ? poolMeta.get(block.slot_leader) : undefined;
+    return {
       blockNo: block.height ?? 0,
       epochNo: block.epoch ?? 0,
       epochSlotNo: block.epoch_slot ?? 0,
       slotNo: block.slot ?? 0,
       hash: block.hash,
-      slotLeader: block.slot_leader,
+      slotLeader: block.slot_leader ?? undefined,
+      poolName: meta?.name ?? '',
+      poolTicker: meta?.ticker ?? '',
       time: block.time.toString(),
       totalFees: Number.parseInt(block.fees ?? '0'),
+      totalOutput: Number.parseInt(block.output ?? '0'),
       txCount: block.tx_count ?? 0,
-    } as Block);
-  }
+      size: block.size,
+    } as Block;
+  });
+
   res.json({
     total: epoch.block_count,
     data: blocks,

@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
-import { Box, useTheme } from "@mui/material";
+import { Box, Chip } from "@mui/material";
+import { alpha } from "@mui/material/styles";
 import { useTranslation } from "react-i18next";
 
 import {
@@ -9,7 +10,8 @@ import {
   ExchageAltIcon,
   CubeIconComponent,
   SlotIcon,
-  TooltipIcon
+  TooltipIcon,
+  ActionTypeIcon
 } from "src/commons/resources";
 import { formatADAFull, formatNameBlockNo } from "src/commons/utils/helper";
 import { MAX_SLOT_EPOCH } from "src/commons/utils/constants";
@@ -21,7 +23,39 @@ import ADAicon from "src/components/commons/ADAIcon";
 import DatetimeTypeTooltip from "src/components/commons/DatetimeTypeTooltip";
 
 import { StyledLink, TitleCard } from "./styles";
-import {TransactionDetail} from "@shared/dtos/transaction.dto";
+import { TransactionDetail, TxTag } from "@shared/dtos/transaction.dto";
+
+// ─── Tag config ────────────────────────────────────────────────────────────────
+
+const TAG_META: Record<TxTag, { label: string; color: string }> = {
+  transfer:   { label: "Transfer",   color: "#3B82F6" },
+  token:      { label: "Token",      color: "#8B5CF6" },
+  mint:       { label: "Mint",       color: "#F59E0B" },
+  stake:      { label: "Stake",      color: "#06B6D4" },
+  pool:       { label: "Pool",       color: "#6366F1" },
+  script:     { label: "Script",     color: "#F97316" },
+  governance: { label: "Governance", color: "#A855F7" },
+};
+
+const TAG_ORDER: TxTag[] = ["transfer", "script", "token", "mint", "stake", "pool", "governance"];
+
+function deriveTagsFromDetail(data: TransactionDetail | null | undefined): TxTag[] {
+  if (!data) return [];
+
+  // Prefer pre-computed tags from the backend (same logic as the list view)
+  if (data.tx.tags?.length) return TAG_ORDER.filter((t) => data.tx.tags!.includes(t));
+
+  // Fallback: derive from populated arrays (for connectors that don't compute tags)
+  const tags: TxTag[] = [];
+  if ((data.contracts?.length ?? 0) > 0) tags.push("script");
+  if ((data.mints?.length ?? 0) > 0 || (data.utxOs?.outputs?.some((o) => (o.tokens?.length ?? 0) > 0) ?? false)) tags.push("token");
+  if ((data.mints?.length ?? 0) > 0) tags.push("mint");
+  if ((data.delegations?.length ?? 0) > 0 || (data.withdrawals?.length ?? 0) > 0 || (data.stakeCertificates?.length ?? 0) > 0 || (data.instantaneousRewards?.length ?? 0) > 0) tags.push("stake");
+  if ((data.poolCertificates?.length ?? 0) > 0) tags.push("pool");
+  if (tags.length === 0) tags.push("transfer");
+
+  return TAG_ORDER.filter((t) => tags.includes(t));
+}
 
 interface Props {
   data: TransactionDetail | null | undefined;
@@ -40,7 +74,41 @@ const TransactionOverview: React.FC<Props> = ({ data, loading }) => {
     if (data) setLastUpdated(Date.now());
   }, [data, blockNo]);
 
+  const txTags = useMemo(() => deriveTagsFromDetail(data), [data]);
+
   const listOverview = [
+    {
+      icon: ActionTypeIcon,
+      title: (
+        <Box display="flex" alignItems="center">
+          <TitleCard mr={1}>Type</TitleCard>
+        </Box>
+      ),
+      value: (
+        <Box display="flex" flexWrap="wrap" gap={0.5}>
+          {txTags.map((tag) => {
+            const meta = TAG_META[tag];
+            return (
+              <Chip
+                key={tag}
+                label={meta.label}
+                size="small"
+                sx={{
+                  height: 20,
+                  fontSize: "0.65rem",
+                  fontWeight: 700,
+                  letterSpacing: "0.04em",
+                  bgcolor: alpha(meta.color, 0.12),
+                  color: meta.color,
+                  border: `1px solid ${alpha(meta.color, 0.3)}`,
+                  "& .MuiChip-label": { px: 0.9 }
+                }}
+              />
+            );
+          })}
+        </Box>
+      )
+    },
     {
       icon: TimeIconComponent,
       title: (
