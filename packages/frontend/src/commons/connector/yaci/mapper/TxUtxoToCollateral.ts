@@ -1,21 +1,26 @@
 import { TxUtxo } from "../types";
 
 export function txUtxoToCollateralResponse(input: TxUtxo): CollateralResponses {
+  const amounts = input.amount || [];
+  const lovelace = amounts.find((a) => a.unit === "lovelace" || a.assetName === "lovelace");
   return {
     address: input.address || "",
-    assetId: "", // TODO: need to implement
-    index: input.outputIndex ? input.outputIndex.toString() : "",
+    assetId: "",
+    index: input.outputIndex != null ? input.outputIndex.toString() : "",
     txHash: input.txHash || "",
-    value: input.amount && input.amount[0].assetName === "lovelace" ? input.amount[0].quantity! : 0,
-    tokens: input.amount!.map((amount) => {
+    value: lovelace?.quantity ?? 0,
+    tokens: amounts.map((amount) => {
+      const policyId = amount.policyId || "";
+      const unit = amount.unit || "";
+      const assetId = policyId ? unit.replace(policyId, "") : unit;
       return {
-        assetName: amount.assetName,
-        assetId: amount.unit!.replace(amount.policyId!, ""),
-        assetQuantity: amount.quantity,
+        assetName: amount.assetName || "",
+        assetId,
+        assetQuantity: amount.quantity ?? 0,
         policy: {
-          policyId: amount.policyId,
-          totalToken: 0, // TODO: need to implement
-          policyScript: "" // TODO: need to implement
+          policyId,
+          totalToken: 0,
+          policyScript: ""
         }
       } as Token;
     })

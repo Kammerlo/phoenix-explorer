@@ -1,4 +1,4 @@
-import { Box } from "@mui/material";
+import { Box, Chip } from "@mui/material";
 import BigNumber from "bignumber.js";
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -13,6 +13,8 @@ import DatetimeTypeTooltip from "src/components/commons/DatetimeTypeTooltip";
 import ScriptModal from "../../ScriptModal";
 import { ButtonLink, PolicyId, PolicyScriptBtn, TokenDescription, TokenHeader, TokenUrl, WrapTitle } from "./styles";
 import {ITokenOverview} from "@shared/dtos/token.dto";
+import { details } from "src/commons/routers";
+import { Link } from "react-router-dom";
 
 BigNumber.config({ DECIMAL_PLACES: 40 });
 
@@ -35,6 +37,14 @@ const TokenOverview: React.FC<TokenOverViewProps> = ({ data, loading, lastUpdate
           <CustomTooltip title={data?.displayName || data?.fingerprint || ""}>
             <span>{data?.displayName || getShortHash(data?.fingerprint) || ""}</span>
           </CustomTooltip>
+          {data?.tokenType && (data.tokenType === "NFT" || data.tokenType === "FT") && (
+            <Chip
+              label={data.tokenType}
+              size="small"
+              color={data.tokenType === "NFT" ? "primary" : "default"}
+              sx={{ ml: 1, fontWeight: "bold" }}
+            />
+          )}
           {data?.metadata && data?.metadata?.logo ? (
             <Box component={"img"} width={"auto"} height={36} src={`${data.metadata.logo}`} alt="logo icon" ml={1} />
           ) : (
@@ -73,15 +83,22 @@ const TokenOverview: React.FC<TokenOverViewProps> = ({ data, loading, lastUpdate
               <CopyButton text={data?.policy}></CopyButton>
             </Box>
           </Box>
-          <PolicyScriptBtn
-            data-testid="token.policyScript"
-            onClick={() => {
-              setOpenModal(true);
-              setPolicyId(data?.policy || "");
-            }}
-          >
-            {t("common.policyScript")}
-          </PolicyScriptBtn>
+          <Box display="flex" gap={1} alignItems="center" mt={0.5}>
+            <PolicyScriptBtn
+              data-testid="token.policyScript"
+              onClick={() => {
+                setOpenModal(true);
+                setPolicyId(data?.policy || "");
+              }}
+            >
+              {t("common.policyScript")}
+            </PolicyScriptBtn>
+            {data?.policy && (
+              <ButtonLink as={Link} to={details.policyDetail(data.policy)}>
+                View Policy
+              </ButtonLink>
+            )}
+          </Box>
         </>
       )
     },
@@ -107,6 +124,17 @@ const TokenOverview: React.FC<TokenOverViewProps> = ({ data, loading, lastUpdate
       icon: TimeIconComponent,
       value: <DatetimeTypeTooltip>{formatDateTimeLocal(data?.tokenLastActivity || "")}</DatetimeTypeTooltip>
     },
+    ...(data?.mintOrBurnCount !== undefined ? [{
+      title: (
+        <Box display={"flex"} alignItems="center">
+          <Box component={"span"} mr={1}>
+            <WrapTitle>{"Mint/Burn Operations"}</WrapTitle>
+          </Box>
+        </Box>
+      ),
+      icon: USDIconComponent,
+      value: <Box component={"span"}>{data.mintOrBurnCount}</Box>
+    }] : [])
   ];
 
   return (

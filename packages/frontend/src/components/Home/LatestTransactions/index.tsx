@@ -2,13 +2,13 @@ import { Box, Grid, useTheme } from "@mui/material";
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { useSelector } from "react-redux";
-import { Link, useHistory } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 import useFetch from "src/commons/hooks/useFetch";
 import { SeeMoreIconHome } from "src/commons/resources";
 import { details, routers } from "src/commons/routers";
 import { API } from "src/commons/utils/api";
-import { TRANSACTION_STATUS } from "src/commons/utils/constants";
+import { TRANSACTION_STATUS } from "@shared/dtos/transaction.dto";
 import { formatADAFull, formatDateTimeLocal, handleClicktWithoutAnchor } from "src/commons/utils/helper";
 import ADAicon from "src/components/commons/ADAIcon";
 import CustomTooltip from "src/components/commons/CustomTooltip";
@@ -49,7 +49,7 @@ const LatestTransactions: React.FC = () => {
     blockKey
   );
 
-  const history = useHistory();
+  const navigate = useNavigate();
   return (
     <TransactionContainer data-testid="home-latest-transactions">
       <Header>
@@ -69,7 +69,7 @@ const LatestTransactions: React.FC = () => {
           {!initialized
             ? new Array(4).fill(0).map((_, index) => {
                 return (
-                  <Grid item xl lg={3} xs={6} key={index}>
+                  <Grid size={{ xs: 6, lg: 3 }} key={index}>
                     <Item>
                       <ItemHeader>
                         <CommonSkeleton variant="circular" width={50} height={40} />
@@ -89,8 +89,8 @@ const LatestTransactions: React.FC = () => {
                   item;
                 return (
                   // isTable show 2 item per row else show 1 item per row grid
-                  <Grid item xl={3} lg={3} xs={12} sm={6} key={hash}>
-                    <Item onClick={(e) => handleClicktWithoutAnchor(e, () => history.push(details.transaction(hash)))}>
+                  <Grid size={{ xs: 12, sm: 6, lg: 3 }} key={hash}>
+                    <Item onClick={(e) => handleClicktWithoutAnchor(e, () => navigate(details.transaction(hash)))}>
                       <ItemHeader>
                         <LatestTransactionItemHeader>
                           <HeaderStatus status={status as TRANSACTION_STATUS}>

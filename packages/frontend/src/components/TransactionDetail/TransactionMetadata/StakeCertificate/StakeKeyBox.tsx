@@ -25,7 +25,7 @@ const StakeKeyBox = ({ data, index }: TProps) => {
   return (
     <Box pt={"15px"}>
       <Grid container spacing={2}>
-        <Grid item xs={12}>
+        <Grid size={{ xs: 12 }}>
           {leftRow.map(({ label, value }) => {
             return (
               <StyledItem key={value}>

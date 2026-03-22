@@ -32,8 +32,11 @@ blockController.get('', async (req, res) => {
       totalFees: Number.parseInt(block.fees ?? '0'),
       totalOutput: Number.parseInt(block.output ?? '0'),
       time: block.time.toString(),
-      previousBlock: block.previous_block,
-      nextBlock: block.next_block
+      previousBlock: block.previous_block ?? undefined,
+      nextBlock: block.next_block ?? undefined,
+      size: block.size,
+      confirmations: (block as any).confirmations,
+      blockVrf: block.block_vrf ?? undefined,
     };
   });
   res.json({
@@ -69,6 +72,9 @@ blockController.get('/:blockId', async (req, res) => {
       // poolName: block.slot_leader,
       slotLeader: block.slot_leader,
       // poolView: block.slot_leader,
+      size: block.size,
+      confirmations: (block as any).confirmations,
+      blockVrf: block.block_vrf ?? undefined,
     },
     lastUpdated: Math.floor(Date.now() / 1000),
   } as ApiReturnType<Block>)

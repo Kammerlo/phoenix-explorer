@@ -242,17 +242,55 @@ export type CustomTypeBackground = {
 };
 
 declare module "@mui/material" {
-  type Palette = CustomPalette;
-  type PaletteOptions = CustomPalette;
-  type TypeText = CustomTypeText;
-  type TypeBackground = CustomTypeBackground;
+  interface Palette {
+    blue: typeof BLUE;
+    red: typeof RED;
+    yellow: typeof YELLOW;
+    purple: typeof PURPLE;
+    gradient: typeof GRADIENTS;
+    border: typeof border;
+    secondary: PaletteColor & {
+      0: string;
+      600: string;
+      700: string;
+      800: string;
+      900: string;
+      background: string;
+    };
+  }
+  interface PaletteOptions {
+    blue?: typeof BLUE;
+    red?: typeof RED;
+    yellow?: typeof YELLOW;
+    purple?: typeof PURPLE;
+    gradient?: typeof GRADIENTS;
+    border?: typeof border;
+  }
+  interface PaletteColor {
+    0?: string;
+    100?: string;
+    200?: string;
+    500?: string;
+    600?: string;
+    700?: string;
+    800?: string;
+    900?: string;
+    background?: string;
+    iconBorder?: string;
+  }
+  interface TypeText {
+    dark?: string;
+    hint?: string;
+  }
+  interface TypeBackground {
+    neutral?: string;
+  }
 }
 
 declare module "@emotion/react" {
-  type Palette = CustomPalette;
-  type PaletteOptions = CustomPalette;
-  type TypeText = CustomTypeText;
-  type TypeBackground = CustomTypeBackground;
+  interface Theme {
+    palette: CustomPalette;
+  }
 }
 
 const light: CustomPalette = {

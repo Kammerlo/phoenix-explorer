@@ -11,6 +11,7 @@ import FetchDataErr from "src/components/commons/FetchDataErr";
 import { StyledContainer } from "./styles";
 import {ITokenOverview, TokenHolder} from "@shared/dtos/token.dto";
 import {ApiConnector} from "../../commons/connector/ApiConnector";
+import PluginSlotRenderer from "src/plugins/PluginSlotRenderer";
 import {ApiReturnType} from "@shared/APIReturnType";
 import CircularProgress from "@mui/material/CircularProgress";
 import TransactionList from "../../components/TransactionLists";
@@ -41,6 +42,7 @@ const TokenDetail: React.FC = () => {
   const [holdersLoading, setHoldersLoading] = useState<boolean>(false);
   const [tabValue, setTabValue] = useState<string>("transactions");
   const apiConnector = ApiConnector.getApiConnector();
+  const network = process.env.REACT_APP_NETWORK || "mainnet";
 
   function updateData() {
     setLoading(true);
@@ -132,6 +134,7 @@ const TokenDetail: React.FC = () => {
             />
           </TabPanel>
         </TabContext>
+        <PluginSlotRenderer slot="token-detail" context={{ data: fetchData?.data, network, apiConnector }} />
       </StyledContainer>
     </OverviewMetadataTokenContext.Provider>
   );

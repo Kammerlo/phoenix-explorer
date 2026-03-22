@@ -33,6 +33,8 @@ epochController.get('', async (req, res) => {
       startTime: epoch.start_time.toString(),
       outSum: Number.parseInt(epoch.output),
       txCount: epoch.tx_count,
+      fees: Number.parseInt((epoch as any).fees ?? '0'),
+      activeStake: Number.parseInt((epoch as any).active_stake ?? '0'),
     };
     return dataEpoch;
   }));
@@ -67,6 +69,8 @@ epochController.get('/:epochNo', async (req, res) => {
     startTime: requestedEpoch.start_time.toString(),
     outSum: Number.parseInt(requestedEpoch.output),
     txCount: requestedEpoch.tx_count,
+    fees: Number.parseInt((requestedEpoch as any).fees ?? '0'),
+    activeStake: Number.parseInt((requestedEpoch as any).active_stake ?? '0'),
   };
   res.json({
     data: epoch,

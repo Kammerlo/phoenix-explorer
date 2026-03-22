@@ -20,6 +20,17 @@ transactionController.get("", async (req, res) => {
   res.json(response);
 });
 
+transactionController.get("/current", async (req, res) => {
+  const size = parseInt(String(req.query.size ?? 10));
+  const txs = await fetchLatestTransactions(size);
+  const response: ApiReturnType<Transaction[]> = {
+    total: 10000,
+    data: txs,
+    lastUpdated: Math.floor(Date.now() / 1000)
+  };
+  res.json(response);
+});
+
 transactionController.get("/:txHash", async (req, res) => {
   const detail = await fetchTransactionDetail(req.params.txHash);
   const response: ApiReturnType<TransactionDetail> = {

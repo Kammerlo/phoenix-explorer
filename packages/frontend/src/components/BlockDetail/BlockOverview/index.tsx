@@ -157,6 +157,78 @@ const BlockOverview: React.FC<BlockOverviewProps> = ({ data, loading, lastUpdate
         </Box>
       ),
       value: <Box data-testid="block.detail.overview.value.slot"><StyledLink to={details.delegation(data?.slotLeader)}>{data?.slotLeader}</StyledLink></Box>
+    },
+    ...(data?.size !== undefined ? [{
+      icon: SlotIcon,
+      title: (
+        <Box display={"flex"} alignItems="center">
+          <TitleCard mr={1} data-testid="block.detail.overview.title.blockSize">
+            {t("glossary.blockSize") || "Block Size"}
+          </TitleCard>
+        </Box>
+      ),
+      value: (
+        <Box data-testid="block.detail.overview.value.blockSize">
+          {`${data.size.toLocaleString()} bytes`}
+        </Box>
+      )
+    }] : []),
+    ...(data?.confirmations !== undefined ? [{
+      icon: CubeIconComponent,
+      title: (
+        <Box display={"flex"} alignItems="center">
+          <TitleCard mr={1} data-testid="block.detail.overview.title.confirmations">
+            {t("glossary.confirmations") || "Confirmations"}
+          </TitleCard>
+        </Box>
+      ),
+      value: (
+        <Box data-testid="block.detail.overview.value.confirmations">
+          {data.confirmations?.toLocaleString()}
+        </Box>
+      )
+    }] : []),
+    {
+      icon: BlockProducerIcon,
+      title: (
+        <Box display={"flex"} alignItems="center">
+          <TitleCard mr={1} data-testid="block.detail.overview.title.previousBlock">
+            {t("glossary.previousBlock") || "Previous Block"}
+          </TitleCard>
+        </Box>
+      ),
+      value: (
+        <Box data-testid="block.detail.overview.value.previousBlock">
+          {data?.previousBlock ? (
+            <StyledLink to={details.block(data.previousBlock)}>
+              {data.previousBlock.substring(0, 8)}...
+            </StyledLink>
+          ) : (
+            "-"
+          )}
+        </Box>
+      )
+    },
+    {
+      icon: BlockProducerIcon,
+      title: (
+        <Box display={"flex"} alignItems="center">
+          <TitleCard mr={1} data-testid="block.detail.overview.title.nextBlock">
+            {t("glossary.nextBlock") || "Next Block"}
+          </TitleCard>
+        </Box>
+      ),
+      value: (
+        <Box data-testid="block.detail.overview.value.nextBlock">
+          {data?.nextBlock ? (
+            <StyledLink to={details.block(data.nextBlock)}>
+              {data.nextBlock.substring(0, 8)}...
+            </StyledLink>
+          ) : (
+            "Latest"
+          )}
+        </Box>
+      )
     }
   ];
   return (

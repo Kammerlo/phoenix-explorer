@@ -13,14 +13,14 @@ import {PoolOverview} from "@shared/dtos/pool.dto";
 import { DelegationContainer, PoolName } from "./styles";
 import { ApiConnector } from "src/commons/connector/ApiConnector";
 import { ApiReturnType } from "@shared/APIReturnType";
-import { useHistory } from "react-router";
+import { useNavigate } from "react-router-dom";
 import { CheckLightGreen } from "src/commons/resources";
 
 const PoolList: React.FC = () => {
   const { t } = useTranslation();
   const { pageInfo } = usePageInfo();
   const [ fetchData, setFetchData] = useState<ApiReturnType<PoolOverview[]>>();
-  const history = useHistory<{ tickerNameSearch?: string; fromPath?: SpecialPath }>();
+  const navigate = useNavigate<{ tickerNameSearch?: string; fromPath?: SpecialPath }>();
   const [loading, setLoading] = useState(true);
 
   const apiConnector = ApiConnector.getApiConnector();
@@ -136,7 +136,7 @@ const PoolList: React.FC = () => {
         data-testid="delegationList.table"
         columns={columns}
         total={{ count: fetchData.total, title: "Total"}}
-        onClickRow={(_, r: Delegators) => history.push(details.delegation(r.poolId))}
+        onClickRow={(_, r: Delegators) => navigate(details.delegation(r.poolId))}
         pagination={{
           ...pageInfo,
           total: fetchData.total

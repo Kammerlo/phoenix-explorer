@@ -1,7 +1,7 @@
 import { Link as LinkDom } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { useTranslation } from "react-i18next";
-import moment from "moment";
+import { isAfter, parseISO } from "date-fns";
 import BigNumber from "bignumber.js";
 import { Box, useTheme } from "@mui/material";
 
@@ -77,7 +77,9 @@ const HomeStatistic = () => {
   const { theme: themeMode } = useSelector(({ theme }: RootState) => theme);
   const { liveStake = 0, activeStake = 1 } = data || {};
 
-  const progress = moment.utc(currentEpoch?.endTime, "YYYY-MM-DDTHH:mm:ssZ").isAfter(moment().utc())
+  const epochEndDate = currentEpoch?.endTime ? parseISO(currentEpoch.endTime) : null;
+  const isEpochActive = epochEndDate ? isAfter(epochEndDate, new Date()) : false;
+  const progress = isEpochActive
     ? (((currentEpoch?.slot || 0) / MAX_SLOT_EPOCH) * 100).toFixed(0)
     : 100;
 
@@ -87,15 +89,15 @@ const HomeStatistic = () => {
   const slot = (currentEpoch?.slot || 0) % MAX_SLOT_EPOCH;
   const countdown = MAX_SLOT_EPOCH - slot;
 
-  const { humanized, s, m, d, h } = getDurationUnits(countdown ? countdown : 0, "second");
-  const { humanized: humanizedActive } = getDurationUnits(slot, "second");
+  const { humanized, s, m, d, h } = getDurationUnits(countdown ? countdown : 0);
+  const { humanized: humanizedActive } = getDurationUnits(slot);
 
   const epochActiveText = `Started ${humanizedActive} ago`;
   const epochFinishText = `Finishes in ${humanized}`;
 
   const { isGalaxyFoldSmall } = useScreen();
 
-  const formattedDateTime = moment.utc(new Date());
+  const formattedDateTime = new Date();
   const numberActiveStake = new BigNumber(activeStake);
   const numberLiveStake = new BigNumber(liveStake);
 
@@ -163,7 +165,7 @@ const HomeStatistic = () => {
                     <Title data-testid="current-epoch-number">{numberWithCommas(currentEpoch?.no)}</Title>
                     <Box color={({ palette }) => palette.secondary.light}>
                       {t("common.slot")}:{" "}
-                      {moment.utc(currentEpoch?.endTime, "YYYY-MM-DDTHH:mm:ssZ").isAfter(moment().utc())
+                      {isEpochActive
                         ? numberWithCommas(currentEpoch?.slot)
                         : numberWithCommas(MAX_SLOT_EPOCH)}
                       / {numberWithCommas(MAX_SLOT_EPOCH)}
@@ -192,7 +194,7 @@ const HomeStatistic = () => {
                       <CircularLegend color={theme.palette.primary.main} />
                       <DatetimeTypeTooltip>
                         <Box color={({ palette }) => palette.secondary.light} fontSize={"12px"}>
-                          {t("glossary.currentTime")}: {formatDateTimeLocal(formattedDateTime.format())}
+                          {t("glossary.currentTime")}: {formatDateTimeLocal(String(Math.floor(formattedDateTime.getTime() / 1000)))}
                         </Box>
                       </DatetimeTypeTooltip>
                     </Box>
@@ -214,7 +216,7 @@ const HomeStatistic = () => {
       </WrapGrid>
       <WrapGrid item xl lg={3} sm={6} xs={12}>
         {data ? (
-          <Box component={LinkDom} display={"contents"} to={routers.DELEGATION_POOLS}>
+          <Box component={LinkDom} display={"contents"} to={routers.POOLS}>
             <Item thememode={themeMode}>
               <VerticalContent>
                 <Box>

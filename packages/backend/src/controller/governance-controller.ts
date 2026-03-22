@@ -74,6 +74,9 @@ governanceController.get('/actions/:txHash/:indexStr', async (req, res) => {
             motivation: jsonMetadata.body.motivation || "",
             title: jsonMetadata.body.title || "",
             authors: jsonMetadata.authors.map((author: any) => author.name) || [],
+            anchorUrl: (proposal as any).anchor_url ?? undefined,
+            anchorHash: (proposal as any).anchor_hash ?? undefined,
+            depositReturn: (proposal as any).return_address ?? undefined,
             allowedVoteByCC: true,
             allowedVoteBySPO: true,
             votesStats: {
@@ -171,10 +174,10 @@ governanceController.get('/dreps', async (req, res) => {
             activeVoteStake: drepDetails ? drepDetails.amount : 0,
             anchorHash: drepMetadata ? drepMetadata?.hash : "",
             anchorUrl: drepMetadata ? drepMetadata?.url : "",
-            givenName: jsonMetadata ? 
-            (typeof jsonMetadata.body.givenName === 'string' 
-                ? jsonMetadata.body.givenName 
-                : jsonMetadata.body.givenName?.["@value"] || "") : "",
+            givenName: jsonMetadata ?
+            (typeof jsonMetadata?.body?.givenName === 'string'
+                ? jsonMetadata.body.givenName
+                : jsonMetadata?.body?.givenName?.["@value"] || "") : "",
             drepHash: drep.hex,
             drepId: drep.drep_id,
             status: "ACTIVE",

@@ -1,4 +1,4 @@
-import { useHistory, useLocation } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { stringify } from "qs";
 import { pick } from "lodash";
 
@@ -6,15 +6,15 @@ import { getPageInfo } from "../utils/helper";
 
 const usePageInfo = () => {
   const { search } = useLocation();
-  const history = useHistory();
+  const navigate = useNavigate();
 
   const pageInfo = getPageInfo(search);
 
   const setSort = (sort: string) => {
     if (sort === "") {
-      history.replace({ search: stringify({ ...pick(pageInfo, ["page", "size", "retired", "tokenName"]), page: 1 }) });
+      navigate({ search: stringify({ ...pick(pageInfo, ["page", "size", "retired", "tokenName"]), page: 1 }) }, { replace: true });
     } else {
-      history.replace({ search: stringify({ ...pageInfo, page: 1, sort }) });
+      navigate({ search: stringify({ ...pageInfo, page: 1, sort }) }, { replace: true });
     }
   };
 

@@ -1,10 +1,8 @@
-import { YaciConnector } from "./yaci/yaciConnector";
 import { FunctionEnum } from "./types/FunctionEnum";
-import { POOL_TYPE } from "src/pages/RegistrationPools";
+import { POOL_TYPE } from "src/commons/connector/types/FunctionEnum";
 // @ts-ignore
 import { TProtocolParam } from "../../types/protocol";
 import { ParsedUrlQuery } from "querystring";
-import { GatewayConnector } from "./gateway/gatewayConnector";
 import { EpochOverview } from "@shared/dtos/epoch.dto";
 import { Block } from "@shared/dtos/block.dto";
 import { ApiReturnType } from "@shared/APIReturnType";
@@ -16,8 +14,13 @@ import { AddressDetail, StakeAddressDetail } from "@shared/dtos/address.dto";
 import { PoolDetail, PoolOverview } from "@shared/dtos/pool.dto";
 import { Drep, DrepDelegates } from "@shared/dtos/drep.dto";
 
-const API_URL: string = process.env.REACT_APP_API_URL || "";
-const API_CONNECTOR_TYPE: string = process.env.REACT_APP_API_TYPE || "";
+// Factory function set by ConnectorFactory.ts to avoid circular imports.
+// ConnectorFactory.ts must be imported before getApiConnector() is called.
+let _connectorFactory: (() => ApiConnector) | null = null;
+
+export function _setConnectorFactory(fn: () => ApiConnector): void {
+  _connectorFactory = fn;
+}
 
 export enum StakeAddressAction {
   REGISTRATION,
@@ -32,15 +35,14 @@ export abstract class ApiConnector {
   }
 
   public static getApiConnector(): ApiConnector {
-    // if (API_CONNECTOR_TYPE === "YACI") {
-    //   return new YaciConnector(API_URL);
-    // }
-    if (API_CONNECTOR_TYPE === "GATEWAY") {
-      return new GatewayConnector(API_URL);
+    if (!_connectorFactory) {
+      throw new Error(
+        "ConnectorFactory not initialized. Add `import 'src/commons/connector/ConnectorFactory';` to index.tsx."
+      );
     }
-    throw new Error("Invalid API_CONNECTOR_TYPE");
-    // return new YaciConnector("https://api.mainnet.yaci.xyz/api/v1");
+    return _connectorFactory();
   }
+
   abstract getSupportedFunctions(): FunctionEnum[];
 
   abstract getEpochs(pageInfo: ParsedUrlQuery): Promise<ApiReturnType<EpochOverview[]>>;
@@ -81,6 +83,8 @@ export abstract class ApiConnector {
   abstract getTokenTransactions(tokenId: string, pageInfo: ParsedUrlQuery): Promise<ApiReturnType<Transaction[]>>;
 
   abstract getTokenHolders(tokenId: string, pageInfo: ParsedUrlQuery): Promise<ApiReturnType<TokenHolder[]>>;
+
+  abstract getTokensByPolicy(policyId: string, pageInfo: ParsedUrlQuery): Promise<ApiReturnType<ITokenOverview[]>>;
 
   abstract getGovernanceOverviewList(pageInfo: ParsedUrlQuery): Promise<ApiReturnType<GovernanceActionListItem[]>>;
 

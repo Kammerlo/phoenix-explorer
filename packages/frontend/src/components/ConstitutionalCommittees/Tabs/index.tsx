@@ -1,4 +1,4 @@
-import { useHistory } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Box } from "@mui/material";
 import { t } from "i18next";
 
@@ -12,9 +12,9 @@ import Members from "./Members";
 import StatusHistory from "./StatusHistory";
 
 const Tabs = () => {
-  const history = useHistory();
+  const navigate = useNavigate();
   const onTabChange = (tab: string) => {
-    history.replace(details.constitutionalCommittees(tab));
+    navigate(details.constitutionalCommittees(tab), { replace: true });
   };
   const constitutionalCommitteeTabs: TTab[] = [
     {

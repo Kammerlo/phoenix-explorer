@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
-import { useHistory } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { Box, CircularProgress } from "@mui/material";
+import { Box, CircularProgress, Chip } from "@mui/material";
 
 import { EPOCH_STATUS } from "src/commons/utils/constants";
 import Card from "src/components/commons/Card";
@@ -22,7 +22,7 @@ import FirstEpoch from "src/components/commons/Epoch/FirstEpoch";
 const Epoch: React.FC = () => {
   const { t } = useTranslation();
   const [selected, setSelected] = useState<(number | string | null)[]>([]);
-  const history = useHistory();
+  const navigate = useNavigate();
   const { onDetailView } = useSelector(({ system }: RootState) => system);
   const epochNo = useSelector(({ system }: RootState) => system.currentEpoch?.no);
   const { pageInfo, setSort } = usePageInfo();
@@ -59,13 +59,16 @@ const Epoch: React.FC = () => {
       minWidth: "50px",
       render: (r, idx) => (
         <EpochNumber data-testid={`epoch.epochValue#${idx}`}>
-          <Box display={"flex"} alignItems={"center"} justifyContent={"center"}>
+          <Box display={"flex"} alignItems={"center"} justifyContent={"center"} gap={1}>
             <StyledLink to={details.epoch(r.no)} data-testid={`blocks.table.value.epoch#${idx}`}>
               {r.no}
             </StyledLink>
-            {/*<StatusTableRow status={r.status as keyof typeof EPOCH_STATUS}>*/}
-            {/*  {EPOCH_STATUS_MAPPING[EPOCH_STATUS[r.status]]}*/}
-            {/*</StatusTableRow>*/}
+            {(r.status as string) === EPOCH_STATUS.IN_PROGRESS && (
+              <Chip label={EPOCH_STATUS_MAPPING[EPOCH_STATUS.IN_PROGRESS]} color="success" size="small" />
+            )}
+            {(r.status as string) === EPOCH_STATUS.REWARDING && (
+              <Chip label={EPOCH_STATUS_MAPPING[EPOCH_STATUS.REWARDING]} color="warning" size="small" />
+            )}
           </Box>
         </EpochNumber>
       )
@@ -109,7 +112,7 @@ const Epoch: React.FC = () => {
   }, [t]);
 
   const handleOpenDetail = (_: React.MouseEvent, r: EpochOverview) => {
-    history.push(details.epoch(r.no));
+    navigate(details.epoch(r.no));
   };
 
   const handleExpandedRow = (data: EpochOverview) => {

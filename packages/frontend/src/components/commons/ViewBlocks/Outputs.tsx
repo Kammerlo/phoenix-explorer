@@ -1,7 +1,7 @@
 import { Box, Typography, useTheme } from "@mui/material";
 import React, { createRef, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { useHistory } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 import { OutlineEye, Polygon, PolygonDarkIcon } from "src/commons/resources";
 
@@ -17,13 +17,13 @@ interface ContractProps {
 const Outputs: React.FC<ContractProps> = ({ title, link }) => {
   const { t } = useTranslation();
   const popoverRef = createRef<{ trickerClose: () => void }>();
-  const history = useHistory();
+  const navigate = useNavigate();
   const anchorEl = useRef();
   const theme = useTheme();
 
   const goToDetail = () => {
     if (link) {
-      history.replace(link);
+      navigate(link, { replace: true });
       popoverRef.current?.trickerClose();
     }
   };

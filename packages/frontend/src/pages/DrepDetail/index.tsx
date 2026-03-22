@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useHistory, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import {
   Box,
   CircularProgress,
@@ -50,6 +50,7 @@ import DatetimeTypeTooltip from "src/components/commons/DatetimeTypeTooltip";
 
 import { StyledContainer, TitleCard, ValueCard } from "./styles";
 import { ApiConnector } from "src/commons/connector/ApiConnector";
+import PluginSlotRenderer from "src/plugins/PluginSlotRenderer";
 import { ApiReturnType } from "@shared/APIReturnType";
 import { Drep, DrepDelegates } from "@shared/dtos/drep.dto";
 import { GovernanceActionListItem } from "@shared/dtos/GovernanceOverview";
@@ -70,22 +71,23 @@ export const voteOption = [
 const DrepDetail = () => {
   const { drepId } = useParams<{ drepId: string }>();
   const theme = useTheme();
-  const history = useHistory();
+  const navigate = useNavigate();
   const { width, isMobile } = useScreen();
 
   const [openModal, setOpenModal] = useState(false);
   const [data, setData] = useState<ApiReturnType<Drep>>(null);
   const [loading, setLoading] = useState<boolean>(true);
-  
+
   const apiConnector = ApiConnector.getApiConnector();
+  const network = process.env.REACT_APP_NETWORK || "mainnet";
 
   useEffect(() => {
     const fetchDrepData = async () => {
       try {
         const result = await apiConnector.getDrep(drepId);
         setData(result);
-      } catch (error) {
-        console.error('Error fetching DRep data:', error);
+      } catch {
+        // ignore
       } finally {
         setLoading(false);
       }
@@ -99,7 +101,7 @@ const DrepDetail = () => {
     return (
       <StyledContainer>
         <HeaderDetailContainer>
-          <BackButton onClick={history.goBack}>
+          <BackButton onClick={() => navigate(-1)}>
             <HiArrowLongLeft color={theme.palette.secondary.light} />
             <BackText>{t("common.back")}</BackText>
           </BackButton>
@@ -154,6 +156,7 @@ const DrepDetail = () => {
       <DrepDetailsTabs drepId={drepId} />
       
       {/* <DrepAccordion /> */}
+      <PluginSlotRenderer slot="drep-detail" context={{ data: data?.data, network, apiConnector }} />
     </StyledContainer>
   );
 };
@@ -268,7 +271,45 @@ const getDrepOverviewCards = (
       </TitleCard>
     ),
     value: <ValueCard>{data?.data.delegators} </ValueCard>
-  }
+  },
+  ...(data?.data.govParticipationRate !== undefined ? [{
+    icon: ActiveVoteIcon,
+    sizeIcon: 26,
+    title: (
+      <TitleCard display={"flex"} alignItems="center">
+        {"Governance Participation Rate"}
+      </TitleCard>
+    ),
+    value: (
+      <ValueCard>{formatPercent(data.data.govParticipationRate)}</ValueCard>
+    )
+  }] : []),
+  ...(data?.data.votingPower !== undefined ? [{
+    icon: LiveStakeDrepIcon,
+    sizeIcon: 26,
+    title: (
+      <TitleCard display={"flex"} alignItems="center">
+        {"Voting Power"}
+      </TitleCard>
+    ),
+    value: (
+      <ValueCard>{`${formatADAFull(data.data.votingPower)} ADA`}</ValueCard>
+    )
+  }] : []),
+  ...(data?.data.updatedAt ? [{
+    icon: CreateDrepIcon,
+    sizeIcon: 26,
+    title: (
+      <TitleCard display={"flex"} alignItems="center">
+        {"Updated At"}
+      </TitleCard>
+    ),
+    value: (
+      <DatetimeTypeTooltip>
+        <ValueCard>{formatDateTimeLocal(data.data.updatedAt)}</ValueCard>
+      </DatetimeTypeTooltip>
+    )
+  }] : [])
 ];
 
 // Drep Details Tabs Component
@@ -326,7 +367,7 @@ const DrepDelegatesTab = ({ drepId }: { drepId: string }) => {
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
-  const history = useHistory();
+  const navigate = useNavigate();
   const apiConnector = ApiConnector.getApiConnector();
 
   const fetchDelegates = async (page: number = 0, pageSize: number = 10) => {
@@ -337,8 +378,8 @@ const DrepDelegatesTab = ({ drepId }: { drepId: string }) => {
         size: pageSize 
       });
       setDelegatesData(result);
-    } catch (error) {
-      console.error('Error fetching delegates:', error);
+    } catch {
+      // ignore
     }
     setLoading(false);
   };
@@ -348,7 +389,7 @@ const DrepDelegatesTab = ({ drepId }: { drepId: string }) => {
   }, [page, rowsPerPage, drepId]);
 
   const handleDelegateClick = (address: string) => {
-    history.push(`/address/${address}`);
+    navigate(`/address/${address}`);
   };
 
   const handlePageChange = (event: unknown, newPage: number) => {
@@ -423,7 +464,7 @@ const DrepVotesTab = ({ drepId }: { drepId: string }) => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const theme = useTheme();
-  const history = useHistory();
+  const navigate = useNavigate();
   const apiConnector = ApiConnector.getApiConnector();
 
   const fetchVotes = async (page: number = 0, pageSize: number = 10) => {
@@ -434,8 +475,8 @@ const DrepVotesTab = ({ drepId }: { drepId: string }) => {
         size: pageSize 
       });
       setVotesData(result);
-    } catch (error) {
-      console.error('Error fetching votes:', error);
+    } catch {
+      // ignore
     }
     setLoading(false);
   };
@@ -445,8 +486,7 @@ const DrepVotesTab = ({ drepId }: { drepId: string }) => {
   }, [page, rowsPerPage, drepId]);
 
   const handleVoteClick = (txHash: string, index: number) => {
-    // Prepare for future governance actions page
-    history.push(`/governance-actions/${txHash}/${index}`);
+    navigate(`/governance-action/${txHash}/${index}`);
   };
 
   const handlePageChange = (event: unknown, newPage: number) => {

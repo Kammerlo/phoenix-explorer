@@ -14,4 +14,9 @@ export interface Block {
   poolTicker?: string;
   poolView?: string;
   description?: string;
+  size?: number;          // block size in bytes
+  confirmations?: number; // number of confirmations
+  blockVrf?: string;      // VRF key used to mint the block
+  previousBlock?: string; // hash of the previous block
+  nextBlock?: string;     // hash of the next block
 }

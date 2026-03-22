@@ -11,6 +11,7 @@ import NoRecord from "src/components/commons/NoRecord";
 import { ApiConnector } from "src/commons/connector/ApiConnector";
 import {ApiReturnType} from "@shared/APIReturnType";
 import { TransactionDetail } from "@shared/dtos/transaction.dto";
+import PluginSlotRenderer from "src/plugins/PluginSlotRenderer";
 
 const StyledContainer = styled(Container)`
   padding: 30px 16px 40px;
@@ -25,6 +26,7 @@ const TransactionDetailView: React.FC = () => {
   const [txData, setTxData] = useState<ApiReturnType<TransactionDetail>>();
   const [loading, setLoading] = useState<boolean>(true);
   const apiConnector: ApiConnector = ApiConnector.getApiConnector();
+  const network = process.env.REACT_APP_NETWORK || "mainnet";
 
   useEffect(() => {
     window.history.replaceState({}, document.title);
@@ -51,6 +53,7 @@ const TransactionDetailView: React.FC = () => {
       <Box>
         <TransactionMetadata data={txData?.data} loading={loading} />
       </Box>
+      <PluginSlotRenderer slot="transaction-detail" context={{ data: txData?.data, network, apiConnector }} excludeMetadataPlugins />
     </StyledContainer>
   );
 };

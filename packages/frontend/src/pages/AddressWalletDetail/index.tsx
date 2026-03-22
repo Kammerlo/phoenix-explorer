@@ -4,6 +4,7 @@ import { styled, Container, CircularProgress } from "@mui/material";
 
 import { ApiConnector } from "../../commons/connector/ApiConnector";
 import AddressHeader from "../../components/AddressDetail/AddressHeader";
+import PluginSlotRenderer from "src/plugins/PluginSlotRenderer";
 import NoRecord from "../../components/commons/NoRecord";
 import NotAvailable from "../../components/commons/NotAvailable";
 import { AddressDetail } from "@shared/dtos/address.dto";
@@ -20,6 +21,7 @@ const AddressWalletDetail = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const apiConnector: ApiConnector = ApiConnector.getApiConnector();
   const [error, setError] = useState<string>();
+  const network = process.env.REACT_APP_NETWORK || "mainnet";
   const { pageInfo } = usePageInfo();
 
   useEffect(() => {
@@ -53,6 +55,7 @@ const AddressWalletDetail = () => {
     <ContainerBox>
       <AddressHeader data={data} loading={loading} />
       <TransactionList showTabView transactions={txData} loading={txDataLoading} updateData={updateTxPage} paginated={true} />
+      <PluginSlotRenderer slot="address-detail" context={{ data, network, apiConnector }} />
     </ContainerBox>
   );
 };

@@ -1,7 +1,7 @@
 import { TabContext, TabList, TabPanel } from "@mui/lab";
 import { Box, Tab, useTheme } from "@mui/material";
 import { useEffect, useState } from "react";
-import { useHistory, useLocation } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { parse, ParsedQs, stringify } from "qs";
 import { useTranslation } from "react-i18next";
 import { t } from "i18next";
@@ -26,7 +26,7 @@ export default function TabOverview() {
   const { pageInfo } = usePageInfo();
   const { search } = useLocation<{ fromPath?: SpecialPath }>();
   const { t } = useTranslation();
-  const history = useHistory();
+  const navigate = useNavigate();
   const theme = useTheme();
   const [fetchData, setFetchData] = useState<ApiReturnType<GovernanceActionListItem[]>>({data: [], lastUpdated: 0, total: 0, currentPage: 1});
   const [loading, setLoading] = useState<boolean>(true);

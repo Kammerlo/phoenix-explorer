@@ -10,6 +10,10 @@ import Routers from "./Routers";
 import i18n from "./i18n";
 import store from "./stores";
 import { SUPPORTED_LANGUAGES } from "./commons/utils/constants";
+import { registerAllPlugins } from "./plugins";
+import ErrorBoundary from "./components/commons/ErrorBoundary";
+
+registerAllPlugins();
 
 const App: React.FC = () => {
   window.Buffer = Buffer;
@@ -26,7 +30,9 @@ const App: React.FC = () => {
       <Provider store={store}>
         <Router basename={basename}>
           <AppContainer>
-            <Routers />
+            <ErrorBoundary>
+              <Routers />
+            </ErrorBoundary>
           </AppContainer>
         </Router>
       </Provider>

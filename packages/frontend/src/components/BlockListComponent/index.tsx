@@ -3,7 +3,7 @@ import { useSelector } from "react-redux";
 import React, { useEffect, useState, useRef, MouseEvent } from "react";
 import { Box, CircularProgress } from "@mui/material";
 import { stringify } from "qs";
-import { useHistory } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
 import { Column } from "src/types/table";
@@ -32,7 +32,7 @@ interface BlockListComponentProps {
 }
 const BlockListComponent: React.FC<BlockListComponentProps> = ({fetchData, updateData, loading}) => {
   const { t } = useTranslation();
-  const history = useHistory();
+  const navigate = useNavigate();
   const { onDetailView } = useSelector(({ system }: RootState) => system);
   const { pageInfo } = usePageInfo();
   const [selected, setSelected] = useState<(number | string | null)[]>([]);
@@ -116,7 +116,7 @@ const BlockListComponent: React.FC<BlockListComponentProps> = ({fetchData, updat
   ];
 
   const handleOpenDetail = (_: MouseEvent<Element, globalThis.MouseEvent>, r: Block) => {
-    history.push(details.block(r.blockNo));
+    navigate(details.block(r.blockNo));
   };
 
   const handleClose = () => {

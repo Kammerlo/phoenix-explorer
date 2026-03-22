@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { isEmpty, isNil } from "lodash";
 import { t } from "i18next";
 import { useSelector } from "react-redux";
-import { useHistory, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
 import { decryptCardanoMessage, isJson } from "src/commons/utils/helper";
 import CIP60Modal from "src/components/CIPComplianceModal/CIP60Modal";

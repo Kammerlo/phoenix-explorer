@@ -107,6 +107,20 @@ export const socials: Social[] = [
 
 export const footerMenus: Menu[] = [
   {
+    title: "Plugins",
+    key: "glossary.plugins",
+    icon: ProtocolIcon,
+    href: routers.PLUGINS,
+    hidden: false
+  },
+  {
+    title: "Protocol Parameters",
+    key: "glossary.protocolParameters",
+    icon: ProtocolIcon,
+    href: routers.PROTOCOL_PARAMETERS,
+    hidden: !supportedFunctions.includes(FunctionEnum.PROTOCOL_PARAMETER)
+  },
+  {
     title: "Discover Cardano",
     key: "glossary.discoverCardano",
     icon: BrowseIcon,

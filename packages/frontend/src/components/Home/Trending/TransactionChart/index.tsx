@@ -1,5 +1,5 @@
 import { Box, Grid, useTheme } from "@mui/material";
-import moment from "moment";
+import { format, parseISO } from "date-fns";
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, TooltipProps, XAxis, YAxis } from "recharts";
@@ -105,10 +105,10 @@ const TransactionChart: React.FC = () => {
   const renderLoading = () => {
     return (
       <Grid container spacing={2}>
-        <Grid item xs={12} lg={9}>
+        <Grid size={{ xs: 12, lg: 9 }}>
           <Skeleton variant="rectangular" height={400} style={{ borderRadius: 10 }} />
         </Grid>
-        <Grid item xs={12} lg={3}>
+        <Grid size={{ xs: 12, lg: 3 }}>
           <Skeleton variant="rectangular" height={400} />
         </Grid>
       </Grid>
@@ -117,10 +117,10 @@ const TransactionChart: React.FC = () => {
   return (
     <TransactionContainer>
       <Grid container spacing={2}>
-        <Grid item xs={12} sm={8} md={8} lg={9}>
+        <Grid size={{ xs: 12, sm: 8, md: 8, lg: 9 }}>
           <Title>{t("drawer.transactionsHistory")}</Title>
         </Grid>
-        <Grid item xs={12} sm={4} md={4} lg={3}>
+        <Grid size={{ xs: 12, sm: 4, md: 4, lg: 3 }}>
           <Box maxWidth={"260px"} mx={isMobile ? "auto" : "none"}>
             <Tabs display="flex" justifyContent="space-between" width={isMobile ? "100%" : "auto"}>
               {Object.keys(optionsTime).map((option) => {
@@ -141,10 +141,10 @@ const TransactionChart: React.FC = () => {
       {loading && renderLoading()}
       {!loading && (
         <Grid container spacing={2}>
-          <Grid item xs={12} lg={9}>
+          <Grid size={{ xs: 12, lg: 9 }}>
             <Chart data={data} range={rangeTime} />
           </Grid>
-          <Grid item xs={12} lg={3}>
+          <Grid size={{ xs: 12, lg: 3 }}>
             <BoxInfo>
               <StyledTransactionTypes>{t("glossary.txTypes")}</StyledTransactionTypes>
               {dataOverview.map((item) => (
@@ -188,18 +188,22 @@ const getLabel = (date: string, range: Time) => {
   switch (range) {
     case "ONE_MONTH":
     case "THREE_MONTH":
-      return moment(date).format("DD MMM");
+      return format(new Date(date), "dd MMM");
     case "ONE_YEAR":
     case "THREE_YEAR":
     case "ALL_TIME":
-      return moment(date).format("MMM YYYY");
+      return format(new Date(date), "MMM yyyy");
 
     default:
       break;
   }
 };
 
-const formatX = (date: string, range: Time) => moment(date, "YYYY-MM-DDTHH:mm:ssZ").format(formatTimeX(range));
+const formatX = (date: string, range: Time) => {
+  const fmt = formatTimeX(range);
+  if (!fmt) return date;
+  return format(parseISO(date), fmt);
+};
 
 const getPercent = (value: number, total: number) => {
   const ratio = total > 0 ? value / total : 0;

@@ -1,7 +1,6 @@
 import { Box, Grid, useTheme } from "@mui/material";
 import BigNumber from "bignumber.js";
-// @ts-ignore
-import moment from "moment";
+import { format } from "date-fns";
 import { FC, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useParams } from "react-router-dom";
@@ -71,7 +70,7 @@ const TokenAnalytics: FC<ITokenAnalyticsProps> = ({ dataToken, loading }) => {
   }));
 
   const getLabelTimeTooltip = (label: number) => {
-    return `${moment(label).format("DD MMM HH:mm")}`;
+    return `${format(new Date(label), "dd MMM HH:mm")}`;
   };
 
   const renderTooltip: TooltipProps<number, number>["content"] = (content) => {
@@ -89,12 +88,12 @@ const TokenAnalytics: FC<ITokenAnalyticsProps> = ({ dataToken, loading }) => {
   return (
     <Card title={<TextCardHighlight>{t("analytics")}</TextCardHighlight>}>
       <Wrapper container columns={24} spacing="35px">
-        <Grid item xs={24} lg={18}>
+        <Grid size={{ xs: 24, lg: 18 }}>
           <Grid spacing={2} container alignItems="center" justifyContent={"space-between"}>
-            <Grid item xs={4} sm={4}>
+            <Grid size={{ xs: 4, sm: 4 }}>
               <ButtonTitle>{t("glossary.volumn")}</ButtonTitle>
             </Grid>
-            <Grid item xs={8} sm={8}>
+            <Grid size={{ xs: 8, sm: 8 }}>
               <Tabs>
                 {options.map(({ value, label }) => (
                   <Tab key={value} active={rangeTime === value ? 1 : 0} onClick={() => setRangeTime(value)}>
@@ -127,7 +126,7 @@ const TokenAnalytics: FC<ITokenAnalyticsProps> = ({ dataToken, loading }) => {
                   </defs>
                   <XAxis
                     dataKey="date"
-                    tickFormatter={(tick) => moment(tick).format('MMM DD')}
+                    tickFormatter={(tick) => format(new Date(tick), 'MMM dd')}
                     tickLine={false}
                     tickMargin={5}
                     dx={-15}
@@ -157,7 +156,7 @@ const TokenAnalytics: FC<ITokenAnalyticsProps> = ({ dataToken, loading }) => {
             )}
           </ChartBox>
         </Grid>
-        <Grid item xs={24} lg={6}>
+        <Grid size={{ xs: 24, lg: 6 }}>
           <BoxInfo height={"100%"} space={0}>
             <Box flex={1}>
               <BoxInfoItemRight display={"flex"} justifyContent={"center"}>

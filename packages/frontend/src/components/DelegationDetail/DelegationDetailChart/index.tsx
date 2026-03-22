@@ -150,7 +150,7 @@ const DelegationDetailChart: React.FC<DelegationDetailChartProps> = ({ poolId })
     <StyledContainer>
       <AnalyticsTitle data-testid="delegatorChart.analytics">{t("common.analytics")}</AnalyticsTitle>
       <GridWrapper container columns={24} spacing={4.375}>
-        <Grid item xs={24} lg={18}>
+        <Grid size={{ xs: 24, lg: 18 }}>
           <Box>
             <Box
               data-testid="delegatorChart.stake"
@@ -171,7 +171,7 @@ const DelegationDetailChart: React.FC<DelegationDetailChartProps> = ({ poolId })
           </Box>
           <ChartContainer data-testid="delegatorChart.areaChart">{renderData()}</ChartContainer>
         </Grid>
-        <Grid item xs={24} lg={6}>
+        <Grid size={{ xs: 24, lg: 6 }}>
           <BoxInfo height={"100%"} space={data?.[selected]?.dataByDays?.length ? 36 : 16}>
             <Box flex={1}>
               <BoxInfoItemRight display={"flex"} alignItems="center" justifyContent={"center"}>

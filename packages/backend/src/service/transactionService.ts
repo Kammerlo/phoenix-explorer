@@ -158,8 +158,8 @@ export async function fetchTransactionDetail(txHash: string): Promise<Transactio
     },
     metadata: metadata.length > 0 ? metadata.map((m: any) => {
       return {
-        label: m.label,
-        value: JSON.stringify(m.json_metadata)
+        label: parseInt(m.label, 10),
+        value: m.json_metadata != null ? JSON.stringify(m.json_metadata) : (m.cbor_metadata ?? "null")
       }
     }) : undefined,
     metadataHash: "",

@@ -1,3 +1,8 @@
+export enum POOL_TYPE {
+  REGISTRATION = "registration",
+  DEREGISTRATION = "deregistration"
+}
+
 export enum FunctionEnum {
   EPOCH,
   BLOCK,

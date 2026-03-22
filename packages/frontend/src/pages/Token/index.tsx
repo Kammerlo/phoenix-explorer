@@ -1,7 +1,7 @@
 import { stringify } from "qs";
 // @ts-ignore
 import React, {useEffect, useRef, useState} from "react";
-import { useHistory, useLocation } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {Box, CircularProgress} from "@mui/material";
 
@@ -23,7 +23,7 @@ const Tokens = () => {
   const { t } = useTranslation();
 
   const { search } = useLocation();
-  const history = useHistory();
+  const navigate = useNavigate();
   const { pageInfo, setSort } = usePageInfo();
 
   const queries = new URLSearchParams(search);
@@ -130,7 +130,7 @@ const Tokens = () => {
 
   const toTokenDetail = (_: React.MouseEvent<Element, MouseEvent>, r: ITokenOverview) => {
     if (!r.fingerprint) return;
-    history.push(details.token(r.fingerprint ?? ""));
+    navigate(details.token(r.fingerprint ?? ""));
   };
 
   if (loading) return <CircularProgress />;
@@ -140,9 +140,9 @@ const Tokens = () => {
       <Card title={t("glossary.nativeTokens")}>
         <Table
           {...fetchData}
-          data={fetchData.data}
+          data={fetchData?.data || []}
           columns={columns}
-          total={{ title: "Total", count: fetchData.total }}
+          total={{ title: "Total", count: fetchData?.total || 0 }}
           onClickRow={toTokenDetail}
           rowKey="fingerprint"
           showTabView

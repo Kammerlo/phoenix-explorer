@@ -1,5 +1,5 @@
 import React, { MouseEvent } from "react";
-import { useHistory } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Box, CircularProgress } from "@mui/material";
 import { useTranslation } from "react-i18next";
 
@@ -27,7 +27,7 @@ const TokenHolders: React.FC<TokenHoldersProps> = ({
   paginated = true 
 }) => {
   const { t } = useTranslation();
-  const history = useHistory();
+  const navigate = useNavigate();
 
   const onClickRow = (e: MouseEvent<Element, globalThis.MouseEvent>, r: TokenHolder) => {
     if (e.target instanceof HTMLAnchorElement || (e.target instanceof Element && e.target.closest("a"))) {
@@ -35,7 +35,7 @@ const TokenHolders: React.FC<TokenHoldersProps> = ({
       e.stopPropagation();
       return;
     }
-    history.push(details.address(r.address));
+    navigate(details.address(r.address));
   };
 
   const { error } = tokenHolders || {};

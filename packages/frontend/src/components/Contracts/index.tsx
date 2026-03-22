@@ -34,7 +34,7 @@ const ContractsList: React.FC<ContractsListProps> = ({ data }) => {
       ) : (
         <Grid container spacing={2}>
           <SmartContractsInfoModal open={openContractInfo} onClose={() => setOpenContactInfo(!openContractInfo)} />
-          <Grid item xs={12}>
+          <Grid size={{ xs: 12 }}>
             <Box display="flex" alignItems="center" gap="4px" flex={1}>
               <UnderlineText onClick={() => setOpenContactInfo(!openContractInfo)}>
                 {t("explain.smartContract")}
@@ -44,7 +44,7 @@ const ContractsList: React.FC<ContractsListProps> = ({ data }) => {
           </Grid>
           {data &&
             data.map((item, index) => (
-              <Grid key={index} item xs={12} sm={6} md={6} lg={4} xl={3}>
+              <Grid key={index} size={{ xs: 12, sm: 6, md: 6, lg: 4 }}>
                 <ContractItem onClick={goToDetail} data={item} index={index} />
               </Grid>
             ))}

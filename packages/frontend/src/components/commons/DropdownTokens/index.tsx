@@ -3,7 +3,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { BiChevronDown, BiChevronUp } from "react-icons/bi";
 import { RiArrowRightSLine } from "react-icons/ri";
-import { Link, useHistory } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 import { useScreen } from "src/commons/hooks/useScreen";
 import { details } from "src/commons/routers";
@@ -34,14 +34,14 @@ const DropdownTokens: React.FC<IDropdownTokens> = ({
 }) => {
   const { t } = useTranslation();
   const [openDropdown, setOpenDropdown] = useState(false);
-  const history = useHistory();
+  const navigate = useNavigate();
   const isSend = tokens[0].assetQuantity < 0;
   const theme = useTheme();
   const hasLongTokenName = tokens.some(
     (token) => token.assetName?.length > 20 || (!token.assetName && token.assetId.length > 20)
   );
   const handleClickItem = (link: string) => {
-    history.push(link);
+    navigate(link);
   };
   const { isMobile } = useScreen();
   return (

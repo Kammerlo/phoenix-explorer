@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Box, Grid, useTheme } from "@mui/material";
-import moment from "moment";
+import { isAfter, parseISO } from "date-fns";
 import { useSelector } from "react-redux";
 import { useTranslation } from "react-i18next";
 
@@ -52,31 +52,33 @@ const DrepsOverview: React.FC = () => {
   if (loading) {
     return (
       <Grid container spacing={2}>
-        <Grid item xl={3} md={6} xs={12}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <StyledSkeleton variant="rectangular" />
         </Grid>
-        <Grid item xl={3} md={6} xs={12}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <StyledSkeleton variant="rectangular" />
         </Grid>
-        <Grid item xl={3} md={6} xs={12}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <StyledSkeleton variant="rectangular" />
         </Grid>{" "}
-        <Grid item xl={3} md={6} xs={12}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <StyledSkeleton variant="rectangular" />
         </Grid>
       </Grid>
     );
   }
 
-  const slot = moment.utc(currentEpoch?.endTime, "YYYY-MM-DDTHH:mm:ssZ").isAfter(moment().utc())
+  const endTimeDate = currentEpoch?.endTime ? parseISO(currentEpoch.endTime) : new Date(0);
+  const isEpochActive = isAfter(endTimeDate, new Date());
+  const slot = isEpochActive
     ? (currentEpoch?.slot || 0) % MAX_SLOT_EPOCH
     : MAX_SLOT_EPOCH;
   const countdown = MAX_SLOT_EPOCH - slot;
-  const duration = moment.duration(countdown ? countdown : 0, "second");
-  const days = duration.days();
-  const hours = duration.hours();
-  const minutes = duration.minutes();
-  const seconds = duration.seconds();
+  const totalSeconds = countdown ? countdown : 0;
+  const days = Math.floor(totalSeconds / 86400);
+  const hours = Math.floor((totalSeconds % 86400) / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
 
   return (
     <Card
@@ -94,7 +96,7 @@ const DrepsOverview: React.FC = () => {
       </TimeDuration>
 
       <Grid container spacing={2}>
-        <Grid item lg={6} xl={3} md={6} sm={6} xs={12}>
+        <Grid size={{ xs: 12, sm: 6, md: 6, lg: 6 }}>
           <StyledCard.ClickAble to={details.epoch(data?.epochNo)}>
             <StyledCard.Content>
               <StyledCard.Title data-testid="drep.epochTitle">{t("glossary.epoch")}</StyledCard.Title>
@@ -118,7 +120,7 @@ const DrepsOverview: React.FC = () => {
             <StyledImg src={theme.mode === "light" ? CurentEpochPool : CurentEpochPoolDark} alt="Clock" />
           </StyledCard.ClickAble>
         </Grid>
-        <Grid item lg={6} xl={3} md={6} sm={6} xs={12}>
+        <Grid size={{ xs: 12, sm: 6, md: 6, lg: 6 }}>
           <Box height={"100%"}>
             <Box
               bgcolor={(theme) => theme.palette.secondary[0]}
@@ -130,7 +132,7 @@ const DrepsOverview: React.FC = () => {
                 <StyledCard.Content>
                   <StyledCard.Title data-testid="drep.slotTitle">{t("glossary.slot")}</StyledCard.Title>
                   <StyledCard.Value data-testid="drep.slotValue">
-                    {moment.utc(currentEpoch?.endTime, "YYYY-MM-DDTHH:mm:ssZ").isAfter(moment().utc())
+                    {isEpochActive
                       ? (currentEpoch?.slot || 0) % MAX_SLOT_EPOCH
                       : MAX_SLOT_EPOCH}
                     <Box
@@ -148,7 +150,7 @@ const DrepsOverview: React.FC = () => {
                 <StyledLinearProgress
                   variant="determinate"
                   value={
-                    moment.utc(currentEpoch?.endTime, "YYYY-MM-DDTHH:mm:ssZ").isAfter(moment().utc())
+                    isEpochActive
                       ? (((currentEpoch?.slot || 0) % MAX_SLOT_EPOCH) / MAX_SLOT_EPOCH) * 100
                       : 100
                   }
@@ -157,7 +159,7 @@ const DrepsOverview: React.FC = () => {
             </Box>
           </Box>
         </Grid>
-        <Grid item lg={6} xl={3} md={6} sm={6} xs={12}>
+        <Grid size={{ xs: 12, sm: 6, md: 6, lg: 6 }}>
           <StyledCard.Container
             sx={{
               justifyContent: "space-between",
@@ -187,7 +189,7 @@ const DrepsOverview: React.FC = () => {
             </Box>
           </StyledCard.Container>
         </Grid>
-        <Grid item lg={6} xl={3} md={6} sm={6} xs={12}>
+        <Grid size={{ xs: 12, sm: 6, md: 6, lg: 6 }}>
           <StyledCard.Container>
             <StyledCard.Content>
               <StyledCard.Title data-testid="drep.totalDrepsTitle">{t("glossary.totalDreps")}</StyledCard.Title>

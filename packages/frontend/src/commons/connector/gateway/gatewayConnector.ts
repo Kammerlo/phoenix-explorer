@@ -2,8 +2,7 @@ import { ApiConnector, StakeAddressAction } from "../ApiConnector";
 import axios, { AxiosInstance, AxiosResponse } from "axios";
 // @ts-ignore
 import { ParsedUrlQuery } from "querystring";
-import { POOL_TYPE } from "src/pages/RegistrationPools";
-import { FunctionEnum } from "src/commons/connector/types/FunctionEnum";
+import { FunctionEnum, POOL_TYPE } from "src/commons/connector/types/FunctionEnum";
 import { ApiReturnType } from "@shared/APIReturnType";
 import applyCaseMiddleware from "axios-case-converter";
 import { EpochOverview } from "@shared/dtos/epoch.dto";
@@ -40,6 +39,14 @@ export class GatewayConnector implements ApiConnector {
     );
     return response.data;
   }
+
+  async getTokensByPolicy(policyId: string, pageInfo: ParsedUrlQuery): Promise<ApiReturnType<ITokenOverview[]>> {
+    const response = await this.client.get<ApiReturnType<ITokenOverview[]>>(
+      `${this.baseUrl}/tokens/policy/${policyId}`,
+      { params: pageInfo }
+    );
+    return response.data;
+  }
   
   getPoolDetail(poolId: string): Promise<ApiReturnType<PoolDetail>> {
     return this.client.get<ApiReturnType<PoolDetail>>(`${this.baseUrl}/pools/${poolId}`)
@@ -68,7 +75,8 @@ export class GatewayConnector implements ApiConnector {
     FunctionEnum.DREP,
     FunctionEnum.GOVERNANCE,
     FunctionEnum.POOL,
-    FunctionEnum.ADDRESS];
+    FunctionEnum.ADDRESS,
+    FunctionEnum.PROTOCOL_PARAMETER];
   }
 
   async getEpoch(epochId: number): Promise<ApiReturnType<EpochOverview>> {
@@ -103,19 +111,20 @@ export class GatewayConnector implements ApiConnector {
   }
 
   async getCurrentProtocolParameters(): Promise<ApiReturnType<TProtocolParam>> {
-    throw new Error("Not Implemented")
+    const response = await this.client.get<ApiReturnType<TProtocolParam>>(`${this.baseUrl}/protocol-params`);
+    return response.data;
   }
 
   async getPoolRegistrations(type: POOL_TYPE): Promise<ApiReturnType<Registration[]>> {
-    throw new Error("Not Implemented")
+    return { data: [], error: "Not supported by this provider", lastUpdated: Date.now() };
   }
 
   async getStakeAddressRegistrations(stakeAddressAction: StakeAddressAction): Promise<ApiReturnType<IStakeKey[]>> {
-    throw new Error("Not Implemented")
+    return { data: [], error: "Not supported by this provider", lastUpdated: Date.now() };
   }
 
   async getStakeDelegations(): Promise<ApiReturnType<IStakeKey[]>> {
-    throw new Error("Not Implemented")
+    return { data: [], error: "Not supported by this provider", lastUpdated: Date.now() };
   }
 
 

@@ -78,6 +78,29 @@ tokenController.get('', async (req, res) => {
  *   derives an analytics time series by iterating the history and accumulating amounts.
  * - Decodes names from hex where applicable and normalizes metadata fields.
  */
+tokenController.get('/policy/:policyId', async (req, res) => {
+  const pageInfo = req.query;
+  const unixTimestamp = Math.floor(Date.now() / 1000);
+  const assets = await API.assetsPolicyById(req.params.policyId, {
+    page: Number.parseInt(String(pageInfo.page || 1)),
+    count: Number.parseInt(String(pageInfo.size || 50))
+  });
+  const assetData: ITokenOverview[] = assets.map((asset: { asset: string; quantity: string }) => ({
+    policy: req.params.policyId,
+    displayName: Buffer.from(asset.asset.slice(56), 'hex').toString('utf8'),
+    supply: asset.quantity ? Number.parseInt(asset.quantity) : 0,
+    fingerprint: asset.asset,
+  } as ITokenOverview));
+  res.json({
+    data: assetData,
+    lastUpdated: unixTimestamp,
+    total: assetData.length,
+    currentPage: Number.parseInt(String(pageInfo.page ?? 1)),
+    pageSize: Number.parseInt(String(pageInfo.size ?? 50)),
+    totalPages: Math.ceil(assetData.length / (pageInfo.size ? Number.parseInt(String(pageInfo.size)) : 50)),
+  } as ApiReturnType<ITokenOverview[]>);
+});
+
 tokenController.get('/:tokenId', async (req, res) => {
   const assetById = await API.assetsById(req.params.tokenId);
   const mintTx = await API.txs(assetById.initial_mint_tx_hash);
@@ -105,6 +128,8 @@ tokenController.get('/:tokenId', async (req, res) => {
     txCount: history.length,
     tokenLastActivity: lastActivity.block_time + "",
     analytics: activityData,
+    mintOrBurnCount: assetById.mint_or_burn_count,
+    tokenType: assetById.onchain_metadata ? 'NFT' : (assetById.metadata ? 'FT' : 'unknown'),
     metadata: assetById.metadata ? {
       policy: assetById.policy_id,
       decimals: assetById.metadata.decimals ?? 0,

@@ -1,4 +1,4 @@
-import { useHistory } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Box, CircularProgress } from "@mui/material";
 import { useRef, MouseEvent, useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
@@ -31,7 +31,7 @@ interface TransactionListProps {
 
 const TransactionList: React.FC<TransactionListProps> = ({ underline = false, transactions, loading, updateData, paginated = true }) => {
   const { t } = useTranslation();
-  const history = useHistory();
+  const navigate = useNavigate();
 
   const onClickRow = (e: MouseEvent<Element, globalThis.MouseEvent>, r: Transaction) => {
     if (e.target instanceof HTMLAnchorElement || (e.target instanceof Element && e.target.closest("a"))) {
@@ -39,7 +39,7 @@ const TransactionList: React.FC<TransactionListProps> = ({ underline = false, tr
       e.stopPropagation();
       return;
     }
-    history.push(details.transaction(r.hash));
+    navigate(details.transaction(r.hash));
   };
 
   const { error } = transactions || {};

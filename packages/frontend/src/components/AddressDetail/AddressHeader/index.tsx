@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { Link, useHistory, useParams } from "react-router-dom";
-import { Grid, Box, useTheme } from "@mui/material";
+import { Link, useNavigate, useParams } from "react-router-dom";
+import { Grid, Box, useTheme, Chip } from "@mui/material";
 import { HiArrowLongLeft } from "react-icons/hi2";
 import { useTranslation } from "react-i18next";
 import { useLocalStorage } from "react-use";
@@ -31,7 +31,7 @@ const AddressHeader: React.FC<Props> = ({ data, loading }) => {
   const apiConnector = ApiConnector.getApiConnector();
 
   const theme = useTheme();
-  const history = useHistory();
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (data?.stakeAddress) {
@@ -113,7 +113,7 @@ const AddressHeader: React.FC<Props> = ({ data, loading }) => {
   return (
     <Card>
       <WrapHeader>
-        <BackButton onClick={history.goBack}>
+        <BackButton onClick={() => navigate(-1)}>
           <HiArrowLongLeft color={theme.palette.secondary.light} fontSize="16px" />
           <BackText data-testid="addressDetail.back">{t("common.back")}</BackText>
         </BackButton>
@@ -128,8 +128,19 @@ const AddressHeader: React.FC<Props> = ({ data, loading }) => {
             flexWrap={"wrap"}
           >
             <TitleText>
-                <Box data-testid="address-detail-title">{t("address.title.addressDetail")}: <span>{data?.address || ""}</span></Box>
+                <Box data-testid="address-detail-title" display="flex" alignItems="center" flexWrap="wrap" gap={1}>
+                  {t("address.title.addressDetail")}: <span>{data?.address || ""}</span>
+                  {data?.isContract && (
+                    <Chip label="Smart Contract" size="small" color="secondary" variant="outlined" />
+                  )}
+                </Box>
             </TitleText>
+            {data?.scriptHash && (
+              <Box mt={1} fontSize="13px" color={theme.palette.secondary.light}>
+                <Box component="span" fontWeight="500">Script Hash: </Box>
+                <Box component="span" sx={{ fontFamily: "var(--font-family-text)" }}>{data.scriptHash}</Box>
+              </Box>
+            )}
           </Box>
         </Box>
         <TimeDuration>
@@ -137,7 +148,7 @@ const AddressHeader: React.FC<Props> = ({ data, loading }) => {
         </TimeDuration>
       </WrapHeader>
       <Grid container spacing={2}>
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <StyledBoxCard>
             <CardAddress
               title={t("common.address")}
@@ -151,7 +162,7 @@ const AddressHeader: React.FC<Props> = ({ data, loading }) => {
             />
           </StyledBoxCard>
         </Grid>
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6 }}>
             <StyledBoxCard>
             <CardAddress
               title={t("common.stakeAddress")}

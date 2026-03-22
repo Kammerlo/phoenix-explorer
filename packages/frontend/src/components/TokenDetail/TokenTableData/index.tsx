@@ -1,7 +1,7 @@
 import { Box, useTheme } from "@mui/material";
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { useHistory, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
 import { details } from "src/commons/routers";
 import CustomAccordion, { TTab } from "src/components/commons/CustomAccordion";
@@ -29,7 +29,7 @@ const TokenTableData: React.FC<ITokenTableData> = ({
 }) => {
   const { t } = useTranslation();
   const { tokenId, tabActive } = useParams<{ tokenId: string; tabActive: string }>();
-  const history = useHistory();
+  const navigate = useNavigate();
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const theme = useTheme();
   const tabs: TTab[] = [
@@ -56,7 +56,7 @@ const TokenTableData: React.FC<ITokenTableData> = ({
   ];
 
   const handleTabChange = (tab: string) => {
-    history.replace(details.token(tokenId, tab));
+    navigate(details.token(tokenId, tab), { replace: true });
   };
 
   return (

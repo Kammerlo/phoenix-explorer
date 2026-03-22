@@ -57,18 +57,18 @@ const ProposingOutputModal: React.FC<ProposingOutputModalProps> = ({
             {data &&
               data.length > 0 &&
               data.map((item) => (
-                <Grid item xs={12} md={6} key={item.title}>
+                <Grid size={{ xs: 12, md: 6 }} key={item.title}>
                   <DataCard title={item.title} value={item.value} />
                 </Grid>
               ))}
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <DataCardEllipsisText
                 title={t("contract.proposalPolicy")}
                 value={proposalPolicy as string}
                 purpose={purpose as string}
               />
             </Grid>
-            <Grid item xs={12} md={12}>
+            <Grid size={{ xs: 12, md: 12 }}>
               <GovernanceActionCard
                 data={{
                   title: t("contract.governanceActionMetadata"),
@@ -79,7 +79,7 @@ const ProposingOutputModal: React.FC<ProposingOutputModalProps> = ({
                 onClose={handleCloseModal}
               />
             </Grid>
-            <Grid item xs={12} md={12}>
+            <Grid size={{ xs: 12, md: 12 }}>
               <ViewGovenanceProposing title={t("contract.viewGovernanceVotes")} />
             </Grid>
           </Grid>

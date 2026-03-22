@@ -1,5 +1,5 @@
 import React, { useContext, useEffect } from "react";
-import { useHistory, useLocation } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Box } from "@mui/material";
 import { stringify } from "qs";
 import { useTranslation } from "react-i18next";
@@ -27,7 +27,7 @@ interface ITokenTransaction {
 const TokenTransaction: React.FC<ITokenTransaction> = ({ tabActive, tokenId }) => {
   const { t } = useTranslation();
   const { search } = useLocation();
-  const history = useHistory();
+  const navigate = useNavigate();
   const pageInfo = getPageInfo(search);
   const blockKey = useSelector(({ system }: RootState) => system.blockKey);
 
@@ -45,7 +45,7 @@ const TokenTransaction: React.FC<ITokenTransaction> = ({ tabActive, tokenId }) =
       e.stopPropagation();
       return;
     }
-    history.push(details.transaction(r.hash));
+    navigate(details.transaction(r.hash));
   };
   const columns: Column<Transaction>[] = [
     {
@@ -149,7 +149,7 @@ const TokenTransaction: React.FC<ITokenTransaction> = ({ tabActive, tokenId }) =
         pagination={{
           ...pageInfo,
           total: fetchData.total,
-          onChange: (page, size) => history.replace({ search: stringify({ page, size }) })
+          onChange: (page, size) => navigate({ search: stringify({ page, size }) }, { replace: true })
         }}
         onClickRow={onClickRow}
       />

@@ -2,7 +2,7 @@ import React, { useEffect } from "react";
 import { TabContext, TabPanel } from "@mui/lab";
 import { Box, Tab, useTheme } from "@mui/material";
 import { stringify } from "qs";
-import { useHistory, useLocation, useParams } from "react-router-dom";
+import { useNavigate, useLocation, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useSelector } from "react-redux";
 
@@ -35,12 +35,12 @@ const PolicyTable = () => {
   const theme = useTheme();
   const { policyId } = useParams<{ policyId: string }>();
   const { search } = useLocation();
-  const history = useHistory();
+  const navigate = useNavigate();
   const pageInfo = getPageInfo(search);
   const blockKey = useSelector(({ system }: RootState) => system.blockKey);
 
   const resetFilter = () => {
-    history.replace({ search: stringify({ page: 1, size: 50 }) });
+    navigate({ search: stringify({ page: 1, size: 50 }) }, { replace: true });
   };
 
   const handleChange = (event: React.SyntheticEvent, tab: TABS) => {
@@ -204,9 +204,9 @@ const PolicyTable = () => {
               pagination={{
                 ...pageInfo,
                 total: fetchData.total,
-                onChange: (page, size) => history.replace({ search: stringify({ page, size }) })
+                onChange: (page, size) => navigate({ search: stringify({ page, size }) }, { replace: true })
               }}
-              onClickRow={(_, r: PolicyHolder | TokenPolicys) => history.push(details.token(r.fingerprint))}
+              onClickRow={(_, r: PolicyHolder | TokenPolicys) => navigate(details.token(r.fingerprint))}
             />
           </TabPanel>
         ))}

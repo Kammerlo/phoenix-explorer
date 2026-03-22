@@ -105,7 +105,7 @@ const StakeKeyBox = ({ data, index }: TProps) => {
   return (
     <Box py={"15px"}>
       <Grid container spacing={2}>
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <LeftRowContainer>
             {(leftRow || []).map(({ label, value, isHyperLink, linkTo, isMultipleValue }) => {
               return (
@@ -151,7 +151,7 @@ const StakeKeyBox = ({ data, index }: TProps) => {
             })}
           </LeftRowContainer>
         </Grid>
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <Box display="flex" flexDirection="column" gap="15px">
             {(rightRow || []).map(({ label, value }) => {
               return (

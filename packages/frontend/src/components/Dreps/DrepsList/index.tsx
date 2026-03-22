@@ -2,7 +2,7 @@ import { Box, Button, CircularProgress } from "@mui/material";
 import { stringify } from "qs";
 import { useRef, useState, useEffect, useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import { useHistory, useLocation } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 import usePageInfo from "src/commons/hooks/usePageInfo";
 import { details } from "src/commons/routers";
@@ -19,7 +19,7 @@ import { ApiReturnType } from "@shared/APIReturnType";
 
 const DrepsList: React.FC = () => {
   const { t } = useTranslation();
-  const history = useHistory();
+  const navigate = useNavigate();
   const { search } = useLocation();
   const { pageInfo, setSort } = usePageInfo();
   const tableRef = useRef<HTMLDivElement>(null);
@@ -31,7 +31,7 @@ const DrepsList: React.FC = () => {
   });
   const [loading, setLoading] = useState<boolean>(true);
   const handleBlankSort = () => {
-    history.replace({ search: stringify({ ...pageInfo, page: 1, sort: undefined }) });
+    navigate({ search: stringify({ ...pageInfo, page: 1, sort: undefined }) }, { replace: true });
   };
 
   const apiConnector = ApiConnector.getApiConnector();
@@ -41,8 +41,8 @@ const DrepsList: React.FC = () => {
     try {
       const data = await apiConnector.getDreps(pageInfo);
       setFetchData(data);
-    } catch (error) {
-      console.error('Error fetching dreps:', error);
+    } catch {
+      // ignore
     } finally {
       setLoading(false);
     }
@@ -217,7 +217,7 @@ const DrepsList: React.FC = () => {
             e.stopPropagation();
             return;
           } else {
-            history.push(details.drep(r.drepId));
+            navigate(details.drep(r.drepId));
           }
         }}
         pagination={{
@@ -225,7 +225,7 @@ const DrepsList: React.FC = () => {
           size: pageInfo.size,
           total: fetchData.total,
           onChange: (page, size) => {
-            history.replace({ search: stringify({ ...pageInfo, page, size }) });
+            navigate({ search: stringify({ ...pageInfo, page, size }) }, { replace: true });
             tableRef.current?.scrollIntoView();
           }
         }}

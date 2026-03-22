@@ -1,8 +1,8 @@
-import { Box, useTheme } from "@mui/material";
+import { Box, useTheme, Chip, Typography } from "@mui/material";
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { HiArrowLongLeft } from "react-icons/hi2";
-import { Link, useHistory } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 import { useScreen } from "src/commons/hooks/useScreen";
 import {
@@ -65,7 +65,7 @@ const DelegationDetailInfo: React.FC<IDelegationDetailInfo> = ({ data, loading, 
   const { t } = useTranslation();
   const theme = useTheme();
   const { width, isGalaxyFoldSmall } = useScreen();
-  const history = useHistory();
+  const navigate = useNavigate();
   const [isErrorImage, setIsErrorImage] = useState(false);
   const [isOpenReward, setOpenReward] = useState<boolean>(false);
   const [isOpenOwner, setOpenOwner] = useState<boolean>(false);
@@ -73,7 +73,7 @@ const DelegationDetailInfo: React.FC<IDelegationDetailInfo> = ({ data, loading, 
   if (loading) {
     return (
       <HeaderDetailContainer>
-        <BackButton onClick={history.goBack}>
+        <BackButton onClick={() => navigate(-1)}>
           <HiArrowLongLeft color={theme.palette.secondary.light} />
           <BackText data-testid="poolDetail.back">{t("common.back")}</BackText>
         </BackButton>
@@ -112,7 +112,7 @@ const DelegationDetailInfo: React.FC<IDelegationDetailInfo> = ({ data, loading, 
 
   return (
     <HeaderDetailContainer>
-      <BackButton data-testid="poolDetail.back" onClick={history.goBack}>
+      <BackButton data-testid="poolDetail.back" onClick={() => navigate(-1)}>
         <HiArrowLongLeft color={theme.palette.secondary.light} />
         <BackText>{t("common.back")}</BackText>
       </BackButton>
@@ -388,6 +388,20 @@ const DelegationDetailInfo: React.FC<IDelegationDetailInfo> = ({ data, loading, 
           </Item>
         </StyledGrid>
       </DataContainer>
+      {data?.relays && data.relays.length > 0 && (
+        <Box mt={2} px={2}>
+          <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+            Pool Relays ({data.relays.length})
+          </Typography>
+          <Box display="flex" flexWrap="wrap" gap={1}>
+            {data.relays.map((relay, i) => {
+              const host = relay.dns || relay.dnsSrv || relay.ipv4 || relay.ipv6 || "unknown";
+              const label = relay.port ? `${host}:${relay.port}` : host;
+              return <Chip key={i} label={label} size="small" variant="outlined" />;
+            })}
+          </Box>
+        </Box>
+      )}
     </HeaderDetailContainer>
   );
 };

@@ -1,5 +1,5 @@
 import { Box } from "@mui/material";
-import moment from "moment";
+import { differenceInSeconds } from "date-fns";
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { useSelector } from "react-redux";
@@ -7,9 +7,12 @@ import { useSelector } from "react-redux";
 import {
   CubeIconComponent,
   ExchageIcon,
+  ExchageAltIcon,
   OutputIcon,
   SlotIcon,
   TimeIconComponent,
+  RewardIconComponent,
+  DropIconComponent,
 } from "src/commons/resources";
 import { MAX_SLOT_EPOCH } from "src/commons/utils/constants";
 import { formatADAFull, formatDateTimeLocal } from "src/commons/utils/helper";
@@ -103,7 +106,7 @@ const EpochOverviewView: React.FC<EpochOverviewProps> = ({ data, loading, lastUp
       ),
       value: (
         <div data-testId="epoch.overview.slotValue">
-          {moment(formatDateTimeLocal(data?.endTime || "")).diff(moment()) > 0 ? slot : MAX_SLOT_EPOCH}
+          {differenceInSeconds(new Date(formatDateTimeLocal(data?.endTime || "")), new Date()) > 0 ? slot : MAX_SLOT_EPOCH}
           <Subtext>/{MAX_SLOT_EPOCH}</Subtext>
         </div>
       )
@@ -118,26 +121,56 @@ const EpochOverviewView: React.FC<EpochOverviewProps> = ({ data, loading, lastUp
         </Box>
       ),
       value: <div data-testId="epoch.overview.transactionCountValue">{data?.txCount}</div>
-    }
-    // {
-    //   icon: RewardIconComponent,
-    //   title: (
-    //     <Box data-testId="epoch.overview.rewardsDistributedTitle" display={"flex"} alignItems="center">
-    //       <TitleCard mr={1}> {t("glossary.rewardsDistributed")}</TitleCard>
-    //     </Box>
-    //   ),
-    //   value: (
-    //     <div data-testId="epoch.overview.rewardsDistributedValue">
-    //       {data?.rewardsDistributed ? (
-    //         <span>
-    //           {formatADAFull(data?.rewardsDistributed)} <ADAicon />
-    //         </span>
-    //       ) : (
-    //         t("common.N/A")
-    //       )}
-    //     </div>
-    //   )
-    // }
+    },
+    {
+      icon: RewardIconComponent,
+      title: (
+        <Box data-testId="epoch.overview.rewardsDistributedTitle" display={"flex"} alignItems="center">
+          <TitleCard mr={1}> {t("glossary.rewardsDistributed")}</TitleCard>
+        </Box>
+      ),
+      value: (
+        <div data-testId="epoch.overview.rewardsDistributedValue">
+          {data?.rewardsDistributed ? (
+            <span>
+              {formatADAFull(data?.rewardsDistributed)} <ADAicon />
+            </span>
+          ) : (
+            t("common.N/A")
+          )}
+        </div>
+      )
+    },
+    {
+      icon: ExchageAltIcon,
+      title: (
+        <Box display={"flex"} alignItems="center">
+          <TitleCard data-testId="epoch.overview.totalFeesTitle" mr={1}>
+            {"Total Fees"}
+          </TitleCard>
+        </Box>
+      ),
+      value: (
+        <Box component={"span"} data-testId="epoch.overview.totalFeesValue">
+          {formatADAFull(data?.fees || 0)} <ADAicon />
+        </Box>
+      )
+    },
+    ...(data?.activeStake !== undefined && data.activeStake > 0 ? [{
+      icon: DropIconComponent,
+      title: (
+        <Box display={"flex"} alignItems="center">
+          <TitleCard data-testId="epoch.overview.activeStakeTitle" mr={1}>
+            {"Active Stake"}
+          </TitleCard>
+        </Box>
+      ),
+      value: (
+        <Box component={"span"} data-testId="epoch.overview.activeStakeValue">
+          {formatADAFull(data?.activeStake || 0)} <ADAicon />
+        </Box>
+      )
+    }] : [])
   ];
   return (
     <Box mb={3}>
