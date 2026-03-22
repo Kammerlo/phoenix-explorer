@@ -56,7 +56,7 @@ const Collaterals: React.FC<CollateralProps> = ({ data }) => {
       {isShowCardOutput && (
         <ItemFooter>
           <Box color={({ palette }) => palette.secondary.main} fontWeight={"bold"}>
-            {t("glassary.totalCollateralSpent")}
+            {t("glossary.totalCollateralSpent")}
           </Box>
           <Box color={({ palette }) => palette.secondary.main} fontWeight={"bold"} component="span" pr={1}>
             {`+${formatADAFull(totalADA)}`} <ADAicon />
@@ -72,7 +72,7 @@ const Card = ({ type, items, sx }: { type: "input" | "output"; items?: Collatera
   return (
     <Wrapper sx={sx} type={type}>
       <Header fontWeight="bold">
-        <BoxHeaderTop>{type === "input" ? t("drawer.input") : t("drawer.ouput")}</BoxHeaderTop>
+        <BoxHeaderTop>{type === "input" ? t("drawer.input") : t("drawer.output")}</BoxHeaderTop>
         <BoxHeaderBottom>
           <Box>{t("glossary.address")}</Box>
           <WrapAmountHeader>{t("glossary.amount")}</WrapAmountHeader>

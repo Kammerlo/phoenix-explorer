@@ -498,7 +498,7 @@ const CustomFilterMultiRange: React.FC = () => {
                 <Box width={"100%"} display={"flex"} alignItems={"center"} justifyContent={"space-between"}>
                   <Box display={"flex"} alignItems={"center"}>
                     <Box color={({ palette }) => palette.secondary.main} data-testid="delegationList.retiredPoolsTitle">
-                      {t("glassary.showRetiredPools")}
+                      {t("glossary.showRetiredPools")}
                     </Box>
                   </Box>
 

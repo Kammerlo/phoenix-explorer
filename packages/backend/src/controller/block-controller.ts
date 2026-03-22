@@ -35,6 +35,7 @@ blockController.get('', async (req, res) => {
       previousBlock: block.previous_block ?? undefined,
       nextBlock: block.next_block ?? undefined,
       size: block.size,
+      slotLeader: block.slot_leader ?? undefined,
       confirmations: (block as any).confirmations,
       blockVrf: block.block_vrf ?? undefined,
     };

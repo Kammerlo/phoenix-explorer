@@ -13,7 +13,7 @@ export function transactionSummaryAndBlockToTransaction(txSummary: TransactionSu
     slot: block.data?.slotNo || 0, // TODO: need to implement
     totalOutput: txSummary.totalOutput || 0,
     addressesOutput: txSummary.outputAddresses || [],
-    addressesInput: [],
+    addressesInput: txSummary.inputAddresses || [],
     balance: 0,
     tokens: [] // TODO: need to implement
   };

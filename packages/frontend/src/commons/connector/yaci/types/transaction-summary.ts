@@ -41,6 +41,12 @@ export interface TransactionSummary {
    * @type {Array<string>}
    * @memberof TransactionSummary
    */
+  inputAddresses?: Array<string>;
+
+  /**
+   * @type {Array<string>}
+   * @memberof TransactionSummary
+   */
   outputAddresses?: Array<string>;
 
   /**
