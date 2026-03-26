@@ -23,9 +23,9 @@ function SaturationBar({ value }: { value: number | null | undefined }) {
   const theme = useTheme();
   if (value == null) return <Box sx={{ color: "secondary.light", fontSize: "0.8rem" }}>N/A</Box>;
 
-  // value is 0-100 range (percentage points, not 0-1)
-  const pct = Math.min(100, value);
-  const isOver = value > 100;
+  // value is 0-1 range (fraction from Blockfrost live_saturation)
+  const pct = Math.min(100, value * 100);
+  const isOver = value > 1;
   const barColor = isOver ? theme.palette.error[700] : theme.palette.primary.main;
 
   return (
@@ -52,7 +52,7 @@ function SaturationBar({ value }: { value: number | null | undefined }) {
         />
       </Box>
       <Box sx={{ fontSize: "0.72rem", color: isOver ? "error.main" : "secondary.light", fontWeight: isOver ? 700 : 400 }}>
-        {formatPercent(value / 100)}
+        {formatPercent(value)}
       </Box>
     </Box>
   );

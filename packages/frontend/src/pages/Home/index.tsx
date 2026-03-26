@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState, useCallback } from "react";
 import {
   Box,
   Chip,
@@ -14,6 +14,8 @@ import {
   TableContainer,
   TableHead,
   TableRow,
+  ToggleButton,
+  ToggleButtonGroup,
   Typography,
   styled,
 } from "@mui/material";
@@ -22,7 +24,16 @@ import { useTheme } from "@mui/material/styles";
 import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { formatDistanceToNow } from "date-fns";
-import { BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, CartesianGrid } from "recharts";
+import {
+  ComposedChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip as RechartsTooltip,
+  ResponsiveContainer,
+  CartesianGrid,
+  Legend,
+} from "recharts";
 
 import useFetch from "src/commons/hooks/useFetch";
 import { details, routers } from "src/commons/routers";
@@ -31,6 +42,7 @@ import { Block } from "@shared/dtos/block.dto";
 import { Transaction, TxTag } from "@shared/dtos/transaction.dto";
 import { PoolOverview } from "@shared/dtos/pool.dto";
 import { ApiReturnType } from "@shared/APIReturnType";
+import { ApiConnector } from "src/commons/connector/ApiConnector";
 
 // ---------------------------------------------------------------------------
 // Interfaces
@@ -132,6 +144,14 @@ function formatBytes(bytes: number | undefined): string {
   return `${bytes} B`;
 }
 
+function formatBucketLabel(ts: number, bucketMs: number): string {
+  const d = new Date(ts);
+  if (bucketMs >= 30 * 86_400_000) {
+    return d.toLocaleDateString(undefined, { month: "short" });
+  }
+  return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+}
+
 // ---------------------------------------------------------------------------
 // StatCard
 // ---------------------------------------------------------------------------
@@ -146,13 +166,12 @@ const StatCard: React.FC<StatCardProps> = ({ title, loading, children }) => {
   const theme = useTheme();
   return (
     <Paper
-      elevation={2}
+      elevation={0}
       sx={{
         p: 2.5,
         borderRadius: 3,
-        height: "100%",
         background: theme.palette.secondary[0],
-        border: `1px solid ${theme.palette.divider}`,
+        border: `1px solid ${theme.isDark ? alpha(theme.palette.secondary.light, 0.1) : theme.palette.primary[200] || "#e0e0e0"}`,
       }}
     >
       <Typography
@@ -223,80 +242,215 @@ const TableSkeleton: React.FC<{ rows?: number; cols?: number }> = ({ rows = 8, c
 );
 
 // ---------------------------------------------------------------------------
-// ActivityChart — tx count per recent block
+// ActivityChart — self-contained with time range selector
 // ---------------------------------------------------------------------------
 
-interface ActivityChartProps {
-  blocks: Block[];
-  loading: boolean;
+const MAX_BLOCK_SIZE = 90_112;
+
+type RangeKey = "1D" | "1W" | "1M" | "1Y";
+
+interface RangeCfg {
+  label: string;
+  rangeMs: number;
+  bucketMs: number; // 0 = per-block
+  fetchSize: number;
 }
 
-const ActivityChart: React.FC<ActivityChartProps> = ({ blocks, loading }) => {
-  const theme = useTheme();
+const RANGES: Record<RangeKey, RangeCfg> = {
+  "1D": { label: "Day",   rangeMs: 86_400_000,       bucketMs: 0,              fetchSize: 100  },
+  "1W": { label: "Week",  rangeMs: 7 * 86_400_000,   bucketMs: 86_400_000,     fetchSize: 500  },
+  "1M": { label: "Month", rangeMs: 30 * 86_400_000,  bucketMs: 3 * 86_400_000, fetchSize: 1000 },
+  "1Y": { label: "Year",  rangeMs: 365 * 86_400_000, bucketMs: 30 * 86_400_000, fetchSize: 2000 },
+};
 
-  const chartData = [...blocks]
-    .sort((a, b) => a.blockNo - b.blockNo)
-    .map((b) => ({
-      block: b.blockNo,
-      txs: b.txCount,
-      size: Math.round((b.size ?? 0) / 1024),
-    }));
+interface ChartDatum {
+  label: string;
+  txs: number;
+  fill: number;
+  blockNo?: number;
+}
+
+const ActivityChart: React.FC = () => {
+  const theme = useTheme();
+  const navigate = useNavigate();
+  const [range, setRange] = useState<RangeKey>("1D");
+  const [chartData, setChartData] = useState<ChartDatum[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchChartData = useCallback(async () => {
+    setLoading(true);
+    try {
+      const apiConnector = ApiConnector.getApiConnector();
+      const cfg = RANGES[range];
+      const res = await apiConnector.getBlocksPage({ page: "1", size: String(cfg.fetchSize) });
+      const blocks: Block[] = res.data ?? [];
+
+      const now = Date.now();
+      const cutoff = now - cfg.rangeMs;
+
+      const filtered = blocks.filter((b) => Number(b.time) * 1000 >= cutoff);
+
+      if (cfg.bucketMs === 0) {
+        // Per-block mode (1D)
+        const data: ChartDatum[] = [...filtered]
+          .sort((a, b) => a.blockNo - b.blockNo)
+          .map((b) => ({
+            label: `#${b.blockNo}`,
+            txs: b.txCount,
+            fill: Math.round(((b.size ?? 0) / MAX_BLOCK_SIZE) * 100),
+            blockNo: b.blockNo,
+          }));
+        setChartData(data);
+      } else {
+        // Aggregated mode
+        const buckets = new Map<number, { txs: number; fills: number[] }>();
+        for (const b of filtered) {
+          const blockMs = Number(b.time) * 1000;
+          const key = Math.floor(blockMs / cfg.bucketMs) * cfg.bucketMs;
+          const entry = buckets.get(key) ?? { txs: 0, fills: [] };
+          entry.txs += b.txCount;
+          entry.fills.push(Math.round(((b.size ?? 0) / MAX_BLOCK_SIZE) * 100));
+          buckets.set(key, entry);
+        }
+        const data: ChartDatum[] = Array.from(buckets.entries())
+          .sort(([a], [b]) => a - b)
+          .map(([ts, { txs, fills }]) => ({
+            label: formatBucketLabel(ts, cfg.bucketMs),
+            txs,
+            fill: fills.length > 0 ? Math.round(fills.reduce((a, b) => a + b, 0) / fills.length) : 0,
+          }));
+        setChartData(data);
+      }
+    } catch {
+      // ignore
+    } finally {
+      setLoading(false);
+    }
+  }, [range]);
+
+  useEffect(() => {
+    fetchChartData();
+  }, [fetchChartData]);
+
+  const handleChartClick = (data: any) => {
+    if (range === "1D" && data?.activePayload?.[0]?.payload?.blockNo) {
+      navigate(details.block(data.activePayload[0].payload.blockNo));
+    }
+  };
+
+  const xAxisInterval =
+    chartData.length > 20 ? Math.floor(chartData.length / 8) : "preserveStartEnd";
 
   return (
     <Paper
-      elevation={2}
+      elevation={0}
       sx={{
         p: 2.5,
         borderRadius: 3,
-        border: `1px solid ${theme.palette.divider}`,
+        border: `1px solid ${theme.isDark ? alpha(theme.palette.secondary.light, 0.1) : theme.palette.primary[200] || "#e0e0e0"}`,
         background: theme.palette.secondary[0],
         mb: 3,
       }}
     >
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb={2} flexWrap="wrap" gap={1}>
         <Typography variant="h6" fontWeight={600}>
           Network Activity
         </Typography>
-        <Typography variant="caption" color="text.secondary">
-          Transactions per recent block
-        </Typography>
+        <ToggleButtonGroup
+          value={range}
+          exclusive
+          size="small"
+          onChange={(_, v) => v && setRange(v as RangeKey)}
+          sx={{
+            "& .MuiToggleButton-root": { px: 1.5, py: 0.4, fontSize: "0.72rem", fontWeight: 600 },
+          }}
+        >
+          {(Object.keys(RANGES) as RangeKey[]).map((k) => (
+            <ToggleButton key={k} value={k}>
+              {RANGES[k].label}
+            </ToggleButton>
+          ))}
+        </ToggleButtonGroup>
       </Box>
+
       {loading ? (
-        <Skeleton variant="rounded" height={160} />
+        <Skeleton variant="rounded" height={180} />
+      ) : chartData.length === 0 ? (
+        <Box display="flex" alignItems="center" justifyContent="center" height={180}>
+          <Typography variant="body2" color="text.secondary">
+            No data for this range
+          </Typography>
+        </Box>
       ) : (
-        <ResponsiveContainer width="100%" height={160}>
-          <BarChart data={chartData} margin={{ top: 4, right: 8, left: -16, bottom: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke={alpha(theme.palette.divider, 0.6)} vertical={false} />
+        <ResponsiveContainer width="100%" height={180}>
+          <ComposedChart
+            data={chartData}
+            margin={{ top: 4, right: 44, left: -16, bottom: 0 }}
+            onClick={handleChartClick}
+            style={{ cursor: range === "1D" ? "pointer" : "default" }}
+          >
+            <CartesianGrid
+              strokeDasharray="3 3"
+              stroke={alpha(theme.isDark ? alpha(theme.palette.secondary.light, 0.1) : theme.palette.primary[200] || "#e0e0e0", 0.6)}
+              vertical={false}
+            />
             <XAxis
-              dataKey="block"
+              dataKey="label"
               tick={{ fontSize: 10, fill: theme.palette.text.secondary }}
-              tickFormatter={(v) => `#${numberWithCommas(v, 0)}`}
               axisLine={false}
               tickLine={false}
+              interval={xAxisInterval as any}
             />
             <YAxis
+              yAxisId="left"
               tick={{ fontSize: 10, fill: theme.palette.text.secondary }}
               axisLine={false}
               tickLine={false}
               allowDecimals={false}
+              width={36}
+            />
+            <YAxis
+              yAxisId="right"
+              orientation="right"
+              tick={{ fontSize: 10, fill: theme.palette.text.secondary }}
+              axisLine={false}
+              tickLine={false}
+              tickFormatter={(v) => `${v}%`}
+              domain={[0, 100]}
+              width={36}
             />
             <RechartsTooltip
               contentStyle={{
                 background: theme.palette.secondary[0],
-                border: `1px solid ${theme.palette.divider}`,
+                border: `1px solid ${theme.isDark ? alpha(theme.palette.secondary.light, 0.1) : theme.palette.primary[200] || "#e0e0e0"}`,
                 borderRadius: 8,
                 fontSize: 12,
               }}
-              labelFormatter={(v) => `Block #${numberWithCommas(v, 0)}`}
-              formatter={(value: number) => [value, "Transactions"]}
+              formatter={(value: number, name: string) =>
+                name === "Block Fill %" ? [`${value}%`, name] : [value, name]
+              }
+            />
+            <Legend
+              wrapperStyle={{ fontSize: "0.72rem", paddingTop: 8 }}
+              iconSize={10}
             />
             <Bar
+              yAxisId="left"
               dataKey="txs"
+              name="Transactions"
               fill={theme.palette.primary.main}
               radius={[3, 3, 0, 0]}
-              maxBarSize={28}
+              maxBarSize={24}
             />
-          </BarChart>
+            <Bar
+              yAxisId="right"
+              dataKey="fill"
+              name="Block Fill %"
+              fill={alpha(theme.palette.warning?.main ?? "#F59E0B", 0.65)}
+              radius={[3, 3, 0, 0]}
+              maxBarSize={24}
+            />
+          </ComposedChart>
         </ResponsiveContainer>
       )}
     </Paper>
@@ -328,7 +482,7 @@ const Home: React.FC = () => {
 
   const cellSx = {
     py: 1,
-    borderBottom: `1px solid ${theme.palette.divider}`,
+    borderBottom: `1px solid ${theme.isDark ? alpha(theme.palette.secondary.light, 0.1) : theme.palette.primary[200] || "#e0e0e0"}`,
     fontSize: "0.82rem",
   };
 
@@ -347,9 +501,14 @@ const Home: React.FC = () => {
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <StatCard title="Current Epoch" loading={statsLoading}>
             <Box display="flex" alignItems="baseline" gap={1}>
-              <Typography variant="h4" fontWeight={700} color={theme.palette.primary.main}>
-                {statsData?.currentEpoch.no ?? "—"}
-              </Typography>
+              <Link
+                to={details.epoch(statsData?.currentEpoch.no ?? "")}
+                style={{ textDecoration: "none" }}
+              >
+                <Typography variant="h4" fontWeight={700} color={theme.palette.primary.main}>
+                  {statsData?.currentEpoch.no ?? "—"}
+                </Typography>
+              </Link>
               <Chip
                 label={`${statsData?.currentEpoch.progressPercent ?? 0}%`}
                 size="small"
@@ -443,19 +602,19 @@ const Home: React.FC = () => {
         </Grid>
       </Grid>
 
-      {/* Activity Chart */}
-      <ActivityChart blocks={blocks} loading={blocksLoading} />
+      {/* Activity Chart — self-contained */}
+      <ActivityChart />
 
       {/* Latest Blocks & Latest Transactions */}
       <Grid container spacing={2} mb={3}>
         {/* Latest Blocks */}
         <Grid size={{ xs: 12, md: 6 }}>
           <Paper
-            elevation={2}
+            elevation={0}
             sx={{
               borderRadius: 3,
               overflow: "hidden",
-              border: `1px solid ${theme.palette.divider}`,
+              border: `1px solid ${theme.isDark ? alpha(theme.palette.secondary.light, 0.1) : theme.palette.primary[200] || "#e0e0e0"}`,
               background: theme.palette.secondary[0],
             }}
           >
@@ -520,11 +679,11 @@ const Home: React.FC = () => {
         {/* Latest Transactions */}
         <Grid size={{ xs: 12, md: 6 }}>
           <Paper
-            elevation={2}
+            elevation={0}
             sx={{
               borderRadius: 3,
               overflow: "hidden",
-              border: `1px solid ${theme.palette.divider}`,
+              border: `1px solid ${theme.isDark ? alpha(theme.palette.secondary.light, 0.1) : theme.palette.primary[200] || "#e0e0e0"}`,
               background: theme.palette.secondary[0],
             }}
           >
@@ -616,11 +775,11 @@ const Home: React.FC = () => {
 
       {/* Top Pools */}
       <Paper
-        elevation={2}
+        elevation={0}
         sx={{
           borderRadius: 3,
           overflow: "hidden",
-          border: `1px solid ${theme.palette.divider}`,
+          border: `1px solid ${theme.isDark ? alpha(theme.palette.secondary.light, 0.1) : theme.palette.primary[200] || "#e0e0e0"}`,
           background: theme.palette.secondary[0],
         }}
       >

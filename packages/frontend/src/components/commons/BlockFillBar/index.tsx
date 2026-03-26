@@ -1,162 +1,105 @@
 import React from "react";
-import { Box, BoxProps, Tooltip, useTheme } from "@mui/material";
+import { Box, useTheme } from "@mui/material";
 import { alpha } from "@mui/material/styles";
 
-/** Cardano mainnet max block body size in bytes (protocol parameter). */
-export const MAX_BLOCK_SIZE_BYTES = 90_112;
+const MAX_BLOCK_SIZE = 90_112; // bytes
 
-function fillColor(pct: number, theme: ReturnType<typeof useTheme>) {
-  if (pct >= 90) return theme.palette.error.main;
-  if (pct >= 70) return theme.palette.warning.main;
-  if (pct >= 30) return theme.palette.success.main;
-  return theme.palette.primary.main;
+interface Props {
+  size: number | undefined;
 }
 
-function fillLabel(pct: number): string {
-  if (pct >= 90) return "High";
-  if (pct >= 70) return "Medium";
-  if (pct > 0) return "Low";
-  return "Empty";
-}
-
-// ─── Mini variant (for table rows) ───────────────────────
-
-interface MiniProps extends BoxProps {
-  size?: number;
-  maxSize?: number;
-}
-
-export const BlockFillBarMini: React.FC<MiniProps> = ({ size, maxSize = MAX_BLOCK_SIZE_BYTES, ...rest }) => {
+/**
+ * Compact block-fill progress bar + percentage label.
+ * Used in the block list table "Fill" column.
+ */
+export const BlockFillBarMini: React.FC<Props> = ({ size }) => {
   const theme = useTheme();
-  if (size == null) return <Box sx={{ color: "secondary.light", fontSize: "0.75rem" }}>—</Box>;
+  if (size == null) return <Box sx={{ color: "secondary.light", fontSize: "0.78rem" }}>—</Box>;
 
-  const pct = Math.min(100, (size / maxSize) * 100);
-  const color = fillColor(pct, theme);
-  const label = `${pct.toFixed(1)}% · ${(size / 1024).toFixed(1)} KB`;
+  const pct = Math.min(100, Math.round((size / MAX_BLOCK_SIZE) * 100));
+  const barColor =
+    pct >= 90 ? theme.palette.error.main :
+    pct >= 70 ? theme.palette.warning.main :
+    theme.palette.success.main;
 
   return (
-    <Tooltip title={`${label} · ${size.toLocaleString()} bytes`} placement="top" arrow>
-      <Box display="flex" alignItems="center" gap={0.75} sx={{ minWidth: 80 }} {...rest}>
+    <Box sx={{ minWidth: 90 }}>
+      <Box
+        sx={{
+          height: 5,
+          borderRadius: 3,
+          mb: 0.4,
+          bgcolor: theme.isDark
+            ? alpha(theme.palette.secondary.light, 0.1)
+            : alpha(theme.palette.secondary.light, 0.15),
+          overflow: "hidden"
+        }}
+      >
         <Box
           sx={{
-            flex: 1,
-            height: 6,
+            width: `${pct}%`,
+            height: "100%",
             borderRadius: 3,
-            bgcolor: theme.isDark ? alpha(theme.palette.secondary.light, 0.12) : alpha(theme.palette.secondary.light, 0.15),
-            overflow: "hidden"
+            bgcolor: barColor,
+            transition: "width 0.3s ease"
           }}
-        >
-          <Box
-            sx={{
-              width: `${pct}%`,
-              height: "100%",
-              borderRadius: 3,
-              bgcolor: color,
-              transition: "width 0.4s ease"
-            }}
-          />
-        </Box>
-        <Box
-          sx={{
-            fontSize: "0.7rem",
-            fontWeight: 600,
-            color,
-            whiteSpace: "nowrap",
-            minWidth: 34,
-            textAlign: "right"
-          }}
-        >
-          {pct.toFixed(0)}%
-        </Box>
+        />
       </Box>
-    </Tooltip>
+      <Box sx={{ fontSize: "0.7rem", color: "secondary.light" }}>
+        {pct}%
+      </Box>
+    </Box>
   );
 };
 
-// ─── Full variant (for block detail) ─────────────────────
-
-interface FullProps extends BoxProps {
-  size?: number;
-  maxSize?: number;
-}
-
-export const BlockFillBarFull: React.FC<FullProps> = ({ size, maxSize = MAX_BLOCK_SIZE_BYTES, ...rest }) => {
+/**
+ * Full block-fill bar with label and byte count.
+ * Used in the block detail visual stats panel.
+ */
+export const BlockFillBarFull: React.FC<Props> = ({ size }) => {
   const theme = useTheme();
+  if (size == null) return <Box sx={{ color: "secondary.light", fontSize: "0.78rem" }}>—</Box>;
 
-  const pct = size != null ? Math.min(100, (size / maxSize) * 100) : 0;
-  const color = fillColor(pct, theme);
-  const isEmpty = size == null || size === 0;
+  const pct = Math.min(100, Math.round((size / MAX_BLOCK_SIZE) * 100));
+  const barColor =
+    pct >= 90 ? theme.palette.error.main :
+    pct >= 70 ? theme.palette.warning.main :
+    theme.palette.success.main;
 
   return (
-    <Box {...rest}>
-      {/* Header row */}
-      <Box display="flex" justifyContent="space-between" alignItems="baseline" mb={1}>
-        <Box sx={{ fontSize: "0.7rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.07em", color: "secondary.light" }}>
-          Block utilization
-        </Box>
-        <Box display="flex" alignItems="center" gap={0.75}>
-          {!isEmpty && (
-            <Box
-              sx={{
-                fontSize: "0.6rem",
-                fontWeight: 700,
-                textTransform: "uppercase",
-                letterSpacing: "0.04em",
-                px: 0.75,
-                py: 0.25,
-                borderRadius: 1,
-                bgcolor: alpha(color, 0.12),
-                color
-              }}
-            >
-              {fillLabel(pct)}
-            </Box>
-          )}
-          <Box sx={{ fontSize: "1.4rem", fontWeight: 800, color, lineHeight: 1 }}>
-            {isEmpty ? "—" : `${pct.toFixed(1)}%`}
-          </Box>
+    <Box>
+      <Box display="flex" alignItems="center" gap={0.75} mb={0.75}>
+        <Box sx={{ fontSize: "0.68rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.07em", color: "secondary.light" }}>
+          Block Fill
         </Box>
       </Box>
-
-      {/* Progress bar */}
+      <Box display="flex" alignItems="baseline" gap={0.5} mb={0.75}>
+        <Box sx={{ fontSize: "1.1rem", fontWeight: 700, color: barColor }}>
+          {pct}%
+        </Box>
+        <Box sx={{ fontSize: "0.72rem", color: "secondary.light" }}>
+          {size.toLocaleString()} / {MAX_BLOCK_SIZE.toLocaleString()} bytes
+        </Box>
+      </Box>
       <Box
         sx={{
-          height: 12,
-          borderRadius: 6,
-          bgcolor: theme.isDark ? alpha(theme.palette.secondary.light, 0.1) : alpha(theme.palette.secondary.light, 0.12),
-          overflow: "hidden",
-          position: "relative"
+          height: 8,
+          borderRadius: 4,
+          bgcolor: theme.isDark
+            ? alpha(theme.palette.secondary.light, 0.1)
+            : alpha(theme.palette.secondary.light, 0.15),
+          overflow: "hidden"
         }}
       >
-        {!isEmpty && (
-          <Box
-            sx={{
-              width: `${pct}%`,
-              height: "100%",
-              borderRadius: 6,
-              background: `linear-gradient(90deg, ${alpha(color, 0.7)} 0%, ${color} 100%)`,
-              transition: "width 0.5s ease",
-              position: "relative",
-              "&::after": {
-                content: '""',
-                position: "absolute",
-                inset: 0,
-                background: "linear-gradient(180deg, rgba(255,255,255,0.18) 0%, transparent 100%)",
-                borderRadius: "inherit"
-              }
-            }}
-          />
-        )}
-      </Box>
-
-      {/* Size info */}
-      <Box display="flex" justifyContent="space-between" alignItems="center" mt={0.75}>
-        <Box sx={{ fontSize: "0.72rem", color: "secondary.light" }}>
-          {isEmpty ? "No data" : `${size!.toLocaleString()} B · ${(size! / 1024).toFixed(2)} KB`}
-        </Box>
-        <Box sx={{ fontSize: "0.72rem", color: "secondary.light", opacity: 0.6 }}>
-          max {(maxSize / 1024).toFixed(0)} KB
-        </Box>
+        <Box
+          sx={{
+            width: `${pct}%`,
+            height: "100%",
+            borderRadius: 4,
+            background: `linear-gradient(90deg, ${alpha(barColor, 0.7)} 0%, ${barColor} 100%)`,
+            transition: "width 0.4s ease"
+          }}
+        />
       </Box>
     </Box>
   );

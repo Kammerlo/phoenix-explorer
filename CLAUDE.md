@@ -3,10 +3,11 @@
 ## Project Overview
 
 Cardano blockchain explorer built with:
-- **Frontend**: React 18, TypeScript, MUI v6, Redux Toolkit v1, React Router v5, recharts, BigNumber.js
-- **Backend**: Node.js + NestJS, Blockfrost SDK
+- **Frontend**: React 18.3, TypeScript, MUI v7, Redux Toolkit v2, React Router v7, Highcharts v11, react-icons v4.6, date-fns v4
+- **Backend**: Node.js + Express 5, Blockfrost SDK v6
 - **Shared**: `@shared/` package with DTOs and API types consumed by both frontend and backend
 - **Monorepo**: `packages/frontend`, `packages/backend`, `packages/shared`
+- **Build**: Vite with `@vitejs/plugin-react` (automatic JSX transform — **no `import React` needed** in component files)
 
 ---
 
@@ -16,9 +17,9 @@ Pages fetch data through an abstract `ApiConnector` class with three implementat
 
 | Connector | File | Description |
 |-----------|------|-------------|
-| Gateway | `src/commons/connector/GatewayConnector.ts` | Default — calls local Node.js backend |
+| Gateway | `src/commons/connector/GatewayConnector.ts` | Default — calls local Express backend |
 | Blockfrost | `src/commons/connector/BlockfrostConnector.ts` | Direct Blockfrost API from browser |
-| Yaci | `src/commons/connector/YaciConnector.ts` | Yaci DevKit for local development |
+| Yaci | `src/commons/connector/yaci/yaciConnector.ts` | Yaci Store API (full-featured, used in dev) |
 
 **Usage pattern in all pages:**
 ```typescript
@@ -212,7 +213,7 @@ pagination={{
 
 ## Routing
 
-React Router v5 (not yet upgraded to v6). Routes defined in `src/Routers.tsx`. Route helpers in `src/commons/routers.ts`.
+React Router v7. Routes defined in `src/Routers.tsx`. Route helpers in `src/commons/routers.ts`. Uses `useParams` and `useHistory` from `react-router-dom`.
 
 Common detail route helpers:
 ```typescript
@@ -224,7 +225,7 @@ details.delegation(poolId)      // /pool/:id
 details.address(address)        // /address/:id
 ```
 
-**Never use `window.location.href` for navigation** — use React Router `useNavigate()` (or `useHistory()` in v5).
+**Never use `window.location.href` for navigation** — use React Router `useNavigate()` or `useHistory()`.
 
 ---
 
@@ -267,13 +268,53 @@ Column `minWidth` must be wide enough for content — "Created At" columns need 
 
 | Package | Purpose | Notes |
 |---------|---------|-------|
-| `recharts` | Charts (analytics, epoch progress) | Already installed |
+| `highcharts` + `highcharts-react-official` | Charts (pie, area, line) | Primary charting library — **not recharts** |
 | `framer-motion` | Animations | Already installed, not widely used yet |
 | `BigNumber.js` | Precise numeric math for ADA values | Always use for ADA arithmetic |
 | `date-fns` | Date utilities | Use instead of moment (moment is deprecated) |
 | `moment` / `moment-timezone` | Legacy date handling | Present but should be replaced with date-fns |
 | `react-i18next` | Internationalization | Translation keys in `public/locales/` |
+| `react-icons` | Icons (IoFlask, CgClose, etc.) | Use `react-icons/io5` for modern Ionicons |
 | `lodash` | Utilities | Available, use sparingly |
+| `axios` | HTTP client (frontend connector layer) | Used inside connector implementations |
+
+---
+
+## Protocol Parameters — Structure & Playground
+
+### Page & Components
+- **Page**: `src/pages/ProtocolParameter/index.tsx` — fetches live params via `apiConnector.getCurrentProtocolParameters()`, splits into 4 groups (Network, Economic, Technical, Governance), passes each to `GroupProtocoParameters`.
+- **Group card**: `src/components/ProtocolParameters/GroupProtocolParameters/GroupProtocolParameters.tsx` — renders parameter cards with tooltips. Accepts optional `playgroundComponent?: React.ReactNode` prop; if provided, an "Open Playground" toggle appears and MUI `Collapse` reveals it below the cards.
+- **Detail drawer**: `DetailViewGroupProtocol` — right-side drawer with full explanatory text per group, opened via "here" link.
+
+### Playground Components (`src/components/ProtocolParameters/Playground/`)
+
+| File | Group | Simulations |
+|------|-------|-------------|
+| `EconomicPlayground.tsx` | Economic | Transaction Fee Calculator; Epoch Rewards (rho/tau split); UTxO Min ADA |
+| `TechnicalPlayground.tsx` | Technical | Pool Saturation (nOpt/k); Pledge Influence (a0) |
+| `NetworkPlayground.tsx` | Network | Block Throughput / TPS; Script Execution Budget |
+| `GovernancePlayground.tsx` | Governance | Timeline converter (epochs → days/months/years) + deposit cost simulator |
+
+### Playground Design Patterns
+- Each playground is seeded with live on-chain values via props from the page.
+- Sliders let users deviate from the real value; a MUI `Chip` badge shows the real on-chain value whenever the slider diverges.
+- A reset link (`IoRefresh` icon) snaps any slider back to the live protocol value.
+- All simulations use only `@mui/material` primitives (Slider, LinearProgress, Chip, Collapse, Grid, Paper) — no additional chart library needed for simple visualisations.
+- Playground panels are `unmountOnExit` so state resets each time they're re-opened.
+- Playground is **not rendered** while `loading` is true to avoid seeding simulators with `0`/`NaN`.
+
+### Key Cardano Constants Used in Simulations
+```
+TOTAL_ADA_SUPPLY = 45_000_000_000   // max supply
+CIRCULATING ≈ 37_000_000_000        // approx
+RESERVES ≈ 8_000_000_000            // TOTAL - CIRCULATING
+ACTIVE_STAKE ≈ 26_000_000_000       // approx mainnet active stake
+LOVELACE_PER_ADA = 1_000_000
+EPOCHS_PER_YEAR ≈ 73
+MAINNET_EPOCH_DAYS = 5
+AVG_BLOCK_TIME_SECONDS = 20         // slot 1s, ~5% leadership rate
+```
 
 ---
 

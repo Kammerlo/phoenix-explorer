@@ -13,9 +13,9 @@ const Transactions: React.FC = () => {
   });
   const apiConnector = ApiConnector.getApiConnector();
 
-  function updateData() {
+  function updateData(page: number = 0) {
     setLoading(true);
-    apiConnector.getTransactions(undefined, { size: 50 }).then((data) => {
+    apiConnector.getTransactions(undefined, { size: "50", page: String(page) }).then((data) => {
       setTransactions(data);
       setLoading(false);
     });
@@ -23,7 +23,7 @@ const Transactions: React.FC = () => {
 
   useEffect(() => {
     document.title = "Latest Transactions | Cardano Explorer";
-    updateData();
+    updateData(0);
   }, []);
 
   return (
@@ -35,6 +35,7 @@ const Transactions: React.FC = () => {
         transactions={transactions}
         loading={loading}
         updateData={updateData}
+        paginated
       />
     </Container>
   );

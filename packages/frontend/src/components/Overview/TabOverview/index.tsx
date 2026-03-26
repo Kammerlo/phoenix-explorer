@@ -1,21 +1,14 @@
-import { TabContext, TabList, TabPanel } from "@mui/lab";
-import { Box, Tab, Typography, useTheme } from "@mui/material";
+import { Box, Typography } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { parse, ParsedQs, stringify } from "qs";
+import { stringify } from "qs";
 import { useTranslation } from "react-i18next";
-import { t } from "i18next";
 
 import { Column } from "src/components/commons/Table";
-import { API } from "src/commons/utils/api";
-import useFetchList from "src/commons/hooks/useFetchList";
 import usePageInfo from "src/commons/hooks/usePageInfo";
 import CustomTooltip from "src/components/commons/CustomTooltip";
-import { formatDateLocal, getShortHash } from "src/commons/utils/helper";
+import { getShortHash } from "src/commons/utils/helper";
 import { details } from "src/commons/routers";
-import DatetimeTypeTooltip from "src/components/commons/DatetimeTypeTooltip";
-import { actionTypeListDrep } from "src/components/commons/CardGovernanceVotes";
-import { STATUS_OVERVIEW } from "src/commons/utils/constants";
 
 import { ContainerTab, StyledLink, StyledTable } from "./styles";
 import { ApiConnector } from "src/commons/connector/ApiConnector";
@@ -24,19 +17,21 @@ import { ApiReturnType } from "@shared/APIReturnType";
 
 export default function TabOverview() {
   const { pageInfo } = usePageInfo();
-  const { search } = useLocation<{ fromPath?: SpecialPath }>();
+  const { search } = useLocation();
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const theme = useTheme();
   const [fetchData, setFetchData] = useState<ApiReturnType<GovernanceActionListItem[]>>({data: [], lastUpdated: 0, total: 0, currentPage: 1});
   const [loading, setLoading] = useState<boolean>(true);
-  
 
   const apiConnector = ApiConnector.getApiConnector();
-  apiConnector.getGovernanceOverviewList(pageInfo).then((res: ApiReturnType<GovernanceActionListItem[]>) => {
-    setFetchData(res);
-    setLoading(false);
-  });
+
+  useEffect(() => {
+    setLoading(true);
+    apiConnector.getGovernanceOverviewList(pageInfo).then((res) => {
+      setFetchData(res);
+      setLoading(false);
+    });
+  }, [search]);
 
   const columns: Column<GovernanceActionListItem>[] = [
     {

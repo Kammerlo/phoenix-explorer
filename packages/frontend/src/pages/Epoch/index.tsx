@@ -11,7 +11,7 @@ import { Capitalize } from "src/components/commons/CustomText/styles";
 import usePageInfo from "src/commons/hooks/usePageInfo";
 import DatetimeTypeTooltip from "src/components/commons/DatetimeTypeTooltip";
 import FormNowMessage from "src/components/commons/FormNowMessage";
-import { formatADA, formatADAFull, formatDateTimeLocal } from "src/commons/utils/helper";
+import { formatADA, formatDateTimeLocal } from "src/commons/utils/helper";
 import ADAicon from "src/components/commons/ADAIcon";
 import { ApiConnector } from "src/commons/connector/ApiConnector";
 import { ApiReturnType } from "@shared/APIReturnType";
@@ -321,7 +321,7 @@ const Epoch: React.FC = () => {
       minWidth: "120px",
       render: (r) => (
         <Box display="inline-flex" alignItems="center" gap={0.35} sx={{ fontWeight: 700, fontSize: "0.85rem" }}>
-          <span>{formatADAFull(r.outSum)}</span>
+          <span>{formatADA(r.outSum)}</span>
           <ADAicon />
         </Box>
       )
@@ -332,7 +332,7 @@ const Epoch: React.FC = () => {
       minWidth: "100px",
       render: (r) => (
         <Box display="inline-flex" alignItems="center" gap={0.35} sx={{ fontSize: "0.82rem", color: "secondary.light", fontWeight: 500 }}>
-          <span>{formatADAFull(r.fees ?? 0)}</span>
+          <span>{formatADA(r.fees ?? 0)}</span>
           <ADAicon />
         </Box>
       )

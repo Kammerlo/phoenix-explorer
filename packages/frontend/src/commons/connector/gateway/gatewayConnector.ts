@@ -9,7 +9,6 @@ import { EpochOverview } from "@shared/dtos/epoch.dto";
 import { Block } from "@shared/dtos/block.dto";
 import { Transaction, TransactionDetail } from "@shared/dtos/transaction.dto";
 import { ITokenOverview, TokenHolder } from "@shared/dtos/token.dto";
-import epoch from "../../../pages/Epoch";
 import { GovActionVote, GovernanceActionDetail, GovernanceActionListItem, GovernanceOverview } from "@shared/dtos/GovernanceOverview";
 import { AddressDetail, StakeAddressDetail } from "@shared/dtos/address.dto";
 import { PoolDetail, PoolOverview } from "@shared/dtos/pool.dto";

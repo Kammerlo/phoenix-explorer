@@ -23,6 +23,7 @@ import CustomTooltip from "src/components/commons/CustomTooltip";
 import DatetimeTypeTooltip from "src/components/commons/DatetimeTypeTooltip";
 import { BlockFillBarFull } from "src/components/commons/BlockFillBar";
 import { details } from "src/commons/routers";
+import { RootState } from "src/stores/types";
 
 import { TitleCard } from "./styles";
 import { StyledLink } from "src/components/share/styled";
