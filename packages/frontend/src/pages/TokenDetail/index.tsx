@@ -1,21 +1,20 @@
 // @ts-ignore
 import React, { createContext, useEffect, useRef, useState } from "react";
-import { useLocation, useParams } from "react-router-dom";
-import { Box, Tab } from "@mui/material";
+import { useParams } from "react-router-dom";
+import { Box, Container, Tab } from "@mui/material";
 import { TabContext, TabList, TabPanel } from "@mui/lab";
+import { useTranslation } from "react-i18next";
+
 import NoRecord from "src/components/commons/NoRecord";
+import FetchDataErr from "src/components/commons/FetchDataErr";
 import TokenOverview from "src/components/TokenDetail/TokenOverview";
 import TokenAnalytics from "src/components/TokenDetail/TokenAnalytics";
-import FetchDataErr from "src/components/commons/FetchDataErr";
-
-import { StyledContainer } from "./styles";
-import {ITokenOverview, TokenHolder} from "@shared/dtos/token.dto";
-import {ApiConnector} from "../../commons/connector/ApiConnector";
+import TransactionList from "src/components/TransactionLists";
+import TokenHolders from "src/components/TokenDetail/TokenHolders";
 import PluginSlotRenderer from "src/plugins/PluginSlotRenderer";
-import {ApiReturnType} from "@shared/APIReturnType";
-import CircularProgress from "@mui/material/CircularProgress";
-import TransactionList from "../../components/TransactionLists";
-import TokenHolders from "../../components/TokenDetail/TokenHolders";
+import { ApiConnector } from "src/commons/connector/ApiConnector";
+import { ApiReturnType } from "@shared/APIReturnType";
+import { ITokenOverview, TokenHolder } from "@shared/dtos/token.dto";
 import { Transaction } from "@shared/dtos/transaction.dto";
 import usePageInfo from "src/commons/hooks/usePageInfo";
 
@@ -30,112 +29,168 @@ export const OverviewMetadataTokenContext = createContext<IOverviewMetadataConte
 });
 
 const TokenDetail: React.FC = () => {
+  const { t } = useTranslation();
   const mainRef = useRef(document.querySelector("#main"));
   const { pageInfo } = usePageInfo();
-
   const { tokenId } = useParams<{ tokenId: string }>();
-  const [fetchData, setFechtData] = useState<ApiReturnType<ITokenOverview>>();
-  const [tokenTransactions, setTokenTransactions] = useState<ApiReturnType<Transaction[]>>({ data: [], lastUpdated: 0, total: 0, currentPage: 1 });
-  const [tokenHolders, setTokenHolders] = useState<ApiReturnType<TokenHolder[]>>({ data: [], lastUpdated: 0, total: 0, currentPage: 1 });
-  const [loading, setLoading] = useState<boolean>(true);
-  const [transactionsLoading, setTransactionsLoading] = useState<boolean>(false);
-  const [holdersLoading, setHoldersLoading] = useState<boolean>(false);
-  const [tabValue, setTabValue] = useState<string>("transactions");
+
+  const [fetchData, setFetchData] = useState<ApiReturnType<ITokenOverview>>();
+  const [tokenTransactions, setTokenTransactions] = useState<ApiReturnType<Transaction[]>>({
+    data: [], lastUpdated: 0, total: 0, currentPage: 0
+  });
+  const [tokenHolders, setTokenHolders] = useState<ApiReturnType<TokenHolder[]>>({
+    data: [], lastUpdated: 0, total: 0, currentPage: 0
+  });
+  const [loading, setLoading] = useState(true);
+  const [transactionsLoading, setTransactionsLoading] = useState(false);
+  const [holdersLoading, setHoldersLoading] = useState(false);
+  const [tabValue, setTabValue] = useState("transactions");
+  const [txCountRealtime, setTxCountRealtime] = useState(0);
+
   const apiConnector = ApiConnector.getApiConnector();
   const network = process.env.REACT_APP_NETWORK || "mainnet";
 
-  function updateData() {
-    setLoading(true);
-    apiConnector.getTokenDetail(tokenId).then((data) => {
-      setFechtData(data);
-      setLoading(false);
-    });
-  }
-
-  function updateTransactions(page: number = 1) {
+  function updateTransactions(page: number = 0) {
     setTransactionsLoading(true);
-    const params = { ...pageInfo, page: page.toString() };
-    apiConnector.getTokenTransactions(tokenId, params).then((data) => {
+    apiConnector.getTokenTransactions(tokenId, { ...pageInfo, page: String(page) }).then((data) => {
       setTokenTransactions(data);
       setTransactionsLoading(false);
     });
   }
 
-  function updateTokenHolders(page: number = 1) {
+  function updateTokenHolders(page: number = 0) {
     setHoldersLoading(true);
-    const params = { ...pageInfo, page: page.toString() };
-    apiConnector.getTokenHolders(tokenId, params).then((data) => {
+    apiConnector.getTokenHolders(tokenId, { ...pageInfo, page: String(page) }).then((data) => {
       setTokenHolders(data);
       setHoldersLoading(false);
     });
   }
 
   useEffect(() => {
-    updateData();
-  }, [0]);
+    setLoading(true);
+    apiConnector.getTokenDetail(tokenId).then((data) => {
+      setFetchData(data);
+      setLoading(false);
+    });
+    updateTransactions(0);
+  }, [tokenId]);
 
   useEffect(() => {
     if (tabValue === "transactions") {
-      updateTransactions();
+      updateTransactions(0);
     } else if (tabValue === "holders") {
-      updateTokenHolders();
+      updateTokenHolders(0);
     }
-  }, [tabValue, tokenId]);
-
-  const [txCountRealtime, setTxCountRealtime] = useState<number>(0);
+  }, [tabValue]);
 
   useEffect(() => {
-    window.history.replaceState({}, document.title);
-    document.title = `Token ${tokenId} | Cardano Blockchain Explorer`;
+    document.title = `Token ${tokenId} | Cardano Explorer`;
     mainRef.current?.scrollTo({ top: 0, behavior: "smooth" });
   }, [tokenId]);
 
-  if (loading) return <CircularProgress/>;
-  if (fetchData.error) return <FetchDataErr />;
-  if (!loading && !fetchData.data) return <NoRecord />;
+  if (fetchData?.error) return <FetchDataErr />;
+  if (!loading && !fetchData?.data) return <NoRecord />;
+
+  const hasAnalytics = (fetchData?.data?.analytics?.length ?? 0) > 0;
+  const txCount = fetchData?.data?.txCount ?? tokenTransactions.total ?? 0;
+  const holdersCount = fetchData?.data?.numberOfHolders ?? tokenHolders.total ?? 0;
 
   return (
-    <OverviewMetadataTokenContext.Provider
-      value={{
-        txCountRealtime,
-        setTxCountRealtime
-      }}
-    >
-      <StyledContainer>
-        <TokenOverview data={fetchData.data} loading={loading} lastUpdated={fetchData.lastUpdated} />
-        {/* <TokenAnalytics dataToken={fetchData.data} /> */}
-        
+    <OverviewMetadataTokenContext.Provider value={{ txCountRealtime, setTxCountRealtime }}>
+      <Container sx={{ pt: 3, pb: 6 }}>
+        {/* Overview header */}
+        <TokenOverview
+          data={fetchData?.data ?? null}
+          loading={loading}
+          lastUpdated={fetchData?.lastUpdated ?? 0}
+        />
+
+        {/* Analytics chart — shown when data is available */}
+        {!loading && hasAnalytics && (
+          <Box mb={3}>
+            <TokenAnalytics dataToken={fetchData?.data} loading={loading} />
+          </Box>
+        )}
+
+        {/* Tabs: Transactions | Holders */}
         <TabContext value={tabValue}>
-          <Box sx={{ borderBottom: 1, borderColor: 'divider', mt: 3 }}>
-            <TabList 
-              onChange={(event: React.SyntheticEvent, newValue: string) => setTabValue(newValue)}
+          <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
+            <TabList
+              onChange={(_: React.SyntheticEvent, newValue: string) => setTabValue(newValue)}
               aria-label="token data tabs"
             >
-              <Tab label="Transactions" value="transactions" />
-              <Tab label="Token Holders" value="holders" />
+              <Tab
+                label={
+                  <Box display="flex" alignItems="center" gap={0.75}>
+                    Transactions
+                    {txCount > 0 && (
+                      <Box
+                        component="span"
+                        sx={{
+                          fontSize: "0.65rem",
+                          fontWeight: 700,
+                          px: 0.7,
+                          py: 0.15,
+                          borderRadius: "9px",
+                          bgcolor: "primary.main",
+                          color: "white"
+                        }}
+                      >
+                        {txCount.toLocaleString()}
+                      </Box>
+                    )}
+                  </Box>
+                }
+                value="transactions"
+              />
+              <Tab
+                label={
+                  <Box display="flex" alignItems="center" gap={0.75}>
+                    Holders
+                    {holdersCount > 0 && (
+                      <Box
+                        component="span"
+                        sx={{
+                          fontSize: "0.65rem",
+                          fontWeight: 700,
+                          px: 0.7,
+                          py: 0.15,
+                          borderRadius: "9px",
+                          bgcolor: (t) => t.palette.secondary.light,
+                          color: "white"
+                        }}
+                      >
+                        {holdersCount.toLocaleString()}
+                      </Box>
+                    )}
+                  </Box>
+                }
+                value="holders"
+              />
             </TabList>
           </Box>
-          
+
           <TabPanel value="transactions" sx={{ px: 0 }}>
-            <TransactionList 
-              transactions={tokenTransactions} 
+            <TransactionList
+              transactions={tokenTransactions}
               loading={transactionsLoading}
               updateData={updateTransactions}
-              paginated={false}
+              paginated
             />
           </TabPanel>
-          
+
           <TabPanel value="holders" sx={{ px: 0 }}>
-            <TokenHolders 
-              tokenHolders={tokenHolders} 
+            <TokenHolders
+              tokenHolders={tokenHolders}
               loading={holdersLoading}
               updateData={updateTokenHolders}
-              paginated={false}
+              paginated
             />
           </TabPanel>
         </TabContext>
+
         <PluginSlotRenderer slot="token-detail" context={{ data: fetchData?.data, network, apiConnector }} />
-      </StyledContainer>
+      </Container>
     </OverviewMetadataTokenContext.Provider>
   );
 };

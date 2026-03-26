@@ -1,5 +1,7 @@
-import { Box, CircularProgress } from "@mui/material";
-import { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { Box, Chip, LinearProgress, Skeleton, useTheme } from "@mui/material";
+import { alpha } from "@mui/material/styles";
 import { useTranslation } from "react-i18next";
 
 import usePageInfo from "src/commons/hooks/usePageInfo";
@@ -8,140 +10,280 @@ import { formatADAFull, formatPercent, getShortHash } from "src/commons/utils/he
 import ADAicon from "src/components/commons/ADAIcon";
 import CustomTooltip from "src/components/commons/CustomTooltip";
 import Table, { Column } from "src/components/commons/Table";
-import {PoolOverview} from "@shared/dtos/pool.dto";
-
-import { DelegationContainer, PoolName } from "./styles";
+import FormNowMessage from "src/components/commons/FormNowMessage";
 import { ApiConnector } from "src/commons/connector/ApiConnector";
 import { ApiReturnType } from "@shared/APIReturnType";
-import { useNavigate } from "react-router-dom";
-import { CheckLightGreen } from "src/commons/resources";
+import { PoolOverview } from "@shared/dtos/pool.dto";
+import { Actions, TimeDuration } from "src/components/TransactionLists/styles";
+import { DelegationContainer } from "./styles";
+
+// ─── Saturation bar ───────────────────────────────────────────────────────────
+
+function SaturationBar({ value }: { value: number | null | undefined }) {
+  const theme = useTheme();
+  if (value == null) return <Box sx={{ color: "secondary.light", fontSize: "0.8rem" }}>N/A</Box>;
+
+  // value is 0-100 range (percentage points, not 0-1)
+  const pct = Math.min(100, value);
+  const isOver = value > 100;
+  const barColor = isOver ? theme.palette.error[700] : theme.palette.primary.main;
+
+  return (
+    <Box sx={{ minWidth: 110 }}>
+      <Box
+        sx={{
+          height: 6,
+          borderRadius: 3,
+          mb: 0.5,
+          bgcolor: theme.isDark
+            ? alpha(theme.palette.secondary.light, 0.1)
+            : alpha(theme.palette.secondary.light, 0.15),
+          overflow: "hidden"
+        }}
+      >
+        <Box
+          sx={{
+            width: `${pct}%`,
+            height: "100%",
+            borderRadius: 3,
+            bgcolor: barColor,
+            transition: "width 0.4s ease"
+          }}
+        />
+      </Box>
+      <Box sx={{ fontSize: "0.72rem", color: isOver ? "error.main" : "secondary.light", fontWeight: isOver ? 700 : 400 }}>
+        {formatPercent(value / 100)}
+      </Box>
+    </Box>
+  );
+}
+
+// ─── Skeleton ─────────────────────────────────────────────────────────────────
+
+const SKELETON_COUNT = 20;
+
+const SkeletonRows: React.FC = () => {
+  const theme = useTheme();
+  return (
+    <Box>
+      {Array.from({ length: SKELETON_COUNT }).map((_, i) => (
+        <Box
+          key={i}
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 2,
+            px: 2,
+            py: 1.5,
+            borderBottom: `1px solid ${
+              theme.isDark
+                ? alpha(theme.palette.secondary.light, 0.08)
+                : theme.palette.primary[200] || "#f0f0f0"
+            }`
+          }}
+        >
+          <Box sx={{ flex: 2 }}>
+            <Skeleton variant="text" width="55%" height={16} />
+            <Skeleton variant="rounded" width={48} height={16} sx={{ mt: 0.5, borderRadius: "9px" }} />
+          </Box>
+          <Box sx={{ flex: 1.5 }}><Skeleton variant="text" width="70%" /></Box>
+          <Box sx={{ flex: 1.5 }}>
+            <Skeleton variant="text" width="80%" height={8} sx={{ borderRadius: 3 }} />
+            <Skeleton variant="text" width="30%" height={12} sx={{ mt: 0.5 }} />
+          </Box>
+          <Box sx={{ flex: 1.5 }}><Skeleton variant="text" width="60%" /></Box>
+          <Box sx={{ flex: 1 }}><Skeleton variant="text" width="50%" /></Box>
+        </Box>
+      ))}
+    </Box>
+  );
+};
+
+// ─── Pool list ────────────────────────────────────────────────────────────────
 
 const PoolList: React.FC = () => {
   const { t } = useTranslation();
   const { pageInfo } = usePageInfo();
-  const [ fetchData, setFetchData] = useState<ApiReturnType<PoolOverview[]>>();
-  const navigate = useNavigate<{ tickerNameSearch?: string; fromPath?: SpecialPath }>();
+  const [fetchData, setFetchData] = useState<ApiReturnType<PoolOverview[]>>();
   const [loading, setLoading] = useState(true);
-
+  const navigate = useNavigate();
   const apiConnector = ApiConnector.getApiConnector();
 
-  apiConnector.getPoolList(pageInfo).then((response) => {
-    setFetchData(response);
-    setLoading(false);
-  });
+  useEffect(() => {
+    setLoading(true);
+    apiConnector.getPoolList(pageInfo).then((response) => {
+      setFetchData(response);
+      setLoading(false);
+    });
+  }, [pageInfo.page, pageInfo.size]);
 
   const columns: Column<PoolOverview>[] = [
     {
-      title: <div data-testid="poolList.poolNameTitle">{t("glossary.pool")}</div>,
+      title: <Box data-testid="poolList.poolNameTitle">{t("glossary.pool")}</Box>,
       key: "poolName",
-      minWidth: "150px",
+      minWidth: "180px",
       render: (r, idx) => (
-        <CustomTooltip
-          title={
-            r.tickerName ? (
-              <div>
-                <Box fontWeight={"bold"} component={"span"}>
-                  Ticker:{" "}
-                </Box>
-                {r.tickerName}
-              </div>
-            ) : undefined
-          }
-        >
-          <PoolName
+        <Box>
+          <Box
+            component="span"
             data-testid={`poolList.poolNameValue#${idx}`}
-            to={{ pathname: details.delegation(r.poolId) }}
+            sx={{
+              color: "primary.main",
+              fontWeight: 600,
+              fontSize: "0.87rem",
+              cursor: "pointer",
+              "&:hover": { textDecoration: "underline" }
+            }}
+            onClick={() => navigate(details.delegation(r.poolId))}
           >
             <Box
-              component={"span"}
-              textOverflow={"ellipsis"}
-              display={(r.poolName || r.poolId || "").length > 20 ? "inline-block" : "inline"}
-              width={"200px"}
-              whiteSpace={"nowrap"}
-              overflow={"hidden"}
+              component="span"
+              sx={{
+                display: "inline-block",
+                maxWidth: 220,
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+                verticalAlign: "bottom"
+              }}
             >
-              {r.poolName || `${getShortHash(r.poolId)}`}
+              {r.poolName || getShortHash(r.poolId)}
             </Box>
-          </PoolName>
-        </CustomTooltip>
+          </Box>
+          {r.tickerName && (
+            <Box mt={0.3}>
+              <Chip
+                label={r.tickerName}
+                size="small"
+                sx={{
+                  height: 17,
+                  fontSize: "0.6rem",
+                  fontWeight: 700,
+                  letterSpacing: "0.04em",
+                  bgcolor: (t) => alpha(t.palette.primary.main, 0.12),
+                  color: "primary.main",
+                  border: (t) => `1px solid ${alpha(t.palette.primary.main, 0.3)}`,
+                  "& .MuiChip-label": { px: 0.7 }
+                }}
+              />
+            </Box>
+          )}
+        </Box>
       )
     },
     {
       title: (
-        <Box component={"span"} data-testid="poolList.poolSizeTitle">
+        <Box component="span" data-testid="poolList.poolSizeTitle">
           {t("glossary.poolSize")} (<ADAicon />)
         </Box>
       ),
       key: "poolSize",
-      minWidth: "120px",
+      minWidth: "130px",
       render: (r, idx) => (
-        <Box component={"span"} data-testid={`poolList.poolSizeValue#${idx}`}>
-          {r.poolSize != null ? formatADAFull(r.poolSize) : t("common.N/A")} <ADAicon />
+        <Box
+          component="span"
+          data-testid={`poolList.poolSizeValue#${idx}`}
+          sx={{ fontWeight: 600, fontSize: "0.85rem", display: "inline-flex", alignItems: "center", gap: 0.4 }}
+        >
+          {r.poolSize != null ? (
+            <>{formatADAFull(r.poolSize)} <ADAicon /></>
+          ) : (
+            <Box sx={{ color: "secondary.light" }}>—</Box>
+          )}
         </Box>
       )
     },
     {
       title: (
-        <Box component={"span"} data-testid="poolList.declaredPledgeTitle">
+        <Box component="span" data-testid="poolList.saturationTitle">
+          {t("glossary.saturation")}
+        </Box>
+      ),
+      key: "saturation",
+      minWidth: "120px",
+      render: (r, idx) => (
+        <Box data-testid={`poolList.saturationValue#${idx}`}>
+          <SaturationBar value={r.saturation} />
+        </Box>
+      )
+    },
+    {
+      title: (
+        <Box component="span" data-testid="poolList.declaredPledgeTitle">
           {t("glossary.declaredPledge")} (<ADAicon />)
         </Box>
       ),
       key: "declaredPledge",
-      minWidth: "120px",
+      minWidth: "130px",
       render: (r, idx) => (
-        <Box component={"span"} data-testid={`poolList.declaredPledgeValue#${idx}`}>
+        <Box
+          component="span"
+          data-testid={`poolList.declaredPledgeValue#${idx}`}
+          sx={{ fontSize: "0.83rem", color: "secondary.light", display: "inline-flex", alignItems: "center", gap: 0.4 }}
+        >
           {formatADAFull(r.declaredPledge)} <ADAicon />
         </Box>
       )
     },
     {
       title: (
-        <Box component={"span"} data-testid="poolList.saturationTitle">
-          {t("glossary.saturation")}
-        </Box>
-      ),
-      minWidth: "120px",
-      key: "saturation",
-      render: (r, idx) =>
-        r.saturation != null ? (
-          <Box component={"span"} mr={1} data-testid={`poolList.saturationValue#${idx}`}>
-            {formatPercent(r.saturation) || `0%`}
-          </Box>
-        ) : (
-          t("common.N/A")
-        )
-    },
-    {
-      title: (
-        <Box component={"span"} data-testid="poolList.blockLifetimeTitle">
+        <Box component="span" data-testid="poolList.blockLifetimeTitle">
           {t("glossary.blocksLifetime")}
         </Box>
       ),
-      minWidth: "100px",
       key: "lifetimeBlock",
+      minWidth: "100px",
       render: (r, idx) => (
-        <Box component={"span"} data-testid={`poolList.blockLifetimeValue#${idx}`}>
-          {r.lifetimeBlock || 0}
+        <Box
+          component="span"
+          data-testid={`poolList.blockLifetimeValue#${idx}`}
+          sx={{ fontWeight: 600, fontSize: "0.85rem" }}
+        >
+          {(r.lifetimeBlock ?? 0).toLocaleString()}
         </Box>
       )
     }
   ];
 
-  if (loading) return <CircularProgress />;
-
   return (
     <DelegationContainer>
-      <Table
-        {...fetchData}
-        data-testid="delegationList.table"
-        columns={columns}
-        total={{ count: fetchData.total, title: "Total"}}
-        onClickRow={(_, r: Delegators) => navigate(details.delegation(r.poolId))}
-        pagination={{
-          ...pageInfo,
-          total: fetchData.total
-        }}
-      />
+      <Actions>
+        <TimeDuration>
+          <FormNowMessage time={fetchData?.lastUpdated || 0} />
+        </TimeDuration>
+      </Actions>
+
+      {loading ? (
+        <SkeletonRows />
+      ) : (
+        <Table
+          data-testid="delegationList.table"
+          data={fetchData?.data || []}
+          columns={columns}
+          total={{ count: fetchData?.total ?? 0, title: "Total" }}
+          onClickRow={(_, r: PoolOverview) => navigate(details.delegation(r.poolId))}
+          pagination={{
+            ...pageInfo,
+            total: fetchData?.total ?? 0,
+            page: fetchData?.currentPage ?? 0,
+            size: fetchData?.pageSize ?? pageInfo.size,
+            onChange: (page) => {
+              setLoading(true);
+              apiConnector.getPoolList({ ...pageInfo, page }).then((response) => {
+                setFetchData(response);
+                setLoading(false);
+              });
+            }
+          }}
+          tableWrapperProps={{
+            sx: (theme) => ({
+              minHeight: "70vh",
+              [theme.breakpoints.down("md")]: { minHeight: "60vh" },
+              [theme.breakpoints.down("sm")]: { minHeight: "50vh" }
+            })
+          }}
+        />
+      )}
     </DelegationContainer>
   );
 };

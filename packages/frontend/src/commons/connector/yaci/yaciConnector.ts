@@ -669,6 +669,11 @@ export class YaciConnector implements ApiConnector {
     }
   }
 
+  async getPoolBlocks(poolId: string, pageInfo: ParsedUrlQuery): Promise<ApiReturnType<Block[]>> {
+    // Yaci does not expose a dedicated pool-blocks endpoint; return empty.
+    return { data: [], lastUpdated: Date.now(), total: 0, currentPage: 0, pageSize: Number(pageInfo.size ?? 20) };
+  }
+
   async getDreps(pageInfo: ParsedUrlQuery): Promise<ApiReturnType<Drep[]>> {
     try {
       const response = await this.client.get<{ drepList?: YaciDrep[]; total?: number; totalPages?: number }>(

@@ -1,154 +1,208 @@
-import { stringify } from "qs";
-// @ts-ignore
-import React, {useEffect, useRef, useState} from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { Box, Skeleton, Typography, useTheme } from "@mui/material";
+import { alpha } from "@mui/material/styles";
 import { useTranslation } from "react-i18next";
-import {Box, CircularProgress} from "@mui/material";
 
 import { details } from "src/commons/routers";
-import { formatDateTimeLocal, formatNumberTotalSupply, getShortHash } from "src/commons/utils/helper";
-import Card from "src/components/commons/Card";
+import { formatNumberTotalSupply, getShortHash } from "src/commons/utils/helper";
 import Table, { Column } from "src/components/commons/Table";
 import FormNowMessage from "src/components/commons/FormNowMessage";
-import CustomTooltip from "src/components/commons/CustomTooltip";
 import usePageInfo from "src/commons/hooks/usePageInfo";
-import DatetimeTypeTooltip from "src/components/commons/DatetimeTypeTooltip";
+import { ApiConnector } from "src/commons/connector/ApiConnector";
+import { ApiReturnType } from "@shared/APIReturnType";
+import { ITokenOverview } from "@shared/dtos/token.dto";
+import { Actions, TimeDuration } from "src/components/TransactionLists/styles";
+import { StyledContainer } from "./styles";
 
-import { AssetName, Logo, StyledContainer, TimeDuration } from "./styles";
-import {ApiReturnType} from "@shared/APIReturnType";
-import {ApiConnector} from "../../commons/connector/ApiConnector";
-import {ITokenOverview} from "@shared/dtos/token.dto";
+// ─── (TypeBadge removed — tokenType not returned by list endpoint) ─────────
 
-const Tokens = () => {
+// ─── Skeleton ─────────────────────────────────────────────────────────────────
+
+const SKELETON_COUNT = 20;
+
+const SkeletonRows: React.FC = () => {
+  const theme = useTheme();
+  return (
+    <Box>
+      {Array.from({ length: SKELETON_COUNT }).map((_, i) => (
+        <Box
+          key={i}
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 2,
+            px: 2,
+            py: 1.5,
+            borderBottom: `1px solid ${
+              theme.isDark
+                ? alpha(theme.palette.secondary.light, 0.08)
+                : theme.palette.primary[200] || "#f0f0f0"
+            }`
+          }}
+        >
+          {/* Asset */}
+          <Box sx={{ flex: 2.5, display: "flex", alignItems: "center", gap: 1.5 }}>
+            <Skeleton variant="circular" width={28} height={28} />
+            <Box>
+              <Skeleton variant="text" width={120} height={16} />
+              <Skeleton variant="rounded" width={40} height={14} sx={{ mt: 0.4, borderRadius: "9px" }} />
+            </Box>
+          </Box>
+          {/* Type */}
+          <Box sx={{ flex: 0.7 }}>
+            <Skeleton variant="rounded" width={32} height={18} sx={{ borderRadius: "9px" }} />
+          </Box>
+          {/* Supply */}
+          <Box sx={{ flex: 1.5 }}><Skeleton variant="text" width="70%" /></Box>
+          {/* Tx Count */}
+          <Box sx={{ flex: 0.8 }}><Skeleton variant="text" width="50%" /></Box>
+          {/* Created At */}
+          <Box sx={{ flex: 1.2 }}><Skeleton variant="text" width="80%" /></Box>
+        </Box>
+      ))}
+    </Box>
+  );
+};
+
+// ─── Token list ───────────────────────────────────────────────────────────────
+
+const Tokens: React.FC = () => {
   const { t } = useTranslation();
-
-  const { search } = useLocation();
   const navigate = useNavigate();
-  const { pageInfo, setSort } = usePageInfo();
-
-  const queries = new URLSearchParams(search);
-
-  const mainRef = useRef(document.querySelector("#main"));
-
+  const { pageInfo } = usePageInfo();
   const [fetchData, setFetchData] = useState<ApiReturnType<ITokenOverview[]>>();
-  const [loading, setLoading] = useState<boolean>(true);
+  const [loading, setLoading] = useState(true);
   const apiConnector = ApiConnector.getApiConnector();
 
   function updateData(page: number) {
-    pageInfo.page = page;
     setLoading(true);
-    apiConnector.getTokensPage(pageInfo).then((data: ApiReturnType<ITokenOverview[]>) => {
+    apiConnector.getTokensPage({ ...pageInfo, page }).then((data: ApiReturnType<ITokenOverview[]>) => {
       setFetchData(data);
       setLoading(false);
     });
   }
 
-
-
   useEffect(() => {
-    window.history.replaceState({}, document.title);
-    document.title = `Native Tokens | Cardano Blockchain Explorer`;
-  }, []);
-
-  useEffect(() => {
+    document.title = "Native Tokens | Cardano Explorer";
     updateData(0);
   }, []);
 
   const columns: Column<ITokenOverview>[] = [
-    // {
-    //   title: <Box data-testid="tokens.table.title.icon">{t("glossary.icon")}</Box>,
-    //   key: "icon",
-    //   minWidth: "50px",
-    //   render: (r) => (r?.metadata?.logo ? <Logo src={`${r.metadata?.logo}`} alt="icon" /> : "")
-    // },
     {
-      title: <Box data-testid="tokens.table.title.assetName">{t("glossary.assetName")}</Box>,
+      title: <Box data-testid="tokens.table.title.assetName">{t("glossary.asset")}</Box>,
       key: "assetName",
-      minWidth: "100px",
-      render: (r, idx) =>
-        r.displayName && r.displayName.length > 20 ? (
-          <CustomTooltip placement={"top"} title={r.displayName}>
-            <AssetName data-testid={`token.assetName#${idx}`} to={details.token(r?.fingerprint ?? "")}>
-              {getShortHash(r.displayName || "")}
-            </AssetName>
-          </CustomTooltip>
-        ) : (
-          <AssetName
-            data-testid={`token.assetName#${idx}`}
-            to={details.token(r?.fingerprint ?? "")}
-            data-policy={`${r?.policy}${r?.name}`}
-          >
-            {r.displayName || getShortHash(r.fingerprint || "")}
-          </AssetName>
-        )
+      minWidth: "200px",
+      render: (r, idx) => (
+        <Box
+          display="flex"
+          alignItems="center"
+          gap={1.5}
+          sx={{ cursor: "pointer" }}
+          onClick={() => navigate(details.token(r.fingerprint ?? ""))}
+        >
+          {/* Logo or placeholder */}
+          {r.metadata?.logo ? (
+            <Box
+              component="img"
+              src={r.metadata.logo}
+              alt=""
+              sx={{ width: 28, height: 28, borderRadius: "50%", objectFit: "cover", flexShrink: 0 }}
+            />
+          ) : (
+            <Box
+              sx={{
+                width: 28,
+                height: 28,
+                borderRadius: "50%",
+                bgcolor: (t) => alpha(t.palette.primary.main, 0.12),
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: "0.65rem",
+                fontWeight: 700,
+                color: "primary.main",
+                flexShrink: 0,
+                letterSpacing: 0
+              }}
+            >
+              {(r.metadata?.ticker || r.displayName || "?").slice(0, 2).toUpperCase()}
+            </Box>
+          )}
+          <Box>
+            <Box
+              data-testid={`token.assetName#${idx}`}
+              sx={{ color: "primary.main", fontWeight: 600, fontSize: "0.87rem", lineHeight: 1.2 }}
+            >
+              {r.displayName || getShortHash(r.fingerprint || "")}
+            </Box>
+            {r.metadata?.ticker && (
+              <Box sx={{ fontSize: "0.68rem", color: "secondary.light", mt: 0.2 }}>
+                {r.metadata.ticker}
+              </Box>
+            )}
+          </Box>
+        </Box>
+      )
     },
-    // {
-    //   title: <Box data-testid="tokens.table.title.scriptHash">{t("glossary.scriptHash")}</Box>,
-    //   key: "policy",
-    //   minWidth: "100px",
-    //   render: (r, idx) => (
-    //     <CustomTooltip title={r.policy}>
-    //       <AssetName
-    //         to={r.policyIsNativeScript ? details.nativeScriptDetail(r.policy) : details.smartContract(r.policy)}
-    //         data-testid={`token.scriptHash#${idx}`}
-    //       >
-    //         {getShortHash(r.policy)}
-    //       </AssetName>
-    //     </CustomTooltip>
-    //   )
-    // },
     {
       title: (
-        <Box data-testid="tokens.table.title.totalSupply" component={"span"}>
+        <Box data-testid="tokens.table.title.totalSupply" component="span">
           {t("common.totalSupply")}
         </Box>
       ),
       key: "supply",
-      minWidth: "150px",
-      render: (r) => {
-        const decimalToken = r?.metadata?.decimals || 0;
-        return formatNumberTotalSupply(r?.supply, decimalToken);
-      },
-      sort: ({ columnKey, sortValue }) => {
-        sortValue ? setSort(`${columnKey},${sortValue}`) : setSort("");
-      }
-    },
-    // {
-    //   title: (
-    //     <Box data-testid="tokens.table.title.createdAt" component={"span"}>
-    //       {t("createdAt")}
-    //     </Box>
-    //   ),
-    //   key: "time",
-    //   minWidth: "150px",
-    //   render: (r) => <DatetimeTypeTooltip>{formatDateTimeLocal(r.createdOn || "")}</DatetimeTypeTooltip>,
-    //   sort: ({ columnKey, sortValue }) => {
-    //     sortValue ? setSort(`${columnKey},${sortValue}`) : setSort("");
-    //   }
-    // }
+      minWidth: "140px",
+      render: (r) => (
+        <Box sx={{ fontWeight: 600, fontSize: "0.85rem" }}>
+          {formatNumberTotalSupply(r?.supply, r?.metadata?.decimals || 0)}
+        </Box>
+      )
+    }
   ];
 
   const toTokenDetail = (_: React.MouseEvent<Element, MouseEvent>, r: ITokenOverview) => {
     if (!r.fingerprint) return;
-    navigate(details.token(r.fingerprint ?? ""));
+    navigate(details.token(r.fingerprint));
   };
-
-  if (loading) return <CircularProgress />;
 
   return (
     <StyledContainer>
-      <Card title={t("glossary.nativeTokens")}>
+      <Box mb={2} px={2}>
+        <Typography variant="h5" fontWeight={700} component="h1">Native Tokens</Typography>
+      </Box>
+      <Actions>
+        <TimeDuration>
+          <FormNowMessage time={fetchData?.lastUpdated || 0} />
+        </TimeDuration>
+      </Actions>
+
+      {loading ? (
+        <SkeletonRows />
+      ) : (
         <Table
-          {...fetchData}
           data={fetchData?.data || []}
           columns={columns}
           total={{ title: "Total", count: fetchData?.total || 0 }}
           onClickRow={toTokenDetail}
           rowKey="fingerprint"
-          showTabView
-          tableWrapperProps={{ sx: (theme) => ({ [theme.breakpoints.between("sm", "md")]: { minHeight: "60vh" } }) }}
+          tableWrapperProps={{
+            sx: (theme) => ({
+              minHeight: "70vh",
+              [theme.breakpoints.down("md")]: { minHeight: "60vh" },
+              [theme.breakpoints.down("sm")]: { minHeight: "50vh" }
+            })
+          }}
+          pagination={{
+            ...pageInfo,
+            total: fetchData?.total || 0,
+            page: fetchData?.currentPage || 0,
+            size: fetchData?.pageSize || pageInfo.size,
+            onChange: (page) => updateData(page),
+            hideLastPage: true
+          }}
         />
-      </Card>
+      )}
     </StyledContainer>
   );
 };

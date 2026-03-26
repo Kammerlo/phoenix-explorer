@@ -1,44 +1,36 @@
 import React, { useEffect, useState } from "react";
-import { useTranslation } from "react-i18next";
-import Card from "src/components/commons/Card";
+import { Box, Container, Typography } from "@mui/material";
 
-import { StyledContainer } from "./styles";
 import BlockListComponent from "../../components/BlockListComponent";
-import usePageInfo from "src/commons/hooks/usePageInfo";
-import {Block} from "@shared/dtos/block.dto";
-import {ApiReturnType} from "@shared/APIReturnType";
-import {ApiConnector} from "src/commons/connector/ApiConnector";
+import { Block } from "@shared/dtos/block.dto";
+import { ApiReturnType } from "@shared/APIReturnType";
+import { ApiConnector } from "src/commons/connector/ApiConnector";
 
 const BlockList: React.FC = () => {
-  const { t } = useTranslation();
-
-  const { pageInfo } = usePageInfo();
   const [loading, setLoading] = useState(true);
   const [fetchData, setFetchData] = useState<ApiReturnType<Block[]>>();
   const apiConnector = ApiConnector.getApiConnector();
 
-  function updateData(pageInfo: {page: number, size?: number}) {
+  function updateData(pageInfo: { page: number; size?: number }) {
     setLoading(true);
     apiConnector.getBlocksPage(pageInfo).then((data: ApiReturnType<Block[]>) => {
-      setLoading(false);
       setFetchData(data);
+      setLoading(false);
     });
   }
 
   useEffect(() => {
-    updateData({page: 1, size: 10});
-  }, []);
-
-  useEffect(() => {
-    document.title = `Latest Blocks List | Cardano Blockchain Explorer`;
+    document.title = "Latest Blocks | Cardano Explorer";
+    updateData({ page: 1, size: 10 });
   }, []);
 
   return (
-    <StyledContainer>
-      <Card data-testid="blocks-card" title={t("head.page.blocks")}>
-        <BlockListComponent fetchData={fetchData} updateData={updateData} loading={loading}/>
-      </Card>
-    </StyledContainer>
+    <Container sx={{ pt: 3, pb: 6 }}>
+      <Box mb={2}>
+        <Typography variant="h5" fontWeight={700} component="h1">Latest Blocks</Typography>
+      </Box>
+      <BlockListComponent fetchData={fetchData} updateData={updateData} loading={loading} />
+    </Container>
   );
 };
 

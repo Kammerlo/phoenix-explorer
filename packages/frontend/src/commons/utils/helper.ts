@@ -193,31 +193,39 @@ export function getPageInfo<T = ParsedUrlQuery>(
 
 export const formatDateTimeLocal = (date: string, addDaysCount: number = 0) => {
   if (!date) return "";
+
+  // Parse the timestamp — could be a Unix timestamp (seconds) or an ISO string
+  const ts = Number(date);
+  const parsed = isNaN(ts) ? new Date(date) : new Date(ts * 1000);
+  if (isNaN(parsed.getTime())) return "";
+
   if (!sessionStorage.getItem("timezone")) {
-    const ts = Number(date);
-    const d = isNaN(ts) ? new Date(date) : new Date(ts * 1000);
-    return isNaN(d.getTime()) ? date : d.toISOString();
+    return parsed.toISOString();
   }
+
   const timeZone = localStorage.getItem("userTimezone")
     ? `${localStorage.getItem("userTimezone")}` === "utc"
       ? "UTC"
       : localStorage.getItem("userTimezone") || "UTC"
     : sessionStorage.getItem("timezone")?.replace(/"/g, "") || "UTC";
 
-  const dateFormat = new Intl.DateTimeFormat(timeZone == "UTC" ? "en-US" : timeZone, {
-    hour: "2-digit",
-    minute: "numeric",
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    second: "2-digit",
-    hourCycle: "h23",
-    timeZone: timeZone == "UTC" ? "UTC" : Intl.DateTimeFormat().resolvedOptions().timeZone
-  });
+  try {
+    const dateFormat = new Intl.DateTimeFormat(timeZone == "UTC" ? "en-US" : timeZone, {
+      hour: "2-digit",
+      minute: "numeric",
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      second: "2-digit",
+      hourCycle: "h23",
+      timeZone: timeZone == "UTC" ? "UTC" : Intl.DateTimeFormat().resolvedOptions().timeZone
+    });
 
-  const baseDate = fromUnixTime(+date);
-  const adjusted = addDaysCount > 0 ? addDaysFn(baseDate, addDaysCount) : baseDate;
-  return dateFormat.format(adjusted);
+    const adjusted = addDaysCount > 0 ? addDaysFn(parsed, addDaysCount) : parsed;
+    return dateFormat.format(adjusted);
+  } catch {
+    return parsed.toISOString();
+  }
 };
 
 export const formatDateLocal = (date: string) => {

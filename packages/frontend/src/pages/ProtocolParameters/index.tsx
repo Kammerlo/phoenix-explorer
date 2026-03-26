@@ -4,11 +4,11 @@ import {
   Card,
   CardContent,
   Chip,
-  CircularProgress,
   Divider,
   Grid,
   IconButton,
   Paper,
+  Skeleton,
   Table,
   TableBody,
   TableCell,
@@ -369,7 +369,13 @@ const ProtocolParameters: React.FC = () => {
         ))}
       </Box>
 
-      {loading && <Box display="flex" justifyContent="center" mt={8}><CircularProgress /></Box>}
+      {loading && (
+        <Box display="flex" flexDirection="column" gap={2} mt={4}>
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Skeleton key={i} variant="rounded" height={120} sx={{ borderRadius: 2 }} />
+          ))}
+        </Box>
+      )}
       {error && <Typography color="error" mt={4}>{error}</Typography>}
 
       {params && viewMode === "cards" && (

@@ -8,12 +8,10 @@ import {
   TimeIconComponent,
   TotalOutput,
   ExchageAltIcon,
-  CubeIconComponent,
-  SlotIcon,
   TooltipIcon,
   ActionTypeIcon
 } from "src/commons/resources";
-import { formatADAFull, formatNameBlockNo } from "src/commons/utils/helper";
+import { formatADAFull, formatDateTimeLocal, formatNameBlockNo } from "src/commons/utils/helper";
 import { MAX_SLOT_EPOCH } from "src/commons/utils/constants";
 import { details } from "src/commons/routers";
 import { RootState } from "src/stores/types";
@@ -117,7 +115,7 @@ const TransactionOverview: React.FC<Props> = ({ data, loading }) => {
         </Box>
       ),
       value: (
-        <DatetimeTypeTooltip data-testid="transactionOverview.createdAtValue">{data?.tx?.time}</DatetimeTypeTooltip>
+        <DatetimeTypeTooltip data-testid="transactionOverview.createdAtValue">{formatDateTimeLocal(String(data?.tx?.time ?? ""))}</DatetimeTypeTooltip>
       )
     },
     {
@@ -149,7 +147,6 @@ const TransactionOverview: React.FC<Props> = ({ data, loading }) => {
       )
     },
     {
-      icon: CubeIconComponent,
       title: (
         <Box display={"flex"} alignItems="center">
           <TitleCard data-testid="transactionOverview.blockTitle" height={24} mr={1}>
@@ -169,7 +166,6 @@ const TransactionOverview: React.FC<Props> = ({ data, loading }) => {
       })()
     },
     {
-      icon: SlotIcon,
       title: (
         <Box data-testid="transactionOverview.slotTitle" display={"flex"} alignItems="center">
           <TitleCard mr={1}>{t("common.slot")}</TitleCard>

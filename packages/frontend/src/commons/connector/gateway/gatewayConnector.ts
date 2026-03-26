@@ -52,6 +52,10 @@ export class GatewayConnector implements ApiConnector {
     return this.client.get<ApiReturnType<PoolDetail>>(`${this.baseUrl}/pools/${poolId}`)
       .then(response => response.data);
   }
+  getPoolBlocks(poolId: string, pageInfo: ParsedUrlQuery): Promise<ApiReturnType<Block[]>> {
+    return this.client.get<ApiReturnType<Block[]>>(`${this.baseUrl}/pools/${poolId}/blocks`, { params: pageInfo })
+      .then(response => response.data);
+  }
   getPoolList(pageInfo: any): Promise<ApiReturnType<PoolOverview[]>> {
     return this.client.get<ApiReturnType<PoolOverview[]>>(`${this.baseUrl}/pools`, {
       params: pageInfo

@@ -8,7 +8,9 @@ type Props = {
 
 const FormNowMessage = ({ time }: Props) => {
   const { t } = useTranslation();
-  const getFromNow = (ts: number) => formatDistanceToNow(fromUnixTime(ts), { addSuffix: true });
+  // Handle both Unix seconds (from backend: ~1.7B) and milliseconds (from Date.now(): ~1.7T)
+  const getFromNow = (ts: number) =>
+    formatDistanceToNow(ts > 1e10 ? new Date(ts) : fromUnixTime(ts), { addSuffix: true });
   const [message, setMessage] = useState(time ? `${t("common.lastUpdated")} ${getFromNow(time)}` : "");
   useEffect(() => {
     if (time) {

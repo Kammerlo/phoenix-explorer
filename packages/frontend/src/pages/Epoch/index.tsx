@@ -11,7 +11,7 @@ import { Capitalize } from "src/components/commons/CustomText/styles";
 import usePageInfo from "src/commons/hooks/usePageInfo";
 import DatetimeTypeTooltip from "src/components/commons/DatetimeTypeTooltip";
 import FormNowMessage from "src/components/commons/FormNowMessage";
-import { formatADAFull, formatDateTimeLocal } from "src/commons/utils/helper";
+import { formatADA, formatADAFull, formatDateTimeLocal } from "src/commons/utils/helper";
 import ADAicon from "src/components/commons/ADAIcon";
 import { ApiConnector } from "src/commons/connector/ApiConnector";
 import { ApiReturnType } from "@shared/APIReturnType";
@@ -168,8 +168,8 @@ const CurrentEpochBanner: React.FC<CurrentEpochBannerProps> = ({ epoch }) => {
       <Box display="flex" flexWrap="wrap" gap={2}>
         {stat("Blocks",    epoch.blkCount?.toLocaleString() ?? "—")}
         {stat("Transactions", epoch.txCount?.toLocaleString() ?? "—")}
-        {stat("Total Output", <Box display="inline-flex" alignItems="center" gap={0.3}>{formatADAFull(epoch.outSum)}<ADAicon /></Box>)}
-        {stat("Fees", <Box display="inline-flex" alignItems="center" gap={0.3}>{formatADAFull(epoch.fees ?? 0)}<ADAicon /></Box>)}
+        {stat("Total Output", <Box display="inline-flex" alignItems="center" gap={0.3}>{formatADA(epoch.outSum)}<ADAicon /></Box>)}
+        {stat("Fees", <Box display="inline-flex" alignItems="center" gap={0.3}>{formatADA(epoch.fees ?? 0)}<ADAicon /></Box>)}
         <Box sx={{ flex: "1 1 130px", minWidth: 100 }}>
           <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em" }}>
             Start
