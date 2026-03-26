@@ -27,9 +27,9 @@ export const FlowWrapper = styled(Box)<{ failed?: number }>(({ theme, failed }) 
 export const FlowRow = styled(Box)(({ theme }) => ({
   display: "grid",
   gridTemplateColumns: "1fr auto 1fr",
-  columnGap: theme.spacing(5), // room for the bezier arrow paths
+  columnGap: theme.spacing(5),
   alignItems: "stretch",
-  position: "relative" as const, // SVG overlay anchor
+  position: "relative" as const,
   [theme.breakpoints.down("md")]: {
     display: "flex",
     flexDirection: "column" as const,
@@ -38,11 +38,21 @@ export const FlowRow = styled(Box)(({ theme }) => ({
   }
 }));
 
-/* ---------- columns ---------- */
+/* ---------- input/output section box (bordered card like Sender/Receiver in the design) ---------- */
+export const SectionBox = styled(Box)(({ theme }) => ({
+  border: `1.5px dashed ${alpha(theme.palette.secondary.light, 0.25)}`,
+  borderRadius: theme.spacing(2),
+  padding: theme.spacing(2),
+  display: "flex",
+  flexDirection: "column" as const,
+  minWidth: 0
+}));
+
+/* ---------- legacy Column alias ---------- */
 export const Column = styled(Box)({
   display: "flex",
   flexDirection: "column" as const,
-  minWidth: 0 // allow shrink
+  minWidth: 0
 });
 
 export const ColumnHeader = styled(Box)(({ theme }) => ({
@@ -66,7 +76,59 @@ export const Dot = styled("span")<{ color: string }>(({ color }) => ({
   flexShrink: 0
 }));
 
-/* ---------- arrow column (stretches to full row height, centers arrow) ---------- */
+/* ---------- count badge next to section header ---------- */
+export const CountBadge = styled("span")(({ theme }) => ({
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  padding: "0 6px",
+  minWidth: 20,
+  height: 18,
+  borderRadius: 9,
+  fontSize: "0.65rem",
+  fontWeight: 700,
+  background: theme.isDark
+    ? alpha(theme.palette.secondary.light, 0.12)
+    : alpha(theme.palette.primary.main, 0.08),
+  color: theme.palette.secondary.main,
+  marginLeft: theme.spacing(0.75)
+}));
+
+/* ---------- change address badge on output cards ---------- */
+export const ChangeBadge = styled("span")(({ theme }) => ({
+  display: "inline-flex",
+  alignItems: "center",
+  fontSize: "0.6rem",
+  fontWeight: 700,
+  textTransform: "uppercase" as const,
+  letterSpacing: "0.04em",
+  padding: "1px 6px",
+  borderRadius: 4,
+  background: alpha(theme.palette.warning.main, 0.1),
+  color: theme.isDark
+    ? theme.palette.warning[200] || theme.palette.warning.light
+    : theme.palette.warning[900] || theme.palette.warning.dark,
+  border: `1px solid ${alpha(theme.palette.warning.main, 0.3)}`
+}));
+
+/* ---------- small numbered circle before address ---------- */
+export const CardNumberBadge = styled("span")(({ theme }) => ({
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  minWidth: 20,
+  height: 20,
+  borderRadius: "50%",
+  fontSize: "0.65rem",
+  fontWeight: 700,
+  background: theme.isDark
+    ? alpha(theme.palette.secondary.light, 0.15)
+    : alpha(theme.palette.primary.main, 0.1),
+  color: theme.palette.secondary.main,
+  flexShrink: 0
+}));
+
+/* ---------- arrow column (kept for compat) ---------- */
 export const ArrowColumn = styled(Box)(({ theme }) => ({
   display: "flex",
   alignItems: "center",
@@ -139,18 +201,39 @@ export const CenterNode = styled(Box)(({ theme }) => ({
   background: theme.isDark
     ? alpha(theme.palette.primary.main, 0.06)
     : alpha(theme.palette.primary.main, 0.03),
-  border: `2px solid ${alpha(theme.palette.primary.main, 0.5)}`,
+  border: `2px solid ${alpha(theme.palette.primary.main, 0.4)}`,
   borderRadius: theme.spacing(2),
   padding: theme.spacing(2),
-  width: 240,
+  width: 230,
   display: "flex",
   flexDirection: "column" as const,
   alignItems: "center",
-  gap: theme.spacing(1.25),
+  gap: theme.spacing(1),
   [theme.breakpoints.down("md")]: {
     width: "100%",
     alignSelf: "stretch"
   }
+}));
+
+/* ---------- total output box (green-tinted, most prominent element in center) ---------- */
+export const TotalOutputBox = styled(Box)(({ theme }) => ({
+  background: alpha(theme.palette.success.main, theme.isDark ? 0.1 : 0.06),
+  border: `1px solid ${alpha(theme.palette.success.main, 0.4)}`,
+  borderRadius: theme.spacing(1.5),
+  padding: theme.spacing(1, 1.5),
+  width: "100%"
+}));
+
+/* ---------- fee callout (subtle red tint, below total output) ---------- */
+export const FeeCallout = styled(Box)(({ theme }) => ({
+  background: alpha(theme.palette.error.main, theme.isDark ? 0.06 : 0.03),
+  border: `1px solid ${alpha(theme.palette.error.main, 0.2)}`,
+  borderRadius: theme.spacing(1.5),
+  padding: theme.spacing(0.75, 1.5),
+  width: "100%",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "space-between"
 }));
 
 export const StatusChip = styled(Box)<{ txStatus: string }>(({ theme, txStatus }) => {
@@ -247,13 +330,14 @@ export const AmountText = styled(Box)<{ side?: "input" | "output" | "collateral"
   display: "flex",
   alignItems: "center",
   gap: 3,
-  color: side === "input"
-    ? theme.palette.error[700] || theme.palette.error.main
-    : side === "output"
-      ? theme.isDark
-        ? theme.palette.success[700] || theme.palette.success.main
-        : theme.palette.success[800] || theme.palette.success.dark
-      : theme.palette.warning[700] || theme.palette.warning.main
+  color:
+    side === "input"
+      ? theme.palette.error[700] || theme.palette.error.main
+      : side === "output"
+        ? theme.isDark
+          ? theme.palette.success[700] || theme.palette.success.main
+          : theme.palette.success[800] || theme.palette.success.dark
+        : theme.palette.warning[700] || theme.palette.warning.main
 }));
 
 export const TokenBadge = styled(Box)(({ theme }) => ({
