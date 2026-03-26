@@ -551,6 +551,48 @@ export class BlockfrostConnector extends ApiConnector {
     }
   }
 
+  async getPoolBlocks(poolId: string, pageInfo: ParsedUrlQuery): Promise<ApiReturnType<Block[]>> {
+    try {
+      const page = Math.max(1, Number(pageInfo.page ?? 1));
+      const count = Number(pageInfo.size ?? 20);
+      const [hashesResp, poolResp] = await Promise.all([
+        this.client.get<string[]>(`/pools/${poolId}/blocks`, { params: { page, count } }),
+        this.client.get<any>(`/pools/${poolId}`).catch(() => ({ data: {} }))
+      ]);
+      const hashes: string[] = hashesResp.data ?? [];
+      const total: number = poolResp.data?.blocks_minted ?? 0;
+      const blockDetails = await Promise.all(
+        hashes.map(hash => this.client.get<any>(`/blocks/${hash}`).then(r => r.data))
+      );
+      const blocks: Block[] = blockDetails.map(b => ({
+        blockNo: b.height ?? 0,
+        epochNo: b.epoch ?? 0,
+        epochSlotNo: b.epoch_slot ?? 0,
+        slotNo: b.slot ?? 0,
+        hash: b.hash,
+        height: b.height,
+        slot: b.slot,
+        txCount: b.tx_count ?? 0,
+        output: parseInt(b.output ?? "0"),
+        totalFees: parseInt(b.fees ?? "0"),
+        totalOutput: parseInt(b.output ?? "0"),
+        time: String(b.time),
+        size: b.size ?? 0,
+        slotLeader: b.slot_leader ?? undefined,
+      }));
+      return {
+        data: blocks,
+        lastUpdated: Date.now(),
+        total,
+        currentPage: page - 1,
+        pageSize: count,
+        totalPages: total > 0 ? Math.ceil(total / count) : undefined,
+      };
+    } catch (e: any) {
+      return { data: [], error: e.message, lastUpdated: Date.now(), total: 0, currentPage: 0, pageSize: 20 };
+    }
+  }
+
   // ── DReps ─────────────────────────────────────────────────────────────────
 
   async getDreps(pageInfo: ParsedUrlQuery): Promise<ApiReturnType<Drep[]>> {

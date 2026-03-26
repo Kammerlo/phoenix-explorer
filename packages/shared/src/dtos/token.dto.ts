@@ -8,7 +8,7 @@ export interface ITokenOverview {
   supply?: number;
   createdOn?: string;
   metadata?: ITokenMetadata;
-  analytics?: { date: number; value: number }[];
+  analytics?: { date: number; value: number; mintAmount?: number; burnAmount?: number }[];
   volumeIn24h?: number;
   totalVolume?: string;
   numberOfHolders?: number;

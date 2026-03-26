@@ -1,75 +1,74 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { styled, Container, CircularProgress } from "@mui/material";
+import { Container } from "@mui/material";
 
 import { ApiConnector } from "../../commons/connector/ApiConnector";
 import AddressHeader from "../../components/AddressDetail/AddressHeader";
 import PluginSlotRenderer from "src/plugins/PluginSlotRenderer";
 import NoRecord from "../../components/commons/NoRecord";
-import NotAvailable from "../../components/commons/NotAvailable";
-import { AddressDetail } from "@shared/dtos/address.dto";
+import FetchDataErr from "../../components/commons/FetchDataErr";
 import TransactionList from "src/components/TransactionLists";
+import { AddressDetail } from "@shared/dtos/address.dto";
 import { ApiReturnType } from "@shared/APIReturnType";
 import { Transaction } from "@shared/dtos/transaction.dto";
 import usePageInfo from "src/commons/hooks/usePageInfo";
 
-const AddressWalletDetail = () => {
-  const { address } = useParams<{ address: string }>();
-  const [data, setData] = useState<AddressDetail>();
-  const [txData, setTxData] = useState<ApiReturnType<Transaction[]>>();
-  const [txDataLoading, setTxDataLoading] = useState<boolean>(true);
-  const [loading, setLoading] = useState<boolean>(true);
-  const apiConnector: ApiConnector = ApiConnector.getApiConnector();
-  const [error, setError] = useState<string>();
-  const network = process.env.REACT_APP_NETWORK || "mainnet";
+const AddressWalletDetail: React.FC = () => {
+  const params = useParams<{ address: string; stakeId: string }>();
+  const address = params.address || params.stakeId;
   const { pageInfo } = usePageInfo();
+  const [data, setData] = useState<AddressDetail>();
+  const [txData, setTxData] = useState<ApiReturnType<Transaction[]>>({
+    data: [], lastUpdated: 0, total: 0, currentPage: 0
+  });
+  const [loading, setLoading] = useState(true);
+  const [txLoading, setTxLoading] = useState(true);
+  const [error, setError] = useState<string>();
 
-  useEffect(() => {
-    window.history.replaceState({}, document.title);
-    document.title = `Address ${address} | Cardano Blockchain Explorer`;
-    document.documentElement.scrollTop = 0;
-    apiConnector.getWalletAddressFromAddress(address).then((data) => {
-      if (data.error) {
-        setLoading(false);
-        setError(data.error);
-        return;
-      }
-      setData(data.data!);
-      setLoading(false);
-    });
-    updateTxPage();
-  }, [address]);
+  const apiConnector = ApiConnector.getApiConnector();
+  const network = process.env.REACT_APP_NETWORK || "mainnet";
 
-  function updateTxPage(page: number = 1) {
-    apiConnector.getAddressTxsFromAddress(address, { ...pageInfo, page }).then((data) => {
-      setTxData(data);
-      setTxDataLoading(false);
+  function updateTxPage(page: number = 0) {
+    setTxLoading(true);
+    apiConnector.getAddressTxsFromAddress(address, { ...pageInfo, page: String(page) }).then((res) => {
+      setTxData(res);
+      setTxLoading(false);
     });
   }
 
-  if (loading) return <CircularProgress />;
-  if (!error && !data) return <NoRecord />;
-  if (error) return <NotAvailable />;
+  useEffect(() => {
+    document.title = `Address ${address} | Cardano Explorer`;
+    document.documentElement.scrollTop = 0;
+
+    setLoading(true);
+    apiConnector.getWalletAddressFromAddress(address).then((res) => {
+      if (res.error) {
+        setError(res.error);
+        setLoading(false);
+        return;
+      }
+      setData(res.data!);
+      setLoading(false);
+    });
+
+    updateTxPage(0);
+  }, [address]);
+
+  if (error) return <FetchDataErr />;
+  if (!loading && !data) return <NoRecord />;
 
   return (
-    <ContainerBox>
+    <Container sx={{ pt: 3, pb: 6 }}>
       <AddressHeader data={data} loading={loading} />
-      <TransactionList showTabView transactions={txData} loading={txDataLoading} updateData={updateTxPage} paginated={true} />
+      <TransactionList
+        transactions={txData}
+        loading={txLoading}
+        updateData={updateTxPage}
+        paginated
+      />
       <PluginSlotRenderer slot="address-detail" context={{ data, network, apiConnector }} />
-    </ContainerBox>
+    </Container>
   );
 };
 
 export default AddressWalletDetail;
-
-const ContainerBox = styled(Container)`
-  padding-top: 30px;
-  display: flex;
-  flex-direction: column;
-  @media screen and (max-width: ${(props) => props.theme.breakpoints.values.md}px) {
-    margin-top: -20px;
-  }
-  @media screen and (max-width: ${(props) => props.theme.breakpoints.values.sm}px) {
-    margin-top: 0px !important;
-  }
-`;

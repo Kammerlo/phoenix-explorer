@@ -73,6 +73,7 @@ const AppRoutes: React.FC = () => {
         <Route path={routers.TRANSACTION_LIST} element={isSupportedElement(TransactionList, FunctionEnum.TRANSACTION)} />
         <Route path={routers.TRANSACTION_DETAIL} element={isSupportedElement(TransactionDetailView, FunctionEnum.TRANSACTION)} />
         <Route path={routers.ADDRESS_DETAIL} element={isSupportedElement(AddressWalletDetail, FunctionEnum.ADDRESS)} />
+        <Route path={routers.STAKE_DETAIL} element={isSupportedElement(AddressWalletDetail, FunctionEnum.ADDRESS)} />
         <Route path={routers.POOLS} element={isSupportedElement(DelegationPools, FunctionEnum.POOL)} />
         <Route path={routers.POOL_DETAIL} element={isSupportedElement(PoolDetailView, FunctionEnum.POOL)} />
         <Route path={routers.TOKEN_LIST} element={isSupportedElement(Tokens, FunctionEnum.TOKENS)} />

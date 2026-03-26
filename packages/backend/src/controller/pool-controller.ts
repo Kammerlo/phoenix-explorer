@@ -1,8 +1,9 @@
 import { ApiReturnType } from "@shared/APIReturnType";
 import { PoolDetail, PoolOverview } from "@shared/dtos/pool.dto";
+import { Block } from "@shared/dtos/block.dto";
 import { Router } from "express";
 import { API } from "src/config/blockfrost";
-import { getTransactions } from "src/config/cache";
+import { getBlock, getTransactions } from "src/config/cache";
 
 export const poolController = Router();
 
@@ -35,6 +36,51 @@ poolController.get('', async (req, res) => {
         totalPages: Math.ceil(poolExtended.length / (pageInfo.size ? Number.parseInt(String(pageInfo.size)) : 100)),
     } as ApiReturnType<PoolOverview[]>);
 
+});
+
+poolController.get('/:poolId/blocks', async (req, res) => {
+    const { poolId } = req.params;
+    const pageInfo = req.query;
+    const page = Math.max(1, Number.parseInt(String(pageInfo.page || 1)));
+    const count = Number.parseInt(String(pageInfo.size || 20));
+    try {
+        const [blockHashes, poolInfo] = await Promise.all([
+            API.poolsByIdBlocks(poolId, { page, count }),
+            API.poolsById(poolId)
+        ]);
+        const blocks = await Promise.all(blockHashes.map(hash => getBlock(hash)));
+        const total = poolInfo.blocks_minted || 0;
+        const blocksData: Block[] = blocks.map(block => ({
+            blockNo: block.height ?? 0,
+            epochNo: block.epoch ?? 0,
+            epochSlotNo: block.epoch_slot ?? 0,
+            slotNo: block.slot ?? 0,
+            hash: block.hash,
+            height: block.height,
+            slot: block.slot,
+            txCount: block.tx_count,
+            output: Number.parseInt(block.output ?? '0'),
+            totalFees: Number.parseInt(block.fees ?? '0'),
+            totalOutput: Number.parseInt(block.output ?? '0'),
+            time: block.time.toString(),
+            previousBlock: block.previous_block ?? undefined,
+            nextBlock: block.next_block ?? undefined,
+            size: block.size,
+            slotLeader: block.slot_leader ?? undefined,
+            confirmations: (block as any).confirmations,
+            blockVrf: block.block_vrf ?? undefined,
+        }));
+        res.json({
+            data: blocksData,
+            lastUpdated: Math.floor(Date.now() / 1000),
+            total,
+            currentPage: page - 1,
+            pageSize: count,
+            totalPages: Math.ceil(total / count),
+        } as ApiReturnType<Block[]>);
+    } catch (error) {
+        res.status(404).json({ message: 'Pool blocks not available' });
+    }
 });
 
 poolController.get('/:poolId', async (req, res) => {

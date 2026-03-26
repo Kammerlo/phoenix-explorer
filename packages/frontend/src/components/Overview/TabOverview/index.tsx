@@ -1,5 +1,5 @@
 import { TabContext, TabList, TabPanel } from "@mui/lab";
-import { Box, Tab, useTheme } from "@mui/material";
+import { Box, Tab, Typography, useTheme } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { parse, ParsedQs, stringify } from "qs";
@@ -68,6 +68,25 @@ export default function TabOverview() {
   ];
   
   if(loading) return <>Loading...</>;
+  if (!loading && fetchData.data.length === 0) return (
+    <Box
+      display="flex"
+      flexDirection="column"
+      alignItems="center"
+      justifyContent="center"
+      py={10}
+      px={2}
+      textAlign="center"
+    >
+      <Typography variant="h6" fontWeight={600} mb={1}>
+        No Active Governance Actions
+      </Typography>
+      <Typography variant="body2" color="text.secondary" maxWidth={480}>
+        There are currently no governance proposals on-chain. Check back later or visit the Cardano governance portal
+        for upcoming proposals.
+      </Typography>
+    </Box>
+  );
   return (
     <ContainerTab>
       <Box sx={{ width: "100%", typography: "body1" }}>

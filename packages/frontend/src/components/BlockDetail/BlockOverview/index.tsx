@@ -15,7 +15,7 @@ import {
   ExchageAltIcon,
   OutputIcon
 } from "src/commons/resources";
-import { formatADAFull, formatNameBlockNo } from "src/commons/utils/helper";
+import { formatADAFull, formatDateTimeLocal, formatNameBlockNo } from "src/commons/utils/helper";
 import { MAX_SLOT_EPOCH } from "src/commons/utils/constants";
 import ADAicon from "src/components/commons/ADAIcon";
 import DetailHeader, { DetailHeaderType } from "src/components/commons/DetailHeader";
@@ -184,7 +184,7 @@ const BlockOverview: React.FC<BlockOverviewProps> = ({ data, loading, lastUpdate
       ),
       value: (
         <DatetimeTypeTooltip>
-          <Box data-testid="block.detail.overview.value.createAt">{data?.time || ""}</Box>
+          <Box data-testid="block.detail.overview.value.createAt">{formatDateTimeLocal(String(data?.time || ""))}</Box>
         </DatetimeTypeTooltip>
       )
     },
@@ -283,7 +283,7 @@ const BlockOverview: React.FC<BlockOverviewProps> = ({ data, loading, lastUpdate
             icon={ExchageAltIcon}
             label={t("glossary.transactionfees")}
             value={
-              <Box display="flex" alignItems="center" gap={0.25} sx={{ flexWrap: "wrap" }}>
+              <Box display="flex" alignItems="center" gap={0.25} sx={{ whiteSpace: "nowrap" }}>
                 {formatADAFull(data.totalFees)} <ADAicon />
               </Box>
             }
@@ -293,7 +293,7 @@ const BlockOverview: React.FC<BlockOverviewProps> = ({ data, loading, lastUpdate
             icon={OutputIcon}
             label={t("glossary.totalOutputInAda")}
             value={
-              <Box display="flex" alignItems="center" gap={0.25} sx={{ flexWrap: "wrap" }}>
+              <Box display="flex" alignItems="center" gap={0.25} sx={{ whiteSpace: "nowrap" }}>
                 {formatADAFull(data.totalOutput)} <ADAicon />
               </Box>
             }

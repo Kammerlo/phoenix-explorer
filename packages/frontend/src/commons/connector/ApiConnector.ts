@@ -96,6 +96,8 @@ export abstract class ApiConnector {
 
   abstract getPoolDetail(poolId: string): Promise<ApiReturnType<PoolDetail>>;
 
+  abstract getPoolBlocks(poolId: string, pageInfo: ParsedUrlQuery): Promise<ApiReturnType<Block[]>>;
+
   abstract getDreps(pageInfo: ParsedUrlQuery): Promise<ApiReturnType<Drep[]>>;
 
   abstract getDrep(drepId: string): Promise<ApiReturnType<Drep>>;

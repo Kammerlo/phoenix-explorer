@@ -4,7 +4,7 @@ import { Box, Chip, Skeleton, useTheme } from "@mui/material";
 import { alpha } from "@mui/material/styles";
 import { useTranslation } from "react-i18next";
 
-import { formatADAFull, getShortHash } from "src/commons/utils/helper";
+import { formatADAFull, formatDateTimeLocal, getShortHash } from "src/commons/utils/helper";
 import { details } from "src/commons/routers";
 import usePageInfo from "src/commons/hooks/usePageInfo";
 
@@ -142,8 +142,6 @@ const SkeletonRows: React.FC = () => {
 // ─── Component ────────────────────────────────────────────
 
 interface TransactionListProps {
-  underline?: boolean;
-  showTabView?: boolean;
   transactions: ApiReturnType<Transaction[]>;
   updateData?: (page: number) => void;
   loading: boolean;
@@ -190,7 +188,7 @@ const TransactionList: React.FC<TransactionListProps> = ({
             </StyledLink>
           </CustomTooltip>
           <Box sx={{ fontSize: "0.72rem", color: "secondary.light", mt: 0.3 }}>
-            <DatetimeTypeTooltip>{r.time}</DatetimeTypeTooltip>
+            {formatDateTimeLocal(String(r.time ?? ""))}
           </Box>
         </Box>
       )

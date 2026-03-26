@@ -16,7 +16,7 @@ import {
   DropIconComponent
 } from "src/commons/resources";
 import { MAX_SLOT_EPOCH, EPOCH_STATUS } from "src/commons/utils/constants";
-import { formatADAFull, formatDateTimeLocal } from "src/commons/utils/helper";
+import { formatADA, formatADAFull, formatDateTimeLocal } from "src/commons/utils/helper";
 import ADAicon from "src/components/commons/ADAIcon";
 import DatetimeTypeTooltip from "src/components/commons/DatetimeTypeTooltip";
 import DetailHeader from "src/components/commons/DetailHeader";
@@ -191,7 +191,7 @@ const EpochOverviewView: React.FC<EpochOverviewProps> = ({ data, loading, lastUp
       ),
       value: (
         <Box display="inline-flex" alignItems="center" gap={0.35} data-testId="epoch.overview.totalOutputValue">
-          {formatADAFull(data?.outSum || 0)} <ADAicon />
+          {formatADA(data?.outSum || 0)} <ADAicon />
         </Box>
       )
     },
@@ -206,7 +206,7 @@ const EpochOverviewView: React.FC<EpochOverviewProps> = ({ data, loading, lastUp
       ),
       value: (
         <Box display="inline-flex" alignItems="center" gap={0.35} data-testId="epoch.overview.totalFeesValue">
-          {formatADAFull(data?.fees || 0)} <ADAicon />
+          {formatADA(data?.fees || 0)} <ADAicon />
         </Box>
       )
     },
@@ -222,7 +222,7 @@ const EpochOverviewView: React.FC<EpochOverviewProps> = ({ data, loading, lastUp
           ),
           value: (
             <Box display="inline-flex" alignItems="center" gap={0.35} data-testId="epoch.overview.activeStakeValue">
-              {formatADAFull(data.activeStake)} <ADAicon />
+              {formatADA(data.activeStake)} <ADAicon />
             </Box>
           )
         }]
@@ -239,7 +239,7 @@ const EpochOverviewView: React.FC<EpochOverviewProps> = ({ data, loading, lastUp
           ),
           value: (
             <Box display="inline-flex" alignItems="center" gap={0.35} data-testId="epoch.overview.rewardsValue">
-              {formatADAFull(data.rewardsDistributed)} <ADAicon />
+              {formatADA(data.rewardsDistributed)} <ADAicon />
             </Box>
           )
         }]

@@ -62,7 +62,7 @@ const DrepsList: React.FC = () => {
         <CustomTooltip title={r.givenName ? r.givenName : undefined}>
           <PoolName data-testid="drepList.drepGivenNameValue" to={{ pathname: details.drep(r.drepId) }}>
             <Box component={"span"} textOverflow={"ellipsis"} whiteSpace={"nowrap"} overflow={"hidden"}>
-              {r.givenName}
+              {r.givenName || <Box component="span" sx={{ color: "secondary.light", fontStyle: "italic" }}>—</Box>}
             </Box>
           </PoolName>
         </CustomTooltip>
@@ -157,11 +157,11 @@ const DrepsList: React.FC = () => {
         </Box>
       ),
       key: "activeVoteStake",
-      minWidth: "120px",
+      minWidth: "140px",
       render: (r) => (
-        <Box data-testid="drepList.activeStakeValue" component={"span"}>
+        <Box data-testid="drepList.activeStakeValue" component={"span"} sx={{ whiteSpace: "nowrap" }}>
           {r.activeVoteStake != null ? formatADAFull(r.activeVoteStake) : t("common.N/A")}
-          <ADAicon/>
+          {r.activeVoteStake != null && <ADAicon />}
         </Box>
       ),
       sort: ({ columnKey, sortValue }) => {
@@ -207,6 +207,7 @@ const DrepsList: React.FC = () => {
         data-testid="drepList.table"
         columns={columns}
         total={{ count: fetchData.total, title: "Total" }}
+        tableWrapperProps={{ sx: { overflowX: "auto" } }}
         onClickRow={(e, r: Drep) => {
           // Prevent navigation if clicking on a link or button
           if (e.target instanceof HTMLAnchorElement || 

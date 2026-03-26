@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { Box, Typography } from "@mui/material";
 
 import PoolList from "src/components/PoolList";
 
@@ -11,6 +12,9 @@ const PoolListPage = () => {
 
   return (
     <StyledContainer>
+      <Box mb={2} px={2}>
+        <Typography variant="h5" fontWeight={700} component="h1">Stake Pools</Typography>
+      </Box>
       <PoolList />
     </StyledContainer>
   );

@@ -1,60 +1,65 @@
-import { useEffect, useState } from "react";
-import { Box, CircularProgress } from "@mui/material";
+import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
+import { Container } from "@mui/material";
 
 import BlockOverview from "src/components/BlockDetail/BlockOverview";
 import NoRecord from "src/components/commons/NoRecord";
-
-import { StyledContainer } from "./styles";
-import { ApiConnector } from "../../commons/connector/ApiConnector";
+import FetchDataErr from "src/components/commons/FetchDataErr";
 import TransactionList from "../../components/TransactionLists";
 import PluginSlotRenderer from "src/plugins/PluginSlotRenderer";
-import {ApiReturnType} from "@shared/APIReturnType";
-import {Block} from "@shared/dtos/block.dto";
+import { ApiConnector } from "../../commons/connector/ApiConnector";
+import { ApiReturnType } from "@shared/APIReturnType";
+import { Block } from "@shared/dtos/block.dto";
+import { Transaction } from "@shared/dtos/transaction.dto";
 import usePageInfo from "../../commons/hooks/usePageInfo";
-import {Transaction} from "@shared/dtos/transaction.dto";
 
-const BlockDetail = () => {
+const BlockDetail: React.FC = () => {
   const { blockId } = useParams<{ blockId: string }>();
-  const [loading, setLoading] = useState<boolean>(true);
-  const [txLoading, setTxLoading] = useState<boolean>(true);
+  const { pageInfo } = usePageInfo();
+  const [loading, setLoading] = useState(true);
+  const [txLoading, setTxLoading] = useState(true);
   const [blockData, setBlockData] = useState<ApiReturnType<Block>>();
-  const [transactions, setTransactions] = useState<ApiReturnType<Transaction[]>>();
-  const {pageInfo} = usePageInfo();
+  const [transactions, setTransactions] = useState<ApiReturnType<Transaction[]>>({
+    data: [], lastUpdated: 0, total: 0, currentPage: 0
+  });
 
-  const apiConnector: ApiConnector = ApiConnector.getApiConnector();
+  const apiConnector = ApiConnector.getApiConnector();
   const network = process.env.REACT_APP_NETWORK || "mainnet";
+
+  function updateTransactions(page: number = 0) {
+    setTxLoading(true);
+    apiConnector.getTransactions(blockId, { ...pageInfo, page }).then((data) => {
+      setTransactions(data);
+      setTxLoading(false);
+    });
+  }
 
   useEffect(() => {
     if (!blockId) return;
-    window.history.replaceState({}, document.title);
-    document.title = `Block ${blockId} | Cardano Blockchain Explorer`;
+    document.title = `Block ${blockId} | Cardano Explorer`;
+
+    setLoading(true);
     apiConnector.getBlockDetail(blockId).then((data) => {
       setBlockData(data);
       setLoading(false);
     });
-    apiConnector.getTransactions(blockId, pageInfo).then((data) => {
-      setTransactions(data);
-      setTxLoading(false);
-    });
-
+    updateTransactions(0);
   }, [blockId]);
 
-  if (loading) {
-    return (
-      <Box>
-        <CircularProgress />
-      </Box>
-    );
-  }
-  if (loading && !blockData) return <NoRecord />;
+  if (blockData?.error) return <FetchDataErr />;
+  if (!loading && !blockData?.data) return <NoRecord />;
 
   return (
-    <StyledContainer>
+    <Container sx={{ pt: 3, pb: 6 }}>
       <BlockOverview data={blockData?.data} loading={loading} lastUpdated={blockData?.lastUpdated} />
-      <TransactionList transactions={transactions} loading={txLoading} showTabView />
+      <TransactionList
+        transactions={transactions}
+        loading={txLoading}
+        updateData={updateTransactions}
+        paginated
+      />
       <PluginSlotRenderer slot="block-detail" context={{ data: blockData?.data, network, apiConnector }} />
-    </StyledContainer>
+    </Container>
   );
 };
 

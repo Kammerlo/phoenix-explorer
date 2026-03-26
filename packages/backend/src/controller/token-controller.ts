@@ -107,15 +107,18 @@ tokenController.get('/:tokenId', async (req, res) => {
   const history = await API.assetsHistoryAll(assetById.asset);
   const lastActivity = await API.txs(history[history.length - 1].tx_hash);
 
-  const activityData: { date: number; value: number }[] = [];
+  const activityData: { date: number; value: number; mintAmount: number; burnAmount: number }[] = [];
   let amount = 0;
   for (const item of history) {
     const tx = await API.txs(item.tx_hash);
-    amount += Number.parseInt(item.amount);
+    const delta = Number.parseInt(item.amount);
+    amount += delta;
     activityData.push({
       date: tx.block_time,
-      value: amount
-    })
+      value: amount,
+      mintAmount: item.action === "minted" ? delta : 0,
+      burnAmount: item.action === "burned" ? Math.abs(delta) : 0,
+    });
   }
 
   const ITokenOverviewData: ITokenOverview = {

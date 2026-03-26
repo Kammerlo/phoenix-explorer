@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
   Alert,
   AlertTitle,
@@ -7,6 +7,7 @@ import {
   Container,
   Divider,
   Grid,
+  IconButton,
   LinearProgress,
   Link as MuiLink,
   Paper,
@@ -268,6 +269,13 @@ const Home: React.FC = () => {
   const { t } = useTranslation();
   const theme = useTheme();
   const navigate = useNavigate();
+  const [showBanner, setShowBanner] = useState(
+    () => localStorage.getItem("bannerDismissed") !== "true"
+  );
+  const dismissBanner = () => {
+    localStorage.setItem("bannerDismissed", "true");
+    setShowBanner(false);
+  };
 
   useEffect(() => {
     document.title = t("head.page.dashboard");
@@ -298,7 +306,12 @@ const Home: React.FC = () => {
   return (
     <HomeContainer data-testid="home-container">
       {/* Disclaimer */}
-      <DisclaimerBox severity="info">
+      {showBanner && (
+      <DisclaimerBox severity="info" action={
+        <IconButton size="small" onClick={dismissBanner} aria-label="Dismiss banner" sx={{ color: "inherit" }}>
+          ✕
+        </IconButton>
+      }>
         <DisclaimerTitle>🚧 Community Project - Development Continues 🚧</DisclaimerTitle>
         <DisclaimerText>
           I'm still committed to pushing this project forward, but{" "}
@@ -331,6 +344,7 @@ const Home: React.FC = () => {
           <strong>Thank you for your patience and continued support! 🙏</strong>
         </DisclaimerText>
       </DisclaimerBox>
+      )}
 
       {/* Stats Row */}
       <Grid container spacing={2} mb={3}>

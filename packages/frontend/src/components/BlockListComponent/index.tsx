@@ -1,6 +1,7 @@
 // @ts-ignore
 import React, { MouseEvent } from "react";
-import { Box, CircularProgress } from "@mui/material";
+import { Box, Skeleton, useTheme } from "@mui/material";
+import { alpha } from "@mui/material/styles";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
@@ -20,6 +21,48 @@ import { PriceWrapper, StyledLink } from "./styles";
 import { Block } from "@shared/dtos/block.dto";
 import { ApiReturnType } from "@shared/APIReturnType";
 import { Actions, TimeDuration } from "../TransactionLists/styles";
+
+// ─── Skeleton ─────────────────────────────────────────────────────────────────
+
+const SKELETON_COUNT = 10;
+
+const BlockListSkeleton: React.FC = () => {
+  const theme = useTheme();
+  return (
+    <Box>
+      {Array.from({ length: SKELETON_COUNT }).map((_, i) => (
+        <Box
+          key={i}
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 2,
+            px: 2,
+            py: 1.5,
+            borderBottom: `1px solid ${
+              theme.isDark
+                ? alpha(theme.palette.secondary.light, 0.08)
+                : theme.palette.primary[200] || "#f0f0f0"
+            }`
+          }}
+        >
+          <Box sx={{ flex: 0.8 }}><Skeleton variant="text" width="50%" /></Box>
+          <Box sx={{ flex: 1.2 }}><Skeleton variant="text" width="70%" /></Box>
+          <Box sx={{ flex: 0.8 }}><Skeleton variant="text" width="60%" /></Box>
+          <Box sx={{ flex: 0.5 }}><Skeleton variant="text" width="40%" /></Box>
+          <Box sx={{ flex: 1.2 }}>
+            <Skeleton variant="text" width="80%" height={8} sx={{ borderRadius: 3 }} />
+            <Skeleton variant="text" width="30%" height={12} sx={{ mt: 0.4 }} />
+          </Box>
+          <Box sx={{ flex: 1 }}><Skeleton variant="text" width="65%" /></Box>
+          <Box sx={{ flex: 1.2 }}><Skeleton variant="text" width="75%" /></Box>
+        </Box>
+      ))}
+    </Box>
+  );
+};
+
+// ─── Component ────────────────────────────────────────────────────────────────
 
 interface BlockListComponentProps {
   fetchData?: ApiReturnType<Block[]>;
@@ -121,7 +164,7 @@ const BlockListComponent: React.FC<BlockListComponentProps> = ({ fetchData, upda
     {
       title: <Capitalize data-testid="blocks.table.title.createAt">{t("createdAt")}</Capitalize>,
       key: "time",
-      minWidth: "130px",
+      minWidth: "170px",
       render: (r, index) => (
         <DatetimeTypeTooltip>
           <PriceWrapper data-testid={`blocks.table.value.createAt#${index}`}>
@@ -136,7 +179,7 @@ const BlockListComponent: React.FC<BlockListComponentProps> = ({ fetchData, upda
     navigate(details.block(r.blockNo));
   };
 
-  if (loading) return <CircularProgress />;
+  if (loading) return <BlockListSkeleton />;
 
   return (
     <>
@@ -155,6 +198,7 @@ const BlockListComponent: React.FC<BlockListComponentProps> = ({ fetchData, upda
           sx: (theme) => ({
             minHeight: "70vh",
             maxHeight: "85vh",
+            overflowX: "auto",
             [theme.breakpoints.down("md")]: { minHeight: "60vh", maxHeight: "80vh" },
             [theme.breakpoints.down("sm")]: { minHeight: "50vh", maxHeight: "75vh" }
           })

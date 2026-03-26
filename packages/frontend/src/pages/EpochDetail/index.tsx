@@ -1,15 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
+import { Container } from "@mui/material";
 
 import EpochOverviewView from "src/components/EpochDetail/EpochOverview";
-
-import { StyledContainer } from "./styles";
-import { ApiConnector } from "src/commons/connector/ApiConnector";
 import BlockListComponent from "../../components/BlockListComponent";
-
+import { ApiConnector } from "src/commons/connector/ApiConnector";
 import { EpochOverview } from "@shared/dtos/epoch.dto";
 import { Block } from "@shared/dtos/block.dto";
-import {ApiReturnType} from "@shared/APIReturnType";
+import { ApiReturnType } from "@shared/APIReturnType";
 
 const EpochDetail: React.FC = () => {
   const { epochId } = useParams<{ epochId: string }>();
@@ -17,31 +15,32 @@ const EpochDetail: React.FC = () => {
   const [fetchData, setFetchData] = useState<ApiReturnType<Block[]>>();
   const [loading, setLoading] = useState(true);
   const [blocksLoading, setBlocksLoading] = useState(true);
-  const apiConnector = ApiConnector.getApiConnector();
 
+  const apiConnector = ApiConnector.getApiConnector();
   useEffect(() => {
-    window.history.replaceState({}, document.title);
-    document.title = `Epoch ${epochId} | Cardano Blockchain Explorer`;
-    apiConnector.getEpoch(Number(epochId)).then((data: ApiReturnType<EpochOverview>) => {
-      setData(data);
+    document.title = `Epoch ${epochId} | Cardano Explorer`;
+
+    setLoading(true);
+    apiConnector.getEpoch(Number(epochId)).then((res: ApiReturnType<EpochOverview>) => {
+      setData(res);
       setLoading(false);
     });
-    updateBlocks({page: 1, size: 10});
+    updateBlocks({ page: 1, size: 10 });
   }, [epochId]);
 
-  function updateBlocks(pageInfo: { page: number, size?: number }) {
+  function updateBlocks(pageInfo: { page: number; size?: number }) {
     setBlocksLoading(true);
-    apiConnector.getBlocksByEpoch(Number(epochId), pageInfo).then((data) => {
-      setFetchData(data);
+    apiConnector.getBlocksByEpoch(Number(epochId), pageInfo).then((res) => {
+      setFetchData(res);
       setBlocksLoading(false);
     });
   }
 
   return (
-    <StyledContainer>
+    <Container sx={{ pt: 3, pb: 6 }}>
       <EpochOverviewView data={data?.data} loading={loading} lastUpdated={data?.lastUpdated} />
-      <BlockListComponent loading={blocksLoading} fetchData={fetchData} updateData={updateBlocks}/>
-    </StyledContainer>
+      <BlockListComponent loading={blocksLoading} fetchData={fetchData} updateData={updateBlocks} />
+    </Container>
   );
 };
 
