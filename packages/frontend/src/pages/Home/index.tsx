@@ -1,15 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import {
-  Alert,
-  AlertTitle,
   Box,
   Chip,
   Container,
   Divider,
   Grid,
-  IconButton,
   LinearProgress,
-  Link as MuiLink,
   Paper,
   Skeleton,
   Table,
@@ -26,6 +22,7 @@ import { useTheme } from "@mui/material/styles";
 import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { formatDistanceToNow } from "date-fns";
+import { BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 
 import useFetch from "src/commons/hooks/useFetch";
 import { details, routers } from "src/commons/routers";
@@ -90,49 +87,13 @@ const TX_TAG_META: Record<TxTag, { label: string; color: string }> = {
 const TX_TAG_ORDER: TxTag[] = ["transfer", "script", "token", "mint", "stake", "pool", "governance"];
 
 // ---------------------------------------------------------------------------
-// Styled components — disclaimer
+// Styled components
 // ---------------------------------------------------------------------------
 
 const HomeContainer = styled(Container)`
   padding-top: 30px;
   padding-bottom: 40px;
 `;
-
-const DisclaimerBox = styled(Alert)(({ theme }) => ({
-  marginBottom: "24px",
-  padding: "20px 24px",
-  borderRadius: "12px",
-  backgroundColor: theme.palette.secondary[0],
-  border: `1px solid ${theme.palette.primary[200]}`,
-  "& .MuiAlert-icon": {
-    color: theme.palette.primary.main,
-  },
-}));
-
-const DisclaimerTitle = styled(AlertTitle)(({ theme }) => ({
-  color: theme.palette.secondary.main,
-  fontWeight: "bold",
-  fontSize: "1.1rem",
-  marginBottom: "12px",
-}));
-
-const DisclaimerText = styled(Typography)(({ theme }) => ({
-  color: theme.palette.secondary.light,
-  lineHeight: 1.6,
-  marginBottom: "10px",
-  "&:last-child": {
-    marginBottom: 0,
-  },
-}));
-
-const StyledLink = styled(MuiLink)(({ theme }) => ({
-  color: theme.palette.primary.main,
-  textDecoration: "none",
-  fontWeight: "bold",
-  "&:hover": {
-    textDecoration: "underline",
-  },
-}));
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -262,6 +223,87 @@ const TableSkeleton: React.FC<{ rows?: number; cols?: number }> = ({ rows = 8, c
 );
 
 // ---------------------------------------------------------------------------
+// ActivityChart — tx count per recent block
+// ---------------------------------------------------------------------------
+
+interface ActivityChartProps {
+  blocks: Block[];
+  loading: boolean;
+}
+
+const ActivityChart: React.FC<ActivityChartProps> = ({ blocks, loading }) => {
+  const theme = useTheme();
+
+  const chartData = [...blocks]
+    .sort((a, b) => a.blockNo - b.blockNo)
+    .map((b) => ({
+      block: b.blockNo,
+      txs: b.txCount,
+      size: Math.round((b.size ?? 0) / 1024),
+    }));
+
+  return (
+    <Paper
+      elevation={2}
+      sx={{
+        p: 2.5,
+        borderRadius: 3,
+        border: `1px solid ${theme.palette.divider}`,
+        background: theme.palette.secondary[0],
+        mb: 3,
+      }}
+    >
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+        <Typography variant="h6" fontWeight={600}>
+          Network Activity
+        </Typography>
+        <Typography variant="caption" color="text.secondary">
+          Transactions per recent block
+        </Typography>
+      </Box>
+      {loading ? (
+        <Skeleton variant="rounded" height={160} />
+      ) : (
+        <ResponsiveContainer width="100%" height={160}>
+          <BarChart data={chartData} margin={{ top: 4, right: 8, left: -16, bottom: 0 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke={alpha(theme.palette.divider, 0.6)} vertical={false} />
+            <XAxis
+              dataKey="block"
+              tick={{ fontSize: 10, fill: theme.palette.text.secondary }}
+              tickFormatter={(v) => `#${numberWithCommas(v, 0)}`}
+              axisLine={false}
+              tickLine={false}
+            />
+            <YAxis
+              tick={{ fontSize: 10, fill: theme.palette.text.secondary }}
+              axisLine={false}
+              tickLine={false}
+              allowDecimals={false}
+            />
+            <RechartsTooltip
+              contentStyle={{
+                background: theme.palette.secondary[0],
+                border: `1px solid ${theme.palette.divider}`,
+                borderRadius: 8,
+                fontSize: 12,
+              }}
+              labelFormatter={(v) => `Block #${numberWithCommas(v, 0)}`}
+              formatter={(value: number) => [value, "Transactions"]}
+            />
+            <Bar
+              dataKey="txs"
+              fill={theme.palette.primary.main}
+              radius={[3, 3, 0, 0]}
+              maxBarSize={28}
+            />
+          </BarChart>
+        </ResponsiveContainer>
+      )}
+    </Paper>
+  );
+};
+
+// ---------------------------------------------------------------------------
 // Home page
 // ---------------------------------------------------------------------------
 
@@ -269,13 +311,6 @@ const Home: React.FC = () => {
   const { t } = useTranslation();
   const theme = useTheme();
   const navigate = useNavigate();
-  const [showBanner, setShowBanner] = useState(
-    () => localStorage.getItem("bannerDismissed") !== "true"
-  );
-  const dismissBanner = () => {
-    localStorage.setItem("bannerDismissed", "true");
-    setShowBanner(false);
-  };
 
   useEffect(() => {
     document.title = t("head.page.dashboard");
@@ -286,8 +321,9 @@ const Home: React.FC = () => {
   const { data: txsData, loading: txsLoading } = useFetch<ApiReturnType<Transaction[]>>("transactions?size=8");
   const { data: poolsData, loading: poolsLoading } = useFetch<ApiReturnType<PoolOverview[]>>("pools?size=5");
 
-  const blocks = blocksData?.data ?? [];
-  const txs = txsData?.data ?? [];
+  const TABLE_ROWS = 8;
+  const blocks = (blocksData?.data ?? []).slice(0, TABLE_ROWS);
+  const txs = (txsData?.data ?? []).slice(0, TABLE_ROWS);
   const pools = poolsData?.data ?? [];
 
   const cellSx = {
@@ -305,47 +341,6 @@ const Home: React.FC = () => {
 
   return (
     <HomeContainer data-testid="home-container">
-      {/* Disclaimer */}
-      {showBanner && (
-      <DisclaimerBox severity="info" action={
-        <IconButton size="small" onClick={dismissBanner} aria-label="Dismiss banner" sx={{ color: "inherit" }}>
-          ✕
-        </IconButton>
-      }>
-        <DisclaimerTitle>🚧 Community Project - Development Continues 🚧</DisclaimerTitle>
-        <DisclaimerText>
-          I'm still committed to pushing this project forward, but{" "}
-          <strong>progress will be slower than anticipated</strong> due to the lack of funding. Unfortunately, my
-          application to{" "}
-          <StyledLink
-            href="https://projectcatalyst.io/funds/14/cardano-open-developers/phoenix-explorer-reviving-an-open-source-explorer"
-            target="_blank"
-          >
-            Project Catalyst Fund 14
-          </StyledLink>{" "}
-          was not successful, which means development will continue at a reduced pace as this remains a volunteer effort.
-        </DisclaimerText>
-        <DisclaimerText>
-          Despite these constraints, my goal remains the same: to build this explorer{" "}
-          <strong>for the community and as open source</strong> so it can be reused by everyone. It's unfortunate that
-          this valuable piece of software was about to be discontinued, which is why I decided to pick it up and continue
-          its development.
-        </DisclaimerText>
-        <DisclaimerText>
-          There's still a lot of work to do, and you may encounter bugs along the way. Development will progress as time
-          permits. You can follow the current progress and contribute on{" "}
-          <StyledLink href="https://github.com/Kammerlo/phoenix-explorer" target="_blank">
-            GitHub
-          </StyledLink>{" "}
-          where the project is actively maintained. Any contributions, whether code, feedback, or support, are greatly
-          appreciated!
-        </DisclaimerText>
-        <DisclaimerText>
-          <strong>Thank you for your patience and continued support! 🙏</strong>
-        </DisclaimerText>
-      </DisclaimerBox>
-      )}
-
       {/* Stats Row */}
       <Grid container spacing={2} mb={3}>
         {/* Current Epoch */}
@@ -448,6 +443,9 @@ const Home: React.FC = () => {
         </Grid>
       </Grid>
 
+      {/* Activity Chart */}
+      <ActivityChart blocks={blocks} loading={blocksLoading} />
+
       {/* Latest Blocks & Latest Transactions */}
       <Grid container spacing={2} mb={3}>
         {/* Latest Blocks */}
@@ -481,7 +479,7 @@ const Home: React.FC = () => {
                 </TableHead>
                 <TableBody>
                   {blocksLoading ? (
-                    <TableSkeleton rows={8} cols={4} />
+                    <TableSkeleton rows={TABLE_ROWS} cols={4} />
                   ) : (
                     blocks.map((block) => (
                       <TableRow
@@ -542,12 +540,11 @@ const Home: React.FC = () => {
                     <TableCell sx={headCellSx}>Block</TableCell>
                     <TableCell sx={headCellSx}>Type</TableCell>
                     <TableCell sx={headCellSx} align="right">Output (₳)</TableCell>
-                    <TableCell sx={headCellSx} align="right">Fee (₳)</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
                   {txsLoading ? (
-                    <TableSkeleton rows={8} cols={5} />
+                    <TableSkeleton rows={TABLE_ROWS} cols={4} />
                   ) : (
                     txs.map((tx) => {
                       const tags = tx.tags?.length ? TX_TAG_ORDER.filter((t) => tx.tags!.includes(t)) : ["transfer" as TxTag];
@@ -559,18 +556,13 @@ const Home: React.FC = () => {
                           onClick={() => navigate(details.transaction(tx.hash))}
                         >
                           <TableCell sx={cellSx}>
-                            <Box>
-                              <Link
-                                to={details.transaction(tx.hash)}
-                                style={{ color: theme.palette.primary.main, textDecoration: "none", fontFamily: "monospace", fontWeight: 600 }}
-                                onClick={(e) => e.stopPropagation()}
-                              >
-                                {getShortHash(tx.hash, 8, 6)}
-                              </Link>
-                              <Typography variant="caption" display="block" color="text.secondary">
-                                {formatDistanceToNow(new Date(Number(tx.time) * 1000), { addSuffix: true })}
-                              </Typography>
-                            </Box>
+                            <Link
+                              to={details.transaction(tx.hash)}
+                              style={{ color: theme.palette.primary.main, textDecoration: "none", fontFamily: "monospace", fontWeight: 600 }}
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              {getShortHash(tx.hash, 8, 6)}
+                            </Link>
                           </TableCell>
                           <TableCell sx={cellSx}>
                             <Link
@@ -580,13 +572,10 @@ const Home: React.FC = () => {
                             >
                               {tx.blockNo?.toLocaleString()}
                             </Link>
-                            <Typography variant="caption" display="block" color="text.secondary">
-                              Epoch {tx.epochNo}
-                            </Typography>
                           </TableCell>
                           <TableCell sx={cellSx}>
                             <Box display="flex" flexWrap="wrap" gap={0.3}>
-                              {tags.map((tag) => {
+                              {tags.slice(0, 2).map((tag) => {
                                 const meta = TX_TAG_META[tag];
                                 return (
                                   <Box
@@ -613,9 +602,6 @@ const Home: React.FC = () => {
                           </TableCell>
                           <TableCell sx={cellSx} align="right">
                             {formatADA(tx.totalOutput)}
-                          </TableCell>
-                          <TableCell sx={cellSx} align="right">
-                            {formatADA(tx.fee)}
                           </TableCell>
                         </TableRow>
                       );
