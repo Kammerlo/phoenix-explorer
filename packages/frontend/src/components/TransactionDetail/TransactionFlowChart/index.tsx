@@ -26,16 +26,19 @@ import { TransactionDetail, Token, TRANSACTION_STATUS } from "@shared/dtos/trans
 import {
   FlowWrapper,
   FlowRow,
-  Column,
+  SectionBox,
   ColumnHeader,
+  CountBadge,
   Dot,
   UtxoCard,
   ContractTag,
+  ChangeBadge,
+  CardNumberBadge,
   CenterNode,
   StatusChip,
-  FeeRow,
-  FeeLabel,
   FeeValue,
+  TotalOutputBox,
+  FeeCallout,
   BadgeChip,
   AddressLink,
   AmountText,
@@ -139,7 +142,6 @@ interface SvgPath {
 const FlowConnectors: React.FC<{
   containerRef: React.RefObject<HTMLDivElement>;
   centerRef: React.RefObject<HTMLDivElement>;
-  /** Re-calculate when these values change (expand/collapse count) */
   deps: unknown[];
 }> = ({ containerRef, centerRef, deps }) => {
   const theme = useTheme();
@@ -177,7 +179,6 @@ const FlowConnectors: React.FC<{
     setPaths(next);
   }, [containerRef, centerRef]);
 
-  // Re-calculate on layout changes
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useLayoutEffect(() => {
     calculate();
@@ -186,7 +187,7 @@ const FlowConnectors: React.FC<{
     return () => ro.disconnect();
   }, [calculate, ...deps]);
 
-  const color = theme.palette.secondary.light;
+  const color = theme.palette.primary.light;
   const markerId = `${svgId.current}-arrow`;
 
   if (paths.length === 0) return null;
@@ -205,19 +206,8 @@ const FlowConnectors: React.FC<{
       aria-hidden="true"
     >
       <defs>
-        <marker
-          id={markerId}
-          markerWidth="7"
-          markerHeight="7"
-          refX="5"
-          refY="3.5"
-          orient="auto"
-        >
-          <polygon
-            points="0 0, 7 3.5, 0 7"
-            fill={color}
-            opacity={0.7}
-          />
+        <marker id={markerId} markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto">
+          <polygon points="0 0, 7 3.5, 0 7" fill={color} opacity={0.6} />
         </marker>
       </defs>
       {paths.map(({ d, key }) => (
@@ -229,7 +219,7 @@ const FlowConnectors: React.FC<{
           strokeWidth="1.5"
           strokeDasharray="5 3"
           markerEnd={`url(#${markerId})`}
-          opacity={0.75}
+          opacity={0.6}
         />
       ))}
     </svg>
@@ -246,6 +236,8 @@ interface UtxoCardProps {
   txHash?: string;
   index?: string;
   isContract?: boolean;
+  cardNumber?: number;
+  isChange?: boolean;
 }
 
 const UtxoCardItem: React.FC<UtxoCardProps> = ({
@@ -255,12 +247,13 @@ const UtxoCardItem: React.FC<UtxoCardProps> = ({
   side,
   txHash,
   index: utxoIndex,
-  isContract
+  isContract,
+  cardNumber,
+  isChange
 }) => {
   const { t } = useTranslation();
   const [showTokens, setShowTokens] = useState(false);
 
-  // Filter out ADA/lovelace — already shown as the main amount
   const realTokens = tokens.filter(
     (tok) => tok.assetId !== "" && tok.assetId !== "lovelace" && tok.assetName !== "lovelace" && !!tok.policy?.policyId
   );
@@ -271,8 +264,9 @@ const UtxoCardItem: React.FC<UtxoCardProps> = ({
       isContract={isContract ? 1 : 0}
       data-flow={side !== "collateral" ? side : undefined}
     >
-      {/* address */}
+      {/* address row: number + address + tags */}
       <Box display="flex" alignItems="center" gap={0.5} minWidth={0}>
+        {cardNumber !== undefined && <CardNumberBadge>{cardNumber}</CardNumberBadge>}
         <HashTooltip hash={address} label="Address">
           <AddressLink flex={1} minWidth={0}>
             <Link to={details.address(address)}>{truncate(address)}</Link>
@@ -285,9 +279,10 @@ const UtxoCardItem: React.FC<UtxoCardProps> = ({
             SC
           </ContractTag>
         )}
+        {isChange && <ChangeBadge>{t("flow.change") || "Change"}</ChangeBadge>}
       </Box>
 
-      {/* UTXO ref for inputs — clicking navigates to that tx */}
+      {/* UTXO ref for inputs */}
       {side === "input" && txHash && (
         <HashTooltip hash={txHash} label="Source transaction">
           <Box
@@ -419,25 +414,58 @@ const TransactionCenterNodeComponent = forwardRef<HTMLDivElement, { data: Transa
       </Box>
     ) : null;
 
+    const successColor = theme.isDark
+      ? theme.palette.success[300] || theme.palette.success.light
+      : theme.palette.success[700] || theme.palette.success.dark;
+
     return (
       <CenterNode ref={ref}>
+        {/* Status chip */}
         <StatusChip txStatus={data.tx.status}>{data.tx.status}</StatusChip>
 
-        <Box width="100%">
-          <FeeRow>
-            <FeeLabel>{t("flow.fee")}</FeeLabel>
-            <FeeValue>
-              {formatADAFull(data.tx.fee)} <ADAicon />
-            </FeeValue>
-          </FeeRow>
-          <FeeRow>
-            <FeeLabel>{t("flow.totalOutput")}</FeeLabel>
-            <FeeValue>
-              {formatADAFull(data.tx.totalOutput)} <ADAicon />
-            </FeeValue>
-          </FeeRow>
-        </Box>
+        {/* Total Output — most prominent element, green-tinted */}
+        <TotalOutputBox>
+          <Box
+            sx={{
+              fontSize: "0.6rem",
+              fontWeight: 700,
+              textTransform: "uppercase",
+              letterSpacing: "0.08em",
+              color: "success.main",
+              mb: 0.4
+            }}
+          >
+            {t("flow.totalOutput")}
+          </Box>
+          <Box
+            display="flex"
+            alignItems="center"
+            gap={0.5}
+            sx={{ fontSize: "0.9rem", fontWeight: 700, color: successColor }}
+          >
+            {formatADAFull(data.tx.totalOutput)} <ADAicon />
+          </Box>
+        </TotalOutputBox>
 
+        {/* Fee — separate callout below total output */}
+        <FeeCallout>
+          <Box
+            sx={{
+              fontSize: "0.65rem",
+              fontWeight: 600,
+              color: "secondary.light",
+              textTransform: "uppercase",
+              letterSpacing: "0.06em"
+            }}
+          >
+            {t("flow.fee")}
+          </Box>
+          <FeeValue sx={{ color: "error.main", fontSize: "0.82rem" }}>
+            {formatADAFull(data.tx.fee)} <ADAicon />
+          </FeeValue>
+        </FeeCallout>
+
+        {/* Badge chips for contracts, delegations, etc. */}
         {(badges.length > 0 || hasMetadata) && (
           <Box display="flex" flexWrap="wrap" gap={0.5} justifyContent="center">
             {badges.map(({ icon: Icon, label, count }) => (
@@ -498,9 +526,10 @@ interface ColumnProps {
   side: "input" | "output";
   contractAddrs: Set<string>;
   maxVisible: number;
+  inputAddresses?: Set<string>;
 }
 
-const UtxoColumn: React.FC<ColumnProps> = ({ items, side, contractAddrs, maxVisible }) => {
+const UtxoColumn: React.FC<ColumnProps> = ({ items, side, contractAddrs, maxVisible, inputAddresses }) => {
   const { t } = useTranslation();
   const theme = useTheme();
   const [expanded, setExpanded] = useState(false);
@@ -508,32 +537,37 @@ const UtxoColumn: React.FC<ColumnProps> = ({ items, side, contractAddrs, maxVisi
   const visible = expanded ? items : items.slice(0, maxVisible);
   const isInput = side === "input";
 
+  const isChangeOutput = (address: string) =>
+    !isInput && !!inputAddresses && inputAddresses.has(address);
+
   if (items.length === 0) {
     return (
-      <Column>
-        <ColumnHeader>
+      <SectionBox>
+        <ColumnHeader sx={{ mb: 1.25 }}>
           <Dot color={isInput ? theme.palette.error.main : theme.palette.success.main} />
-          {isInput ? t("flow.inputs") : t("flow.outputs")} (0)
+          {isInput ? t("flow.inputs") : t("flow.outputs")}
+          <CountBadge>0</CountBadge>
         </ColumnHeader>
         <Box sx={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center" }}>
           <EmptyColumn>{isInput ? "No inputs" : "No outputs"}</EmptyColumn>
         </Box>
-      </Column>
+      </SectionBox>
     );
   }
 
   return (
-    <Column>
-      <ColumnHeader>
+    <SectionBox>
+      <ColumnHeader sx={{ mb: 1.25 }}>
         <Dot color={isInput ? theme.palette.error.main : theme.palette.success.main} />
-        {isInput ? t("flow.inputs") : t("flow.outputs")} ({items.length})
+        {isInput ? t("flow.inputs") : t("flow.outputs")}
+        <CountBadge>{items.length}</CountBadge>
       </ColumnHeader>
 
-      {/* Cards centered in remaining height */}
       <Box sx={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center" }}>
         {visible.map((item, i) => (
           <UtxoCardItem
             key={`${item.txHash}-${item.index}-${i}`}
+            cardNumber={i + 1}
             address={item.address}
             value={item.value}
             tokens={item.tokens}
@@ -544,6 +578,7 @@ const UtxoColumn: React.FC<ColumnProps> = ({ items, side, contractAddrs, maxVisi
               contractAddrs.has(item.address) ||
               (item.stakeAddress ? contractAddrs.has(item.stakeAddress) : false)
             }
+            isChange={isChangeOutput(item.address)}
           />
         ))}
 
@@ -555,7 +590,7 @@ const UtxoColumn: React.FC<ColumnProps> = ({ items, side, contractAddrs, maxVisi
           </ShowMoreButton>
         )}
       </Box>
-    </Column>
+    </SectionBox>
   );
 };
 
@@ -721,6 +756,12 @@ const TransactionFlowChart: React.FC<Props> = ({ data }) => {
 
   const contractAddrs = useMemo(() => (data ? getContractAddresses(data) : new Set<string>()), [data]);
 
+  // Build the set of input addresses to detect change outputs
+  const inputAddresses = useMemo(
+    () => new Set((data?.utxOs?.inputs ?? []).map((i) => i.address)),
+    [data]
+  );
+
   if (!data) return null;
 
   const inputs = data.utxOs?.inputs ?? [];
@@ -741,13 +782,24 @@ const TransactionFlowChart: React.FC<Props> = ({ data }) => {
           />
         )}
 
-        <UtxoColumn items={inputs} side="input" contractAddrs={contractAddrs} maxVisible={maxVisible} />
+        <UtxoColumn
+          items={inputs}
+          side="input"
+          contractAddrs={contractAddrs}
+          maxVisible={maxVisible}
+        />
 
         <Box display="flex" alignItems="center" justifyContent="center" sx={{ zIndex: 1 }}>
           <TransactionCenterNodeComponent ref={centerRef} data={data} />
         </Box>
 
-        <UtxoColumn items={outputs} side="output" contractAddrs={contractAddrs} maxVisible={maxVisible} />
+        <UtxoColumn
+          items={outputs}
+          side="output"
+          contractAddrs={contractAddrs}
+          maxVisible={maxVisible}
+          inputAddresses={inputAddresses}
+        />
       </FlowRow>
 
       {/* ── Additional sections ── */}
