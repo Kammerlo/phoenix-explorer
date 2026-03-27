@@ -1,4 +1,4 @@
-import { Box, Button, CircularProgress } from "@mui/material";
+import { Box, Button } from "@mui/material";
 import { stringify } from "qs";
 import { useRef, useState, useEffect, useCallback } from "react";
 import { useTranslation } from "react-i18next";
@@ -6,7 +6,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 
 import usePageInfo from "src/commons/hooks/usePageInfo";
 import { details } from "src/commons/routers";
-import { formatADAFull, getShortHash } from "src/commons/utils/helper";
+import { formatADA, getShortHash } from "src/commons/utils/helper";
 import ADAicon from "src/components/commons/ADAIcon";
 import CustomTooltip from "src/components/commons/CustomTooltip";
 import { StakeKeyStatus } from "src/components/commons/DetailHeader/styles";
@@ -23,19 +23,20 @@ const DrepsList: React.FC = () => {
   const { search } = useLocation();
   const { pageInfo, setSort } = usePageInfo();
   const tableRef = useRef<HTMLDivElement>(null);
-  const [fetchData, setFetchData] = useState<ApiReturnType<Drep[]>>({ 
-    data: [], 
-    lastUpdated: 0, 
-    total: 0, 
-    currentPage: 1 
+  const [fetchData, setFetchData] = useState<ApiReturnType<Drep[]>>({
+    data: [],
+    lastUpdated: 0,
+    total: 0,
+    currentPage: 1
   });
   const [loading, setLoading] = useState<boolean>(true);
+
   const handleBlankSort = () => {
     navigate({ search: stringify({ ...pageInfo, page: 1, sort: undefined }) }, { replace: true });
   };
 
   const apiConnector = ApiConnector.getApiConnector();
-  
+
   const fetchDreps = useCallback(async () => {
     setLoading(true);
     try {
@@ -52,17 +53,20 @@ const DrepsList: React.FC = () => {
     fetchDreps();
   }, [fetchDreps]);
 
-
   const columns: Column<Drep>[] = [
     {
       title: <div data-testid="drepList.drepGivenName">{t("dreps.givenName")}</div>,
       key: "givenName",
-      minWidth: "100px",
+      minWidth: "160px",
       render: (r) => (
-        <CustomTooltip title={r.givenName ? r.givenName : undefined}>
+        <CustomTooltip title={r.givenName || r.drepId}>
           <PoolName data-testid="drepList.drepGivenNameValue" to={{ pathname: details.drep(r.drepId) }}>
             <Box component={"span"} textOverflow={"ellipsis"} whiteSpace={"nowrap"} overflow={"hidden"}>
-              {r.givenName || <Box component="span" sx={{ color: "secondary.light", fontStyle: "italic" }}>—</Box>}
+              {r.givenName || (
+                <Box component="span" sx={{ color: "secondary.light", fontStyle: "italic", fontSize: "0.85em" }}>
+                  {getShortHash(r.drepId)}
+                </Box>
+              )}
             </Box>
           </PoolName>
         </CustomTooltip>
@@ -71,12 +75,12 @@ const DrepsList: React.FC = () => {
     {
       title: <div data-testid="drepList.drepIdTitle">{t("dreps.id")}</div>,
       key: "id",
-      minWidth: "100px",
+      minWidth: "150px",
       render: (r) => (
-        <CustomTooltip title={r.drepId ? r.drepId : undefined}>
+        <CustomTooltip title={r.drepId || undefined}>
           <PoolName data-testid="drepList.drepIdValue" to={{ pathname: details.drep(r.drepId) }}>
             <Box component={"span"} textOverflow={"ellipsis"} whiteSpace={"nowrap"} overflow={"hidden"}>
-              {`${getShortHash(r.drepId)}`}
+              {getShortHash(r.drepId)}
             </Box>
           </PoolName>
         </CustomTooltip>
@@ -89,18 +93,18 @@ const DrepsList: React.FC = () => {
         </Box>
       ),
       key: "anchorLink",
-      minWidth: "100px",
+      minWidth: "180px",
       render: (r) =>
-        r.anchorUrl != null ? (
-          <CustomTooltip title={r.anchorUrl ? r.anchorUrl : undefined} sx={{ width: 150 }}>
+        r.anchorUrl ? (
+          <CustomTooltip title={r.anchorUrl} sx={{ width: 200 }}>
             <Box
               padding={"6px 0px"}
               data-testid="drepList.anchorLinkValue"
               component={Button}
               textTransform={"lowercase"}
               fontWeight={400}
-              display={(r.anchorUrl || "").length > 20 ? "inline-block" : "inline"}
-              width={(r.anchorUrl || "").length > 20 ? "150px" : "fit-content"}
+              display={"inline-block"}
+              width={"180px"}
               minWidth={0}
               textOverflow={"ellipsis"}
               whiteSpace={"nowrap"}
@@ -110,44 +114,18 @@ const DrepsList: React.FC = () => {
                 e.preventDefault();
                 e.stopPropagation();
                 const url = r.anchorUrl.includes("http") ? r.anchorUrl : `https://${r.anchorUrl}`;
-                window.open(url, '_blank', 'noopener,noreferrer');
+                window.open(url, "_blank", "noopener,noreferrer");
               }}
               disableRipple={true}
               sx={{ ":hover": { background: "none" }, textAlign: "left" }}
             >
-              {`${r.anchorUrl || ""}`}
+              {r.anchorUrl}
             </Box>
           </CustomTooltip>
         ) : (
-          <Box padding={"6px 8px 6px 0"}>{t("common.N/A")}</Box>
-        )
-    },
-    {
-      title: (
-        <Box data-testid="drepList.anchorHashTitle" component={"span"}>
-          {t("dreps.anchorHash")}
-        </Box>
-      ),
-      key: "pu.anchorHash",
-      minWidth: "120px",
-      render: (r) =>
-        r.anchorHash != null ? (
-          <CustomTooltip title={r.anchorHash ? r.anchorHash : undefined}>
-            <Box
-              data-testid="drepList.anchorHashValue"
-              component={"span"}
-              display={"inline-block"}
-              width={"150px"}
-              textOverflow={"ellipsis"}
-              whiteSpace={"nowrap"}
-              overflow={"hidden"}
-              paddingTop={"3px"}
-            >
-              {r.anchorHash}
-            </Box>
-          </CustomTooltip>
-        ) : (
-          t("common.N/A")
+          <Box padding={"6px 8px 6px 0"} color="secondary.light">
+            {t("common.N/A")}
+          </Box>
         )
     },
     {
@@ -157,11 +135,16 @@ const DrepsList: React.FC = () => {
         </Box>
       ),
       key: "activeVoteStake",
-      minWidth: "140px",
+      minWidth: "160px",
       render: (r) => (
         <Box data-testid="drepList.activeStakeValue" component={"span"} sx={{ whiteSpace: "nowrap" }}>
-          {r.activeVoteStake != null ? formatADAFull(r.activeVoteStake) : t("common.N/A")}
-          {r.activeVoteStake != null && <ADAicon />}
+          {r.activeVoteStake != null ? (
+            <>
+              {formatADA(r.activeVoteStake)} <ADAicon />
+            </>
+          ) : (
+            t("common.N/A")
+          )}
         </Box>
       ),
       sort: ({ columnKey, sortValue }) => {
@@ -176,7 +159,7 @@ const DrepsList: React.FC = () => {
         <StakeKeyStatus
           data-testid="drepList.statusValue"
           status={r.status}
-          sx={{ width: 65, display: "inline-block", textAlign: "center" }}
+          sx={{ width: 70, display: "inline-block", textAlign: "center" }}
         >
           {r.status === "ACTIVE"
             ? t("status.active")
@@ -187,16 +170,11 @@ const DrepsList: React.FC = () => {
       )
     }
   ];
-  if (loading) return <CircularProgress />;
-  
+
   return (
     <>
       {!fetchData.error && (
-        <TopSearchContainer
-          sx={{
-            justifyContent: "space-between"
-          }}
-        >
+        <TopSearchContainer sx={{ justifyContent: "space-between", mt: 2, mb: 1.5 }}>
           <ListOfDreps>{t("dreps.listOfDreps")}</ListOfDreps>
         </TopSearchContainer>
       )}
@@ -207,19 +185,20 @@ const DrepsList: React.FC = () => {
         data-testid="drepList.table"
         columns={columns}
         total={{ count: fetchData.total, title: "Total" }}
+        minHeight="calc(100vh - 350px)"
         tableWrapperProps={{ sx: { overflowX: "auto" } }}
         onClickRow={(e, r: Drep) => {
-          // Prevent navigation if clicking on a link or button
-          if (e.target instanceof HTMLAnchorElement || 
-              (e.target instanceof Element && e.target.closest("a")) ||
-              e.target instanceof HTMLButtonElement ||
-              (e.target instanceof Element && e.target.closest("button"))) {
+          if (
+            e.target instanceof HTMLAnchorElement ||
+            (e.target instanceof Element && e.target.closest("a")) ||
+            e.target instanceof HTMLButtonElement ||
+            (e.target instanceof Element && e.target.closest("button"))
+          ) {
             e.preventDefault();
             e.stopPropagation();
             return;
-          } else {
-            navigate(details.drep(r.drepId));
           }
+          navigate(details.drep(r.drepId));
         }}
         pagination={{
           page: pageInfo.page,
