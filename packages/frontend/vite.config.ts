@@ -5,9 +5,12 @@ import viteTsconfigPaths from "vite-tsconfig-paths";
 import svgr from "vite-plugin-svgr";
 import { resolve } from "path";
 
+// Root .env lives two levels up (monorepo root)
+const rootDir = resolve(__dirname, "../../");
+
 // @ts-ignore
 export default defineConfig(({ mode }) => {
-  const env = loadEnv(mode, process.cwd(), "REACT_");
+  const env = loadEnv(mode, rootDir, "REACT_");
   return {
     define: {
       global: "globalThis",
@@ -17,6 +20,7 @@ export default defineConfig(({ mode }) => {
       "process.env.REACT_APP_ADA_HANDLE_API": JSON.stringify(env.REACT_APP_ADA_HANDLE_API),
       "process.env.REACT_APP_API_URL_COIN_GECKO": JSON.stringify(env.REACT_APP_API_URL_COIN_GECKO)
     },
+    envDir: rootDir,
     base: "/",
     optimizeDeps: {
       exclude: ["util"]
