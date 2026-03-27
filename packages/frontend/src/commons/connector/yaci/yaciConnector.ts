@@ -560,7 +560,8 @@ export class YaciConnector implements ApiConnector {
       const items: GovernanceActionListItem[] = (response.data.govActionProposalList ?? []).map((p) => ({
         txHash: p.txHash ?? "",
         index: p.index ?? 0,
-        type: p.type
+        type: p.type,
+        status: "ACTIVE" as const,
       }));
       return { data: items, total: response.data.total, totalPage: response.data.totalPages, lastUpdated: Date.now() };
     } catch (e: any) {

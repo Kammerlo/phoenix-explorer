@@ -1,178 +1,227 @@
-import React, { useState, useMemo } from "react";
-import {
-  Table,
-  TableBody,
-  TableHead,
-  Pagination,
-  Box,
-  useTheme
-} from "@mui/material";
-import { useNavigate } from "react-router-dom";
-import { useTranslation } from "react-i18next";
+import { useState } from "react";
+import { Box, Chip, Skeleton, Typography, useTheme } from "@mui/material";
+import { Link } from "react-router-dom";
+import { styled } from "@mui/material/styles";
 
-import { GovActionVote } from "@shared/dtos/GovernanceOverview";
-import { formatDateTimeLocal } from "src/commons/utils/helper";
+import { GovActionVote, VoteType } from "@shared/dtos/GovernanceOverview";
+import { formatDateTimeLocal, getShortHash } from "src/commons/utils/helper";
 import DatetimeTypeTooltip from "src/components/commons/DatetimeTypeTooltip";
+import CustomTooltip from "src/components/commons/CustomTooltip";
+import { Column } from "src/components/commons/Table";
+import Table from "src/components/commons/Table";
 import { details } from "src/commons/routers";
-
-import {
-  TableContainer,
-  TableTitle,
-  StyledTableRow,
-  StyledTableCell,
-  HeaderTableCell,
-  VoterLink,
-  VoteChip,
-  VoterTypeChip,
-  PaginationContainer
-} from "./styles";
 
 interface Props {
   votes: GovActionVote[];
+  loading?: boolean;
 }
 
 const VOTES_PER_PAGE = 10;
 
-export default function GovernanceVotesTable({ votes }: Props) {
-  const { t } = useTranslation();
-  const theme = useTheme();
-  const navigate = useNavigate();
-  const [page, setPage] = useState(1);
-
-  const handlePageChange = (_event: React.ChangeEvent<unknown>, value: number) => {
-    setPage(value);
-  };
-
-  const handleVoterClick = (vote: GovActionVote) => {
-    switch (vote.voterType) {
-      case 'drep':
-        navigate(details.drep(vote.voter));
-        break;
-    // TODO add route for committee member details
-    //   case 'constitutional_committee':
-    //     navigate(details.constitutionalCommitteeDetail(vote.voter));
-    //     break;
-      case 'spo':
-        navigate(details.delegation(vote.voter));
-        break;
-    }
-  };
-
-  const getVoterTypeLabel = (voterType: string): string => {
-    switch (voterType) {
-      case 'drep':
-        return 'DRep';
-      case 'constitutional_committee':
-        return 'Committee';
-      case 'spo':
-        return 'SPO';
-      default:
-        return voterType;
-    }
-  };
-
-  const getVoteLabel = (vote: string): string => {
-    return vote.charAt(0).toUpperCase() + vote.slice(1);
-  };
-
-  // Calculate pagination
-  const totalPages = Math.ceil(votes.length / VOTES_PER_PAGE);
-  const startIndex = (page - 1) * VOTES_PER_PAGE;
-  const endIndex = startIndex + VOTES_PER_PAGE;
-  const paginatedVotes = useMemo(() => {
-    return votes.slice(startIndex, endIndex);
-  }, [votes, startIndex, endIndex]);
-
-  if (!votes || votes.length === 0) {
-    return (
-      <TableContainer>
-        <TableTitle>{t("govAction.votes") || "Votes"}</TableTitle>
-        <Box sx={{ 
-          display: 'flex', 
-          justifyContent: 'center', 
-          alignItems: 'center', 
-          height: 200,
-          color: theme.palette.secondary.light,
-          fontSize: '16px'
-        }}>
-          {t("govAction.noVotesAvailable") || "No votes available"}
-        </Box>
-      </TableContainer>
-    );
+const VoterLink = styled(Link)`
+  color: ${(props) => props.theme.palette.primary.main};
+  font-weight: 500;
+  text-decoration: none;
+  font-family: var(--font-family-text);
+  &:hover {
+    text-decoration: underline;
   }
+`;
+
+const VOTER_TYPE_LABELS: Record<VoteType, string> = {
+  drep: "DRep",
+  constitutional_committee: "Committee",
+  spo: "SPO",
+};
+
+const VOTE_COLORS = {
+  yes: "success",
+  no: "error",
+  abstain: "warning",
+} as const;
+
+function VoteChipInline({ vote }: { vote: "yes" | "no" | "abstain" }) {
+  const theme = useTheme();
+  const colorKey = VOTE_COLORS[vote] ?? "default";
+  const colorValue = theme.palette[colorKey as "success" | "error" | "warning"]?.main ?? theme.palette.secondary.main;
+  return (
+    <Chip
+      label={vote.charAt(0).toUpperCase() + vote.slice(1)}
+      size="small"
+      sx={{
+        fontWeight: 600,
+        fontSize: "11px",
+        height: "22px",
+        backgroundColor: `${colorValue}18`,
+        color: colorValue,
+        border: `1px solid ${colorValue}50`,
+        "& .MuiChip-label": { px: 1 },
+      }}
+    />
+  );
+}
+
+function VoterTypeChipInline({ voterType }: { voterType: VoteType }) {
+  const theme = useTheme();
+  const colorMap: Record<VoteType, string> = {
+    drep: theme.palette.info.main,
+    constitutional_committee: theme.palette.secondary.main,
+    spo: theme.palette.primary.main,
+  };
+  const color = colorMap[voterType] ?? theme.palette.secondary.main;
+  return (
+    <Chip
+      label={VOTER_TYPE_LABELS[voterType] ?? voterType}
+      size="small"
+      sx={{
+        fontWeight: 600,
+        fontSize: "11px",
+        height: "22px",
+        backgroundColor: `${color}18`,
+        color,
+        border: `1px solid ${color}50`,
+        "& .MuiChip-label": { px: 1 },
+      }}
+    />
+  );
+}
+
+function LoadingTable() {
+  return (
+    <Box>
+      {Array.from({ length: 5 }).map((_, i) => (
+        <Box
+          key={i}
+          sx={{
+            display: "grid",
+            gridTemplateColumns: "2fr 1fr 1fr 2fr 2fr",
+            gap: 2,
+            px: 2,
+            py: 1.5,
+            borderBottom: 1,
+            borderColor: "divider",
+          }}
+        >
+          <Skeleton variant="text" width="80%" height={20} />
+          <Skeleton variant="rounded" width={60} height={22} />
+          <Skeleton variant="rounded" width={50} height={22} />
+          <Skeleton variant="text" width="70%" height={20} />
+          <Skeleton variant="text" width="60%" height={20} />
+        </Box>
+      ))}
+    </Box>
+  );
+}
+
+export default function GovernanceVotesTable({ votes, loading = false }: Props) {
+  const theme = useTheme();
+  const [page, setPage] = useState(0);
+
+  const getVoterLink = (vote: GovActionVote): string | null => {
+    switch (vote.voterType) {
+      case "drep": return details.drep(vote.voter);
+      case "spo": return details.delegation(vote.voter);
+      default: return null;
+    }
+  };
+
+  const columns: Column<GovActionVote>[] = [
+    {
+      title: "Voter",
+      key: "voter",
+      minWidth: "180px",
+      render: (v) => {
+        const link = getVoterLink(v);
+        const shortAddr = `${v.voter.slice(0, 10)}…${v.voter.slice(-8)}`;
+        if (link) {
+          return (
+            <CustomTooltip title={v.voter}>
+              <VoterLink to={link}>{shortAddr}</VoterLink>
+            </CustomTooltip>
+          );
+        }
+        return (
+          <CustomTooltip title={v.voter}>
+            <Box component="span" sx={{ fontSize: "14px", fontFamily: "var(--font-family-text)" }}>
+              {shortAddr}
+            </Box>
+          </CustomTooltip>
+        );
+      },
+    },
+    {
+      title: "Type",
+      key: "voterType",
+      minWidth: "100px",
+      render: (v) => <VoterTypeChipInline voterType={v.voterType} />,
+    },
+    {
+      title: "Vote",
+      key: "vote",
+      minWidth: "90px",
+      render: (v) => <VoteChipInline vote={v.vote} />,
+    },
+    {
+      title: "Vote Time",
+      key: "voteTime",
+      minWidth: "170px",
+      render: (v) =>
+        v.voteTime ? (
+          <DatetimeTypeTooltip>{formatDateTimeLocal(String(v.voteTime))}</DatetimeTypeTooltip>
+        ) : (
+          <Box component="span" sx={{ color: "text.secondary" }}>
+            —
+          </Box>
+        ),
+    },
+    {
+      title: "Transaction",
+      key: "txHash",
+      minWidth: "170px",
+      render: (v) => (
+        <CustomTooltip title={v.txHash}>
+          <Box
+            component="span"
+            sx={{ fontSize: "14px", fontFamily: "var(--font-family-text)", color: theme.palette.primary.main }}
+          >
+            {getShortHash(v.txHash)}
+          </Box>
+        </CustomTooltip>
+      ),
+    },
+  ];
 
   return (
-    <TableContainer>
-      <TableTitle>
-        {t("govAction.votes") || "Votes"} ({votes.length})
-      </TableTitle>
-      
-      <Table>
-        <TableHead>
-          <StyledTableRow>
-            <HeaderTableCell>{t("govAction.voter") || "Voter"}</HeaderTableCell>
-            <HeaderTableCell>{t("govAction.voterType") || "Type"}</HeaderTableCell>
-            <HeaderTableCell>{t("govAction.vote") || "Vote"}</HeaderTableCell>
-            <HeaderTableCell>{t("govAction.voteTime") || "Vote Time"}</HeaderTableCell>
-            <HeaderTableCell>{t("govAction.txHash") || "Transaction"}</HeaderTableCell>
-          </StyledTableRow>
-        </TableHead>
-        <TableBody>
-          {paginatedVotes.map((vote, index) => (
-            <StyledTableRow key={`${vote.txHash}-${vote.certIndex}-${index}`}>
-              <StyledTableCell>
-                <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                  <VoterLink onClick={() => handleVoterClick(vote)}>
-                    {vote.voter.slice(0, 8)}...{vote.voter.slice(-8)}
-                  </VoterLink>
-                </Box>
-              </StyledTableCell>
-              <StyledTableCell>
-                    <VoterTypeChip
-                        voterType={vote.voterType}
-                        label={getVoterTypeLabel(vote.voterType)}
-                        variant="outlined"
-                    />
-              </StyledTableCell>
-              <StyledTableCell>
-                <VoteChip
-                  voteType={vote.vote}
-                  label={getVoteLabel(vote.vote)}
-                  variant="outlined"
-                />
-              </StyledTableCell>
-              <StyledTableCell>
-                <DatetimeTypeTooltip>
-                          {formatDateTimeLocal(vote?.voteTime)}
-                </DatetimeTypeTooltip>
-              </StyledTableCell>
-              <StyledTableCell>
-                <Box sx={{ 
-                  color: theme.palette.primary.main,
-                  fontSize: '14px',
-                  fontFamily: 'monospace'
-                }}>
-                  {vote.txHash.slice(0, 8)}...{vote.txHash.slice(-8)}
-                </Box>
-              </StyledTableCell>
-            </StyledTableRow>
-          ))}
-        </TableBody>
-      </Table>
+    <Box
+      sx={{
+        background: (t) => t.palette.secondary[0],
+        borderRadius: 3,
+        boxShadow: (t) => t.shadow.card,
+        p: 3,
+      }}
+    >
+      <Typography variant="h6" fontWeight={700} sx={{ mb: 3 }}>
+        Votes {!loading && votes.length > 0 && `(${votes.length})`}
+      </Typography>
 
-      {totalPages > 1 && (
-        <PaginationContainer>
-          <Pagination
-            count={totalPages}
-            page={page}
-            onChange={handlePageChange}
-            color="primary"
-            shape="rounded"
-            showFirstButton
-            showLastButton
-          />
-        </PaginationContainer>
+      {loading ? (
+        <LoadingTable />
+      ) : (
+        <Table
+          columns={columns}
+          data={votes.slice(page * VOTES_PER_PAGE, (page + 1) * VOTES_PER_PAGE)}
+          total={{ count: votes.length, title: "Votes" }}
+          rowKey={(r) => `${r.txHash}-${r.certIndex}`}
+          pagination={{
+            page,
+            size: VOTES_PER_PAGE,
+            total: votes.length,
+            onChange: (p, _s) => setPage(p),
+            hideLastPage: true,
+          }}
+          tableWrapperProps={{ sx: { overflowX: "auto" } }}
+        />
       )}
-    </TableContainer>
+    </Box>
   );
 }
