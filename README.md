@@ -72,38 +72,33 @@ npm install
 ### Step 2: Environment Configuration
 
 ```bash
-# Create environment file from template
-cp packages/frontend/.env.example packages/frontend/.env
-cp packages/backend/.env.example packages/backend/.env
+# Create environment file from the template
+cp .env.example .env
 ```
 
-### Step 3: Configure Environment Variables
+Then edit `.env` and fill in the required values:
 
-Edit `packages/frontend/.env` with your settings:
-
-```env
-# Application Configuration
-PORT=3000
-REACT_APP_NETWORK=mainnet  # Options: mainnet, preprod, preview
-
-# API Configuration
-REACT_APP_API_TYPE=GATEWAY    # Currently supported: GATEWAY
-REACT_APP_API_URL=http://localhost:8080  # Your Gateway backend
-```
+| Variable | Description |
+|---|---|
+| `API_KEY` | Blockfrost project API key (get one at [blockfrost.io](https://blockfrost.io)) |
+| `NETWORK` | Cardano network: `mainnet`, `preprod`, or `preview` |
+| `REACT_APP_API_TYPE` | Data provider: `GATEWAY` (default), `YACI`, or `BLOCKFROST` |
+| `REACT_APP_API_URL` | Backend URL (default `http://localhost:3000/api` for GATEWAY mode) |
+| `REACT_APP_NETWORK` | Network label shown in the UI |
 
 **Supported Networks:**
 - `mainnet` - Cardano Mainnet
-- `preprod` - Cardano Pre-Production Testnet  
+- `preprod` - Cardano Pre-Production Testnet
 - `preview` - Cardano Preview Testnet
 
-### Step 4: Development Server
+### Step 3: Development Server
 
 ```bash
-# Start the development servers - will start backend and frontend
+# Start both backend and frontend with a single command
 npm run dev
 ```
 
-The application will be available at [http://localhost:3000](http://localhost:3000)
+The application will be available at [http://localhost:5173](http://localhost:5173)
 
 ## 📁 Project Structure
 

@@ -1,6 +1,7 @@
 import dotenv from "dotenv";
+import path from "path";
 import {CardanoNetwork} from "@blockfrost/blockfrost-js/lib/types";
-dotenv.config();
+dotenv.config({ path: path.resolve(__dirname, "../../../../.env") });
 
 export const ENV = {
   API_KEY: process.env.API_KEY!,
