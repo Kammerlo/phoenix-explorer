@@ -233,14 +233,26 @@ governanceController.get('/dreps/:drepId', async (req, res) => {
     } catch (e) {
         console.error("Error fetching drep details for drep id:", drepId);
     }
+
+    // Compute governance participation rate: votes cast / total proposals on chain
+    let govParticipationRate = 0;
+    try {
+        const proposals = await API.governance.proposals({ page: 1, count: 100 });
+        if (proposals.length > 0 && votes.length > 0) {
+            govParticipationRate = Math.min(1, votes.length / proposals.length);
+        }
+    } catch {
+        // leave at 0 if proposals fetch fails
+    }
+
     const unixTimestamp = Math.floor(Date.now() / 1000);
     const drep: Drep = {
         activeVoteStake: drepDetails ? drepDetails.amount : 0,
         anchorHash: drepMetadata ? drepMetadata?.hash : "",
         anchorUrl: drepMetadata ? drepMetadata?.url : "",
-        givenName: jsonMetadata ? 
-        (typeof jsonMetadata.body.givenName === 'string' 
-            ? jsonMetadata.body.givenName 
+        givenName: jsonMetadata ?
+        (typeof jsonMetadata.body.givenName === 'string'
+            ? jsonMetadata.body.givenName
             : jsonMetadata.body.givenName?.["@value"] || "") : "",
         drepHash: drepDetails ? drepDetails.hex : "",
         createdAt: createTx ? createTx.block_time : undefined,
@@ -248,7 +260,7 @@ governanceController.get('/dreps/:drepId', async (req, res) => {
         drepId: drepId,
         status: drepDetails?.retired ? "RETIRED" : "ACTIVE",
         votingPower: drepDetails ? drepDetails.amount : 0,
-        govParticipationRate: 0,
+        govParticipationRate,
         delegators: delegators?.length || 0,
         votes: {
             total: votes?.length || 0,

@@ -2,40 +2,34 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   Box,
-  Tooltip,
-  TooltipProps,
   Typography,
-  styled,
-  tooltipClasses,
   useTheme,
   Tabs,
   Tab,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  TablePagination
+  LinearProgress,
+  alpha
 } from "@mui/material";
 import { HiArrowLongLeft } from "react-icons/hi2";
 import { t } from "i18next";
+import Highcharts from "highcharts";
+import HighchartsReact from "highcharts-react-official";
 
 import DetailHeader, { DetailHeaderType } from "src/components/commons/DetailHeader";
 import {
   DescriptonDrepIcon,
   CreateDrepIcon,
-  ActiveVoteIcon,
-  LiveStakeDrepIcon,
+  ActiveStakeDrepIcon,
   DelegatorsDrepIcon,
   LifetimeVoteDrepIcon,
+  VotingPowerIcon,
+  GovernanceIcon,
+  DrepIdIcon,
   VotesYesIcon,
   VotesAbstainIcon,
   VotesNoIcon
 } from "src/commons/resources";
 import { ActionMetadataModalConfirm } from "src/components/GovernanceVotes";
-import { formatADA, formatADAFull, formatDateTimeLocal, formatPercent } from "src/commons/utils/helper";
+import { formatADA, formatDateTimeLocal, formatPercent, numberWithCommas } from "src/commons/utils/helper";
 import {
   BackButton,
   BackText,
@@ -46,6 +40,8 @@ import { TruncateSubTitleContainer } from "src/components/share/styled";
 import DynamicEllipsisText from "src/components/DynamicEllipsisText";
 import { useScreen } from "src/commons/hooks/useScreen";
 import DatetimeTypeTooltip from "src/components/commons/DatetimeTypeTooltip";
+import Table, { Column } from "src/components/commons/Table";
+import ADAicon from "src/components/commons/ADAIcon";
 
 import { StyledContainer, TitleCard, ValueCard } from "./styles";
 import { ApiConnector } from "src/commons/connector/ApiConnector";
@@ -81,19 +77,14 @@ const DrepDetail = () => {
   const network = process.env.REACT_APP_NETWORK || "mainnet";
 
   useEffect(() => {
-    const fetchDrepData = async () => {
-      try {
-        const result = await apiConnector.getDrep(drepId);
-        setData(result);
-      } catch {
-        // ignore
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchDrepData();
+    document.title = `DRep Detail | Cardano Blockchain Explorer`;
+    apiConnector
+      .getDrep(drepId)
+      .then((result) => setData(result))
+      .catch(() => {})
+      .finally(() => setLoading(false));
   }, [drepId]);
+
   const listOverview = getDrepOverviewCards(data, theme, openModal, setOpenModal);
 
   if (loading) {
@@ -108,10 +99,10 @@ const DrepDetail = () => {
             <CommonSkeleton variant="rectangular" height={80} width="100%" />
           </Box>
           <Box mt={2} borderRadius={4} overflow="hidden">
-            <CommonSkeleton variant="rectangular" height={250} width="100%" />
+            <CommonSkeleton variant="rectangular" height={280} width="100%" />
           </Box>
-          <Box mt={4} borderRadius={4} overflow="hidden">
-            <CommonSkeleton variant="rectangular" height={250} width="100%" />
+          <Box mt={3} borderRadius={4} overflow="hidden">
+            <CommonSkeleton variant="rectangular" height={350} width="100%" />
           </Box>
         </HeaderDetailContainer>
       </StyledContainer>
@@ -125,7 +116,7 @@ const DrepDetail = () => {
         title={
           <TruncateSubTitleContainer mr={isMobile ? 2 : 0}>
             <DynamicEllipsisText
-              value={data?.data.givenName || ""}
+              value={data?.data.givenName || data?.data.drepId || ""}
               sxFirstPart={{ maxWidth: width > 600 ? "calc(100% - 130px)" : "calc(100% - 70px)" }}
               postfix={5}
               isNoLimitPixel={true}
@@ -135,26 +126,35 @@ const DrepDetail = () => {
         }
         loading={false}
         listItem={listOverview}
-        // subTitle={`Type: ${data?.data.type || ""}`}
         stakeKeyStatus={data?.data.status}
       />
-      
-      {/* Lifetime Votes Section */}
+
+      {/* Vote Distribution Section */}
       <Box mt={3} p={3} bgcolor={theme.palette.background.paper} borderRadius={2}>
-        <Box display={"flex"} alignItems="center" gap={1} mb={3}>
-          <LifetimeVoteDrepIcon style={{ width: 26, height: 26 }} />
-          <TitleCard display={"flex"} alignItems="center">
-            {t("drep.lifetimeVotes")}
-          </TitleCard>
+        <Box display="flex" alignItems="center" justifyContent="space-between" mb={3} flexWrap="wrap" gap={1}>
+          <Box display="flex" alignItems="center" gap={1}>
+            <LifetimeVoteDrepIcon style={{ width: 22, height: 22 }} />
+            <TitleCard display="flex" alignItems="center">
+              {t("drep.lifetimeVotes")}
+            </TitleCard>
+          </Box>
+          {data?.data.votes?.total > 0 && (
+            <Box display="flex" alignItems="center" gap={1}>
+              <Typography variant="body2" color="secondary.light">
+                Total Votes:
+              </Typography>
+              <Typography variant="body2" fontWeight={700} color="secondary.main">
+                {data.data.votes.total.toLocaleString()}
+              </Typography>
+            </Box>
+          )}
         </Box>
-        
-        <VoteRate votes={data?.data.votes} loading={loading} />
+        <DrepVoteChart votes={data?.data.votes} />
       </Box>
-      
+
       {/* Drep Details Tabs */}
       <DrepDetailsTabs drepId={drepId} />
-      
-      {/* <DrepAccordion /> */}
+
       <PluginSlotRenderer slot="drep-detail" context={{ data: data?.data, network, apiConnector }} />
     </StyledContainer>
   );
@@ -162,21 +162,35 @@ const DrepDetail = () => {
 
 export default DrepDetail;
 
-// Helper function to create overview cards
+// ─── Overview cards ──────────────────────────────────────────────────────────
+
 const getDrepOverviewCards = (
-  data: ApiReturnType<Drep> | null, 
-  theme: any, 
-  openModal: boolean, 
+  data: ApiReturnType<Drep> | null,
+  theme: any,
+  openModal: boolean,
   setOpenModal: (open: boolean) => void
 ) => [
   {
+    icon: DrepIdIcon,
+    sizeIcon: 26,
+    title: <TitleCard display="flex" alignItems="center">DRep ID</TitleCard>,
+    value: (
+      <ValueCard>
+        <DynamicEllipsisText
+          value={data?.data.drepId || ""}
+          sxFirstPart={{ maxWidth: "160px" }}
+          postfix={8}
+          isNoLimitPixel={true}
+          isCopy={true}
+          isTooltip={true}
+        />
+      </ValueCard>
+    )
+  },
+  {
     icon: DescriptonDrepIcon,
     sizeIcon: 26,
-    title: (
-      <TitleCard display={"flex"} alignItems="center">
-        {t("drep.Anchor")}
-      </TitleCard>
-    ),
+    title: <TitleCard display="flex" alignItems="center">{t("drep.Anchor")}</TitleCard>,
     value: (
       <ValueCard>
         <Box sx={{ maxWidth: 200, wordBreak: "break-all", whiteSpace: "normal" }}>
@@ -191,17 +205,14 @@ const getDrepOverviewCards = (
         </Box>
         {data?.data.anchorUrl && (
           <Box
-            position={"relative"}
-            component={"span"}
+            position="relative"
+            component="span"
             onClick={() => setOpenModal(true)}
             color={`${theme.palette.primary.main} !important`}
           >
             <DynamicEllipsisText
               value={data?.data.anchorUrl || ""}
-              sxFirstPart={{
-                maxWidth: "calc(100% - 60px)",
-                minWidth: 16
-              }}
+              sxFirstPart={{ maxWidth: "calc(100% - 60px)", minWidth: 16 }}
               customTruncateFold={[4, 4]}
               postfix={5}
               sxLastPart={{ direction: "inherit" }}
@@ -215,7 +226,11 @@ const getDrepOverviewCards = (
           open={openModal}
           onClose={() => setOpenModal(false)}
           anchorUrl={
-            data?.data.anchorUrl ? (data?.data.anchorUrl.includes("http") ? data?.data.anchorUrl : `//${data.data.anchorUrl}`) : ""
+            data?.data.anchorUrl
+              ? data?.data.anchorUrl.includes("http")
+                ? data?.data.anchorUrl
+                : `//${data.data.anchorUrl}`
+              : ""
           }
         />
       </ValueCard>
@@ -224,11 +239,7 @@ const getDrepOverviewCards = (
   {
     icon: CreateDrepIcon,
     sizeIcon: 26,
-    title: (
-      <TitleCard display={"flex"} alignItems="center">
-        {t("createdAt")}
-      </TitleCard>
-    ),
+    title: <TitleCard display="flex" alignItems="center">{t("createdAt")}</TitleCard>,
     value: (
       <DatetimeTypeTooltip>
         <ValueCard>{formatDateTimeLocal(data?.data.createdAt || "")}</ValueCard>
@@ -236,120 +247,326 @@ const getDrepOverviewCards = (
     )
   },
   {
-    icon: ActiveVoteIcon,
+    icon: ActiveStakeDrepIcon,
     sizeIcon: 26,
-    title: (
-      <TitleCard display={"flex"} alignItems="center">
-        {t("drep.activeVoteStake")}
-      </TitleCard>
-    ),
+    title: <TitleCard display="flex" alignItems="center">{t("drep.activeVoteStake")}</TitleCard>,
     value: (
       <ValueCard>
-        {data?.data.activeVoteStake !== null ? `${formatADAFull(data?.data.activeVoteStake || 0)} ADA` : t("common.N/A")}{" "}
+        {data?.data.activeVoteStake != null
+          ? `${formatADA(data?.data.activeVoteStake || 0)} ADA`
+          : t("common.N/A")}
       </ValueCard>
-    )
-  },
-  {
-    icon: LiveStakeDrepIcon,
-    sizeIcon: 26,
-    title: (
-      <TitleCard display={"flex"} alignItems="center">
-        {t("drep.liveStake")}
-      </TitleCard>
-    ),
-    value: (
-      <ValueCard>{data?.data.activeVoteStake !== null ? `${formatADA(data?.data.activeVoteStake || 0)} ADA` : t("common.N/A")} </ValueCard>
     )
   },
   {
     icon: DelegatorsDrepIcon,
     sizeIcon: 26,
-    title: (
-      <TitleCard display={"flex"} alignItems="center">
-        {t("glossary.delegators")}
-      </TitleCard>
-    ),
-    value: <ValueCard>{data?.data.delegators} </ValueCard>
+    title: <TitleCard display="flex" alignItems="center">{t("glossary.delegators")}</TitleCard>,
+    value: (
+      <ValueCard>
+        {data?.data.delegators != null ? numberWithCommas(data.data.delegators.toString(), 0) : "—"}
+      </ValueCard>
+    )
   },
-  ...(data?.data.govParticipationRate !== undefined ? [{
-    icon: ActiveVoteIcon,
-    sizeIcon: 26,
-    title: (
-      <TitleCard display={"flex"} alignItems="center">
-        {"Governance Participation Rate"}
-      </TitleCard>
-    ),
-    value: (
-      <ValueCard>{formatPercent(data.data.govParticipationRate)}</ValueCard>
-    )
-  }] : []),
-  ...(data?.data.votingPower !== undefined ? [{
-    icon: LiveStakeDrepIcon,
-    sizeIcon: 26,
-    title: (
-      <TitleCard display={"flex"} alignItems="center">
-        {"Voting Power"}
-      </TitleCard>
-    ),
-    value: (
-      <ValueCard>{`${formatADAFull(data.data.votingPower)} ADA`}</ValueCard>
-    )
-  }] : []),
-  ...(data?.data.updatedAt ? [{
-    icon: CreateDrepIcon,
-    sizeIcon: 26,
-    title: (
-      <TitleCard display={"flex"} alignItems="center">
-        {"Updated At"}
-      </TitleCard>
-    ),
-    value: (
-      <DatetimeTypeTooltip>
-        <ValueCard>{formatDateTimeLocal(data.data.updatedAt)}</ValueCard>
-      </DatetimeTypeTooltip>
-    )
-  }] : [])
+  ...(data?.data.govParticipationRate !== undefined && data.data.govParticipationRate > 0
+    ? [
+        {
+          icon: GovernanceIcon,
+          sizeIcon: 26,
+          title: <TitleCard display="flex" alignItems="center">Governance Participation</TitleCard>,
+          value: <ValueCard>{formatPercent(data.data.govParticipationRate)}</ValueCard>
+        }
+      ]
+    : []),
+  ...(data?.data.votingPower !== undefined
+    ? [
+        {
+          icon: VotingPowerIcon,
+          sizeIcon: 26,
+          title: <TitleCard display="flex" alignItems="center">Voting Power</TitleCard>,
+          value: <ValueCard>{`${formatADA(data.data.votingPower)} ADA`}</ValueCard>
+        }
+      ]
+    : []),
+  ...(data?.data.updatedAt && data.data.updatedAt !== data.data.createdAt
+    ? [
+        {
+          icon: CreateDrepIcon,
+          sizeIcon: 26,
+          title: <TitleCard display="flex" alignItems="center">Last Updated</TitleCard>,
+          value: (
+            <DatetimeTypeTooltip>
+              <ValueCard>{formatDateTimeLocal(data.data.updatedAt)}</ValueCard>
+            </DatetimeTypeTooltip>
+          )
+        }
+      ]
+    : [])
 ];
 
-// Drep Details Tabs Component
+// ─── Vote Distribution Chart ──────────────────────────────────────────────────
+
+const DrepVoteChart = ({
+  votes
+}: {
+  votes?: { yes: number; no: number; abstain: number; total: number };
+}) => {
+  const theme = useTheme();
+
+  if (!votes || votes.total === 0) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" py={5}>
+        <Typography color="secondary.light">No votes recorded yet</Typography>
+      </Box>
+    );
+  }
+
+  const { yes, no, abstain, total } = votes;
+  const yesPercent = ((yes / total) * 100).toFixed(1);
+  const noPercent = ((no / total) * 100).toFixed(1);
+  const abstainPercent = ((abstain / total) * 100).toFixed(1);
+
+  const yesColor = theme.palette.success[700];
+  const noColor = theme.isDark ? theme.palette.error[700] : theme.palette.error[700];
+  const abstainColor = theme.palette.warning[700];
+
+  const chartOptions: Highcharts.Options = {
+    chart: {
+      type: "pie",
+      backgroundColor: "transparent",
+      height: 260,
+      margin: [0, 0, 0, 0],
+      spacing: [0, 0, 0, 0]
+    },
+    title: { text: undefined },
+    tooltip: {
+      pointFormat: "<b>{point.y}</b> votes ({point.percentage:.1f}%)",
+      backgroundColor: theme.palette.secondary[0],
+      borderColor: theme.palette.primary[200],
+      style: { color: theme.palette.secondary.main }
+    },
+    plotOptions: {
+      pie: {
+        innerSize: "65%",
+        dataLabels: { enabled: false },
+        showInLegend: false,
+        borderWidth: 2,
+        borderColor: theme.palette.background.paper
+      }
+    },
+    series: [
+      {
+        type: "pie",
+        name: "Votes",
+        data: [
+          { name: "Yes", y: yes, color: yesColor },
+          { name: "Abstain", y: abstain, color: abstainColor },
+          { name: "No", y: no, color: noColor }
+        ].filter((item) => item.y > 0)
+      }
+    ],
+    credits: { enabled: false }
+  };
+
+  return (
+    <Box
+      display="flex"
+      flexDirection={{ xs: "column", md: "row" }}
+      alignItems={{ xs: "center", md: "flex-start" }}
+      gap={4}
+    >
+      {/* Donut chart with center overlay */}
+      <Box
+        position="relative"
+        flexShrink={0}
+        sx={{ width: { xs: "100%", md: 260 }, maxWidth: 300 }}
+      >
+        <HighchartsReact highcharts={Highcharts} options={chartOptions} />
+        <Box
+          position="absolute"
+          top={0}
+          left={0}
+          right={0}
+          bottom={0}
+          display="flex"
+          flexDirection="column"
+          alignItems="center"
+          justifyContent="center"
+          sx={{ pointerEvents: "none" }}
+        >
+          <Typography variant="h5" fontWeight={700} color="secondary.main">
+            {total.toLocaleString()}
+          </Typography>
+          <Typography variant="caption" color="secondary.light" sx={{ mt: 0.25 }}>
+            Total Votes
+          </Typography>
+        </Box>
+      </Box>
+
+      {/* Vote stats */}
+      <Box
+        flex={1}
+        display="flex"
+        flexDirection="column"
+        justifyContent="center"
+        gap={2.5}
+        width="100%"
+        minWidth={0}
+      >
+        <VoteStatBar
+          icon={<VotesYesIcon style={{ width: 18, height: 18 }} />}
+          label={t("common.yes")}
+          count={yes}
+          percent={yesPercent}
+          color={yesColor}
+        />
+        <VoteStatBar
+          icon={<VotesNoIcon style={{ width: 18, height: 18 }} />}
+          label={t("common.no")}
+          count={no}
+          percent={noPercent}
+          color={noColor}
+        />
+        <VoteStatBar
+          icon={<VotesAbstainIcon style={{ width: 18, height: 18 }} />}
+          label={t("common.abstain")}
+          count={abstain}
+          percent={abstainPercent}
+          color={abstainColor}
+        />
+      </Box>
+    </Box>
+  );
+};
+
+const VoteStatBar = ({
+  icon,
+  label,
+  count,
+  percent,
+  color
+}: {
+  icon: React.ReactNode;
+  label: string;
+  count: number;
+  percent: string;
+  color: string;
+}) => (
+  <Box>
+    <Box display="flex" alignItems="center" justifyContent="space-between" mb={0.75}>
+      <Box display="flex" alignItems="center" gap={1}>
+        {icon}
+        <Typography variant="body2" fontWeight={500} color="secondary.main" textTransform="capitalize">
+          {label}
+        </Typography>
+      </Box>
+      <Box display="flex" alignItems="center" gap={0.75}>
+        <Typography variant="body2" color="secondary.main" fontWeight={600}>
+          {count.toLocaleString()}
+        </Typography>
+        <Typography variant="body2" color="secondary.light">
+          ({percent}%)
+        </Typography>
+      </Box>
+    </Box>
+    <LinearProgress
+      variant="determinate"
+      value={parseFloat(percent)}
+      sx={{
+        height: 8,
+        borderRadius: 4,
+        bgcolor: (theme) => alpha(color, theme.isDark ? 0.2 : 0.15),
+        "& .MuiLinearProgress-bar": {
+          bgcolor: color,
+          borderRadius: 4
+        }
+      }}
+    />
+  </Box>
+);
+
+// ─── Vote badge ───────────────────────────────────────────────────────────────
+
+const VoteBadge = ({ vote }: { vote: "yes" | "no" | "abstain" }) => {
+  const theme = useTheme();
+
+  const config = {
+    yes: {
+      icon: <VotesYesIcon style={{ width: 14, height: 14 }} />,
+      bg: theme.palette.success[100],
+      color: theme.palette.success[700]
+    },
+    no: {
+      icon: <VotesNoIcon style={{ width: 14, height: 14 }} />,
+      bg: theme.palette.error[100],
+      color: theme.palette.error[700]
+    },
+    abstain: {
+      icon: <VotesAbstainIcon style={{ width: 14, height: 14 }} />,
+      bg: theme.palette.warning[100],
+      color: theme.palette.warning[700]
+    }
+  };
+
+  const { icon, bg, color } = config[vote];
+
+  return (
+    <Box
+      sx={{
+        display: "inline-flex",
+        alignItems: "center",
+        gap: 0.75,
+        px: 1.5,
+        py: 0.5,
+        borderRadius: 1,
+        bgcolor: bg,
+        color,
+        width: "fit-content"
+      }}
+    >
+      {icon}
+      <Typography variant="body2" textTransform="capitalize" fontWeight={500} color="inherit">
+        {vote}
+      </Typography>
+    </Box>
+  );
+};
+
+// ─── Tabs container ───────────────────────────────────────────────────────────
+
 const DrepDetailsTabs = ({ drepId }: { drepId: string }) => {
   const [tabValue, setTabValue] = useState(0);
   const theme = useTheme();
-
-  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
-    setTabValue(newValue);
-  };
 
   return (
     <Box mt={3} bgcolor={theme.palette.background.paper} borderRadius={2}>
       <Tabs
         value={tabValue}
-        onChange={handleTabChange}
-        aria-label="drep details tabs"
+        onChange={(_e, newValue) => setTabValue(newValue)}
         sx={{
           borderBottom: 1,
-          borderColor: 'divider',
-          '& .MuiTabs-indicator': {
-            backgroundColor: theme.palette.primary.main,
-          },
+          borderColor: (theme) =>
+            theme.isDark ? alpha(theme.palette.secondary.light, 0.1) : theme.palette.primary[200] || "#e0e0e0",
+          px: 2,
+          "& .MuiTabs-indicator": { backgroundColor: theme.palette.primary.main }
         }}
       >
-        <Tab 
+        <Tab
           label={t("glossary.delegators")}
           sx={{
             color: theme.palette.secondary.light,
-            '&.Mui-selected': {
-              color: theme.palette.primary.main
-            }
+            textTransform: "none",
+            fontWeight: 500,
+            "&.Mui-selected": { color: theme.palette.primary.main }
           }}
         />
-        <Tab 
+        <Tab
           label={t("drep.votes")}
           sx={{
             color: theme.palette.secondary.light,
-            '&.Mui-selected': {
-              color: theme.palette.primary.main
-            }
+            textTransform: "none",
+            fontWeight: 500,
+            "&.Mui-selected": { color: theme.palette.primary.main }
           }}
         />
       </Tabs>
@@ -360,337 +577,150 @@ const DrepDetailsTabs = ({ drepId }: { drepId: string }) => {
   );
 };
 
-// Delegates Tab Component
+// ─── Delegates tab ────────────────────────────────────────────────────────────
+
 const DrepDelegatesTab = ({ drepId }: { drepId: string }) => {
   const [delegatesData, setDelegatesData] = useState<ApiReturnType<DrepDelegates[]>>(null);
-  const [loading, setLoading] = useState(false);
-  const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const navigate = useNavigate();
   const apiConnector = ApiConnector.getApiConnector();
 
-  const fetchDelegates = async (page: number = 0, pageSize: number = 10) => {
-    setLoading(true);
-    try {
-      const result = await apiConnector.getDrepDelegates(drepId, { 
-        page: page + 1, 
-        size: pageSize 
-      });
-      setDelegatesData(result);
-    } catch {
-      // ignore
-    }
-    setLoading(false);
-  };
-
   useEffect(() => {
-    fetchDelegates(page, rowsPerPage);
-  }, [page, rowsPerPage, drepId]);
+    setLoading(true);
+    apiConnector
+      .getDrepDelegates(drepId, { page, size: pageSize })
+      .then((result) => setDelegatesData(result))
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, [page, pageSize, drepId]);
 
-  const handleDelegateClick = (address: string) => {
-    navigate(`/address/${address}`);
-  };
-
-  const handlePageChange = (event: unknown, newPage: number) => {
-    setPage(newPage);
-  };
-
-  const handleRowsPerPageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
-  };
+  const columns: Column<DrepDelegates>[] = [
+    {
+      title: t("common.address"),
+      key: "address",
+      minWidth: "280px",
+      render: (r) => (
+        <DynamicEllipsisText
+          value={r.address}
+          sxFirstPart={{ maxWidth: "220px" }}
+          postfix={8}
+          isTooltip
+        />
+      )
+    },
+    {
+      title: (
+        <Box component="span">
+          {t("common.amountADA")} (<ADAicon />)
+        </Box>
+      ),
+      key: "amount",
+      minWidth: "150px",
+      render: (r) => (
+        <Box component="span" sx={{ whiteSpace: "nowrap" }}>
+          {formatADA(r.amount)} <ADAicon />
+        </Box>
+      )
+    }
+  ];
 
   return (
-    <Box p={3}>
-      <TableContainer component={Paper} elevation={0}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>{t("common.address")}</TableCell>
-              <TableCell align="right">{t("common.amountADA")}</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {loading ? (
-              Array.from({ length: rowsPerPage }).map((_, index) => (
-                <TableRow key={index}>
-                  <TableCell><CommonSkeleton variant="text" width="200px" /></TableCell>
-                  <TableCell><CommonSkeleton variant="text" width="100px" /></TableCell>
-                </TableRow>
-              ))
-            ) : (
-              delegatesData?.data?.map((delegate, index) => (
-                <TableRow 
-                  key={index}
-                  hover
-                  sx={{ cursor: 'pointer' }}
-                  onClick={() => handleDelegateClick(delegate.address)}
-                >
-                  <TableCell>
-                    <DynamicEllipsisText
-                      value={delegate.address}
-                      sxFirstPart={{ maxWidth: "200px" }}
-                      postfix={8}
-                      isTooltip
-                    />
-                  </TableCell>
-                  <TableCell align="right">
-                    {formatADA(delegate.amount)} ADA
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </TableContainer>
-      <TablePagination
-        rowsPerPageOptions={[5, 10, 25]}
-        component="div"
-        count={delegatesData?.total || 0}
-        rowsPerPage={rowsPerPage}
-        page={page}
-        onPageChange={handlePageChange}
-        onRowsPerPageChange={handleRowsPerPageChange}
+    <Box p={2}>
+      <Table
+        data={delegatesData?.data}
+        loading={loading}
+        columns={columns}
+        total={{ count: delegatesData?.total || 0, title: t("glossary.delegators") }}
+        onClickRow={(_e, r) => navigate(`/address/${r.address}`)}
+        rowKey="address"
+        tableWrapperProps={{ sx: { overflowX: "auto" } }}
+        pagination={{
+          page,
+          size: pageSize,
+          total: delegatesData?.total || 0,
+          onChange: (newPage, newSize) => {
+            setPage(newPage);
+            setPageSize(newSize);
+          }
+        }}
       />
     </Box>
   );
 };
 
-// Votes Tab Component
+// ─── Votes tab ────────────────────────────────────────────────────────────────
+
 const DrepVotesTab = ({ drepId }: { drepId: string }) => {
   const [votesData, setVotesData] = useState<ApiReturnType<GovernanceActionListItem[]>>(null);
-  const [loading, setLoading] = useState(false);
-  const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
-  const theme = useTheme();
+  const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const navigate = useNavigate();
   const apiConnector = ApiConnector.getApiConnector();
 
-  const fetchVotes = async (page: number = 0, pageSize: number = 10) => {
-    setLoading(true);
-    try {
-      const result = await apiConnector.getDrepVotes(drepId, { 
-        page: page + 1, 
-        size: pageSize 
-      });
-      setVotesData(result);
-    } catch {
-      // ignore
-    }
-    setLoading(false);
-  };
-
   useEffect(() => {
-    fetchVotes(page, rowsPerPage);
-  }, [page, rowsPerPage, drepId]);
+    setLoading(true);
+    apiConnector
+      .getDrepVotes(drepId, { page, size: pageSize })
+      .then((result) => setVotesData(result))
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, [page, pageSize, drepId]);
 
-  const handleVoteClick = (txHash: string, index: number) => {
-    navigate(`/governance-action/${txHash}/${index}`);
-  };
-
-  const handlePageChange = (event: unknown, newPage: number) => {
-    setPage(newPage);
-  };
-
-  const handleRowsPerPageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
-  };
+  const columns: Column<GovernanceActionListItem>[] = [
+    {
+      title: t("glossary.txHash"),
+      key: "txHash",
+      minWidth: "240px",
+      render: (r) => (
+        <DynamicEllipsisText
+          value={r.txHash}
+          sxFirstPart={{ maxWidth: "180px" }}
+          postfix={8}
+          isTooltip
+        />
+      )
+    },
+    {
+      title: t("common.index"),
+      key: "index",
+      minWidth: "80px",
+      render: (r) => (
+        <Typography variant="body2" color="secondary.main">
+          {r.index}
+        </Typography>
+      )
+    },
+    {
+      title: t("common.vote"),
+      key: "vote",
+      minWidth: "130px",
+      render: (r) => (r.vote ? <VoteBadge vote={r.vote} /> : <Box color="secondary.light">—</Box>)
+    }
+  ];
 
   return (
-    <Box p={3}>
-      <TableContainer component={Paper} elevation={0}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>{t("glossary.txHash")}</TableCell>
-              <TableCell align="center">{t("common.index")}</TableCell>
-              <TableCell align="center">{t("common.vote")}</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {loading ? (
-              Array.from({ length: rowsPerPage }).map((_, index) => (
-                <TableRow key={index}>
-                  <TableCell><CommonSkeleton variant="text" width="200px" /></TableCell>
-                  <TableCell><CommonSkeleton variant="text" width="50px" /></TableCell>
-                  <TableCell><CommonSkeleton variant="text" width="80px" /></TableCell>
-                </TableRow>
-              ))
-            ) : (
-              votesData?.data?.map((vote, index) => (
-                <TableRow 
-                  key={index}
-                  hover
-                  sx={{ cursor: 'pointer' }}
-                  onClick={() => handleVoteClick(vote.txHash, vote.index)}
-                >
-                  <TableCell>
-                    <DynamicEllipsisText
-                      value={vote.txHash}
-                      sxFirstPart={{ maxWidth: "200px" }}
-                      postfix={8}
-                      isTooltip
-                    />
-                  </TableCell>
-                  <TableCell align="center">
-                    {vote.index}
-                  </TableCell>
-                  <TableCell align="center">
-                    <Box
-                      sx={{
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: 1,
-                        px: 2,
-                        py: 0.5,
-                        borderRadius: 1,
-                        backgroundColor: 
-                          vote.vote === 'yes' ? theme.palette.success[100] :
-                          vote.vote === 'no' ? theme.palette.error[100] :
-                          theme.palette.warning[100],
-                        color:
-                          vote.vote === 'yes' ? theme.palette.success[700] :
-                          vote.vote === 'no' ? theme.palette.error[700] :
-                          theme.palette.warning[700]
-                      }}
-                    >
-                      {vote.vote === 'yes' && <VotesYesIcon />}
-                      {vote.vote === 'no' && <VotesNoIcon />}
-                      {vote.vote === 'abstain' && <VotesAbstainIcon />}
-                      <Typography variant="body2" textTransform="capitalize">
-                        {vote.vote}
-                      </Typography>
-                    </Box>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </TableContainer>
-      <TablePagination
-        rowsPerPageOptions={[5, 10, 25]}
-        component="div"
-        count={votesData?.total || 0}
-        rowsPerPage={rowsPerPage}
-        page={page}
-        onPageChange={handlePageChange}
-        onRowsPerPageChange={handleRowsPerPageChange}
+    <Box p={2}>
+      <Table
+        data={votesData?.data}
+        loading={loading}
+        columns={columns}
+        total={{ count: votesData?.total || 0, title: t("drep.votes") }}
+        onClickRow={(_e, r) => navigate(`/governance-action/${r.txHash}/${r.index}`)}
+        rowKey="txHash"
+        tableWrapperProps={{ sx: { overflowX: "auto" } }}
+        pagination={{
+          page,
+          size: pageSize,
+          total: votesData?.total || 0,
+          onChange: (newPage, newSize) => {
+            setPage(newPage);
+            setPageSize(newSize);
+          }
+        }}
       />
     </Box>
   );
 };
-
-
-
-export const VoteRate = ({
-  votes,
-  loading
-}: {
-  votes: {yes: number; no: number; abstain: number; total: number}
-  loading: boolean;
-}) => {
-  const theme = useTheme();
-
-  if (loading) {
-    return (
-      <Box borderRadius={4} overflow="hidden" height={150}>
-        <CommonSkeleton variant="rectangular" height={250} width="100%" />
-      </Box>
-    );
-  }
-
-  return (
-    <Box display="flex" alignItems="end" justifyContent="center" gap={4} flexWrap={"wrap"} width="100%" minHeight={150}>
-      <VoteBar
-        percentage={votes.total > 0 ? formatPercent((votes.yes) / votes.total) : 0}
-        color={theme.palette.success[700]}
-        numberVote={votes.yes}
-        icon={<VotesYesIcon />}
-        label={t("common.yes")}
-        showDataTooltip={true}
-      />
-      <VoteBar
-        percentage={votes.total > 0 ? formatPercent((votes.abstain) / votes.total) : 0}
-        color={theme.palette.warning[700]}
-        numberVote={votes.abstain}
-        icon={<VotesAbstainIcon />}
-        label={t("common.abstain")}
-        showDataTooltip={true}
-      />
-      <VoteBar
-        percentage={
-          votes.total > 0
-            ? formatPercent(
-                (100 -
-                  (+formatPercent(votes.yes / votes.total).split("%")[0] +
-                    +formatPercent(votes.abstain / votes.total).split("%")[0])) /
-                  100
-              )
-            : 0
-        }
-        color={theme.isDark ? theme.palette.error[100] : theme.palette.error[700]}
-        numberVote={votes.no}
-        icon={<VotesNoIcon />}
-        label={t("common.no")}
-        showDataTooltip={true}
-      />
-    </Box>
-  );
-};
-
-const VoteBar = ({
-  percentage,
-  color,
-  icon,
-  label,
-  numberVote,
-  showDataTooltip
-}: {
-  percentage: string | number;
-  numberVote: number;
-  color: string;
-  icon?: JSX.Element;
-  label: string;
-  showDataTooltip: boolean;
-}) => (
-  <Box display="flex" flexDirection="column" alignItems="center">
-    <Typography fontSize="10px" fontWeight={400}>
-      {!percentage ? "0%" : percentage}
-    </Typography>
-    <LightTooltip
-      title={
-        <Box height="39px" display="flex" alignItems="center" gap="8px">
-          {icon}
-          <Typography fontSize="12px" fontWeight={600}>
-            {showDataTooltip ? numberVote : t("common.na")} ({percentage})
-          </Typography>
-        </Box>
-      }
-      placement="top"
-    >
-      <Box
-        sx={{ background: color, borderRadius: "4px" }}
-        height={`${
-          +(percentage.toString()?.split("%")[0] || 0) === 0 ? 0.5 : +percentage.toString().split("%")[0] + 1
-        }px`}
-        width="80px"
-      />
-    </LightTooltip>
-    <Typography fontSize="14px" fontWeight={400} pt="4px" textTransform="uppercase">
-      {label}
-    </Typography>
-  </Box>
-);
-
-const LightTooltip = styled(({ className, ...props }: TooltipProps) => (
-  <Tooltip {...props} classes={{ popper: className }} />
-))(({ theme }) => ({
-  [`& .${tooltipClasses.tooltip}`]: {
-    backgroundColor: theme.palette.primary[100],
-    color: "rgba(0, 0, 0, 0.87)",
-    fontSize: 11,
-    border: `1px solid ${theme.palette.primary[200]}`
-  }
-}));

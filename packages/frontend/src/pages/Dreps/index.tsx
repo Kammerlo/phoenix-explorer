@@ -1,20 +1,25 @@
 import { useEffect } from "react";
+import { Box, Typography } from "@mui/material";
 
-import OverViews from "src/components/Dreps/DrepsOverview";
-import { FF_GLOBAL_IS_CONWAY_ERA } from "src/commons/utils/constants";
 import DrepsList from "src/components/Dreps/DrepsList";
 
-import NotFound from "../NotFound";
 import { StyledContainer } from "./styles";
 
 const Dreps = () => {
   useEffect(() => {
-    document.title = `Delegated Representative | Cardano Blockchain Explorer`;
+    document.title = `Delegated Representatives | Cardano Blockchain Explorer`;
   }, []);
 
   return (
     <StyledContainer>
-      {/* <OverViews /> */}
+      <Box mt={3} mb={1}>
+        <Typography variant="h5" fontWeight={700} component="h1">
+          Delegated Representatives
+        </Typography>
+        <Typography variant="body2" color="secondary.light" mt={0.5}>
+          Registered DReps participating in Cardano on-chain governance
+        </Typography>
+      </Box>
       <DrepsList />
     </StyledContainer>
   );
