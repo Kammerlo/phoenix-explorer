@@ -9,6 +9,7 @@ import { addressController } from "./controller/address-controller";
 import { poolController } from "./controller/pool-controller";
 import { protocolParamsController } from "./controller/protocol-params-controller";
 import { dashboardController } from "./controller/dashboard-controller";
+import { searchController } from "./controller/search-controller";
 
 const app = express();
 
@@ -24,5 +25,6 @@ app.use("/api/addresses", addressController);
 app.use("/api/pools", poolController);
 app.use("/api/protocol-params", protocolParamsController);
 app.use("/api/dashboard", dashboardController);
+app.use("/api/search", searchController);
 
 export default app;

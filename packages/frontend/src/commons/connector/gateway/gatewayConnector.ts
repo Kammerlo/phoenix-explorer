@@ -13,6 +13,7 @@ import { GovActionVote, GovernanceActionDetail, GovernanceActionListItem, Govern
 import { AddressDetail, StakeAddressDetail } from "@shared/dtos/address.dto";
 import { PoolDetail, PoolOverview } from "@shared/dtos/pool.dto";
 import { Drep, DrepDelegates } from "@shared/dtos/drep.dto";
+import { SearchResult } from "@shared/dtos/seach.dto";
 
 export class GatewayConnector implements ApiConnector {
   baseUrl: string;
@@ -206,6 +207,14 @@ export class GatewayConnector implements ApiConnector {
     const response = await this.client.get<ApiReturnType<GovernanceActionListItem[]>>(`${this.baseUrl}/governance/dreps/${drepId}/votes`, {
       params: pageInfo
     });
+    return response.data;
+  }
+
+  async search(query: string): Promise<ApiReturnType<SearchResult[]>> {
+    const response = await this.client.get<ApiReturnType<SearchResult[]>>(
+      `${this.baseUrl}/search`,
+      { params: { q: query } }
+    );
     return response.data;
   }
 

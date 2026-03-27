@@ -45,6 +45,7 @@ import { GovActionVote, GovernanceActionDetail, GovernanceActionListItem } from 
 import { AddressDetail, StakeAddressDetail } from "@shared/dtos/address.dto";
 import { PoolDetail, PoolOverview } from "@shared/dtos/pool.dto";
 import { Drep, DrepDelegates } from "@shared/dtos/drep.dto";
+import { SearchResult } from "@shared/dtos/seach.dto";
 import { addressBalanceDtoToWalletAddress } from "./mapper/AddressBalanceDtoToWalletAddress";
 
 /**
@@ -725,6 +726,121 @@ export class YaciConnector implements ApiConnector {
     } catch (e: any) {
       return { data: [], error: e.message, lastUpdated: Date.now() };
     }
+  }
+
+  async search(query: string): Promise<ApiReturnType<SearchResult[]>> {
+    const q = query.trim();
+    if (!q || q.length < 2) return { data: [], lastUpdated: Date.now(), total: 0 };
+
+    const probe = async <T>(fn: () => Promise<T>): Promise<T | null> => {
+      try { return await fn(); } catch { return null; }
+    };
+
+    const results: SearchResult[] = [];
+
+    // Governance action: {64hex}#{index}
+    const govMatch = /^([0-9a-f]{64})#(\d+)$/i.exec(q);
+    if (govMatch) {
+      const [, txHash, indexStr] = govMatch;
+      const [govResult, txResult] = await Promise.all([
+        probe(() => this.client.get(`${this.baseUrl}/governance/proposals/${txHash}/${indexStr}`)),
+        probe(() => this.client.get(`${this.baseUrl}/txs/${txHash}`)),
+      ]);
+      if (govResult) results.push({ type: "gov_action", id: txHash, extraId: indexStr });
+      else if (txResult) results.push({ type: "transaction", id: txHash });
+      return { data: results, lastUpdated: Date.now(), total: results.length };
+    }
+
+    // 64-char hex: transaction hash OR block hash
+    if (/^[0-9a-f]{64}$/i.test(q)) {
+      const [txResult, blockResult] = await Promise.all([
+        probe(() => this.client.get<any>(`${this.baseUrl}/txs/${q}`)),
+        probe(() => this.client.get<BlockDto>(`${this.baseUrl}/blocks/${q}`)),
+      ]);
+      if (txResult) results.push({ type: "transaction", id: q });
+      if (blockResult) results.push({ type: "block", id: q, label: blockResult.data?.number != null ? String(blockResult.data.number) : undefined });
+      return { data: results, lastUpdated: Date.now(), total: results.length };
+    }
+
+    // 56-char hex: policy ID
+    if (/^[0-9a-f]{56}$/i.test(q)) {
+      const policyResult = await probe(() => this.client.get<{ assetList?: unknown[] }>(`${this.baseUrl}/assets/policy/${q}`, { params: { page: 0, size: 1 } }));
+      if (policyResult?.data?.assetList && policyResult.data.assetList.length > 0) {
+        results.push({ type: "policy", id: q });
+      }
+      return { data: results, lastUpdated: Date.now(), total: results.length };
+    }
+
+    // addr1... payment address — format-valid bech32
+    if (/^addr1[a-z0-9]+$/i.test(q)) {
+      results.push({ type: "address", id: q });
+      return { data: results, lastUpdated: Date.now(), total: results.length };
+    }
+
+    // stake1... stake address — format-valid bech32
+    if (/^stake1[a-z0-9]+$/i.test(q)) {
+      results.push({ type: "stake", id: q });
+      return { data: results, lastUpdated: Date.now(), total: results.length };
+    }
+
+    // pool1... stake pool
+    if (/^pool1[a-z0-9]{50,}$/i.test(q)) {
+      const poolResult = await probe(() => this.client.get<any>(`${this.baseUrl}/pools/${q}`));
+      if (poolResult) {
+        const label: string | undefined = poolResult.data?.metadata?.ticker ?? poolResult.data?.metadata?.name ?? undefined;
+        results.push({ type: "pool", id: q, label });
+      }
+      return { data: results, lastUpdated: Date.now(), total: results.length };
+    }
+
+    // drep1... DRep
+    if (/^drep1[a-z0-9]+$/i.test(q)) {
+      const drepResult = await probe(() => this.client.get(`${this.baseUrl}/governance/dreps/${q}`));
+      if (drepResult) results.push({ type: "drep", id: q });
+      return { data: results, lastUpdated: Date.now(), total: results.length };
+    }
+
+    // asset1... token fingerprint
+    if (/^asset1[a-z0-9]+$/i.test(q)) {
+      const assetResult = await probe(() => this.client.get<YaciAsset>(`${this.baseUrl}/assets/${q}`));
+      if (assetResult) {
+        const label: string | undefined = assetResult.data?.metadata?.ticker ?? (assetResult.data?.onchainMetadata?.name as string | undefined) ?? undefined;
+        results.push({ type: "token", id: q, label });
+      }
+      return { data: results, lastUpdated: Date.now(), total: results.length };
+    }
+
+    // Pure number: epoch or block
+    if (/^\d+$/.test(q)) {
+      const n = Number(q);
+      const [epochResult, blockResult] = await Promise.all([
+        probe(() => this.client.get<any>(`${this.baseUrl}/epochs/${n}`)),
+        probe(() => this.client.get<BlockDto>(`${this.baseUrl}/blocks/${n}`)),
+      ]);
+      if (epochResult) results.push({ type: "epoch", id: q });
+      if (blockResult) results.push({ type: "block", id: q, label: String(n) });
+      return { data: results, lastUpdated: Date.now(), total: results.length };
+    }
+
+    // Free-text: use Yaci's native asset name search
+    if (/^[a-zA-Z0-9$.\-_ ]+$/.test(q)) {
+      const tokenResult = await probe(() =>
+        this.client.get<{ assetList?: YaciAsset[] }>(
+          `${this.baseUrl}/assets`,
+          { params: { search: q, size: 5, page: 0 } }
+        )
+      );
+      for (const asset of tokenResult?.data?.assetList ?? []) {
+        const overview = yaciAssetToTokenOverview(asset);
+        const id = overview.fingerprint || asset.unit || "";
+        if (!id) continue;
+        const label = overview.displayName || overview.metadata?.ticker || q;
+        results.push({ type: "token", id, label });
+        if (results.length >= 5) break;
+      }
+    }
+
+    return { data: results, lastUpdated: Date.now(), total: results.length };
   }
 }
 

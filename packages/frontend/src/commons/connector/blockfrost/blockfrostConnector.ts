@@ -14,6 +14,7 @@ import { ITokenOverview, TokenHolder } from "@shared/dtos/token.dto";
 import { AddressDetail, StakeAddressDetail } from "@shared/dtos/address.dto";
 import { PoolDetail, PoolOverview } from "@shared/dtos/pool.dto";
 import { Drep, DrepDelegates } from "@shared/dtos/drep.dto";
+import { SearchResult } from "@shared/dtos/seach.dto";
 import {
   GovActionVote,
   GovernanceActionDetail,
@@ -668,6 +669,123 @@ export class BlockfrostConnector extends ApiConnector {
 
   async getPoolRegistrations(): Promise<ApiReturnType<Registration[]>> {
     return { data: [], error: "Not supported", lastUpdated: Date.now() };
+  }
+
+  async search(query: string): Promise<ApiReturnType<SearchResult[]>> {
+    const q = query.trim();
+    if (!q || q.length < 2) return { data: [], lastUpdated: Date.now(), total: 0 };
+
+    const probe = async <T>(fn: () => Promise<T>): Promise<T | null> => {
+      try { return await fn(); } catch { return null; }
+    };
+
+    const results: SearchResult[] = [];
+
+    // Governance action: {64hex}#{index}
+    const govMatch = /^([0-9a-f]{64})#(\d+)$/i.exec(q);
+    if (govMatch) {
+      const [, txHash, indexStr] = govMatch;
+      const [govResult, txResult] = await Promise.all([
+        probe(() => this.client.get(`/governance/proposals/${txHash}/${indexStr}`)),
+        probe(() => this.client.get(`/txs/${txHash}`)),
+      ]);
+      if (govResult) results.push({ type: "gov_action", id: txHash, extraId: indexStr });
+      else if (txResult) results.push({ type: "transaction", id: txHash });
+      return { data: results, lastUpdated: Date.now(), total: results.length };
+    }
+
+    // 64-char hex: transaction hash OR block hash
+    if (/^[0-9a-f]{64}$/i.test(q)) {
+      const [txResult, blockResult] = await Promise.all([
+        probe(() => this.client.get<any>(`/txs/${q}`)),
+        probe(() => this.client.get<any>(`/blocks/${q}`)),
+      ]);
+      if (txResult) results.push({ type: "transaction", id: q });
+      if (blockResult) results.push({ type: "block", id: q, label: blockResult.data?.height != null ? String(blockResult.data.height) : undefined });
+      return { data: results, lastUpdated: Date.now(), total: results.length };
+    }
+
+    // 56-char hex: policy ID
+    if (/^[0-9a-f]{56}$/i.test(q)) {
+      const assets = await probe(() => this.client.get<any[]>(`/assets/policy/${q}`, { params: { count: 1, page: 1 } }));
+      if (assets?.data?.length) results.push({ type: "policy", id: q });
+      return { data: results, lastUpdated: Date.now(), total: results.length };
+    }
+
+    // addr1... payment address — format-valid bech32
+    if (/^addr1[a-z0-9]+$/i.test(q)) {
+      results.push({ type: "address", id: q });
+      return { data: results, lastUpdated: Date.now(), total: results.length };
+    }
+
+    // stake1... stake address — format-valid bech32
+    if (/^stake1[a-z0-9]+$/i.test(q)) {
+      results.push({ type: "stake", id: q });
+      return { data: results, lastUpdated: Date.now(), total: results.length };
+    }
+
+    // pool1... stake pool
+    if (/^pool1[a-z0-9]{50,}$/i.test(q)) {
+      const poolResult = await probe(() => this.client.get<any>(`/pools/${q}`));
+      if (poolResult) {
+        const meta = await probe(() => this.client.get<any>(`/pools/${q}/metadata`));
+        const label: string | undefined = meta?.data?.ticker ?? meta?.data?.name ?? undefined;
+        results.push({ type: "pool", id: q, label });
+      }
+      return { data: results, lastUpdated: Date.now(), total: results.length };
+    }
+
+    // drep1... DRep
+    if (/^drep1[a-z0-9]+$/i.test(q)) {
+      const drepResult = await probe(() => this.client.get(`/governance/dreps/${q}`));
+      if (drepResult) results.push({ type: "drep", id: q });
+      return { data: results, lastUpdated: Date.now(), total: results.length };
+    }
+
+    // asset1... token fingerprint
+    if (/^asset1[a-z0-9]+$/i.test(q)) {
+      const assetResult = await probe(() => this.client.get<any>(`/assets/${q}`));
+      if (assetResult) {
+        const label: string | undefined = assetResult.data?.metadata?.name ?? undefined;
+        results.push({ type: "token", id: q, label });
+      }
+      return { data: results, lastUpdated: Date.now(), total: results.length };
+    }
+
+    // Pure number: epoch or block
+    if (/^\d+$/.test(q)) {
+      const n = Number(q);
+      const [epochResult, blockResult] = await Promise.all([
+        probe(() => this.client.get<any>(`/epochs/${n}`)),
+        probe(() => this.client.get<any>(`/blocks/${n}`)),
+      ]);
+      if (epochResult) results.push({ type: "epoch", id: q });
+      if (blockResult) results.push({ type: "block", id: q, label: String(n) });
+      return { data: results, lastUpdated: Date.now(), total: results.length };
+    }
+
+    // Free-text: scan recently-minted assets for name match (browser-safe hex decode)
+    if (/^[a-zA-Z0-9$.\-_ ]+$/.test(q)) {
+      const hexToUtf8 = (hex: string): string => {
+        try {
+          const bytes = hex.match(/.{1,2}/g)!.map(b => parseInt(b, 16));
+          return new TextDecoder("utf-8").decode(new Uint8Array(bytes));
+        } catch { return ""; }
+      };
+      for (let page = 1; page <= 3 && results.length < 5; page++) {
+        const assets = await probe(() => this.client.get<any[]>(`/assets`, { params: { count: 100, page } }));
+        if (!assets?.data?.length) break;
+        for (const asset of assets.data) {
+          if (!asset.asset || asset.asset.length <= 56) continue;
+          const decoded = hexToUtf8(asset.asset.slice(56));
+          if (!decoded || !decoded.toLowerCase().includes(q.toLowerCase())) continue;
+          results.push({ type: "token", id: asset.asset, label: decoded });
+          if (results.length >= 5) break;
+        }
+      }
+    }
+
+    return { data: results, lastUpdated: Date.now(), total: results.length };
   }
 }
 
