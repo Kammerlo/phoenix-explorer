@@ -63,7 +63,8 @@ export class GatewayConnector implements ApiConnector {
   }
   getGovernanceDetail(txHash: string, index: string): Promise<ApiReturnType<GovernanceActionDetail>> {
     return this.client.get<ApiReturnType<GovernanceActionDetail>>(`${this.baseUrl}/governance/actions/${txHash}/${index}`)
-      .then(response => response.data);
+      .then(response => response.data)
+      .catch((e: any) => ({ data: null, error: e?.message ?? "Failed to load governance action", lastUpdated: Date.now() }));
   }
   getGovernanceOverviewList(pageInfo: ParsedUrlQuery): Promise<ApiReturnType<GovernanceActionListItem[]>> {
     return this.client.get<ApiReturnType<GovernanceActionListItem[]>>(`${this.baseUrl}/governance/actions`, {

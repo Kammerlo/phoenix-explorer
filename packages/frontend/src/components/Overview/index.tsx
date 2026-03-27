@@ -1,46 +1,21 @@
-import { Box } from "@mui/material";
-import { t } from "i18next";
+import { Box, Grid, Paper, Skeleton, Typography, useTheme } from "@mui/material";
+import { MdHowToVote, MdAccountBalance, MdPeople } from "react-icons/md";
+import { IoShieldCheckmark } from "react-icons/io5";
 
-import { API } from "src/commons/utils/api";
-import useFetch from "src/commons/hooks/useFetch";
-
-import Card from "../commons/Card";
-import Description from "./styles";
-import CardOverview from "./CardOverview";
-import ChartOverview from "./ChartOverview";
 import TabOverview from "./TabOverview";
-import NoRecord from "../commons/NoRecord";
-import FetchDataErr from "../commons/FetchDataErr";
-import PreDefinedVotesChart from "./ChartPreDefined";
-import { ApiConnector } from "src/commons/connector/ApiConnector";
-import { GovernanceOverview } from "@shared/dtos/GovernanceOverview";
 
 export default function OverviewComponent() {
-  const { data, loading, error, statusError } = useFetch<GovernanceOverview>(API.GOVERNANCE_OVERVIEW.OVERVIEW);
-  // const apiConnector = ApiConnector.getApiConnector();
-  // apiConnector.
-
-  const dataCard = {
-    activeDReps: data?.activeDReps,
-    activeSPOs: data?.activeSPOs,
-    activeCommittees: data?.activeCommittees
-  };
-
-  const dataChart = {
-    totalGovActions: data?.totalGovActions,
-    govStatusMap: data?.govStatusMap,
-    govCountMap: data?.govCountMap
-  };
-  if (error && (statusError || 0) < 500) return <NoRecord />;
-  if (error && (statusError || 0) >= 500) return <FetchDataErr />;
   return (
     <Box>
-      <Card marginBottom={"32px"} title={t("glossary.overview")}>
-        <Description>{t("overview.page.description")}</Description>
-      </Card>
-      {/* <CardOverview loading={loading} data={dataCard} /> */}
-      {/* <ChartOverview loading={loading} data={dataChart} /> */}
-      {/* <PreDefinedVotesChart /> */}
+      <Box mb={4}>
+        <Typography variant="h5" fontWeight={700} component="h1" gutterBottom>
+          Governance Actions
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
+          On-chain governance proposals submitted to the Cardano blockchain. DReps, SPOs, and the Constitutional
+          Committee vote on these actions to shape the protocol's future.
+        </Typography>
+      </Box>
       <TabOverview />
     </Box>
   );

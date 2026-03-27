@@ -20,17 +20,13 @@ export interface GovernanceOverview {
 }
 
 export interface GovernanceActionListItem {
-    // govActionName: string;
     txHash: string;
     index: number;
     type?: string;
     vote?: 'yes' | 'no' | 'abstain';
-    // status: string;
-    // votingPower: number;
-    // indexType: number;
-    // isRepeatVote: null;
-    // voterHash: null;
-    // createdAt: string;
+    status?: GovActionStatus;
+    expiredEpoch?: number | null;
+    enactedEpoch?: number | null;
 }
 
 export interface GovernanceActionDetail {

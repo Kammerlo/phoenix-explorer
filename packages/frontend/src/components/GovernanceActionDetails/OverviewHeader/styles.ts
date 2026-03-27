@@ -161,7 +161,3 @@ export const StatusChip = styled(Chip)`
   }
 `;
 
-export const FixedSizeContainer = styled(Box)`
-  height: 500px;
-  width: 100%;
-`;

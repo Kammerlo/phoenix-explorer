@@ -428,13 +428,17 @@ export class BlockfrostConnector extends ApiConnector {
     try {
       const page = Number(pageInfo.page ?? 1);
       const count = Number(pageInfo.size ?? 20);
-      const resp = await this.client.get<{ tx_hash: string; cert_index: number; governance_type: string }[]>(
+      const resp = await this.client.get<any[]>(
         "/governance/proposals", { params: { page, count, order: "desc" } }
       );
       const items: GovernanceActionListItem[] = (resp.data ?? []).map((p) => ({
         txHash: p.tx_hash,
         index: p.cert_index,
-        type: p.governance_type
+        type: p.governance_type,
+        // Blockfrost list has `expiration` (scheduled epoch); detail has `expired_epoch`/`enacted_epoch`
+        status: p.expired_epoch ? "EXPIRED" : p.enacted_epoch ? "ENACTED" : "ACTIVE",
+        expiredEpoch: p.expired_epoch ?? p.expiration ?? null,
+        enactedEpoch: p.enacted_epoch ?? null,
       }));
       return { data: items, lastUpdated: Date.now() };
     } catch (e: any) {
@@ -452,9 +456,10 @@ export class BlockfrostConnector extends ApiConnector {
           index: String(p.cert_index ?? index),
           dateCreated: "",
           actionType: p.governance_type ?? "",
-          status: p.expired_epoch ? "EXPIRED" : p.ratified_epoch ? "ENACTED" : "ACTIVE",
-          expiredEpoch: p.expired_epoch ?? null,
-          enactedEpoch: p.ratified_epoch ?? null,
+          // Blockfrost may use either `expired_epoch`/`expired_in` and `ratified_epoch`/`enacted_in`
+          status: (p.expired_epoch ?? p.expired_in) ? "EXPIRED" : (p.ratified_epoch ?? p.enacted_in ?? p.ratified_in) ? "ENACTED" : "ACTIVE",
+          expiredEpoch: p.expired_epoch ?? p.expired_in ?? null,
+          enactedEpoch: p.ratified_epoch ?? p.enacted_in ?? p.ratified_in ?? null,
           motivation: p.motivation ?? null,
           rationale: p.rationale ?? null,
           title: p.title ?? null,

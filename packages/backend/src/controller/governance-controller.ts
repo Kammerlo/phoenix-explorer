@@ -16,11 +16,17 @@ governanceController.get('/actions', async (req, res) => {
         count: Number.parseInt(String(pageInfo.size || 100))
     });
 
-    const govActionListItems: GovernanceActionListItem[] = proposals.map((proposal) => {
+    const govActionListItems: GovernanceActionListItem[] = proposals.map((proposal: any) => {
+        // Blockfrost list returns `expiration` (scheduled expiry epoch).
+        // `expired_epoch`/`enacted_epoch` are only on the detail endpoint.
+        const status = proposal.expired_epoch ? 'EXPIRED' : proposal.enacted_epoch ? 'ENACTED' : 'ACTIVE';
         return {
             txHash: proposal.tx_hash,
             index: proposal.cert_index,
-            type: proposal.governance_type
+            type: proposal.governance_type,
+            status,
+            expiredEpoch: proposal.expired_epoch ?? proposal.expiration ?? null,
+            enactedEpoch: proposal.enacted_epoch ?? null,
         } as GovernanceActionListItem;
     });
     res.json({
@@ -52,28 +58,29 @@ governanceController.get('/actions/:txHash/:indexStr', async (req, res) => {
                 if (typeof metadata.json_metadata === 'string') {
                     jsonMetadata = JSON.parse(metadata.json_metadata);
                 } else {
-                    // Already parsed object
                     jsonMetadata = metadata.json_metadata;
                 }
             }
         } catch (e) {
             console.error('Error parsing json_metadata:', e);
-            jsonMetadata = {};
         }
-        const status = proposal.expired_epoch ? 'EXPIRED' : proposal.enacted_epoch ? 'ENACTED' : 'ACTIVE';
+        const body = jsonMetadata?.body || {};
+        const authorsRaw: any[] = Array.isArray(jsonMetadata?.authors) ? jsonMetadata.authors : [];
+        const p = proposal as any;
+        const status = p.expired_epoch ? 'EXPIRED' : p.enacted_epoch ? 'ENACTED' : 'ACTIVE';
         governanceDetail = {
             txHash: txHash,
             index: indexStr,
             status: status,
             dateCreated: transaction.block_time || "",
             actionType: proposal.governance_type,
-            expiredEpoch: proposal.expired_epoch,
-            enactedEpoch: proposal.enacted_epoch,
-            rationale: jsonMetadata.body.rationale || "",
-            abstract: jsonMetadata.body.abstract || "",
-            motivation: jsonMetadata.body.motivation || "",
-            title: jsonMetadata.body.title || "",
-            authors: jsonMetadata.authors.map((author: any) => author.name) || [],
+            expiredEpoch: p.expired_epoch ?? null,
+            enactedEpoch: p.enacted_epoch ?? null,
+            rationale: body.rationale || null,
+            abstract: body.abstract || null,
+            motivation: body.motivation || null,
+            title: body.title || null,
+            authors: authorsRaw.map((a: any) => (typeof a === 'string' ? a : a?.name || String(a))),
             anchorUrl: (proposal as any).anchor_url ?? undefined,
             anchorHash: (proposal as any).anchor_hash ?? undefined,
             depositReturn: (proposal as any).return_address ?? undefined,
