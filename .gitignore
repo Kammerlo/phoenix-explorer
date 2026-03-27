@@ -117,3 +117,7 @@ build/
 /packages/backend/dist/
 /packages/shared/dist/
 /packages/frontend/build/
+
+# Claude Code
+.claude/worktrees/
+.claude/settings.local.json
