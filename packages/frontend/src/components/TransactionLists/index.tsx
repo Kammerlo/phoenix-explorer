@@ -40,7 +40,8 @@ const TAG_ORDER: TxTag[] = ["transfer", "script", "token", "mint", "stake", "poo
 
 // ─── Tag chip ─────────────────────────────────────────────
 
-const TxTagChip: React.FC<{ tag: TxTag }> = ({ tag }) => {
+export { TAG_ORDER };
+export const TxTagChip: React.FC<{ tag: TxTag }> = ({ tag }) => {
   const meta = TAG_META[tag];
   if (!meta) return null;
   return (

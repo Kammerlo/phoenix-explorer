@@ -318,6 +318,62 @@ AVG_BLOCK_TIME_SECONDS = 20         // slot 1s, ~5% leadership rate
 
 ---
 
+## Dashboard Block Chain Visualizer
+
+`BlockChainVisualizer` lives in `src/pages/Home/index.tsx` as a self-contained component.
+
+### Design
+- Horizontal scroll: newest block on the **left**, scroll right → older blocks
+- Each `BlockChainCard` (168 px wide) shows: fill bar at top, block #, tx count, relative age, pool ticker
+- `BlockChainConnector` renders a thin horizontal line between cards; shows `+N` badge when `blockNo` gap > 0 (i.e. fetched pages skipped blocks)
+- Latest block is highlighted with a blue border and a pulsing green dot ("live" indicator)
+
+### Refresh pattern
+```typescript
+const doFetch = useCallback(() => {
+  ApiConnector.getApiConnector().getBlocksPage({ page: "1", size: "20" }).then(...)
+}, []);
+
+useEffect(() => {
+  doFetch();
+  const id = setInterval(doFetch, 30_000); // every 30 s
+  return () => clearInterval(id);
+}, [doFetch]);
+```
+Do **not** put `ApiConnector.getApiConnector()` in the `useCallback` dependencies array — it is a stable singleton.
+
+### Styling conventions applied
+- `theme.palette.divider` does **not** exist in `CustomPalette`. Use the project border pattern instead:
+  ```typescript
+  theme.isDark ? alpha(theme.palette.secondary.light, 0.1) : theme.palette.primary[200] || "#e0e0e0"
+  ```
+- CSS `@keyframes` work inside MUI `sx` objects:
+  ```tsx
+  sx={{
+    "@keyframes livePulse": { "0%, 100%": { boxShadow: "..." }, "50%": { boxShadow: "..." } },
+    animation: "livePulse 2s ease-in-out infinite"
+  }}
+  ```
+- Horizontal scrollable containers: add `overflowX: "auto"` + custom scrollbar styles via `"&::-webkit-scrollbar"` in `sx`.
+
+### Block fill — canonical constant
+`BLOCK_MAX_SIZE = 90_112` bytes. Used in both `BlockChainCard` (Home) and `BlockFillBarMini/Full` (`src/components/commons/BlockFillBar/index.tsx`). Keep in sync if the protocol max ever changes.
+
+### Saturation fix (PoolList)
+Blockfrost `live_saturation` is a **0–1 fraction**. The `SaturationBar` component and the Home pool table must multiply by 100 before passing to LinearProgress or width calculations. `formatPercent(value)` already expects 0–1.
+
+### Common issues fixed in this session
+| Bug | Root cause | Fix |
+|-----|-----------|-----|
+| `theme.palette.divider` TS error | `CustomPalette` doesn't extend MUI `Palette` completely | Use `alpha(secondary.light, ...)` / `primary[200]` pattern |
+| Infinite re-render in `TabOverview` | API call directly in component body (not in `useEffect`) | Wrap in `useEffect(() => { ... }, [search])` |
+| Accidental circular import | `gatewayConnector.ts` imported `Epoch` page component | Remove stray import |
+| `BlockFillBarFull` missing | Only `BlockFillBarMini` was exported | Added `BlockFillBarFull` to `BlockFillBar/index.tsx` |
+| Saturation bar invisible | `SaturationBar` treated 0–1 fraction as 0–100 | Multiply by 100 in pct calculation; pass raw value to `formatPercent` |
+| `formatADAFull` overflow in epoch table | Full precision (~20 chars) overflows 100–120 px column | Use `formatADA` (abbreviated) for table cells too, not just banners |
+
+---
+
 ## Package Scripts
 
 From monorepo root or `packages/frontend`:

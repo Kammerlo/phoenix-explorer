@@ -1,205 +1,96 @@
-import { Box, Grid, useTheme } from "@mui/material";
-import React from "react";
-import { useTranslation } from "react-i18next";
-import { useSelector } from "react-redux";
+import { Box, Divider, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, useTheme } from "@mui/material";
+import { alpha } from "@mui/material/styles";
 import { Link, useNavigate } from "react-router-dom";
 
-import useFetch from "src/commons/hooks/useFetch";
-import { SeeMoreIconHome } from "src/commons/resources";
+import SectionHeader from "src/components/commons/SectionHeader";
+import { TxTagChip, TAG_ORDER } from "src/components/TransactionLists";
 import { details, routers } from "src/commons/routers";
-import { API } from "src/commons/utils/api";
-import { TRANSACTION_STATUS } from "@shared/dtos/transaction.dto";
-import { formatADAFull, formatDateTimeLocal, handleClicktWithoutAnchor } from "src/commons/utils/helper";
-import ADAicon from "src/components/commons/ADAIcon";
-import CustomTooltip from "src/components/commons/CustomTooltip";
-import FormNowMessage from "src/components/commons/FormNowMessage";
-import ViewAllButtonExternal from "src/components/commons/ViewAllButtonExternal";
-import { CommonSkeleton } from "src/components/commons/CustomSkeleton";
-import DynamicEllipsisText from "src/components/DynamicEllipsisText";
-import DatetimeTypeTooltip from "src/components/commons/DatetimeTypeTooltip";
+import { formatADA, getShortHash } from "src/commons/utils/helper";
+import { Transaction, TxTag } from "@shared/dtos/transaction.dto";
 
-import {
-  Actions,
-  BlockNo,
-  Hash,
-  Header,
-  HeaderStatus,
-  Item,
-  ItemDetail,
-  ItemHeader,
-  PriveValue,
-  RowItem,
-  TimeDuration,
-  TimeDurationSm,
-  LatestTransactionItemHeader,
-  RowItemFromTo,
-  Title,
-  TransactionContainer,
-  WalletAddress
-} from "./style";
+// ─── Skeleton rows ────────────────────────────────────────────────────────────
 
-const LatestTransactions: React.FC = () => {
-  const { t } = useTranslation();
+const SkeletonRows: React.FC<{ rows: number; cols: number }> = ({ rows, cols }) => (
+  <>
+    {Array.from({ length: rows }).map((_, i) => (
+      <TableRow key={i}>
+        {Array.from({ length: cols }).map((__, j) => (
+          <TableCell key={j}>
+            <Box sx={{ height: 14, borderRadius: 1, bgcolor: "action.hover", width: `${50 + Math.random() * 40}%` }} />
+          </TableCell>
+        ))}
+      </TableRow>
+    ))}
+  </>
+);
+
+// ─── LatestTransactions ───────────────────────────────────────────────────────
+
+interface Props {
+  txs: Transaction[];
+  loading: boolean;
+  rows?: number;
+}
+
+const LatestTransactions: React.FC<Props> = ({ txs, loading, rows = 8 }) => {
   const theme = useTheme();
-  const blockKey = useSelector(({ system }: RootState) => system.blockKey);
-  const { data, initialized, lastUpdated } = useFetch<CurrentTransactions[]>(
-    API.TRANSACTION.CURRENT,
-    undefined,
-    false,
-    blockKey
-  );
-
   const navigate = useNavigate();
+
+  const cellSx = {
+    py: 1,
+    borderBottom: `1px solid ${theme.isDark ? alpha(theme.palette.secondary.light, 0.1) : theme.palette.primary[200] || "#e0e0e0"}`,
+    fontSize: "0.82rem",
+  };
+  const headCellSx = { ...cellSx, fontWeight: 700, color: theme.palette.text.secondary, background: theme.palette.secondary[0] };
+
   return (
-    <TransactionContainer data-testid="home-latest-transactions">
-      <Header>
-        <Title>{t("common.latestTxs")}</Title>
-        <Actions>
-          <TimeDuration>
-            <FormNowMessage time={lastUpdated} />
-          </TimeDuration>
-          <ViewAllButtonExternal to={routers.TRANSACTION_LIST} />
-        </Actions>
-      </Header>
-      <TimeDurationSm>
-        <FormNowMessage time={lastUpdated} />
-      </TimeDurationSm>
-      {
-        <Grid container spacing={{ sm: 2 }}>
-          {!initialized
-            ? new Array(4).fill(0).map((_, index) => {
+    <Paper elevation={0} sx={{ borderRadius: 3, overflow: "hidden", border: `1px solid ${theme.isDark ? alpha(theme.palette.secondary.light, 0.1) : theme.palette.primary[200] || "#e0e0e0"}`, background: theme.palette.secondary[0] }}>
+      <Box px={2.5} pt={2.5} pb={1}>
+        <SectionHeader title="Latest Transactions" viewAllPath={routers.TRANSACTION_LIST} />
+      </Box>
+      <Divider />
+      <TableContainer>
+        <Table size="small">
+          <TableHead>
+            <TableRow>
+              <TableCell sx={headCellSx}>Hash</TableCell>
+              <TableCell sx={headCellSx}>Block</TableCell>
+              <TableCell sx={headCellSx}>Type</TableCell>
+              <TableCell sx={headCellSx} align="right">Output (₳)</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {loading ? (
+              <SkeletonRows rows={rows} cols={4} />
+            ) : (
+              txs.map((tx) => {
+                const tags = tx.tags?.length ? TAG_ORDER.filter((t) => tx.tags!.includes(t)) : ["transfer" as TxTag];
                 return (
-                  <Grid size={{ xs: 6, lg: 3 }} key={index}>
-                    <Item>
-                      <ItemHeader>
-                        <CommonSkeleton variant="circular" width={50} height={40} />
-                        <CommonSkeleton variant="text" width={"100%"} />
-                      </ItemHeader>
-                      <CommonSkeleton />
-                      <CommonSkeleton variant="text" height={30} width={"100%"} />
-                      <CommonSkeleton variant="text" height={30} width={"100%"} />
-                      <CommonSkeleton variant="text" height={30} width={"100%"} />
-                      <CommonSkeleton variant="text" height={30} width={"100%"} />
-                    </Item>
-                  </Grid>
+                  <TableRow key={tx.hash} hover sx={{ cursor: "pointer" }} onClick={() => navigate(details.transaction(tx.hash))}>
+                    <TableCell sx={cellSx}>
+                      <Link to={details.transaction(tx.hash)} style={{ color: theme.palette.primary.main, textDecoration: "none", fontFamily: "monospace", fontWeight: 600 }} onClick={(e) => e.stopPropagation()}>
+                        {getShortHash(tx.hash, 8, 6)}
+                      </Link>
+                    </TableCell>
+                    <TableCell sx={cellSx}>
+                      <Link to={details.block(tx.blockNo)} style={{ color: theme.palette.primary.main, textDecoration: "none", fontWeight: 600 }} onClick={(e) => e.stopPropagation()}>
+                        {tx.blockNo?.toLocaleString()}
+                      </Link>
+                    </TableCell>
+                    <TableCell sx={cellSx}>
+                      <Box display="flex" flexWrap="wrap" gap={0.3}>
+                        {tags.slice(0, 2).map((tag) => <TxTagChip key={tag} tag={tag} />)}
+                      </Box>
+                    </TableCell>
+                    <TableCell sx={cellSx} align="right">{formatADA(tx.totalOutput)}</TableCell>
+                  </TableRow>
                 );
               })
-            : data?.map((item) => {
-                const { hash, fromAddress, toAddress, blockNo, amount, status, time, epochNo, epochSlotNo, index } =
-                  item;
-                return (
-                  // isTable show 2 item per row else show 1 item per row grid
-                  <Grid size={{ xs: 12, sm: 6, lg: 3 }} key={hash}>
-                    <Item onClick={(e) => handleClicktWithoutAnchor(e, () => navigate(details.transaction(hash)))}>
-                      <ItemHeader>
-                        <LatestTransactionItemHeader>
-                          <HeaderStatus status={status as TRANSACTION_STATUS}>
-                            {t(`status.${String(status).toLowerCase()}`)}
-                          </HeaderStatus>
-                          <Box display={"flex"} alignItems={"flex-start"}>
-                            <PriveValue>{formatADAFull(amount)}</PriveValue>
-                            <Box component={"span"} sx={{ width: 14 }}>
-                              <ADAicon width={14} />
-                            </Box>
-                          </Box>
-                        </LatestTransactionItemHeader>
-                      </ItemHeader>
-                      <ItemDetail>
-                        <Box display="flex" alignItems="center">
-                          <RowItem sx={{ width: "100%" }}>
-                            <small>{t("common.txhash")}: </small>
-                            <CustomTooltip title={hash}>
-                              <Link to={details.transaction(hash)}>
-                                <Hash>
-                                  <DynamicEllipsisText
-                                    data-testid={`trxLastest.transactionHash.value#${index}`}
-                                    value={hash}
-                                  />
-                                </Hash>
-                              </Link>
-                            </CustomTooltip>
-                          </RowItem>
-                        </Box>
-                        <RowItem>
-                          <small>{t("glossary.block")}: </small>
-                          <Link to={details.block(blockNo)}>
-                            <BlockNo data-testid={`trxLastest.block.value#${index}`}>{blockNo}</BlockNo>
-                          </Link>
-                        </RowItem>
-                        <RowItem>
-                          <small>{t("glossary.epoch")}: </small>
-                          <Link to={details.epoch(epochNo)}>
-                            <BlockNo data-testid={`trxLastest.epochNo.value#${index}`}>{epochNo}</BlockNo>
-                          </Link>
-                        </RowItem>
-                        <RowItem>
-                          <small>{t("glossary.slot")}: </small>
-                          <small>{epochSlotNo}</small>
-                        </RowItem>
-                        {fromAddress?.slice(0, 1).map((add) => {
-                          return (
-                            // from
-                            <RowItemFromTo key={add} data-testid={`trxLastest.fromAddress.value#${index}`}>
-                              <small>{t("common.from")}: </small>
-                              <CustomTooltip title={add}>
-                                <Link to={details.address(add)}>
-                                  <WalletAddress>
-                                    <DynamicEllipsisText
-                                      value={add}
-                                      afterElm={
-                                        <Box
-                                          component={SeeMoreIconHome}
-                                          fill={theme.palette.primary.main}
-                                          width={10}
-                                          height={10}
-                                        />
-                                      }
-                                    />
-                                  </WalletAddress>
-                                </Link>
-                              </CustomTooltip>
-                            </RowItemFromTo>
-                          );
-                        })}
-                        {/* to */}
-                        {toAddress?.slice(0, 1).map((add) => {
-                          return (
-                            <RowItemFromTo key={add} data-testid={`trxLastest.toAddress.value#${index}`}>
-                              <small>{t("common.to")}: </small>
-                              <CustomTooltip title={add}>
-                                <Link to={details.address(add)}>
-                                  <WalletAddress>
-                                    <DynamicEllipsisText
-                                      value={add}
-                                      afterElm={
-                                        <Box
-                                          component={SeeMoreIconHome}
-                                          fill={theme.palette.primary.main}
-                                          width={10}
-                                          height={10}
-                                        />
-                                      }
-                                    />
-                                  </WalletAddress>
-                                </Link>
-                              </CustomTooltip>
-                            </RowItemFromTo>
-                          );
-                        })}
-                        <RowItem>
-                          <small>{t("common.createdAt")}: </small>
-                          <DatetimeTypeTooltip data-testid={`trxLastest.createdAt.value#${index}`}>
-                            <small>{formatDateTimeLocal(time)}</small>
-                          </DatetimeTypeTooltip>
-                        </RowItem>
-                      </ItemDetail>
-                    </Item>
-                  </Grid>
-                );
-              })}
-        </Grid>
-      }
-    </TransactionContainer>
+            )}
+          </TableBody>
+        </Table>
+      </TableContainer>
+    </Paper>
   );
 };
 

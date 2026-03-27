@@ -2,7 +2,8 @@ import React from "react";
 import { Box, useTheme } from "@mui/material";
 import { alpha } from "@mui/material/styles";
 
-const MAX_BLOCK_SIZE = 90_112; // bytes
+export const BLOCK_MAX_SIZE = 90_112; // bytes — Cardano protocol max block size
+const MAX_BLOCK_SIZE = BLOCK_MAX_SIZE;
 
 interface Props {
   size: number | undefined;

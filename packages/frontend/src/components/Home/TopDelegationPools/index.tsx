@@ -1,128 +1,101 @@
-import { useNavigate } from "react-router-dom";
-import { Box } from "@mui/material";
-import { get } from "lodash";
-import { useTranslation } from "react-i18next";
-import { useSelector } from "react-redux";
+import { Box, Divider, LinearProgress, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography, useTheme } from "@mui/material";
+import { alpha } from "@mui/material/styles";
+import { Link, useNavigate } from "react-router-dom";
 
-import useFetch from "src/commons/hooks/useFetch";
+import SectionHeader from "src/components/commons/SectionHeader";
 import { details, routers } from "src/commons/routers";
-import { formatADAFull, formatPercent, getShortHash } from "src/commons/utils/helper";
-import ViewAllButtonExternal from "src/components/commons/ViewAllButtonExternal";
-import { Column } from "src/components/commons/Table";
-import CustomTooltip from "src/components/commons/CustomTooltip";
-import { API } from "src/commons/utils/api";
-import FormNowMessage from "src/components/commons/FormNowMessage";
-import ADAicon from "src/components/commons/ADAIcon";
+import { formatADA, getShortHash, numberWithCommas } from "src/commons/utils/helper";
+import { PoolOverview } from "@shared/dtos/pool.dto";
 
-import {
-  Actions,
-  DelegateTable,
-  Header,
-  PoolName,
-  StyledLinearProgress,
-  SubHeader,
-  TimeDuration,
-  TimeDurationSm,
-  Title,
-  TopDelegateContainer
-} from "./style";
+// ─── Skeleton rows ────────────────────────────────────────────────────────────
 
-const TopDelegationPools = () => {
-  const { t } = useTranslation();
-  const blockNo = useSelector(({ system }: RootState) => system.blockNo);
+const SkeletonRows: React.FC<{ rows: number; cols: number }> = ({ rows, cols }) => (
+  <>
+    {Array.from({ length: rows }).map((_, i) => (
+      <TableRow key={i}>
+        {Array.from({ length: cols }).map((__, j) => (
+          <TableCell key={j}>
+            <Box sx={{ height: 14, borderRadius: 1, bgcolor: "action.hover", width: `${50 + Math.random() * 40}%` }} />
+          </TableCell>
+        ))}
+      </TableRow>
+    ))}
+  </>
+);
 
-  const { data, loading, initialized, lastUpdated, error, statusError } = useFetch<DelegationPool[]>(
-    `${API.DELEGATION.TOP}?page=0&size=5`,
-    undefined,
-    false,
-    blockNo
-  );
+// ─── TopDelegationPools ───────────────────────────────────────────────────────
+
+interface Props {
+  pools: PoolOverview[];
+  loading: boolean;
+  rows?: number;
+}
+
+const TopDelegationPools: React.FC<Props> = ({ pools, loading, rows = 5 }) => {
+  const theme = useTheme();
   const navigate = useNavigate();
 
-  const columns: Column<DelegationPool>[] = [
-    {
-      title: t("glossary.pool"),
-      key: "Pool",
-      minWidth: "40px",
-      maxWidth: "350px",
-      render: (r) => (
-        <CustomTooltip title={r.poolName || r.poolId}>
-          <PoolName to={details.delegation(r.poolId)}>
-            <Box component={"span"} textOverflow={"ellipsis"} whiteSpace={"nowrap"} overflow={"hidden"}>
-              {r.poolName || `${getShortHash(r.poolId)}`}
-            </Box>
-          </PoolName>
-        </CustomTooltip>
-      )
-    },
-    {
-      title: (
-        <Box component="span">
-          {t("glossary.poolSize")} (<ADAicon />)
-        </Box>
-      ),
-      key: "poolSize",
-      minWidth: "120px",
-      render: (r) => <Box component={"span"}>{r.poolSize != null ? formatADAFull(r.poolSize) : t("common.N/A")}</Box>
-    },
-    {
-      title: t("glossary.saturation"),
-      key: "Saturation",
-      minWidth: "200px",
-      render: (r) =>
-        r.saturation != null ? (
-          <Box display="flex" alignItems="center" justifyContent={"flex-start"}>
-            <Box component={"span"} mr={1} flexGrow={1} textAlign={"right"} maxWidth={"55px"}>
-              {formatPercent(r.saturation / 100) || `0%`}
-            </Box>
-            <StyledLinearProgress
-              variant="determinate"
-              saturation={r.saturation}
-              value={r.saturation > 100 ? 100 : get(r, "saturation", 0)}
-            />
-          </Box>
-        ) : (
-          t("common.N/A")
-        )
-    },
-    {
-      title: t("glossary.blocksInCurrentEpoch"),
-      key: "epochBlock",
-      render: (r) => r.epochBlock || 0
-    },
-    {
-      title: t("glossary.blocksLifetime"),
-      key: "lifetimeBlock",
-      render: (r) => r.lifetimeBlock || 0
-    }
-  ];
+  const cellSx = {
+    py: 1,
+    borderBottom: `1px solid ${theme.isDark ? alpha(theme.palette.secondary.light, 0.1) : theme.palette.primary[200] || "#e0e0e0"}`,
+    fontSize: "0.82rem",
+  };
+  const headCellSx = { ...cellSx, fontWeight: 700, color: theme.palette.text.secondary, background: theme.palette.secondary[0] };
+
   return (
-    <TopDelegateContainer data-testid="home-top-delegation">
-      <Header>
-        <Title>
-          {t("glossary.pools")}
-          <SubHeader>{t("info.sortedBlock")}</SubHeader>
-        </Title>
-        <Actions>
-          <TimeDuration>
-            <FormNowMessage time={lastUpdated} />
-          </TimeDuration>
-          <ViewAllButtonExternal to={routers.POOLS} />
-        </Actions>
-      </Header>
-      <TimeDurationSm>
-        <FormNowMessage time={lastUpdated} />
-      </TimeDurationSm>
-      <DelegateTable
-        error={error}
-        statusError={statusError}
-        loading={loading}
-        initialized={initialized}
-        columns={columns}
-        data={data || []}
-        onClickRow={(_, r: DelegationPool) => navigate(details.delegation(r.poolId))}
-      />
-    </TopDelegateContainer>
+    <Paper elevation={0} sx={{ borderRadius: 3, overflow: "hidden", border: `1px solid ${theme.isDark ? alpha(theme.palette.secondary.light, 0.1) : theme.palette.primary[200] || "#e0e0e0"}`, background: theme.palette.secondary[0] }}>
+      <Box px={2.5} pt={2.5} pb={1}>
+        <SectionHeader title="Top Pools" viewAllPath={routers.POOLS} />
+      </Box>
+      <Divider />
+      <TableContainer>
+        <Table size="small">
+          <TableHead>
+            <TableRow>
+              <TableCell sx={headCellSx}>Pool</TableCell>
+              <TableCell sx={headCellSx} align="right">Pool Size (₳)</TableCell>
+              <TableCell sx={headCellSx} align="right">Saturation</TableCell>
+              <TableCell sx={headCellSx} align="right">Lifetime Blocks</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {loading ? (
+              <SkeletonRows rows={rows} cols={4} />
+            ) : (
+              pools.map((pool) => (
+                <TableRow key={pool.poolId} hover sx={{ cursor: "pointer" }} onClick={() => navigate(details.delegation(pool.poolId))}>
+                  <TableCell sx={cellSx}>
+                    <Link to={details.delegation(pool.poolId)} style={{ color: theme.palette.primary.main, textDecoration: "none", fontWeight: 600 }} onClick={(e) => e.stopPropagation()}>
+                      {pool.poolName && pool.poolName !== "Unknown Pool" ? pool.poolName : getShortHash(pool.poolId, 10, 8)}
+                    </Link>
+                    {pool.tickerName && pool.tickerName !== "N/A" && (
+                      <Typography component="span" variant="caption" sx={{ ml: 0.5, color: theme.palette.text.secondary }}>
+                        [{pool.tickerName}]
+                      </Typography>
+                    )}
+                  </TableCell>
+                  <TableCell sx={cellSx} align="right">{formatADA(pool.poolSize)}</TableCell>
+                  <TableCell sx={cellSx} align="right">
+                    <Box display="flex" alignItems="center" justifyContent="flex-end" gap={1}>
+                      <Box sx={{ width: 60 }}>
+                        <LinearProgress
+                          variant="determinate"
+                          value={Math.min(100, (pool.saturation ?? 0) * 100)}
+                          sx={{ borderRadius: 2, height: 5 }}
+                          color={(pool.saturation ?? 0) > 0.95 ? "error" : (pool.saturation ?? 0) > 0.7 ? "warning" : "success"}
+                        />
+                      </Box>
+                      <Typography variant="caption">{((pool.saturation ?? 0) * 100).toFixed(1)}%</Typography>
+                    </Box>
+                  </TableCell>
+                  <TableCell sx={cellSx} align="right">{numberWithCommas(pool.lifetimeBlock, 0)}</TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </TableContainer>
+    </Paper>
   );
 };
 
