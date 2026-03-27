@@ -8,31 +8,51 @@ import {Transaction, TxTag} from "@shared/dtos/transaction.dto";
 
 export const blockController = Router();
 
+// Blockfrost caps count at 100 per call. To satisfy larger requests we
+// paginate through multiple blocksPrevious calls, always anchored at the
+// latest block hash so the page numbers are stable.
+const BF_MAX_PER_PAGE = 100;
+const BF_FETCH_CAP    = 500; // hard ceiling to keep response times reasonable
+
 blockController.get('', async (req, res) => {
   const pageInfo = req.query;
   const unixTimestamp = Math.floor(Date.now() / 1000);
+  const skipMeta = String(pageInfo.skipMeta) === "true";
 
-  const latestBlock = await API.blocksLatest();
-  const blocks = await API.blocksPrevious(latestBlock.hash, {
-    page: Number.parseInt(String(pageInfo.page || 0)),
-    count: Number.parseInt(String(pageInfo.size || 100))
-  });
-  // blocks.push(latestBlock); // Add the latest block to the list
-  // Batch-fetch pool metadata for unique slot leaders
-  const uniqueLeaders = [...new Set(blocks.map(b => b.slot_leader).filter(Boolean))] as string[];
-  const poolMeta = new Map<string, { name: string; ticker: string }>();
-  await Promise.all(
-    uniqueLeaders
-      .filter(l => l.startsWith("pool"))  // skip genesis/Byron keys
-      .map(async (leader) => {
-        try {
-          const meta = await API.poolMetadata(leader);
-          poolMeta.set(leader, { name: meta.name ?? "", ticker: meta.ticker ?? "" });
-        } catch { /* no metadata */ }
-      })
+  const requestedSize = Math.min(
+    Number.parseInt(String(pageInfo.size || BF_MAX_PER_PAGE)),
+    BF_FETCH_CAP
   );
 
-  const blocksData: Block[] = blocks.map((block) => {
+  const latestBlock = await API.blocksLatest();
+
+  // Paginate Blockfrost to satisfy requestedSize
+  const allBfBlocks: any[] = [];
+  const pagesNeeded = Math.ceil(requestedSize / BF_MAX_PER_PAGE);
+  for (let bfPage = 1; bfPage <= pagesNeeded; bfPage++) {
+    const count = Math.min(BF_MAX_PER_PAGE, requestedSize - allBfBlocks.length);
+    const page = await API.blocksPrevious(latestBlock.hash, { page: bfPage, count });
+    allBfBlocks.push(...page);
+    if (page.length < count) break; // reached the beginning of the chain
+  }
+
+  // Batch-fetch pool metadata for unique slot leaders (skipped for bulk/chart requests)
+  const poolMeta = new Map<string, { name: string; ticker: string }>();
+  if (!skipMeta) {
+    const uniqueLeaders = [...new Set(allBfBlocks.map(b => b.slot_leader).filter(Boolean))] as string[];
+    await Promise.all(
+      uniqueLeaders
+        .filter(l => l.startsWith("pool"))
+        .map(async (leader) => {
+          try {
+            const meta = await API.poolMetadata(leader);
+            poolMeta.set(leader, { name: meta.name ?? "", ticker: meta.ticker ?? "" });
+          } catch { /* no metadata */ }
+        })
+    );
+  }
+
+  const blocksData: Block[] = allBfBlocks.map((block) => {
     const meta = block.slot_leader ? poolMeta.get(block.slot_leader) : undefined;
     return {
       blockNo: block.height ?? 0,
@@ -57,13 +77,14 @@ blockController.get('', async (req, res) => {
       blockVrf: block.block_vrf ?? undefined,
     };
   });
+
   res.json({
-    data: blocksData.reverse(), // Reverse to show the latest block first
+    data: blocksData.reverse(), // newest first
     lastUpdated: unixTimestamp,
-    total: latestBlock.height, // TODO need to find the total number of blocks
+    total: latestBlock.height,
     currentPage: Number.parseInt(String(pageInfo.page ?? 0)),
-    pageSize: Number.parseInt(String(pageInfo.size ?? 10)),
-    totalPages: Math.ceil(blocksData.length / (pageInfo.size ? Number.parseInt(String(pageInfo.size)) : 100)),
+    pageSize: requestedSize,
+    totalPages: Math.ceil(blocksData.length / requestedSize),
   } as ApiReturnType<Block[]>);
 });
 
