@@ -1,12 +1,12 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Container, Grid, styled } from "@mui/material";
 import { useTranslation } from "react-i18next";
+import axios from "axios";
 
-import useFetch from "src/commons/hooks/useFetch";
+import { ApiConnector } from "src/commons/connector/ApiConnector";
 import { Block } from "@shared/dtos/block.dto";
 import { Transaction } from "@shared/dtos/transaction.dto";
 import { PoolOverview } from "@shared/dtos/pool.dto";
-import { ApiReturnType } from "@shared/APIReturnType";
 
 import BlockChainVisualizer from "src/components/Home/BlockChainVisualizer";
 import ActivityChart from "src/components/Home/ActivityChart";
@@ -29,18 +29,48 @@ const TABLE_ROWS = 8;
 const Home: React.FC = () => {
   const { t } = useTranslation();
 
+  const [statsData, setStatsData]     = useState<DashboardStats | null>(null);
+  const [statsLoading, setStatsLoading] = useState(true);
+  const [blocks, setBlocks]           = useState<Block[]>([]);
+  const [blocksLoading, setBlocksLoading] = useState(true);
+  const [txs, setTxs]                 = useState<Transaction[]>([]);
+  const [txsLoading, setTxsLoading]   = useState(true);
+  const [pools, setPools]             = useState<PoolOverview[]>([]);
+  const [poolsLoading, setPoolsLoading] = useState(true);
+
   useEffect(() => {
     document.title = t("head.page.dashboard");
   }, [t]);
 
-  const { data: statsData, loading: statsLoading } = useFetch<DashboardStats>("dashboard/stats");
-  const { data: blocksData, loading: blocksLoading } = useFetch<ApiReturnType<Block[]>>("blocks?size=8");
-  const { data: txsData,    loading: txsLoading    } = useFetch<ApiReturnType<Transaction[]>>("transactions?size=8");
-  const { data: poolsData,  loading: poolsLoading  } = useFetch<ApiReturnType<PoolOverview[]>>("pools?size=5");
+  useEffect(() => {
+    const api = ApiConnector.getApiConnector();
 
-  const blocks = (blocksData?.data ?? []).slice(0, TABLE_ROWS);
-  const txs    = (txsData?.data   ?? []).slice(0, TABLE_ROWS);
-  const pools  = poolsData?.data ?? [];
+    // Dashboard stats — gateway-specific aggregated endpoint.
+    // On Yaci/Blockfrost the call will 404 and statsData stays null (cards show "—").
+    axios
+      .get<DashboardStats>(`${api.baseUrl}/dashboard/stats`)
+      .then((r) => setStatsData(r.data))
+      .catch(() => {/* unsupported provider — stats stay empty */})
+      .finally(() => setStatsLoading(false));
+
+    api
+      .getBlocksPage({ page: "1", size: String(TABLE_ROWS) })
+      .then((r) => setBlocks((r.data ?? []).slice(0, TABLE_ROWS)))
+      .catch(() => {})
+      .finally(() => setBlocksLoading(false));
+
+    api
+      .getTransactions(undefined, { page: "1", size: String(TABLE_ROWS) })
+      .then((r) => setTxs((r.data ?? []).slice(0, TABLE_ROWS)))
+      .catch(() => {})
+      .finally(() => setTxsLoading(false));
+
+    api
+      .getPoolList({ page: "1", size: "5" })
+      .then((r) => setPools(r.data ?? []))
+      .catch(() => {})
+      .finally(() => setPoolsLoading(false));
+  }, []);
 
   return (
     <HomeContainer data-testid="home-container">

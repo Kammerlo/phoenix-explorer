@@ -13,3 +13,17 @@ services:
       NETWORK: "${NETWORK:-mainnet}"
       API_KEY: "${API_KEY}"
     restart: unless-stopped
+
+  frontend:
+    build:
+      context: .
+      dockerfile: packages/frontend/Dockerfile.frontend
+      args:
+        REACT_APP_API_URL: /api
+        REACT_APP_NETWORK: "${NETWORK:-mainnet}"
+        REACT_APP_API_TYPE: GATEWAY
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
