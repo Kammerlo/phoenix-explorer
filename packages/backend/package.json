@@ -5,8 +5,7 @@
   "type": "commonjs",
   "scripts": {
     "dev": "ts-node-dev -r tsconfig-paths/register src/server.ts --respawn --transpile-only src/server.ts",
-    "build": "tsc --project tsconfig.json",
-    "prebuild": "npm --workspace=cardano-explorer-shared run build",
+    "build": "tsc --build tsconfig.json",
     "start": "node dist/server.js"
   },
   "keywords": [],

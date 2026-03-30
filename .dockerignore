@@ -1,0 +1,31 @@
+# Node modules — rebuilt inside Docker; sending them is the #1 cause of slow builds
+node_modules
+packages/*/node_modules
+
+# Git history — not needed in Docker
+.git
+
+# Claude Code files
+.claude
+
+# Environment files — never bake into image context
+.env
+.env.*
+
+# Build outputs — rebuilt inside Docker
+packages/*/dist
+packages/*/build
+packages/shared/dist
+
+# Test and coverage artifacts
+coverage
+**/coverage
+
+# IDE and OS files
+.idea
+.DS_Store
+*.iml
+
+# Logs
+*.log
+npm-debug.log*
