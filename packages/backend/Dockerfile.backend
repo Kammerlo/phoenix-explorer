@@ -18,11 +18,8 @@ COPY packages/backend/ ./packages/backend/
 COPY packages/shared/ ./packages/shared/
 COPY tsconfig.base.json ./
 
-# Build shared declarations first (required by TypeScript project references in the backend tsconfig)
-# The prebuild hook would also do this, but tsc project references need the .tsbuildinfo to
-# already exist before backend's tsc --project runs, so we build shared explicitly first.
-RUN npm run build --workspace=cardano-explorer-shared && \
-    npm run build --workspace=backend
+# tsc --build resolves project references in order (shared first, then backend)
+RUN npm run build --workspace=backend
 
 # ─── Production stage ─────────────────────────────────────────────────────────
 # Installs only runtime deps — drops typescript, ts-node, nodemon, type defs, etc.
