@@ -1,5 +1,5 @@
 {
-  "name": "@shared",
+  "name": "cardano-explorer-shared",
   "exports": {
     "./*": "./dist/*"
   },

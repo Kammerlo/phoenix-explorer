@@ -28,7 +28,7 @@ ARG REACT_APP_API_URL_COIN_GECKO=https://api.coingecko.com/api/v3/coins/markets
 RUN printf "REACT_APP_API_URL=%s\nREACT_APP_NETWORK=%s\nREACT_APP_API_TYPE=%s\nREACT_APP_API_URL_COIN_GECKO=%s\n" \
     "$REACT_APP_API_URL" "$REACT_APP_NETWORK" "$REACT_APP_API_TYPE" "$REACT_APP_API_URL_COIN_GECKO" > .env
 
-RUN npm run build --workspace=@shared && \
+RUN npm run build --workspace=cardano-explorer-shared && \
     npm run build --workspace=frontend
 
 # ─── Serve stage ──────────────────────────────────────────────────────────────

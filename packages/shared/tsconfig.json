@@ -2,9 +2,10 @@
   "compilerOptions": {
     "composite": true,
     "declaration": true,
-    "module": "Node16",
-    "target": "ES2020",
-    "moduleResolution": "Node16",
+    "emitDeclarationOnly": true,
+    "module": "ESNext",
+    "target": "ESNext",
+    "moduleResolution": "Node",
     "skipLibCheck": true,
     "strict": true,
     "rootDir": "src",
