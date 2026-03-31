@@ -2,9 +2,9 @@ import { ApiReturnType } from "@shared/APIReturnType";
 import { AddressDetail, StakeAddressDetail } from "@shared/dtos/address.dto";
 import { Transaction } from "@shared/dtos/transaction.dto";
 import { Router, Request, Response } from "express";
-import { API } from "src/config/blockfrost";
-import { cache, fetchAddressTotal } from "src/config/cache";
-import { fetchTransactionDetail } from "src/service/transactionService";
+import { API } from "../config/blockfrost";
+import { cache, fetchAddressTotal } from "../config/cache";
+import { fetchTransactionDetail } from "../service/transactionService";
 
 export const addressController = Router();
 

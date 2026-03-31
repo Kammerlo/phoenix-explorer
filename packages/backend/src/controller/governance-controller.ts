@@ -4,7 +4,7 @@ import { GovActionVote, GovernanceActionDetail, GovernanceActionListItem, VoteDa
 import { ApiReturnType } from "@shared/APIReturnType";
 import { Drep, DrepDelegates } from "@shared/dtos/drep.dto";
 import { json } from "stream/consumers";
-import { cache, getTransactions } from "src/config/cache";
+import { cache, getTransactions } from "../config/cache";
 
 export const governanceController = Router();
 

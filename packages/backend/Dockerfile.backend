@@ -33,8 +33,11 @@ COPY packages/shared/package.json ./packages/shared/
 RUN --mount=type=cache,target=/root/.npm \
     npm ci --omit=dev --workspaces
 
-# The backend dist is self-contained (shared types are inlined at compile time)
+# Copy backend dist
 COPY --from=build /app/packages/backend/dist ./packages/backend/dist
+# Copy shared dist as @shared so require('@shared/...') resolves at runtime
+# (TypeScript enums like EpochStatus generate real JS that can't be inlined)
+COPY --from=build /app/packages/shared/dist ./node_modules/@shared
 
 EXPOSE 3000
 CMD ["node", "packages/backend/dist/server.js"]

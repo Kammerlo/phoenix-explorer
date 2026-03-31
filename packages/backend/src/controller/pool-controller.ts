@@ -2,8 +2,8 @@ import { ApiReturnType } from "@shared/APIReturnType";
 import { PoolDetail, PoolOverview } from "@shared/dtos/pool.dto";
 import { Block } from "@shared/dtos/block.dto";
 import { Router } from "express";
-import { API } from "src/config/blockfrost";
-import { getBlock, getTransactions } from "src/config/cache";
+import { API } from "../config/blockfrost";
+import { getBlock, getTransactions } from "../config/cache";
 
 export const poolController = Router();
 
