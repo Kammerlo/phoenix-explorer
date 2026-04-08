@@ -9,8 +9,9 @@ export const poolController = Router();
 
 poolController.get('', async (req, res) => {
     const pageInfo = req.query;
+    const requestedPage = Number.parseInt(String(pageInfo.page || 0));
     const poolExtended = await API.poolsExtended({
-        page: Number.parseInt(String(pageInfo.page || 0)),
+        page: requestedPage + 1, // Blockfrost uses 1-based pagination
         count: Number.parseInt(String(pageInfo.size || 100))
     });
 
@@ -27,13 +28,17 @@ poolController.get('', async (req, res) => {
             lifetimeBlock: Number.parseInt((pool as any).blocks_minted ?? '0'),
         } as PoolOverview;
     });
+    const pageSize = Number.parseInt(String(pageInfo.size ?? 100));
+    const currentPage = Number.parseInt(String(pageInfo.page ?? 0));
+    const hasMore = poolData.length >= pageSize;
+    const estimatedTotal = hasMore ? (currentPage + 2) * pageSize : currentPage * pageSize + poolData.length;
+
     res.json({
         data: poolData,
-        lastUpdated: Math.floor(Date.now() / 1000),
-        total: poolExtended.length, // TODO need to find the total number of pools
-        currentPage: Number.parseInt(String(pageInfo.page ?? 0)),
-        pageSize: Number.parseInt(String(pageInfo.size ?? 10)),
-        totalPages: Math.ceil(poolExtended.length / (pageInfo.size ? Number.parseInt(String(pageInfo.size)) : 100)),
+        lastUpdated: Date.now(),
+        total: estimatedTotal,
+        currentPage,
+        pageSize,
     } as ApiReturnType<PoolOverview[]>);
 
 });
@@ -72,7 +77,7 @@ poolController.get('/:poolId/blocks', async (req, res) => {
         }));
         res.json({
             data: blocksData,
-            lastUpdated: Math.floor(Date.now() / 1000),
+            lastUpdated: Date.now(),
             total,
             currentPage: page - 1,
             pageSize: count,
@@ -134,7 +139,7 @@ poolController.get('/:poolId', async (req, res) => {
                     port: r.port ?? undefined
                 })),
             } as PoolDetail,
-            lastUpdated: Math.floor(Date.now() / 1000),
+            lastUpdated: Date.now(),
             total: 1,
             currentPage: 0,
             pageSize: 1,

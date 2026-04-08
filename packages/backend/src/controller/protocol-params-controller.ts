@@ -49,5 +49,5 @@ protocolParamsController.get("", async (_req, res) => {
     ccMaxTermLength: (params as any).committee_max_term_length ?? 0
   };
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  res.json({ data: result, lastUpdated: Math.floor(Date.now() / 1000) } as ApiReturnType<any>);
+  res.json({ data: result, lastUpdated: Date.now() } as ApiReturnType<any>);
 });

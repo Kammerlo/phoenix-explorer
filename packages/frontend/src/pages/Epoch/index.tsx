@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { Box, Chip, LinearProgress, Paper, Skeleton, Typography, useTheme } from "@mui/material";
 import { alpha } from "@mui/material/styles";
 import { useTranslation } from "react-i18next";
-import { useSelector } from "react-redux";
 
 import { details } from "src/commons/routers";
 import Table, { Column } from "src/components/commons/Table";
@@ -20,7 +19,6 @@ import { Link } from "react-router-dom";
 import { Actions, TimeDuration } from "src/components/TransactionLists/styles";
 import { StyledContainer } from "./styles";
 import { EPOCH_STATUS, MAX_SLOT_EPOCH } from "src/commons/utils/constants";
-import { RootState } from "src/stores/types";
 
 // ─── Status badge ──────────────────────────────────────────────────────────────
 
@@ -84,10 +82,8 @@ interface CurrentEpochBannerProps {
 const CurrentEpochBanner: React.FC<CurrentEpochBannerProps> = ({ epoch }) => {
   const theme = useTheme();
   const navigate = useNavigate();
-  const { currentEpoch } = useSelector(({ system }: RootState) => system);
 
-  // Use live slot from Redux store if available; otherwise fall back to syncingProgress
-  const liveSlot = currentEpoch?.no === epoch.no ? (currentEpoch.slot ?? 0) : 0;
+  const liveSlot = epoch.epochSlotNo ?? 0;
   const pct = liveSlot > 0
     ? Math.min(100, (liveSlot / MAX_SLOT_EPOCH) * 100)
     : Math.min(100, epoch.syncingProgress ?? 0);
@@ -175,7 +171,7 @@ const CurrentEpochBanner: React.FC<CurrentEpochBannerProps> = ({ epoch }) => {
             Start
           </Typography>
           <Box sx={{ fontWeight: 500, fontSize: "0.82rem", color: "text.secondary", mt: 0.3 }}>
-            <DatetimeTypeTooltip>{epoch.startTime}</DatetimeTypeTooltip>
+            {formatDateTimeLocal(epoch.startTime || "")}
           </Box>
         </Box>
         <Box sx={{ flex: "1 1 130px", minWidth: 100 }}>
@@ -183,7 +179,7 @@ const CurrentEpochBanner: React.FC<CurrentEpochBannerProps> = ({ epoch }) => {
             Ends
           </Typography>
           <Box sx={{ fontWeight: 500, fontSize: "0.82rem", color: "text.secondary", mt: 0.3 }}>
-            <DatetimeTypeTooltip>{epoch.endTime}</DatetimeTypeTooltip>
+            {formatDateTimeLocal(epoch.endTime || "")}
           </Box>
         </Box>
       </Box>

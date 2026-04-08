@@ -3,16 +3,17 @@ import { API } from "../config/blockfrost";
 import { GovActionVote, GovernanceActionDetail, GovernanceActionListItem, VoteData } from "@shared/dtos/GovernanceOverview";
 import { ApiReturnType } from "@shared/APIReturnType";
 import { Drep, DrepDelegates } from "@shared/dtos/drep.dto";
-import { json } from "stream/consumers";
+
 import { cache, getTransactions } from "../config/cache";
 
 export const governanceController = Router();
 
 governanceController.get('/actions', async (req, res) => {
     const pageInfo = req.query;
-    const unixTimestamp = Math.floor(Date.now() / 1000);
+
+    const requestedPage = Number.parseInt(String(pageInfo.page || 0));
     const proposals = await API.governance.proposals({
-        page: Number.parseInt(String(pageInfo.page || 0)),
+        page: requestedPage + 1, // Blockfrost uses 1-based pagination
         count: Number.parseInt(String(pageInfo.size || 100))
     });
 
@@ -30,8 +31,8 @@ governanceController.get('/actions', async (req, res) => {
         } as GovernanceActionListItem;
     });
     res.json({
-        data: govActionListItems, // Reverse to show the latest block first
-        lastUpdated: unixTimestamp,
+        data: govActionListItems,
+        lastUpdated: Date.now(),
         total: govActionListItems.length, // TODO need to find the total number of blocks
         currentPage: Number.parseInt(String(pageInfo.page ?? 0)),
         pageSize: Number.parseInt(String(pageInfo.size ?? 10)),
@@ -114,7 +115,7 @@ governanceController.get('/actions/:txHash/:indexStr', async (req, res) => {
     res.json({
         data: governanceDetail,
         error: error,
-        lastUpdated: Math.floor(Date.now() / 1000),
+        lastUpdated: Date.now(),
     } as ApiReturnType<GovernanceActionDetail>);
 });
 
@@ -136,7 +137,7 @@ governanceController.get('/actions/:txHash/:indexStr/votes', async (req, res) =>
             }));
     res.json({
         data: govActionVote,
-        lastUpdated: Math.floor(Date.now() / 1000),
+        lastUpdated: Date.now(),
         total: govActionVote.length,
         pageSize: govActionVote.length,
     } as ApiReturnType<GovActionVote[]>);
@@ -145,10 +146,10 @@ governanceController.get('/actions/:txHash/:indexStr/votes', async (req, res) =>
 governanceController.get('/dreps', async (req, res) => {
     const pageInfo = req.query;
     const drepsData = await API.governance.dreps({
-        page: Number.parseInt(String(pageInfo.page || 0)),
+        page: Number.parseInt(String(pageInfo.page || 0)) + 1, // Blockfrost uses 1-based pagination
         count: Number.parseInt(String(pageInfo.size || 100))
     });
-    const unixTimestamp = Math.floor(Date.now() / 1000);
+
     let dreps: Drep[] = [];
     for (const drep of drepsData) {
 
@@ -192,7 +193,7 @@ governanceController.get('/dreps', async (req, res) => {
     }
     res.json({
         data: dreps,
-        lastUpdated: unixTimestamp,
+        lastUpdated: Date.now(),
         total: dreps.length,
         currentPage: 1,
         pageSize: dreps.length,
@@ -252,7 +253,7 @@ governanceController.get('/dreps/:drepId', async (req, res) => {
         // leave at 0 if proposals fetch fails
     }
 
-    const unixTimestamp = Math.floor(Date.now() / 1000);
+
     const drep: Drep = {
         activeVoteStake: drepDetails ? drepDetails.amount : 0,
         anchorHash: drepMetadata ? drepMetadata?.hash : "",
@@ -278,7 +279,7 @@ governanceController.get('/dreps/:drepId', async (req, res) => {
     } as Drep;
     res.json({
         data: drep,
-        lastUpdated: unixTimestamp,
+        lastUpdated: Date.now(),
     } as ApiReturnType<Drep>);
 });
 
@@ -286,7 +287,6 @@ governanceController.get('/dreps/:drepId/votes', async (req, res) => {
     const { drepId } = req.params;
     const pageInfo = req.query;
     const votesData = await API.governance.drepsByIdVotes(drepId);
-    const unixTimestamp = Math.floor(Date.now() / 1000);
     const page = Number.parseInt(String(pageInfo.page ?? 0));
     const size = Number.parseInt(String(pageInfo.size ?? 10));
     const safePage = Number.isNaN(page) ? 0 : Math.max(0, page);
@@ -300,12 +300,12 @@ governanceController.get('/dreps/:drepId/votes', async (req, res) => {
             return {
                 txHash: vote.tx_hash,
                 index: vote.cert_index,
-                vote: vote.vote, // reuse the "type" field to carry the vote value
+                vote: vote.vote,
             } as GovernanceActionListItem;
         });
     res.json({
         data: votes,
-        lastUpdated: unixTimestamp,
+        lastUpdated: Date.now(),
         total: votesData.length,
         currentPage: Number.parseInt(String(pageInfo.page ?? 0)),
         pageSize: Number.parseInt(String(pageInfo.size ?? 10)),
@@ -317,7 +317,6 @@ governanceController.get('/dreps/:drepId/delegates', async (req, res) => {
     const { drepId } = req.params;
     const pageInfo = req.query;
     const delegatorsData = await API.governance.drepsByIdDelegatorsAll(drepId);
-    const unixTimestamp = Math.floor(Date.now() / 1000);
     const page = Number.parseInt(String(pageInfo.page ?? 0));
     const size = Number.parseInt(String(pageInfo.size ?? 10));
     const safePage = Number.isNaN(page) ? 0 : Math.max(0, page);
@@ -335,7 +334,7 @@ governanceController.get('/dreps/:drepId/delegates', async (req, res) => {
         });
     res.json({
         data: delegates,
-        lastUpdated: unixTimestamp,
+        lastUpdated: Date.now(),
         total: delegatorsData.length,
         currentPage: Number.parseInt(String(pageInfo.page ?? 0)),
         pageSize: Number.parseInt(String(pageInfo.size ?? 10)),

@@ -6,7 +6,7 @@ import { useTranslation } from "react-i18next";
 
 import usePageInfo from "src/commons/hooks/usePageInfo";
 import { details } from "src/commons/routers";
-import { formatADAFull, formatPercent, getShortHash } from "src/commons/utils/helper";
+import { formatADA, formatPercent, getShortHash } from "src/commons/utils/helper";
 import ADAicon from "src/components/commons/ADAIcon";
 import CustomTooltip from "src/components/commons/CustomTooltip";
 import Table, { Column } from "src/components/commons/Table";
@@ -186,7 +186,7 @@ const PoolList: React.FC = () => {
           sx={{ fontWeight: 600, fontSize: "0.85rem", display: "inline-flex", alignItems: "center", gap: 0.4 }}
         >
           {r.poolSize != null ? (
-            <>{formatADAFull(r.poolSize)} <ADAicon /></>
+            <>{formatADA(r.poolSize)} <ADAicon /></>
           ) : (
             <Box sx={{ color: "secondary.light" }}>—</Box>
           )}
@@ -221,7 +221,7 @@ const PoolList: React.FC = () => {
           data-testid={`poolList.declaredPledgeValue#${idx}`}
           sx={{ fontSize: "0.83rem", color: "secondary.light", display: "inline-flex", alignItems: "center", gap: 0.4 }}
         >
-          {formatADAFull(r.declaredPledge)} <ADAicon />
+          {formatADA(r.declaredPledge)} <ADAicon />
         </Box>
       )
     },

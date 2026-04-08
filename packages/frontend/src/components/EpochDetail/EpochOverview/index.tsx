@@ -2,7 +2,6 @@ import React from "react";
 import { Box, Chip, LinearProgress, useTheme } from "@mui/material";
 import { alpha } from "@mui/material/styles";
 import { useTranslation } from "react-i18next";
-import { useSelector } from "react-redux";
 import { differenceInSeconds } from "date-fns";
 
 import {
@@ -16,11 +15,10 @@ import {
   DropIconComponent
 } from "src/commons/resources";
 import { MAX_SLOT_EPOCH, EPOCH_STATUS } from "src/commons/utils/constants";
-import { formatADA, formatADAFull, formatDateTimeLocal } from "src/commons/utils/helper";
+import { formatADA, formatDateTimeLocal } from "src/commons/utils/helper";
 import ADAicon from "src/components/commons/ADAIcon";
 import DatetimeTypeTooltip from "src/components/commons/DatetimeTypeTooltip";
 import DetailHeader from "src/components/commons/DetailHeader";
-import { RootState } from "src/stores/types";
 import { EpochOverview, EpochStatus } from "@shared/dtos/epoch.dto";
 
 import { TitleCard } from "./styles";
@@ -101,8 +99,7 @@ function EpochProgressValue({ data, slot }: { data: EpochOverview; slot: number 
 
 const EpochOverviewView: React.FC<EpochOverviewProps> = ({ data, loading, lastUpdated }) => {
   const { t } = useTranslation();
-  const { currentEpoch } = useSelector(({ system }: RootState) => system);
-  const slot = data && data.no === currentEpoch?.no ? (currentEpoch.slot ?? 0) : MAX_SLOT_EPOCH;
+  const slot = data?.epochSlotNo ?? 0;
 
   const isFinished = !data || differenceInSeconds(new Date(data.endTime || ""), new Date()) <= 0;
 

@@ -90,7 +90,7 @@ const Tokens: React.FC = () => {
 
   const columns: Column<ITokenOverview>[] = [
     {
-      title: <Box data-testid="tokens.table.title.assetName">{t("glossary.asset")}</Box>,
+      title: <Box data-testid="tokens.table.title.assetName">Asset</Box>,
       key: "assetName",
       minWidth: "200px",
       render: (r, idx) => (

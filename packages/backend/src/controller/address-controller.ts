@@ -25,7 +25,7 @@ addressController.get('/:address', async (req, res) => {
             };
             res.json({
                 data: addressDetail,
-                lastUpdated: Math.floor(Date.now() / 1000),
+                lastUpdated: Date.now(),
             } as ApiReturnType<AddressDetail>);
             return;
         }
@@ -52,13 +52,13 @@ addressController.get('/:address', async (req, res) => {
 
         res.json({
             data: addressDetail,
-            lastUpdated: Math.floor(Date.now() / 1000),
+            lastUpdated: Date.now(),
         } as ApiReturnType<AddressDetail>);
     } catch (err: any) {
         res.json({
             data: null,
             error: err.message || 'Failed to fetch address',
-            lastUpdated: Math.floor(Date.now() / 1000),
+            lastUpdated: Date.now(),
         } as ApiReturnType<AddressDetail | null>);
     }
 });
@@ -77,7 +77,7 @@ addressController.get('/:address/transactions', async (req, res) => {
             // Blockfrost doesn't provide a direct transactions-by-stake-address endpoint
             res.json({
                 data: [],
-                lastUpdated: Math.floor(Date.now() / 1000),
+                lastUpdated: Date.now(),
                 currentPage: page,
                 total: 0
             } as ApiReturnType<Transaction[]>);
@@ -114,7 +114,7 @@ addressController.get('/:address/transactions', async (req, res) => {
 
         res.json({
             data: txData,
-            lastUpdated: Math.floor(Date.now() / 1000),
+            lastUpdated: Date.now(),
             currentPage: page,
             total: addressData.tx_count
         } as ApiReturnType<Transaction[]>);
@@ -122,7 +122,7 @@ addressController.get('/:address/transactions', async (req, res) => {
         res.json({
             data: [],
             error: err.message || 'Failed to fetch transactions',
-            lastUpdated: Math.floor(Date.now() / 1000),
+            lastUpdated: Date.now(),
             currentPage: 0,
             total: 0
         } as ApiReturnType<Transaction[]>);
@@ -157,13 +157,13 @@ addressController.get('/:address/stake', async (req, res) => {
 
         res.json({
             data: stakeAddressDetail,
-            lastUpdated: Math.floor(Date.now() / 1000),
+            lastUpdated: Date.now(),
         } as ApiReturnType<StakeAddressDetail>);
     } catch (err: any) {
         res.json({
             data: null,
             error: err.message || 'Failed to fetch stake details',
-            lastUpdated: Math.floor(Date.now() / 1000),
+            lastUpdated: Date.now(),
         });
     }
 })

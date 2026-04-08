@@ -35,29 +35,35 @@ export const tokenController = Router();
  */
 tokenController.get('', async (req, res) => {
   const pageInfo = req.query;
-  const unixTimestamp = Math.floor(Date.now() / 1000);
 
+  const requestedPage = Number.parseInt(String(pageInfo.page || 0));
   const assets = await API.assets({
-    page: Number.parseInt(String(pageInfo.page || 0)),
+    page: requestedPage + 1, // Blockfrost uses 1-based pagination
     count: Number.parseInt(String(pageInfo.size || 100))
   });
 
   const assetData: ITokenOverview[] = assets.map((asset) => {
     return {
-      policy: asset.asset.slice(0, 58),
-      displayName: Buffer.from(asset.asset.slice(58), 'hex').toString('utf8'),
+      policy: asset.asset.slice(0, 56),
+      displayName: Buffer.from(asset.asset.slice(56), 'hex').toString('utf8'),
       supply: asset.quantity ? Number.parseInt(asset.quantity) : 0,
       fingerprint: asset.asset,
     } as ITokenOverview;
   });
 
+  const pageSize = Number.parseInt(String(pageInfo.size ?? 100));
+  // Blockfrost doesn't return total asset count; if a full page was returned
+  // there are likely more pages, so report a high total for pagination to work.
+  const hasMore = assetData.length >= pageSize;
+  const currentPage = Number.parseInt(String(pageInfo.page ?? 0));
+  const estimatedTotal = hasMore ? (currentPage + 2) * pageSize : currentPage * pageSize + assetData.length;
+
   res.json({
-    data: assetData.reverse(), // Reverse to show the latest block first
-    lastUpdated: unixTimestamp,
-    total: assetData.length, // TODO need to find the total number of blocks
-    currentPage: Number.parseInt(String(pageInfo.page ?? 0)),
-    pageSize: Number.parseInt(String(pageInfo.size ?? 10)),
-    totalPages: Math.ceil(assetData.length / (pageInfo.size ? Number.parseInt(String(pageInfo.size)) : 100)),
+    data: assetData.reverse(),
+    lastUpdated: Date.now(),
+    total: estimatedTotal,
+    currentPage,
+    pageSize,
   } as ApiReturnType<ITokenOverview[]>);
 });
 
@@ -80,7 +86,6 @@ tokenController.get('', async (req, res) => {
  */
 tokenController.get('/policy/:policyId', async (req, res) => {
   const pageInfo = req.query;
-  const unixTimestamp = Math.floor(Date.now() / 1000);
   const assets = await API.assetsPolicyById(req.params.policyId, {
     page: Number.parseInt(String(pageInfo.page || 1)),
     count: Number.parseInt(String(pageInfo.size || 50))
@@ -93,7 +98,7 @@ tokenController.get('/policy/:policyId', async (req, res) => {
   } as ITokenOverview));
   res.json({
     data: assetData,
-    lastUpdated: unixTimestamp,
+    lastUpdated: Date.now(),
     total: assetData.length,
     currentPage: Number.parseInt(String(pageInfo.page ?? 1)),
     pageSize: Number.parseInt(String(pageInfo.size ?? 50)),
@@ -125,7 +130,7 @@ tokenController.get('/:tokenId', async (req, res) => {
     name: assetById.asset,
     displayName: Buffer.from(assetById.asset_name ?? "", 'hex').toString('utf8'),
     policy: assetById.policy_id,
-    supply: assetById.mint_or_burn_count,
+    supply: Number.parseInt(assetById.quantity),
     fingerprint: assetById.fingerprint,
     createdOn: mintTx.block_time + "",
     txCount: history.length,
@@ -146,7 +151,7 @@ tokenController.get('/:tokenId', async (req, res) => {
     total: 1,
     data: ITokenOverviewData,
     error: undefined,
-    lastUpdated: Math.floor(Date.now() / 1000),
+    lastUpdated: Date.now(),
     currentPage: 0,
     pageSize: 1,
   } as ApiReturnType<ITokenOverview>);
@@ -154,12 +159,13 @@ tokenController.get('/:tokenId', async (req, res) => {
 
 tokenController.get('/:tokenId/holders', async (req, res) => {
   const pageInfo = req.query;
-  const unixTimestamp = Math.floor(Date.now() / 1000);
   const assetById = await API.assetsById(req.params.tokenId);
+  const pageSize = Number.parseInt(String(pageInfo.size || 100));
+  const currentPage = Number.parseInt(String(pageInfo.page || 0));
 
   const assetAddresses = await API.assetsAddresses(req.params.tokenId, {
-    page: Number.parseInt(String(pageInfo.page || 0)),
-    count: Number.parseInt(String(pageInfo.size || 100))
+    page: currentPage + 1, // Blockfrost uses 1-based pagination
+    count: pageSize
   });
 
   const holders = assetAddresses.map((entry) => {
@@ -168,25 +174,28 @@ tokenController.get('/:tokenId/holders', async (req, res) => {
       amount: entry.quantity ? Number.parseInt(entry.quantity) : 0,
       ratio: (Number.parseInt(entry.quantity) / (assetById.quantity ? Number.parseInt(assetById.quantity) : 1)) * 100
     } as TokenHolder;
-  })
+  });
+
+  const hasMore = holders.length >= pageSize;
+  const estimatedTotal = hasMore ? (currentPage + 2) * pageSize : currentPage * pageSize + holders.length;
 
   res.json({
     data: holders,
-    lastUpdated: unixTimestamp,
-    total: holders.length, // TODO need to find the total number of blocks
-    currentPage: Number.parseInt(String(pageInfo.page ?? 0)),
-    pageSize: Number.parseInt(String(pageInfo.size ?? 10)),
-    totalPages: Math.ceil(holders.length / (pageInfo.size ? Number.parseInt(String(pageInfo.size)) : 100)), // TODO need to find the total number of blocks
+    lastUpdated: Date.now(),
+    total: estimatedTotal,
+    currentPage,
+    pageSize,
   } as ApiReturnType<TokenHolder[]>);
 });
 
 tokenController.get('/:tokenId/transactions', async (req, res) => {
   const pageInfo = req.query;
-  const unixTimestamp = Math.floor(Date.now() / 1000);
-  const assetById = await API.assetsById(req.params.tokenId);
+  const pageSize = Number.parseInt(String(pageInfo.size || 100));
+  const currentPage = Number.parseInt(String(pageInfo.page || 0));
+
   const assetTransactions = await API.assetsTransactions(req.params.tokenId, {
-    page: Number.parseInt(String(pageInfo.page || 0)),
-    count: Number.parseInt(String(pageInfo.size || 100))
+    page: currentPage + 1, // Blockfrost uses 1-based pagination
+    count: pageSize
   });
 
   const transactions : Transaction[] = await Promise.all(assetTransactions.map(async (entry) => {
@@ -205,12 +214,14 @@ tokenController.get('/:tokenId/transactions', async (req, res) => {
     } as Transaction
   } ));
 
+  const hasMore = transactions.length >= pageSize;
+  const estimatedTotal = hasMore ? (currentPage + 2) * pageSize : currentPage * pageSize + transactions.length;
+
   res.json({
     data: transactions,
-    lastUpdated: unixTimestamp,
-    total: transactions.length, // TODO need to find the total number of blocks
-    currentPage: Number.parseInt(String(pageInfo.page ?? 0)),
-    pageSize: Number.parseInt(String(pageInfo.size ?? 10)),
-    totalPages: Math.ceil(transactions.length / (pageInfo.size ? Number.parseInt(String(pageInfo.size)) : 100)), // TODO need to find the total number of blocks
+    lastUpdated: Date.now(),
+    total: estimatedTotal,
+    currentPage,
+    pageSize,
   } as ApiReturnType<Transaction[]>);
 });

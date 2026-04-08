@@ -16,9 +16,9 @@ const BF_FETCH_CAP    = 500; // hard ceiling to keep response times reasonable
 
 blockController.get('', async (req, res) => {
   const pageInfo = req.query;
-  const unixTimestamp = Math.floor(Date.now() / 1000);
   const skipMeta = String(pageInfo.skipMeta) === "true";
 
+  const requestedPage = Math.max(1, Number.parseInt(String(pageInfo.page || 1)));
   const requestedSize = Math.min(
     Number.parseInt(String(pageInfo.size || BF_MAX_PER_PAGE)),
     BF_FETCH_CAP
@@ -26,15 +26,21 @@ blockController.get('', async (req, res) => {
 
   const latestBlock = await API.blocksLatest();
 
-  // Paginate Blockfrost to satisfy requestedSize
+  // Calculate how many blocks to skip for the requested page, then fetch
+  const totalToSkip = (requestedPage - 1) * requestedSize;
+  const totalToFetch = totalToSkip + requestedSize;
+
   const allBfBlocks: any[] = [];
-  const pagesNeeded = Math.ceil(requestedSize / BF_MAX_PER_PAGE);
+  const pagesNeeded = Math.ceil(totalToFetch / BF_MAX_PER_PAGE);
   for (let bfPage = 1; bfPage <= pagesNeeded; bfPage++) {
-    const count = Math.min(BF_MAX_PER_PAGE, requestedSize - allBfBlocks.length);
+    const count = Math.min(BF_MAX_PER_PAGE, totalToFetch - allBfBlocks.length);
     const page = await API.blocksPrevious(latestBlock.hash, { page: bfPage, count });
     allBfBlocks.push(...page);
     if (page.length < count) break; // reached the beginning of the chain
   }
+
+  // Slice to the requested page
+  allBfBlocks.splice(0, totalToSkip);
 
   // Batch-fetch pool metadata for unique slot leaders (skipped for bulk/chart requests)
   const poolMeta = new Map<string, { name: string; ticker: string }>();
@@ -80,16 +86,27 @@ blockController.get('', async (req, res) => {
 
   res.json({
     data: blocksData.reverse(), // newest first
-    lastUpdated: unixTimestamp,
+    lastUpdated: Date.now(),
     total: latestBlock.height,
-    currentPage: Number.parseInt(String(pageInfo.page ?? 0)),
+    currentPage: requestedPage - 1,
     pageSize: requestedSize,
-    totalPages: Math.ceil(blocksData.length / requestedSize),
   } as ApiReturnType<Block[]>);
 });
 
 blockController.get('/:blockId', async (req, res) => {
   const block = await getBlock(req.params.blockId);
+
+  // Fetch pool metadata if the slot leader is a pool
+  let poolName = "";
+  let poolTicker = "";
+  if (block.slot_leader?.startsWith("pool")) {
+    try {
+      const meta = await API.poolMetadata(block.slot_leader);
+      poolName = meta.name ?? "";
+      poolTicker = meta.ticker ?? "";
+    } catch { /* no metadata */ }
+  }
+
   res.json({
     total: 1,
     data: {
@@ -107,15 +124,14 @@ blockController.get('/:blockId', async (req, res) => {
       time: block.time.toString(),
       previousBlock: block.previous_block,
       nextBlock: block.next_block,
-      // poolTicker: block.slot_leader,
-      // poolName: block.slot_leader,
+      poolTicker,
+      poolName,
       slotLeader: block.slot_leader,
-      // poolView: block.slot_leader,
       size: block.size,
       confirmations: (block as any).confirmations,
       blockVrf: block.block_vrf ?? undefined,
     },
-    lastUpdated: Math.floor(Date.now() / 1000),
+    lastUpdated: Date.now(),
   } as ApiReturnType<Block>)
 })
 
@@ -151,7 +167,7 @@ blockController.get('/:blockId/transactions', async (req, res) => {
   res.json({
     total: txs.length,
     data: txs,
-    lastUpdated: Math.floor(Date.now() / 1000),
+    lastUpdated: Date.now(),
     currentPage: Number.parseInt(String(req.query.page ?? 0)),
     pageSize: Number.parseInt(String(req.query.size ?? 10)),
     totalPages: Math.ceil(txs.length / (req.query.size ? Number.parseInt(String(req.query.size)) : 100)),

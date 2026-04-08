@@ -12,20 +12,28 @@ epochController.get('', async (req, res) => {
   const pageInfo = req.query;
   const unixTimestamp = Math.floor(Date.now() / 1000);
   const latestEpoch = await API.epochsLatest();
+  const requestedPage = Number.parseInt(String(pageInfo.page || 0));
   const epochs = await API.epochsPrevious(latestEpoch.epoch,
-    {page: Number.parseInt(String(pageInfo.page || 0)), count: Number.parseInt(String(pageInfo.size || 100))});
-  if(Number.parseInt(String(pageInfo.page || 0)) == 0) {
+    {page: requestedPage + 1, count: Number.parseInt(String(pageInfo.size || 100))});
+  if(requestedPage === 0) {
     // If page is 0, we need to add the latest epoch to the list
     // since the API does not return it
     epochs.push(latestEpoch);
   }
   const epochsData = epochs.map((epoch => {
+    // Calculate slot for the current epoch
+    let epochSlotNo = 0;
+    if (epoch.epoch === latestEpoch.epoch) {
+      epochSlotNo = Math.max(0, unixTimestamp - epoch.start_time);
+    } else {
+      epochSlotNo = Math.max(0, epoch.end_time - epoch.start_time);
+    }
     const dataEpoch: EpochOverview = {
       no: epoch.epoch,
       syncingProgress: getProgressPercentage(epoch.start_time, epoch.end_time, unixTimestamp),
       status: getEpochstatus(epoch.epoch, latestEpoch.epoch),
       rewardsDistributed: 0,
-      epochSlotNo: 0,
+      epochSlotNo,
       account: 0,
       maxSlot: 0,
       blkCount: epoch.block_count,
@@ -40,7 +48,7 @@ epochController.get('', async (req, res) => {
   }));
   res.json({
     data: epochsData.reverse(), // Reverse to show the latest epoch first
-    lastUpdated: Math.floor(Date.now() / 1000),
+    lastUpdated: Date.now(),
     total: epochsData.length,
     currentPage: Number.parseInt(String(pageInfo.page ?? 0)),
     pageSize: Number.parseInt(String(pageInfo.size ?? 100)),
@@ -56,14 +64,24 @@ epochController.get('/:epochNo', async (req, res) => {
 
   const unixTimestamp = Math.floor(Date.now() / 1000);
 
+  // Calculate current epoch slot for the active epoch
+  let epochSlotNo = 0;
+  if (requestedEpoch.epoch === latestEpoch.epoch) {
+    // For the current epoch, compute slot from elapsed time (1 slot = 1 second on mainnet)
+    epochSlotNo = Math.max(0, unixTimestamp - requestedEpoch.start_time);
+  } else {
+    // For finished epochs, the slot is the total slots in the epoch
+    epochSlotNo = Math.max(0, requestedEpoch.end_time - requestedEpoch.start_time);
+  }
+
   const epoch: EpochOverview = {
     no: requestedEpoch.epoch,
     syncingProgress: getProgressPercentage(requestedEpoch.start_time, requestedEpoch.end_time, unixTimestamp),
     status: getEpochstatus(requestedEpoch.epoch, latestEpoch.epoch),
     rewardsDistributed: 0,
-    epochSlotNo: 0,
+    epochSlotNo,
     account: 0,
-    maxSlot: 0,
+    maxSlot: 432000,
     blkCount: requestedEpoch.block_count,
     endTime: requestedEpoch.end_time.toString(),
     startTime: requestedEpoch.start_time.toString(),
@@ -74,7 +92,7 @@ epochController.get('/:epochNo', async (req, res) => {
   };
   res.json({
     data: epoch,
-    lastUpdated: Math.floor(Date.now() / 1000),
+    lastUpdated: Date.now(),
   } as ApiReturnType<EpochOverview>);
 });
 
@@ -82,8 +100,9 @@ epochController.get('/:epochNo/blocks', async (req, res) => {
   const {epochNo} = req.params;
   const pageInfo = req.query;
   let epoch = await getEpoch(epochNo);
+  const epochBlocksPage = Number.parseInt(String(pageInfo.page ?? 0));
   const epochBlocks = await API.epochsBlocks(Number.parseInt(epochNo), {
-    page: Number.parseInt(String(pageInfo.page ?? 0)),
+    page: epochBlocksPage + 1, // Blockfrost uses 1-based pagination
     count: Number.parseInt(String(pageInfo.size ?? 100)),
   });
 
@@ -126,7 +145,7 @@ epochController.get('/:epochNo/blocks', async (req, res) => {
   res.json({
     total: epoch.block_count,
     data: blocks,
-    lastUpdated: Math.floor(Date.now() / 1000),
+    lastUpdated: Date.now(),
     currentPage: Number.parseInt(String(pageInfo.page ?? 0)),
     pageSize: Number.parseInt(String(pageInfo.size ?? 100)),
     totalPages: Math.ceil(epoch.block_count / (pageInfo.size ? Number.parseInt(String(pageInfo.size)) : 100)),

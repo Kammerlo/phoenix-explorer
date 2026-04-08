@@ -18,8 +18,7 @@ import { IoCheckmarkCircle, IoWarning, IoGlobeOutline } from "react-icons/io5";
 import { MdContentCopy } from "react-icons/md";
 
 import { details } from "src/commons/routers";
-import { formatADAFull, formatPercent } from "src/commons/utils/helper";
-import { formatDateTimeLocal } from "src/commons/utils/helper";
+import { formatADA, formatADAFull, formatPercent, formatDateTimeLocal } from "src/commons/utils/helper";
 import ADAicon from "src/components/commons/ADAIcon";
 import FormNowMessage from "src/components/commons/FormNowMessage";
 import DatetimeTypeTooltip from "src/components/commons/DatetimeTypeTooltip";
@@ -146,8 +145,9 @@ function StatCard({ label, value, accent }: StatCardProps) {
 
 function SaturationCard({ saturation }: { saturation: number | null | undefined }) {
   const theme = useTheme();
-  const pct = Math.min(100, saturation ?? 0);
-  const isOver = (saturation ?? 0) > 100;
+  // saturation from Blockfrost is a 0–1 fraction (e.g. 0.85 = 85%)
+  const pct = Math.min(100, (saturation ?? 0) * 100);
+  const isOver = (saturation ?? 0) > 1;
   const barColor = isOver ? theme.palette.error[700] : theme.palette.success.main;
 
   return (
@@ -165,7 +165,7 @@ function SaturationCard({ saturation }: { saturation: number | null | undefined 
       </Typography>
       <Box display="flex" alignItems="baseline" justifyContent="space-between" mt={0.5} mb={1}>
         <Box sx={{ fontWeight: 800, fontSize: "1.1rem", color: isOver ? "error.main" : "text.primary" }}>
-          {saturation != null ? formatPercent((saturation) / 100) : "—"}
+          {saturation != null ? formatPercent(saturation) : "—"}
         </Box>
         {isOver && (
           <Chip label="Over-saturated" color="error" size="small" sx={{ height: 18, fontSize: "0.6rem", fontWeight: 700 }} />
@@ -403,7 +403,7 @@ const DelegationDetail: React.FC = () => {
           label={<>Pool Size (<ADAicon />)</>}
           value={
             data.poolSize != null
-              ? <Box display="inline-flex" alignItems="center" gap={0.4}>{formatADAFull(data.poolSize)}<ADAicon /></Box>
+              ? <Box display="inline-flex" alignItems="center" gap={0.4}>{formatADA(data.poolSize)}<ADAicon /></Box>
               : "—"
           }
           accent
@@ -417,7 +417,7 @@ const DelegationDetail: React.FC = () => {
         <StatCard
           label="Fixed Cost (₳)"
           value={
-            <Box display="inline-flex" alignItems="center" gap={0.4}>{formatADAFull(data.cost)}<ADAicon /></Box>
+            <Box display="inline-flex" alignItems="center" gap={0.4}>{formatADA(data.cost)}<ADAicon /></Box>
           }
         />
 
@@ -450,13 +450,13 @@ const DelegationDetail: React.FC = () => {
               </Tooltip>
             </Box>
           }
-          value={<Box display="inline-flex" alignItems="center" gap={0.4}>{formatADAFull(data.pledge)}<ADAicon /></Box>}
+          value={<Box display="inline-flex" alignItems="center" gap={0.4}>{formatADA(data.pledge)}<ADAicon /></Box>}
         />
 
         {data.livePledge !== undefined && (
           <StatCard
             label="Live Pledge (₳)"
-            value={<Box display="inline-flex" alignItems="center" gap={0.4}>{formatADAFull(data.livePledge)}<ADAicon /></Box>}
+            value={<Box display="inline-flex" alignItems="center" gap={0.4}>{formatADA(data.livePledge)}<ADAicon /></Box>}
           />
         )}
 
