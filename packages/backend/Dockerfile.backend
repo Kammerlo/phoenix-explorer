@@ -18,9 +18,8 @@ COPY packages/backend/ ./packages/backend/
 COPY packages/shared/ ./packages/shared/
 COPY tsconfig.base.json ./
 
-# Clean stale shared dist (may be copied from host), then build shared + backend
-RUN npm run clean --workspace=cardano-explorer-shared && \
-    npm run build --workspace=cardano-explorer-shared && \
+# Build shared (needed at runtime for enums/JS) then backend
+RUN npm run build --workspace=cardano-explorer-shared && \
     npm run build --workspace=backend
 
 # ─── Production stage ─────────────────────────────────────────────────────────
