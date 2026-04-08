@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { Container, Grid, styled } from "@mui/material";
 import { useTranslation } from "react-i18next";
-import axios from "axios";
 
 import { ApiConnector } from "src/commons/connector/ApiConnector";
 import { Block } from "@shared/dtos/block.dto";
@@ -45,12 +44,10 @@ const Home: React.FC = () => {
   useEffect(() => {
     const api = ApiConnector.getApiConnector();
 
-    // Dashboard stats — gateway-specific aggregated endpoint.
-    // On Yaci/Blockfrost the call will 404 and statsData stays null (cards show "—").
-    axios
-      .get<DashboardStats>(`${api.baseUrl}/dashboard/stats`)
-      .then((r) => setStatsData(r.data))
-      .catch(() => {/* unsupported provider — stats stay empty */})
+    api
+      .getDashboardStats()
+      .then((stats) => setStatsData(stats))
+      .catch(() => {})
       .finally(() => setStatsLoading(false));
 
     api
