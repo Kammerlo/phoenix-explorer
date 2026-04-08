@@ -17,23 +17,18 @@ const themePersistConfig = {
   blacklist: ["isDark"]
 };
 
-const providerPersistConfig = {
-  key: "provider",
-  storage: storage
-};
-
 const rootReducer = combineReducers({
   system: systemReducer,
   toast: toastReducer,
   theme: persistReducer(themePersistConfig, themeReducer),
-  provider: persistReducer(providerPersistConfig, providerReducer)
+  provider: providerReducer // persisted via cookies, not redux-persist
 });
 
 export type RootReducerState = {
   system: SystemState;
   toast: ToastState;
   theme: ThemeStoreType & PersistPartial;
-  provider: ProviderState & PersistPartial;
+  provider: ProviderState;
 };
 
 const persistConfig = {

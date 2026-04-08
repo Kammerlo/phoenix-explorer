@@ -18,8 +18,9 @@ COPY packages/backend/ ./packages/backend/
 COPY packages/shared/ ./packages/shared/
 COPY tsconfig.base.json ./
 
-# tsc --build resolves project references in order (shared first, then backend)
-RUN npm run build --workspace=backend
+# Build shared (needed at runtime for enums/JS) then backend
+RUN npm run build --workspace=cardano-explorer-shared && \
+    npm run build --workspace=backend
 
 # ─── Production stage ─────────────────────────────────────────────────────────
 # Installs only runtime deps — drops typescript, ts-node, nodemon, type defs, etc.

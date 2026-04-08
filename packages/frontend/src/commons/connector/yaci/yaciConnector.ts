@@ -729,6 +729,10 @@ export class YaciConnector implements ApiConnector {
     }
   }
 
+  async getDashboardStats(): Promise<null> {
+    return null; // Yaci Store doesn't provide a network/supply endpoint
+  }
+
   async search(query: string): Promise<ApiReturnType<SearchResult[]>> {
     const q = query.trim();
     if (!q || q.length < 2) return { data: [], lastUpdated: Date.now(), total: 0 };

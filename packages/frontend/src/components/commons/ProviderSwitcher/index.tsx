@@ -91,6 +91,26 @@ const ProviderSwitcher: React.FC<ProviderSwitcherProps> = ({ open, onClose }) =>
 
   const selectedProvider = PROVIDERS.find((p) => p.type === selectedType)!;
 
+  // Reset local state when the dialog opens so it reflects the current config
+  React.useEffect(() => {
+    if (open && currentConfig) {
+      setSelectedType(currentConfig.type);
+      setCustomUrl(currentConfig.baseUrl);
+      setApiKey(currentConfig.apiKey ?? "");
+    }
+  }, [open]);
+
+  // When provider type changes, reset URL to that provider's default
+  const handleTypeChange = (type: ProviderType) => {
+    setSelectedType(type);
+    const provider = PROVIDERS.find((p) => p.type === type)!;
+    // Only reset URL if the current value belongs to a different provider
+    if (type !== currentConfig?.type) {
+      setCustomUrl(provider.defaultUrl);
+      setApiKey("");
+    }
+  };
+
   const handleSave = () => {
     const network = process.env.REACT_APP_NETWORK || "mainnet";
     const baseUrl = customUrl || selectedProvider.defaultUrl;
@@ -112,7 +132,7 @@ const ProviderSwitcher: React.FC<ProviderSwitcherProps> = ({ open, onClose }) =>
         <IconButton onClick={onClose} size="small"><MdClose /></IconButton>
       </DialogTitle>
       <DialogContent>
-        <RadioGroup value={selectedType} onChange={(e) => setSelectedType(e.target.value as ProviderType)}>
+        <RadioGroup value={selectedType} onChange={(e) => handleTypeChange(e.target.value as ProviderType)}>
           {PROVIDERS.map((provider) => (
             <Box
               key={provider.type}
@@ -124,7 +144,7 @@ const ProviderSwitcher: React.FC<ProviderSwitcherProps> = ({ open, onClose }) =>
                 cursor: "pointer",
                 "&:hover": { borderColor: theme.palette.primary.main }
               }}
-              onClick={() => setSelectedType(provider.type)}
+              onClick={() => handleTypeChange(provider.type)}
             >
               <FormControlLabel
                 value={provider.type}

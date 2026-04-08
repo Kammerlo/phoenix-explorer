@@ -1,10 +1,10 @@
 import {Router} from 'express';
 import {API} from "../config/blockfrost";
-import {EpochStatus, EpochOverview} from "@shared/dtos/epoch.dto";
+import {EpochOverview} from "@shared/dtos/epoch.dto";
 import {Block} from "@shared/dtos/block.dto";
 import {ApiReturnType} from "@shared/APIReturnType";
 import {cache, getBlock, getEpoch} from "../config/cache";
-import { components } from '@blockfrost/openapi';
+import { getEpochStatus, getEpochProgress, computeEpochSlotNo, MAINNET_EPOCH_MAX_SLOT } from "@shared/helpers/epochHelpers";
 
 export const epochController = Router();
 
@@ -30,12 +30,12 @@ epochController.get('', async (req, res) => {
     }
     const dataEpoch: EpochOverview = {
       no: epoch.epoch,
-      syncingProgress: getProgressPercentage(epoch.start_time, epoch.end_time, unixTimestamp),
-      status: getEpochstatus(epoch.epoch, latestEpoch.epoch),
+      syncingProgress: getEpochProgress(epoch.start_time, epoch.end_time, unixTimestamp),
+      status: getEpochStatus(epoch.epoch, latestEpoch.epoch),
       rewardsDistributed: 0,
       epochSlotNo,
       account: 0,
-      maxSlot: 0,
+      maxSlot: MAINNET_EPOCH_MAX_SLOT,
       blkCount: epoch.block_count,
       endTime: epoch.end_time.toString(),
       startTime: epoch.start_time.toString(),
@@ -76,12 +76,12 @@ epochController.get('/:epochNo', async (req, res) => {
 
   const epoch: EpochOverview = {
     no: requestedEpoch.epoch,
-    syncingProgress: getProgressPercentage(requestedEpoch.start_time, requestedEpoch.end_time, unixTimestamp),
-    status: getEpochstatus(requestedEpoch.epoch, latestEpoch.epoch),
+    syncingProgress: getEpochProgress(requestedEpoch.start_time, requestedEpoch.end_time, unixTimestamp),
+    status: getEpochStatus(requestedEpoch.epoch, latestEpoch.epoch),
     rewardsDistributed: 0,
     epochSlotNo,
     account: 0,
-    maxSlot: 432000,
+    maxSlot: MAINNET_EPOCH_MAX_SLOT,
     blkCount: requestedEpoch.block_count,
     endTime: requestedEpoch.end_time.toString(),
     startTime: requestedEpoch.start_time.toString(),
@@ -152,21 +152,3 @@ epochController.get('/:epochNo/blocks', async (req, res) => {
   } as ApiReturnType<Block[]>);
 });
 
-function getEpochstatus(epoch: number, latestEpoch: number): EpochStatus {
-  if (epoch === latestEpoch) {
-    return EpochStatus.IN_PROGRESS;
-  } else if (epoch === latestEpoch - 1) {
-    return EpochStatus.REWARDING;
-  } else {
-    return EpochStatus.FINISHED;
-  }
-}
-
-function getProgressPercentage(start: number, end: number, current: number): number {
-  if (current <= start) return 0;
-  if (current >= end) return 100;
-
-  const total = end - start;
-  const progress = current - start;
-  return (progress / total) * 100;
-}

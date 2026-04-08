@@ -13,23 +13,48 @@ export interface ProviderState {
   config: ProviderConfig;
 }
 
-const STORAGE_KEY = "phoenix_provider_config";
+const COOKIE_NAME = "phoenix_provider";
+const COOKIE_MAX_AGE = 365 * 24 * 60 * 60; // 1 year
+
+function getCookie(name: string): string | null {
+  const match = document.cookie.match(new RegExp("(^|; )" + name + "=([^;]*)"));
+  return match ? decodeURIComponent(match[2]) : null;
+}
+
+function setCookie(name: string, value: string): void {
+  document.cookie = `${name}=${encodeURIComponent(value)};path=/;max-age=${COOKIE_MAX_AGE};SameSite=Lax`;
+}
 
 function getDefaultConfig(): ProviderConfig {
-  const stored = localStorage.getItem(STORAGE_KEY);
-  if (stored) {
-    try { return JSON.parse(stored); } catch { /* ignore */ }
-  }
-  return {
+  const envDefaults: ProviderConfig = {
     type: (process.env.REACT_APP_API_TYPE as ProviderType) || "GATEWAY",
     baseUrl: process.env.REACT_APP_API_URL || "",
     apiKey: process.env.REACT_APP_BLOCKFROST_API_KEY,
     network: process.env.REACT_APP_NETWORK || "mainnet"
   };
+
+  // Read from cookie first
+  const cookieValue = getCookie(COOKIE_NAME);
+  if (cookieValue) {
+    try { return JSON.parse(cookieValue); } catch { /* ignore malformed cookie */ }
+  }
+
+  // Migrate from old localStorage keys (one-time)
+  const oldKey = localStorage.getItem("phoenix_provider_config");
+  if (oldKey) {
+    try {
+      const parsed = JSON.parse(oldKey);
+      setCookie(COOKIE_NAME, oldKey);
+      localStorage.removeItem("phoenix_provider_config");
+      return parsed;
+    } catch { /* ignore */ }
+  }
+
+  return envDefaults;
 }
 
 export function saveProviderConfig(config: ProviderConfig): void {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
+  setCookie(COOKIE_NAME, JSON.stringify(config));
 }
 
 export function loadProviderConfig(): ProviderConfig {

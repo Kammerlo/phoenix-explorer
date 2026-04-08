@@ -3,6 +3,7 @@ import { fetchTransactionDetail } from "../service/transactionService";
 import { ApiReturnType } from "@shared/APIReturnType";
 import { Transaction, TransactionDetail } from "@shared/dtos/transaction.dto";
 import { API } from "../config/blockfrost";
+import { computeTxTags, computeTotalLovelaceOutput } from "@shared/helpers/txTags";
 
 export const transactionController = Router();
 
@@ -38,14 +39,6 @@ transactionController.get("", async (req, res) => {
   const txs: Transaction[] = await Promise.all(
     txEntries.map(async ({ txHash, blockHeight: bh }) => {
       const tx = await API.txs(txHash);
-      const tags: import("@shared/dtos/transaction.dto").TxTag[] = [];
-      const hasNativeTokens = tx.output_amount.some((a: any) => a.unit !== "lovelace");
-      if (hasNativeTokens || (tx.asset_mint_or_burn_count ?? 0) > 0) tags.push("token");
-      if ((tx.asset_mint_or_burn_count ?? 0) > 0) tags.push("mint");
-      if ((tx.delegation_count ?? 0) > 0 || (tx.stake_cert_count ?? 0) > 0 || (tx.withdrawal_count ?? 0) > 0 || (tx.mir_cert_count ?? 0) > 0) tags.push("stake");
-      if ((tx.pool_update_count ?? 0) > 0 || (tx.pool_retire_count ?? 0) > 0) tags.push("pool");
-      if ((tx.redeemer_count ?? 0) > 0) tags.push("script");
-      if (tags.length === 0) tags.push("transfer");
       return {
         blockNo: tx.block_height ?? bh,
         hash: txHash,
@@ -54,11 +47,9 @@ transactionController.get("", async (req, res) => {
         epochNo: latestBlock.epoch ?? 0,
         epochSlotNo: tx.slot ? tx.slot - epochStartSlot : 0,
         fee: parseInt(tx.fees ?? "0"),
-        totalOutput: tx.output_amount
-          .filter((a: any) => a.unit === "lovelace")
-          .reduce((acc: number, a: any) => acc + parseInt(a.quantity), 0),
+        totalOutput: computeTotalLovelaceOutput(tx.output_amount),
         blockHash: tx.block,
-        tags,
+        tags: computeTxTags(tx),
       } as Transaction;
     })
   );

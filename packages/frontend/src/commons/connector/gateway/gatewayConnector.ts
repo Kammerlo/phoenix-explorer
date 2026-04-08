@@ -5,6 +5,7 @@ import { ParsedUrlQuery } from "querystring";
 import { FunctionEnum, POOL_TYPE } from "src/commons/connector/types/FunctionEnum";
 import { ApiReturnType } from "@shared/APIReturnType";
 import applyCaseMiddleware from "axios-case-converter";
+import type { DashboardStats } from "src/components/Home/DashboardStats";
 import { EpochOverview } from "@shared/dtos/epoch.dto";
 import { Block } from "@shared/dtos/block.dto";
 import { Transaction, TransactionDetail } from "@shared/dtos/transaction.dto";
@@ -224,5 +225,12 @@ export class GatewayConnector implements ApiConnector {
       params: pageInfo
     });
     return response.data;
+  }
+
+  async getDashboardStats(): Promise<DashboardStats | null> {
+    try {
+      const response = await this.client.get<DashboardStats>(`${this.baseUrl}/dashboard/stats`);
+      return response.data;
+    } catch { return null; }
   }
 }

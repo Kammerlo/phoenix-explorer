@@ -5,7 +5,7 @@
   "type": "commonjs",
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only -r tsconfig-paths/register src/server.ts",
-    "build": "tsc --build tsconfig.json",
+    "build": "tsc -p tsconfig.build.json",
     "start": "node dist/server.js"
   },
   "keywords": [],
