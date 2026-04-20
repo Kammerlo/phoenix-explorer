@@ -40,7 +40,7 @@ const TAG_ORDER: TxTag[] = ["transfer", "script", "token", "mint", "stake", "poo
 function deriveTagsFromDetail(data: TransactionDetail | null | undefined): TxTag[] {
   if (!data) return [];
 
-  // Prefer pre-computed tags from the backend (same logic as the list view)
+  // Prefer pre-computed tags from the gateway (same logic as the list view)
   if (data.tx.tags?.length) return TAG_ORDER.filter((t) => data.tx.tags!.includes(t));
 
   // Fallback: derive from populated arrays (for connectors that don't compute tags)

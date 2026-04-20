@@ -26,7 +26,7 @@ import { getEpochStatus, getEpochProgress, computeEpochSlotNo, MAINNET_EPOCH_MAX
 
 /**
  * Direct Blockfrost connector — calls the Blockfrost REST API from the browser.
- * Produces the same DTO shapes as the Gateway (backend) connector.
+ * Produces the same DTO shapes as the Gateway connector.
  */
 export class BlockfrostConnector extends ApiConnector {
   client: AxiosInstance;

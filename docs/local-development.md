@@ -24,13 +24,13 @@ The project is an npm workspaces monorepo. All `npm` commands below must be run 
 git clone <repo-url>
 cd phoenix-explorer
 
-# 2. Install all workspace dependencies (frontend + backend + shared)
+# 2. Install all workspace dependencies (frontend + gateway + shared)
 npm install
 
 # 3. Copy and fill in environment files
-cp .env.template packages/backend/.env
+cp .env.template packages/gateway/.env
 cp packages/frontend/.env.example packages/frontend/.env
-# Edit both files — at minimum set API_KEY in packages/backend/.env
+# Edit both files — at minimum set API_KEY in packages/gateway/.env
 
 # 4. Start both services concurrently
 npm run dev
@@ -38,7 +38,7 @@ npm run dev
 
 `npm run dev` runs the following workspaces in parallel using `concurrently`:
 
-- **Backend** — `ts-node-dev` with hot-reload on `packages/backend/src/server.ts`, default port **3000**
+- **Gateway** — `ts-node-dev` with hot-reload on `packages/gateway/src/server.ts`, default port **3000**
 - **Frontend** — Vite dev server on `packages/frontend`, default port **5173** (or the `PORT` value in `packages/frontend/.env`)
 
 Open `http://localhost:5173` in your browser once both processes are ready.
@@ -47,11 +47,11 @@ Open `http://localhost:5173` in your browser once both processes are ready.
 
 ## Environment Variables
 
-### Backend (`packages/backend/.env`)
+### Gateway (`packages/gateway/.env`)
 
 | Variable | Required | Default | Description |
 |---|---|---|---|
-| `API_KEY` | Yes* | — | Blockfrost project API key. Required when the backend acts as a Blockfrost gateway. |
+| `API_KEY` | Yes* | — | Blockfrost project API key. Required when the gateway acts as a Blockfrost gateway. |
 | `PORT` | No | `3000` | Port the Express server listens on. |
 | `HOST` | No | `0.0.0.0` | Interface the server binds to. |
 | `NETWORK` | No | `mainnet` | Cardano network passed to Blockfrost (`mainnet`, `preprod`, `preview`). |
@@ -69,7 +69,7 @@ Open `http://localhost:5173` in your browser once both processes are ready.
 | `REACT_APP_API_URL_COIN_GECKO` | No | `https://api.coingecko.com/...` | CoinGecko endpoint for ADA price data. |
 | `PORT` | No | `3000` | Port used by the Vite dev server. |
 
-A template covering both backend and frontend variables is provided at `.env.template` in the repository root.
+A template covering both gateway and frontend variables is provided at `.env.template` in the repository root.
 
 ---
 
@@ -79,21 +79,21 @@ Phoenix Explorer supports three data providers. The active provider is determine
 
 ### GATEWAY (default)
 
-The frontend talks to the local Express backend, which proxies requests to Blockfrost.
+The frontend talks to the local Express gateway, which proxies requests to Blockfrost.
 
 ```env
 # packages/frontend/.env
 REACT_APP_API_TYPE=GATEWAY
 REACT_APP_API_URL=http://localhost:3000/api
 
-# packages/backend/.env
+# packages/gateway/.env
 API_KEY=mainnetXXXXXXXXXXXXXXXXXXXXXXXX
 NETWORK=mainnet
 ```
 
 ### YACI
 
-The frontend talks directly to a [Yaci Store](https://github.com/bloxbean/yaci-store) REST API. No backend process is needed.
+The frontend talks directly to a [Yaci Store](https://github.com/bloxbean/yaci-store) REST API. No gateway process is needed.
 
 ```env
 # packages/frontend/.env
@@ -120,16 +120,16 @@ REACT_APP_NETWORK=mainnet
 
 ## Docker Compose Setup
 
-The Docker Compose configuration builds the backend Express server from source and runs it as a container. The frontend continues to run as a Vite dev server on the host.
+The Docker Compose configuration builds the gateway Express server from source and runs it as a container. The frontend continues to run as a Vite dev server on the host.
 
 ### Files created
 
 | File | Location |
 |---|---|
-| `Dockerfile.backend` | `packages/backend/Dockerfile.backend` |
+| `Dockerfile.gateway` | `packages/gateway/Dockerfile.gateway` |
 | `docker-compose.yml` | Repository root `docker-compose.yml` |
 
-### `packages/backend/Dockerfile.backend`
+### `packages/gateway/Dockerfile.gateway`
 
 ```dockerfile
 FROM node:20-alpine AS base
@@ -137,24 +137,24 @@ WORKDIR /app
 
 # Copy workspace manifests
 COPY package.json package-lock.json ./
-COPY packages/backend/package.json ./packages/backend/
+COPY packages/gateway/package.json ./packages/gateway/
 COPY packages/shared/package.json ./packages/shared/
 
 # Install all workspace deps
 RUN npm install --workspaces
 
 # Copy source
-COPY packages/backend/ ./packages/backend/
+COPY packages/gateway/ ./packages/gateway/
 COPY packages/shared/ ./packages/shared/
 COPY tsconfig.base.json ./
 
-# Build shared first, then backend
+# Build shared first, then gateway
 RUN npm run build --workspace=shared
-RUN npm run build --workspace=backend
+RUN npm run build --workspace=gateway
 
 EXPOSE 3000
 
-CMD ["node", "packages/backend/dist/server.js"]
+CMD ["node", "packages/gateway/dist/server.js"]
 ```
 
 ### `docker-compose.yml` (repository root)
@@ -163,10 +163,10 @@ CMD ["node", "packages/backend/dist/server.js"]
 version: "3.9"
 
 services:
-  backend:
+  gateway:
     build:
       context: .
-      dockerfile: packages/backend/Dockerfile.backend
+      dockerfile: packages/gateway/Dockerfile.gateway
     ports:
       - "3000:3000"
     environment:
@@ -186,7 +186,7 @@ services:
    # Edit .env and set at least API_KEY
    ```
 
-2. Build and start the backend container:
+2. Build and start the gateway container:
 
    ```bash
    docker compose up --build
@@ -198,7 +198,7 @@ services:
    npm run dev --workspace=frontend
    ```
 
-4. Point your frontend at the containerised backend:
+4. Point your frontend at the containerised gateway:
 
    ```env
    # packages/frontend/.env
@@ -212,10 +212,10 @@ services:
 
 1. Create a free project at [blockfrost.io](https://blockfrost.io) for the network you need (`mainnet`, `preprod`, or `preview`).
 2. Copy the project ID — it looks like `mainnetXXXXXXXXXXXXXXXXXXXXXXXX`.
-3. Set `API_KEY` in `packages/backend/.env` (or in your Docker `.env`).
+3. Set `API_KEY` in `packages/gateway/.env` (or in your Docker `.env`).
 4. Ensure `NETWORK` in the same file matches the network of the API key.
 
-The backend reads these values in `packages/backend/src/config/env.ts` via `dotenv`.
+The gateway reads these values in `packages/gateway/src/config/env.ts` via `dotenv`.
 
 ---
 
@@ -240,7 +240,7 @@ The backend reads these values in `packages/backend/src/config/env.ts` via `dote
    npm run dev --workspace=frontend
    ```
 
-   The backend Express server is not needed when using the YACI provider directly.
+   The gateway Express server is not needed when using the YACI provider directly.
 
 4. If your devnet runs on a non-default port or a remote host, update `REACT_APP_API_URL` accordingly.
 
@@ -252,9 +252,9 @@ The backend reads these values in `packages/backend/src/config/env.ts` via `dote
 
 | Command | What it does |
 |---|---|
-| `npm run dev` | Start backend + frontend concurrently (from repo root) |
+| `npm run dev` | Start gateway + frontend concurrently (from repo root) |
 | `npm run dev --workspace=frontend` | Start only the Vite dev server |
-| `npm run dev --workspace=backend` | Start only the Express backend with hot-reload |
-| `npm run build --workspace=backend` | Compile the backend TypeScript to `packages/backend/dist/` |
+| `npm run dev --workspace=gateway` | Start only the Express gateway with hot-reload |
+| `npm run build --workspace=gateway` | Compile the gateway TypeScript to `packages/gateway/dist/` |
 | `npm run build --workspace=frontend` | Build the frontend for production to `packages/frontend/dist/` |
-| `docker compose up --build` | Build and start the backend Docker container |
+| `docker compose up --build` | Build and start the gateway Docker container |

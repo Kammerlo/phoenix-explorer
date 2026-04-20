@@ -241,7 +241,7 @@ const TransactionList: React.FC<TransactionListProps> = ({
       key: "tags",
       minWidth: 100,
       render: (r) => {
-        // Fallback: tags may be absent when backend hasn't been restarted yet
+        // Fallback: tags may be absent when gateway hasn't been restarted yet
         const tags: TxTag[] = r.tags?.length ? r.tags : ["transfer"];
         const ordered = TAG_ORDER.filter((t) => tags.includes(t));
         return (

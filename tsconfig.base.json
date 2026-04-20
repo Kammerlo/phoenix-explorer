@@ -3,6 +3,6 @@
   "references": [
     { "path": "./packages/shared" },
     { "path": "./packages/frontend" },
-    { "path": "./packages/backend" }
+    { "path": "./packages/gateway" }
   ]
 }

@@ -78,8 +78,8 @@ Phoenix Explorer is an npm workspaces monorepo with three packages:
 phoenix-explorer/
 ├── packages/
 │   ├── frontend/   # React 18 SPA (Vite, MUI v7, Redux Toolkit, React Router v7)
-│   ├── backend/    # Express 5 gateway server (TypeScript, Blockfrost SDK)
-│   └── shared/     # DTOs and API types consumed by both frontend and backend
+│   ├── gateway/    # Express 5 gateway server (TypeScript, Blockfrost SDK)
+│   └── shared/     # DTOs and API types consumed by both frontend and gateway
 ├── docs/           # Development guides
 └── .env.example    # Environment variable template
 ```
@@ -90,7 +90,7 @@ The frontend uses a pluggable connector system. The active connector is selected
 
 | Mode | How it works | When to use |
 |------|-------------|-------------|
-| `GATEWAY` (default) | Frontend → local Express backend → Blockfrost | Production; keeps API key server-side, adds response caching |
+| `GATEWAY` (default) | Frontend → local Express gateway → Blockfrost | Production; keeps API key server-side, adds response caching |
 | `YACI` | Frontend → Yaci Store REST API directly | Local devnet / private networks using [Yaci Store](https://github.com/bloxbean/yaci-store) |
 | `BLOCKFROST` | Frontend → Blockfrost API directly from the browser | Quick local testing; exposes API key in the JS bundle — not for production |
 
@@ -144,15 +144,15 @@ npm run dev
 | Service | URL |
 |---------|-----|
 | Frontend | http://localhost:5173 |
-| Backend API | http://localhost:3000/api |
+| Gateway API | http://localhost:3000/api |
 
 ---
 
 ## Environment Variables
 
-The root `.env` file configures both the backend and the Vite frontend build.
+The root `.env` file configures both the gateway and the Vite frontend build.
 
-### Backend
+### Gateway
 
 | Variable | Default | Description |
 |----------|---------|-------------|
@@ -188,17 +188,33 @@ REACT_APP_API_URL=https://cardano-mainnet.blockfrost.io/api/v0
 
 ## Docker Setup
 
+Pre-built images are published on Docker Hub:
+
+| Image | Description |
+|-------|-------------|
+| [`kammerlo/phoenix-explorer`](https://hub.docker.com/r/kammerlo/phoenix-explorer) | Frontend (React + nginx on port `80`) |
+| [`kammerlo/phoenix-explorer-gateway`](https://hub.docker.com/r/kammerlo/phoenix-explorer-gateway) | Gateway (Express on port `3000`) |
+
+Both are tagged `:main` and automatically rebuilt on every push to `main` via GitHub Actions ([`.github/workflows/docker-publish.yml`](.github/workflows/docker-publish.yml)).
+
+### Run the published images
+
 ```bash
 cp .env.example .env
 # Fill in API_KEY in .env
+docker compose pull
+docker compose up
+```
+
+Frontend is served at http://localhost and proxies `/api/*` to the gateway.
+
+### Build locally instead of pulling
+
+```bash
 docker compose up --build
 ```
 
-Then start the frontend separately (Vite requires a host dev server):
-
-```bash
-npm run dev --workspace=frontend
-```
+This rebuilds both images from source and tags them as `kammerlo/phoenix-explorer:main` and `kammerlo/phoenix-explorer-gateway:main` locally. Override the tag via `IMAGE_TAG=mytag docker compose up --build` if needed.
 
 ---
 
@@ -211,9 +227,9 @@ All commands can also be run per-package from the repo root:
 npm run dev --workspace=frontend      # Vite dev server (hot reload)
 npm run build --workspace=frontend    # Production build to packages/frontend/dist/
 
-# Backend only
-npm run dev --workspace=backend       # ts-node-dev with hot reload
-npm run build --workspace=backend     # Compile TypeScript to packages/backend/dist/
+# Gateway only
+npm run dev --workspace=gateway       # ts-node-dev with hot reload
+npm run build --workspace=gateway     # Compile TypeScript to packages/gateway/dist/
 ```
 
 ---

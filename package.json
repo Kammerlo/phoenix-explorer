@@ -5,7 +5,7 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "concurrently -k -n backend,frontend \"npm run dev --workspace backend\" \"npm run dev --workspace frontend\""
+    "dev": "concurrently -k -n gateway,frontend \"npm run dev --workspace gateway\" \"npm run dev --workspace frontend\""
   },
   "devDependencies": {
     "@types/node": "^24.3.0",

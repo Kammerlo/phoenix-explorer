@@ -2,7 +2,7 @@ import { TxTag } from "../dtos/transaction.dto";
 
 /**
  * Computes transaction tags from Blockfrost tx fields.
- * Shared between the backend controllers and the direct BlockfrostConnector.
+ * Shared between the gateway controllers and the direct BlockfrostConnector.
  */
 export interface TxTagInput {
   output_amount?: { unit: string; quantity: string }[];
