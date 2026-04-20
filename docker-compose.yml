@@ -1,8 +1,9 @@
 services:
-  backend:
+  gateway:
+    image: kammerlo/phoenix-explorer-gateway:${IMAGE_TAG:-main}
     build:
       context: .
-      dockerfile: packages/backend/Dockerfile.backend
+      dockerfile: packages/gateway/Dockerfile.gateway
     ports:
       - "3000:3000"
     environment:
@@ -13,6 +14,7 @@ services:
     restart: unless-stopped
 
   frontend:
+    image: kammerlo/phoenix-explorer:${IMAGE_TAG:-main}
     build:
       context: .
       dockerfile: packages/frontend/Dockerfile.frontend
@@ -23,5 +25,5 @@ services:
     ports:
       - "80:80"
     depends_on:
-      - backend
+      - gateway
     restart: unless-stopped

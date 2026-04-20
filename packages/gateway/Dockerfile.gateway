@@ -1,0 +1,47 @@
+# syntax=docker/dockerfile:1
+
+# ─── Build stage ──────────────────────────────────────────────────────────────
+FROM node:20-alpine AS build
+WORKDIR /app
+
+# Manifests first — cached until deps change
+COPY package.json package-lock.json ./
+COPY packages/gateway/package.json ./packages/gateway/
+COPY packages/shared/package.json ./packages/shared/
+
+RUN --mount=type=cache,target=/root/.npm \
+    npm ci --workspaces
+
+# Source after deps so source changes don't bust the install layer
+COPY packages/gateway/ ./packages/gateway/
+COPY packages/shared/ ./packages/shared/
+COPY tsconfig.base.json ./
+
+# Build shared first (gateway imports from @shared/...)
+RUN npm run build --workspace=cardano-explorer-shared \
+ && npm run build --workspace=gateway
+
+# ─── Runtime stage ────────────────────────────────────────────────────────────
+# Installs only runtime deps — drops typescript, ts-node, nodemon, type defs, etc.
+FROM node:20-alpine
+WORKDIR /app
+
+LABEL org.opencontainers.image.source="https://github.com/kammerlo/phoenix-explorer"
+LABEL org.opencontainers.image.description="Phoenix Explorer gateway"
+
+COPY package.json package-lock.json ./
+COPY packages/gateway/package.json ./packages/gateway/
+COPY packages/shared/package.json ./packages/shared/
+
+RUN --mount=type=cache,target=/root/.npm \
+    npm ci --omit=dev --workspaces
+
+# Gateway compiled output
+COPY --from=build /app/packages/gateway/dist ./packages/gateway/dist
+# Shared compiled output exposed as @shared so require('@shared/...') resolves
+# (TypeScript enums generate real JS that can't be inlined).
+COPY --from=build /app/packages/shared/dist ./node_modules/@shared
+
+USER node
+EXPOSE 3000
+CMD ["node", "packages/gateway/dist/server.js"]

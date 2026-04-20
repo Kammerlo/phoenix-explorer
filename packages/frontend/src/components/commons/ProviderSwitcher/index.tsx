@@ -55,8 +55,8 @@ const FEATURE_LABELS: Record<FunctionEnum, string> = {
 const PROVIDERS: ProviderOption[] = [
   {
     type: "GATEWAY",
-    label: "Gateway (Blockfrost via Backend)",
-    description: "Proxies requests through the Phoenix Explorer backend to Blockfrost.",
+    label: "Gateway (Blockfrost via Gateway)",
+    description: "Proxies requests through the Phoenix Explorer gateway to Blockfrost.",
     defaultUrl: process.env.REACT_APP_API_URL || "",
     supportedFeatures: new GatewayConnector("").getSupportedFunctions()
   },

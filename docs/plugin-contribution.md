@@ -197,7 +197,7 @@ Naming rules:
    npm run dev
    ```
 
-   This runs the backend (port 3000 by default) and the frontend (port configurable in `.env`) concurrently.
+   This runs the gateway (port 3000 by default) and the frontend (port configurable in `.env`) concurrently.
 
 2. Navigate to the page that corresponds to the slot your plugin targets — for example, open any transaction detail page to test a `transaction-detail` plugin.
 
