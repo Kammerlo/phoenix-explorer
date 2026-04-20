@@ -1,13 +1,5 @@
 # Phoenix Explorer — Community Cardano Explorer
 
-## Community Project — Development in Progress
-
-**I'm still committed to pushing this project forward**, but progress will be slower than anticipated due to the lack of funding. Unfortunately, my application to [Project Catalyst Fund 14](https://projectcatalyst.io/funds/14/cardano-open-developers/phoenix-explorer-reviving-an-open-source-explorer) was not successful, which means development will continue at a reduced pace as this remains a volunteer effort.
-
-Despite these constraints, my goal remains the same: to build this explorer **for the community and as open source** so it can be reused by everyone. It's unfortunate that this valuable piece of software was about to be discontinued, which is why I decided to pick it up and continue its development.
-
-**Development will progress as time permits. Any contributions — code, feedback, or support — are greatly appreciated!**
-
 ## Mission & Vision
 
 Phoenix Explorer is an open-source Cardano blockchain explorer, originally based on the [Cardano Foundation Explorer](https://github.com/cardano-foundation/cf-explorer-frontend). When this important piece of infrastructure was about to be discontinued, this project stepped in to **revive, maintain, and extend it for the entire Cardano ecosystem**.
@@ -67,6 +59,12 @@ Phoenix Explorer is an open-source Cardano blockchain explorer, originally based
 ### Protocol Parameters
 - Live on-chain protocol parameters organised into Network, Economic, Technical, and Governance groups
 - Interactive playground for each group — simulate the effect of parameter changes (fee calculations, pool saturation, epoch reward splits, block throughput, and more)
+
+### Plugin System
+- Slot-based runtime extension points on every detail page (transaction, address, token, block, governance, DRep, pool, home dashboard, global sidebar)
+- Sample plugins included (CIP-25 NFT viewer, Cardano Foundation Reeve viewer)
+- Plugins can be toggled on/off at runtime from the `/plugins` page
+- See [`docs/plugin-contribution.md`](docs/plugin-contribution.md) for the contribution guide
 
 ---
 
@@ -225,7 +223,7 @@ All commands can also be run per-package from the repo root:
 ```bash
 # Frontend only
 npm run dev --workspace=frontend      # Vite dev server (hot reload)
-npm run build --workspace=frontend    # Production build to packages/frontend/dist/
+npm run build --workspace=frontend    # Production build to packages/frontend/build/
 
 # Gateway only
 npm run dev --workspace=gateway       # ts-node-dev with hot reload
@@ -244,7 +242,10 @@ Contributions are what keep this project alive.
 - **Improve docs** — help make setup and usage clearer
 - **Star the repo** — helps with visibility
 
-See [`docs/local-development.md`](docs/local-development.md) for a detailed guide covering environment setup, switching providers, and connecting to a local Yaci devnet.
+Documentation:
+- [`docs/local-development.md`](docs/local-development.md) — environment setup, switching providers, connecting to a local Yaci devnet
+- [`docs/plugin-contribution.md`](docs/plugin-contribution.md) — writing and registering a plugin
+- [`docs/plugin-development.md`](docs/plugin-development.md) — plugin system internals
 
 ---
 
