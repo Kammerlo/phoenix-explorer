@@ -3,7 +3,7 @@ import { Box, Grid, useMediaQuery } from "@mui/material";
 import { useTheme } from "@emotion/react";
 import { t } from "i18next";
 
-import useFetch from "src/commons/hooks/useFetch";
+import useFetch from "src/hooks/useFetch";
 import { API } from "src/commons/utils/api";
 import NoRecord from "src/components/commons/NoRecord";
 import { numberWithCommas } from "src/commons/utils/helper";

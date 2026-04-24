@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 import { useSelector } from "react-redux";
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, TooltipProps, XAxis, YAxis } from "recharts";
 
-import useFetch from "src/commons/hooks/useFetch";
+import useFetch from "src/hooks/useFetch";
 import { HighestIconComponent, LowestIconComponent } from "src/commons/resources";
 import { API } from "src/commons/utils/api";
 import { formatADAFull, formatPrice, numberWithCommas } from "src/commons/utils/helper";
@@ -77,24 +77,25 @@ const DelegationDetailChart: React.FC<DelegationDetailChartProps> = ({ poolId })
 
   const renderData = () => {
     if (loading) {
-      return <SkeletonUI variant="rectangular" style={{ height: "400px" }} />;
+      return <SkeletonUI variant="rectangular" sx={{ height: { xs: 260, sm: 320, md: 400 } }} />;
     }
     if (!loading && data?.delegatorChart === null) {
       return (
-        <Box style={{ height: "400px" }}>
+        <Box sx={{ height: { xs: 260, sm: 320, md: 400 } }}>
           <NotAvailable />
         </Box>
       );
     }
     if ((!loading && data?.epochChart === null) || data === null) {
       return (
-        <Box style={{ height: "400px" }}>
+        <Box sx={{ height: { xs: 260, sm: 320, md: 400 } }}>
           <NotAvailable />
         </Box>
       );
     }
     return (
-      <ResponsiveContainer width="100%" height={400}>
+      <Box sx={{ width: "100%", height: { xs: 260, sm: 320, md: 400 } }}>
+      <ResponsiveContainer width="100%" height="100%">
         <AreaChart
           width={900}
           height={400}
@@ -143,6 +144,7 @@ const DelegationDetailChart: React.FC<DelegationDetailChartProps> = ({ poolId })
           />
         </AreaChart>
       </ResponsiveContainer>
+      </Box>
     );
   };
 

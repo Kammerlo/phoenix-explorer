@@ -3,7 +3,7 @@ import { Box } from "@mui/material";
 
 import { getShortHash } from "src/commons/utils/helper";
 import CustomTooltip from "src/components/commons/CustomTooltip";
-import { useScreen } from "src/commons/hooks/useScreen";
+import { useIsGalaxyFoldSmall } from "src/hooks/useBreakpoint";
 
 import { DataCardBox, DataTitle, DataValue, LinkToText } from "./styles";
 
@@ -19,7 +19,7 @@ export interface DataCardProps {
 }
 
 const GovernanceActionCard: React.FC<DataCardProps> = ({ data, setOpenModal, onClose }) => {
-  const { isGalaxyFoldSmall } = useScreen();
+  const isGalaxyFoldSmall = useIsGalaxyFoldSmall();
   const handleClick = () => {
     onClose?.();
     setOpenModal?.();

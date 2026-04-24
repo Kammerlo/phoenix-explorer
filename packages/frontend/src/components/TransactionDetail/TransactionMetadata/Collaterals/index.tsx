@@ -12,7 +12,7 @@ import ADAicon from "src/components/commons/ADAIcon";
 import CopyButton from "src/components/commons/CopyButton";
 import DynamicEllipsisText from "src/components/DynamicEllipsisText";
 import { FlexCenter } from "src/components/share/styled";
-import { useScreen } from "src/commons/hooks/useScreen";
+import { useBreakpoint } from "src/hooks/useBreakpoint";
 
 import {
   BoxHeaderBottom,
@@ -90,7 +90,7 @@ export default Collaterals;
 const ItemCollateral = ({ data, type }: { data: CollateralResponses[]; type: "input" | "output" }) => {
   const { t } = useTranslation();
   const theme = useTheme();
-  const { isMobile } = useScreen();
+  const { isMobile } = useBreakpoint();
   return (
     <Box>
       {data?.map((item) => (

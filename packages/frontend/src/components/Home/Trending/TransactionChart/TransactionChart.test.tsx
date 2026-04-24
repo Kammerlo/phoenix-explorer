@@ -6,12 +6,12 @@ import userEvent from "@testing-library/user-event";
 import "@testing-library/jest-dom/extend-expect";
 
 import { render } from "src/test-utils";
-import useFetch from "src/commons/hooks/useFetch";
+import useFetch from "src/hooks/useFetch";
 import { numberWithCommas } from "src/commons/utils/helper";
 
 import TransactionChart, { TransactionChartIF } from "./index";
 
-jest.mock("src/commons/hooks/useFetch");
+jest.mock("src/hooks/useFetch");
 jest.mock("react-redux", () => ({
   ...jest.requireActual("react-redux"),
   useSelector: jest.fn()

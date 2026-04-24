@@ -2,7 +2,7 @@ import { useTheme } from "@mui/material";
 import { JsonViewer } from "@textea/json-viewer";
 import { useEffect } from "react";
 
-import useDisableJsonKey from "src/commons/hooks/useDisableJsonKey";
+import useDisableJsonKey from "src/hooks/useDisableJsonKey";
 
 import { StyledCustomModal, SubTitle, ViewJson } from "./styles";
 interface ParseScriptModalProps {

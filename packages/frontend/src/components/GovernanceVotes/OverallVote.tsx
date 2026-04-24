@@ -15,7 +15,8 @@ import { useTranslation } from "react-i18next";
 import { stringify } from "qs";
 import { useLocation } from "react-router-dom";
 
-import { useScreen } from "src/commons/hooks/useScreen";
+import { useBreakpoint, useIsGalaxyFoldSmall } from "src/hooks/useBreakpoint";
+import { useMediaQuery } from "@mui/material";
 import {
   ActionTypeIcon,
   AnchorTextIcon,
@@ -32,7 +33,7 @@ import {
 } from "src/commons/resources";
 import { formatADA, formatADAFull, formatDateTimeLocal, formatPercent, getShortHash } from "src/commons/utils/helper";
 import { ChipContainer } from "src/components/share/ChipContainer";
-import useFetch from "src/commons/hooks/useFetch";
+import useFetch from "src/hooks/useFetch";
 import { API } from "src/commons/utils/api";
 import { VOTE_TYPE } from "src/commons/utils/constants";
 
@@ -95,7 +96,9 @@ const OverallVote: React.FC<{ data: GovernanceVoteDetail | null; voteId: string;
 
   const theme = useTheme();
   const { t } = useTranslation();
-  const { isGalaxyFoldSmall, isMobile, isLanrgeScreen } = useScreen();
+  const { isMobile } = useBreakpoint();
+  const isGalaxyFoldSmall = useIsGalaxyFoldSmall();
+  const isLargeScreen = useMediaQuery(theme.breakpoints.down("xl"));
   const listVotes = ["SPOs", "DReps", "CC"];
 
   const filterDataChart = (selectVote: string) => {
@@ -442,7 +445,7 @@ const OverallVote: React.FC<{ data: GovernanceVoteDetail | null; voteId: string;
                 </Box>
               </InfoValue>
             </Item>
-            {isLanrgeScreen && type === VOTE_TYPE.CONSTITUTIONAL_COMMITTEE_HOT_KEY_HASH ? (
+            {isLargeScreen && type === VOTE_TYPE.CONSTITUTIONAL_COMMITTEE_HOT_KEY_HASH ? (
               <></>
             ) : (
               <Item
@@ -564,7 +567,8 @@ const VoteBar = ({
   tooltipTitle: React.ReactNode;
 }) => {
   const theme = useTheme();
-  const { isGalaxyFoldSmall, isMobile } = useScreen();
+  const { isMobile } = useBreakpoint();
+  const isGalaxyFoldSmall = useIsGalaxyFoldSmall();
   return (
     <Box display="flex" flexDirection="column" alignItems="center">
       <Typography data-testid="governance.voteBar.percent" fontSize="10px" fontWeight={400}>
@@ -610,7 +614,8 @@ export const VoteRate = ({ data, selectedVote }: { data: VotingChart | null; sel
   const { t } = useTranslation();
   const theme = useTheme();
   const [openModal, setOpenModal] = useState(false);
-  const { isTablet, isGalaxyFoldSmall } = useScreen();
+  const { isTablet } = useBreakpoint();
+  const isGalaxyFoldSmall = useIsGalaxyFoldSmall();
   const totalVote = useMemo(() => {
     if (data) {
       return (data?.numberOfAbstainVotes || 0) + Number(data?.numberOfNoVotes || 0) + (data?.numberOfYesVote || 0);

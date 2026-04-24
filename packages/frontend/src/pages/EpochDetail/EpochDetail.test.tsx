@@ -1,9 +1,9 @@
 import { render, screen } from "src/test-utils";
-import useFetch from "src/commons/hooks/useFetch";
+import useFetch from "src/hooks/useFetch";
 
 import EpochDetail from "./index";
 
-jest.mock("src/commons/hooks/useFetch");
+jest.mock("src/hooks/useFetch");
 
 describe("EpochDetail component", () => {
   it("should component render the empty image", () => {

@@ -5,7 +5,7 @@ import { BiChevronDown, BiChevronUp } from "react-icons/bi";
 import { RiArrowRightSLine } from "react-icons/ri";
 import { Link, useNavigate } from "react-router-dom";
 
-import { useScreen } from "src/commons/hooks/useScreen";
+import { useBreakpoint } from "src/hooks/useBreakpoint";
 import { details } from "src/commons/routers";
 import { formatNumberDivByDecimals, getShortHash } from "src/commons/utils/helper";
 import DynamicEllipsisText from "src/components/DynamicEllipsisText";
@@ -43,7 +43,7 @@ const DropdownTokens: React.FC<IDropdownTokens> = ({
   const handleClickItem = (link: string) => {
     navigate(link);
   };
-  const { isMobile } = useScreen();
+  const { isMobile } = useBreakpoint();
   return (
     <CustomSelect
       sx={{

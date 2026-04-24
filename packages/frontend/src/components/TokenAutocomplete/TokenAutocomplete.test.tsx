@@ -1,5 +1,5 @@
 import { fireEvent, render, screen } from "src/test-utils";
-import useFetchList from "src/commons/hooks/useFetchList";
+import useFetchList from "src/hooks/useFetchList";
 
 import TokenAutocomplete from "./index";
 const mockToken = {
@@ -18,7 +18,7 @@ const mockToken = {
   }
 };
 
-jest.mock("src/commons/hooks/useFetchList");
+jest.mock("src/hooks/useFetchList");
 
 describe("TokenAutocomplete component", () => {
   beforeEach(() => {

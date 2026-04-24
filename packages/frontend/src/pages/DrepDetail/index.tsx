@@ -38,7 +38,7 @@ import {
 import { CommonSkeleton } from "src/components/commons/CustomSkeleton";
 import { TruncateSubTitleContainer } from "src/components/share/styled";
 import DynamicEllipsisText from "src/components/DynamicEllipsisText";
-import { useScreen } from "src/commons/hooks/useScreen";
+import { useBreakpoint } from "src/hooks/useBreakpoint";
 import DatetimeTypeTooltip from "src/components/commons/DatetimeTypeTooltip";
 import Table, { Column } from "src/components/commons/Table";
 import ADAicon from "src/components/commons/ADAIcon";
@@ -67,7 +67,7 @@ const DrepDetail = () => {
   const { drepId } = useParams<{ drepId: string }>();
   const theme = useTheme();
   const navigate = useNavigate();
-  const { width, isMobile } = useScreen();
+  const { isMobile } = useBreakpoint();
 
   const [openModal, setOpenModal] = useState(false);
   const [data, setData] = useState<ApiReturnType<Drep>>(null);
@@ -117,7 +117,7 @@ const DrepDetail = () => {
           <TruncateSubTitleContainer mr={isMobile ? 2 : 0}>
             <DynamicEllipsisText
               value={data?.data.givenName || data?.data.drepId || ""}
-              sxFirstPart={{ maxWidth: width > 600 ? "calc(100% - 130px)" : "calc(100% - 70px)" }}
+              sxFirstPart={{ maxWidth: !isMobile ? "calc(100% - 130px)" : "calc(100% - 70px)" }}
               postfix={5}
               isNoLimitPixel={true}
               isTooltip

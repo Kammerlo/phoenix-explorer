@@ -1,5 +1,5 @@
 import { fireEvent, render, screen } from "src/test-utils";
-import useFetch from "src/commons/hooks/useFetch";
+import useFetch from "src/hooks/useFetch";
 
 import DelegationDetailChart from "./index";
 
@@ -40,7 +40,7 @@ const mockData = {
   scrollEffect: jest.fn()
 };
 
-jest.mock("src/commons/hooks/useFetch");
+jest.mock("src/hooks/useFetch");
 
 const mockPool = "pool88372DCC324";
 describe("DelegationDetailChart component", () => {

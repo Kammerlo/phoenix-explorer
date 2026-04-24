@@ -3,12 +3,12 @@ import { JsonViewer } from "@textea/json-viewer";
 import { useTranslation } from "react-i18next";
 import { useEffect } from "react";
 
-import useFetch from "src/commons/hooks/useFetch";
+import useFetch from "src/hooks/useFetch";
 import { details } from "src/commons/routers";
 import { API } from "src/commons/utils/api";
 import CopyButton from "src/components/commons/CopyButton";
 import StyledModal from "src/components/commons/StyledModal";
-import useDisableJsonKey from "src/commons/hooks/useDisableJsonKey";
+import useDisableJsonKey from "src/hooks/useDisableJsonKey";
 
 import { CommonSkeleton } from "../commons/CustomSkeleton";
 import { ButtonLink, ViewJson } from "./styles";

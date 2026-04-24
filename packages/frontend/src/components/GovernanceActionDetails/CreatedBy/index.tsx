@@ -3,8 +3,8 @@ import { t } from "i18next";
 import { stringify } from "qs";
 import { useNavigate } from "react-router-dom";
 
-import useFetch from "src/commons/hooks/useFetch";
-import usePageInfo from "src/commons/hooks/usePageInfo";
+import useFetch from "src/hooks/useFetch";
+import usePageInfo from "src/hooks/usePageInfo";
 import { API } from "src/commons/utils/api";
 import { getShortHash } from "src/commons/utils/helper";
 import CustomTooltip from "src/components/commons/CustomTooltip";

@@ -4,7 +4,8 @@ import { useTranslation } from "react-i18next";
 import { HiArrowLongLeft } from "react-icons/hi2";
 import { Link, useNavigate } from "react-router-dom";
 
-import { useScreen } from "src/commons/hooks/useScreen";
+import { useBreakpoint, useIsGalaxyFoldSmall } from "src/hooks/useBreakpoint";
+import { useMediaQuery } from "@mui/material";
 import {
   CalendarIconComponent,
   DelegatorIconComponent,
@@ -64,7 +65,9 @@ export interface IDelegationDetailInfo {
 const DelegationDetailInfo: React.FC<IDelegationDetailInfo> = ({ data, loading, poolId, lastUpdated }) => {
   const { t } = useTranslation();
   const theme = useTheme();
-  const { width, isGalaxyFoldSmall } = useScreen();
+  const { isMobile } = useBreakpoint();
+  const isGalaxyFoldSmall = useIsGalaxyFoldSmall();
+  const isVeryNarrow = useMediaQuery("(max-width:400px)");
   const navigate = useNavigate();
   const [isErrorImage, setIsErrorImage] = useState(false);
   const [isOpenReward, setOpenReward] = useState<boolean>(false);
@@ -102,7 +105,7 @@ const DelegationDetailInfo: React.FC<IDelegationDetailInfo> = ({ data, loading, 
     return (
       <Box display="flex" alignItems="center" justifyContent={justifyStyle} flex="1">
         <Box display="flex" alignItems="center" width={"100%"}>
-          <Box marginLeft={width < 400 ? 0 : 1}>
+          <Box marginLeft={isVeryNarrow ? 0 : 1}>
             <HeaderStatus status={data?.poolStatus}>{data?.poolStatus}</HeaderStatus>
           </Box>
         </Box>
@@ -141,7 +144,7 @@ const DelegationDetailInfo: React.FC<IDelegationDetailInfo> = ({ data, loading, 
                 <TruncateSubTitleContainer>
                   <DynamicEllipsisText
                     value={data?.poolName || data?.poolView || poolId}
-                    sxFirstPart={{ maxWidth: width > 600 ? "calc(100% - 130px)" : "calc(100% - 50px)" }}
+                    sxFirstPart={{ maxWidth: !isMobile ? "calc(100% - 130px)" : "calc(100% - 50px)" }}
                     postfix={5}
                     isNoLimitPixel={true}
                   />
@@ -149,7 +152,7 @@ const DelegationDetailInfo: React.FC<IDelegationDetailInfo> = ({ data, loading, 
               )}
             </HeaderTitle>
           </CustomTooltip>
-          {width > 600 && <HeaderBookmark justifyStyle={"space-between"} />}
+          {!isMobile && <HeaderBookmark justifyStyle={"space-between"} />}
         </Box>
       </HeaderContainer>
       {width < 600 && <HeaderBookmark justifyStyle={"flex-end"} />}

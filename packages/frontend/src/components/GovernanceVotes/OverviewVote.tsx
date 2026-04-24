@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Box, Button, Typography, useTheme } from "@mui/material";
 import { useTranslation } from "react-i18next";
 
-import { useScreen } from "src/commons/hooks/useScreen";
+import { useBreakpoint, useIsGalaxyFoldSmall } from "src/hooks/useBreakpoint";
 import {
   ActionTypeIcon,
   AnchorTextIcon,
@@ -40,7 +40,8 @@ const OverviewVote: React.FC<{ data: GovernanceVoteDetail | null }> = ({ data })
 
   const theme = useTheme();
   const { t } = useTranslation();
-  const { isGalaxyFoldSmall, isMobile } = useScreen();
+  const { isMobile } = useBreakpoint();
+  const isGalaxyFoldSmall = useIsGalaxyFoldSmall();
   if (!data) {
     return <></>;
   }

@@ -6,7 +6,7 @@ import { useTranslation } from "react-i18next";
 
 import { formatADAFull, formatDateTimeLocal, getShortHash } from "src/commons/utils/helper";
 import { details } from "src/commons/routers";
-import usePageInfo from "src/commons/hooks/usePageInfo";
+import usePageInfo from "src/hooks/usePageInfo";
 
 import CustomTooltip from "../commons/CustomTooltip";
 import ADAicon from "../commons/ADAIcon";

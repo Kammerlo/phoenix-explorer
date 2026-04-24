@@ -6,7 +6,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { stringify, parse } from "qs";
 import BigNumber from "bignumber.js";
 
-import useFetch from "src/commons/hooks/useFetch";
+import useFetch from "src/hooks/useFetch";
 import {
   FilterIcon,
   PoolBlocksIcon,
@@ -27,7 +27,7 @@ import {
   truncateToTwoDecimals
 } from "src/commons/utils/helper";
 import { FilterWrapper } from "src/components/share/FilterStyles";
-import usePageInfo from "src/commons/hooks/usePageInfo";
+import usePageInfo from "src/hooks/usePageInfo";
 import { FF_GLOBAL_IS_CONWAY_ERA } from "src/commons/utils/constants";
 import { AntSwitch } from "src/components/PoolList/styles";
 

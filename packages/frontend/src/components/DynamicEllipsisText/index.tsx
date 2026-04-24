@@ -3,7 +3,7 @@ import { useEffect, useId, useRef, useState } from "react";
 
 import CopyButton from "src/components/commons/CopyButton";
 import { getShortHash, truncateCustom } from "src/commons/utils/helper";
-import { useScreen } from "src/commons/hooks/useScreen";
+import { useIsGalaxyFoldSmall } from "src/hooks/useBreakpoint";
 
 import CustomTooltip from "../commons/CustomTooltip";
 
@@ -79,7 +79,7 @@ const DynamicEllipsisText = ({
   const randomIdRef = useRef(`ELIPSIS_${useId()}`);
 
   const [isMin, setIsMin] = useState<boolean>(false);
-  const { isGalaxyFoldSmall } = useScreen();
+  const isGalaxyFoldSmall = useIsGalaxyFoldSmall();
   const [openTooltip, setOpenTooltip] = useState(false);
 
   useEffect(() => {

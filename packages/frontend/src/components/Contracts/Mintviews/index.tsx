@@ -2,7 +2,7 @@ import { useTheme } from "@mui/material";
 import { useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { useScreen } from "src/commons/hooks/useScreen";
+import { useBreakpoint } from "src/hooks/useBreakpoint";
 import { details } from "src/commons/routers";
 import { formatNumberDivByDecimals, isAssetId } from "src/commons/utils/helper";
 import DrawPath from "src/components/commons/DrawPath";
@@ -33,7 +33,7 @@ export interface MintviewsProps {
 const Mintviews: React.FC<MintviewsProps> = ({ isBurned = false, data, isMobile }) => {
   const { t } = useTranslation();
   const theme = useTheme();
-  const screen = useScreen();
+  const screen = useBreakpoint();
   const redeemerRef = useRef(null);
   const middleBoxRef = useRef(null);
   const rightBoxRef = useRef(null);

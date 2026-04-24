@@ -3,11 +3,11 @@ import { useSelector } from "react-redux";
 import "@testing-library/jest-dom/extend-expect";
 
 import { render } from "src/test-utils";
-import useFetch from "src/commons/hooks/useFetch";
+import useFetch from "src/hooks/useFetch";
 
 import HomeStatistic from "./index";
 
-jest.mock("src/commons/hooks/useFetch");
+jest.mock("src/hooks/useFetch");
 jest.mock("react-redux", () => ({
   ...jest.requireActual("react-redux"),
   useSelector: jest.fn()
@@ -98,7 +98,7 @@ describe("HomeStatistic", () => {
     const mockUseSelector = useSelector as jest.Mock;
     mockUseFetch.mockReturnValue({ data: mockStakeAnalytis });
 
-    // jest.mock("src/commons/hooks/useFetchInterval", () => ({
+    // jest.mock("src/hooks/useFetchInterval", () => ({
     //   useFetchInterval: jest.fn((url) => {
     //     if (url.includes("btc")) {
     //       return {

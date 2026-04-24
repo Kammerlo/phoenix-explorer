@@ -1,6 +1,6 @@
 import { renderHook } from "@testing-library/react";
 
-import { addToast, removeToast } from "../../stores/toast";
+import { addToast, removeToast } from "src/stores/toast";
 import useToast from "./useToast";
 
 jest.mock("../../stores/toast", () => ({

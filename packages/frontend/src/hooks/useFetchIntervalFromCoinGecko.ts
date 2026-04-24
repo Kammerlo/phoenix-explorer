@@ -2,7 +2,7 @@
 import { AxiosError } from "axios";
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { defaultAxios } from "../utils/axios";
+import { defaultAxios } from "src/commons/utils/axios";
 
 interface FetchReturnType<T> {
   data: T | null;

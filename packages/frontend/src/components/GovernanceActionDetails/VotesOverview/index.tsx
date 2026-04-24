@@ -3,7 +3,7 @@ import { useNavigate, useLocation, useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { parse, stringify } from "qs";
 
-import useFetchList from "src/commons/hooks/useFetchList";
+import useFetchList from "src/hooks/useFetchList";
 import { API } from "src/commons/utils/api";
 import { TimeDuration } from "src/components/TransactionLists/styles";
 import { FooterTable } from "src/components/commons/Table";

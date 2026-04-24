@@ -4,7 +4,7 @@
 
 Cardano blockchain explorer (fork of `cardano-foundation/cf-explorer-frontend`, revived and actively maintained). Live deployment: [phoenix-explorer.org](https://phoenix-explorer.org).
 
-- **Frontend**: React 18.3, TypeScript, MUI v7, Redux Toolkit v2, React Router v7, Highcharts v11, react-icons v4.6, date-fns v4, Vite (with `@vitejs/plugin-react`, automatic JSX transform — **no `import React` needed** in component files)
+- **Frontend**: React 18.3.1, TypeScript, MUI v7 (+ `@mui/lab`, `@mui/x-tree-view`), Redux Toolkit v2, React Router v7, Highcharts v11, react-icons v4.6, date-fns v4, Vite 5 (with `@vitejs/plugin-react`, automatic JSX transform — **no `import React` needed** in component files)
 - **Gateway**: Node.js + Express 5, Blockfrost SDK v6, `ts-node-dev` in dev, `tsc` build → `dist/`
 - **Shared**: `cardano-explorer-shared` package exposing DTOs and API types as `@shared/*`
 - **Monorepo**: npm workspaces — `packages/frontend`, `packages/gateway`, `packages/shared`
@@ -250,19 +250,43 @@ All ADA arithmetic should go through `BigNumber.js` to avoid float rounding — 
 
 ---
 
-## Known Broken: `useFetchList` Hook
+## Hooks
 
-[`src/commons/hooks/useFetchList.ts`](packages/frontend/src/commons/hooks/useFetchList.ts) is **completely non-functional**. The hook initialises state but `refresh` is `() => {}`. Any component using it will render but never receive data.
+All hooks live in [`src/hooks/`](packages/frontend/src/hooks/) (previously `src/commons/hooks/` — moved during the mobile-view refactor). Non-React modules (Redux slices, plain utils) that need breakpoint **numbers** keep importing from `src/themes/breakpoints`. React components use `useTheme().breakpoints.*` / `useMediaQuery` / the hooks below.
 
-**Affected components (render but show empty/stale data):**
-- `TokenAutocomplete` (used in `AddressDetail`)
-- `GovernanceVotes`
-- `VotesOverview`
-- `PolicyTable`
-- `ConstitutionalCommittees`
-- `TokenTableData`
+| Hook | Purpose |
+|------|---------|
+| `useBreakpoint()` | `{ isMobile, isTablet, isLaptop, isDesktop }` via MUI `useMediaQuery(theme.breakpoints.down(...))`. No resize listener. |
+| `useIsGalaxyFoldSmall()` | `useMediaQuery("(max-width:355px)")`. `SAMSUNG_FOLD_SMALL_WIDTH = 355` is re-exported from the same module. |
+| `useFetch` / `useFetchList` | Axios-based list/detail fetching (baseURL = `REACT_APP_API_URL`). `useFetchList` returns `{ data, loading, error, initialized, total, totalPage, currentPage, refresh, update, lastUpdated, query, isDataOverSize }` and normalises `{ data | items | content }` response envelopes. |
+| `usePageInfo` | Parses querystring pagination (`page`, `size`, `sort`) for list pages. |
+| `useADAHandle` | ADA Handle ↔ address resolution helper. |
+| `useFetchIntervalFromCoinGecko` | Poll CoinGecko markets at `REACT_APP_API_URL_COIN_GECKO`. |
 
-**Fix:** Migrate to `ApiConnector.getApiConnector()` directly with `useState` + `useEffect`, as in `BlockList`, `Token`, `TransactionListPage`, etc.
+**Removed** (delete on sight if you encounter an older branch):
+- `useScreen` — replaced by `useBreakpoint` / `useIsGalaxyFoldSmall` / inline `useMediaQuery(down("xl"))`. The typo export `isLanrgeScreen` is gone; use `isLargeScreen`.
+- `SAMSUNG_FOLD_SMALL_WIDTH` / `IPAD_PRO` constants from `useScreen.ts` — `SAMSUNG_FOLD_SMALL_WIDTH` now lives in `useBreakpoint.ts`; `IPAD_PRO` was deleted (0 prod callers).
+
+**Rule:** never read `window.innerWidth` in render paths. The only legitimate remaining site is `stores/system.ts:24` (module-load snapshot for the initial sidebar state) — everything else goes through `useMediaQuery` or `ResizeObserver` on a local element.
+
+---
+
+## Responsive & Mobile Conventions
+
+Breakpoints (from [`src/themes/breakpoints.ts`](packages/frontend/src/themes/breakpoints.ts)): `xs` 0, `sm` 600, `md` 900, `lg` 1200, `laptop` 1440, `xl` 1536, `hd` 1710, `fhd` 1920.
+
+**Shell layout:**
+- **Sidebar drawer anchors left** on all viewports ([`Layout/index.tsx`](packages/frontend/src/components/commons/Layout/index.tsx)). A `BackDrop` dims content on mobile when open.
+- **Mobile header** ([`Layout/Header/index.tsx`](packages/frontend/src/components/commons/Layout/Header/index.tsx)): hamburger + search on the **left** (inside `SideBarRight` rendered first), logo on the **right** (`HeaderLogoLink` rendered second). `HeaderTop` uses `justify-content: space-between` at mobile.
+- **Header logo asset**: `LogoFullIcon` / `LogoDarkmodeFullIcon` (full "EXPLORER" wordmark) on mobile; `CardanoBlueLogo` / `CardanoBlueDarkmodeLogo` on tablet. `HeaderLogoLink` is `display: none` on `md+` — the sidebar provides the desktop logo via its own `getLogo()` (`LogoFullIcon` expanded, `LogoIcon` collapsed, darkmode variants). The styled `<HeaderLogo>` is an `<img>` element — it **must** be given a `src` or it renders a broken image.
+
+**DetailHeader stacking** ([`commons/DetailHeader/index.tsx`](packages/frontend/src/components/commons/DetailHeader/index.tsx)):
+- `CardItem` size = `{ xs: 12, sm: ..., md: ..., lg: ... }` — full-width stack on mobile eliminates the orphan-icon bug. Skeleton block uses the same sizing.
+- `BufferList` (phantom trailing items for grid alignment) short-circuits to `null` on `isMobile`.
+
+**Chart heights:** never hard-code `height={400}` on `ResponsiveContainer`. Wrap in `<Box sx={{ width: "100%", height: { xs: 260, sm: 320, md: 400 } }}><ResponsiveContainer height="100%">...</ResponsiveContainer></Box>`. Applies to both recharts and Highcharts containers.
+
+**Tables:** see [`Column<T>.hideBelow`](#table-component) — annotate low-priority columns so mobile drops them instead of horizontal-scrolling an 8-column list. `hideBelow` currently resolves only the standard MUI keys (`sm`/`md`/`lg`/`xl`) inside `useVisibleColumns`. Columns annotated with custom breakpoints (`laptop`/`hd`/`fhd`) are treated as always visible.
 
 ---
 
@@ -344,7 +368,10 @@ For horizontally scrollable containers: `overflowX: "auto"` + custom `"&::-webki
 - `total: { title: string; count: number }` — shown above the table
 - `onClickRow`, `rowKey` (string or function)
 - `pagination` — see pattern above
-- `tableWrapperProps` — pass `{ sx: { overflowX: "auto" } }` for wide tables
+- `tableWrapperProps` — pass `{ sx: { overflowX: "auto" } }` for wide tables, or `{ sx: { maxHeight: "50vh" } }` to constrain vertical scroll
+- `Column.hideBelow?: Breakpoint` — hides a column on viewports strictly below the given theme breakpoint. `useVisibleColumns` in the same file reads the current viewport via four `useMediaQuery(theme.breakpoints.down(...))` calls and filters the columns array before rendering. Omit to always show. **Only supports `sm`/`md`/`lg`/`xl`** — custom keys (`laptop`/`hd`/`fhd`) are not resolved, treated as always visible.
+
+**Removed props:** `maxHeight` on `TableProps` was the previously-deprecated path — gone. Use `tableWrapperProps.sx.maxHeight` instead.
 
 ---
 
@@ -454,9 +481,24 @@ AVG_BLOCK_TIME_SECONDS = 20             // slot 1 s, ~5 % leadership rate
 
 `DetailHeader` renders `listOverview` items as a CSS grid (3 per row at md+). Each item has an optional `icon`.
 
-**Known visual issue:** An icon on an item in row 2+ floats in the whitespace between the row above's value and its own label ("orphaned").
+**Desktop orphan-icon issue:** An icon on an item in row 2+ can float in the whitespace between the row above's value and its own label. Partial mitigation: remove icons from items whose labels are already descriptive (e.g. "Block", "Slot", "Epoch"). Keep icons only where they add meaning beyond the label.
 
-**Fix:** Remove icons from items whose labels are already descriptive (e.g. "Block", "Slot", "Epoch"). Keep icons only where they add meaning beyond the label.
+**Mobile stacking:** `CardItem` is forced to `xs: 12` in both skeleton and real render, so every item is its own row on phones (no orphan icons possible). `BufferList` short-circuits on `isMobile`.
+
+---
+
+## Shared Commons Primitives
+
+[`src/components/commons/`](packages/frontend/src/components/commons/) houses the shared primitives used across feature folders. Prefer these to hand-rolled one-offs.
+
+| Component | Purpose |
+|-----------|---------|
+| `LoadingWrapper` | `{ loading, skeletonCount, skeletonVariant, skeletonHeight, skeletonWidth, skeletonSpacing, fallback }`. Renders one or more MUI `Skeleton` placeholders while loading; otherwise renders `children`. Replaces ad-hoc skeleton blocks. |
+| `AdaAmount` | `<AdaAmount value={...} variant="short" \| "full" />`. Short variant uses `formatADA` + a `Tooltip` with `formatADAFull`; full variant renders the full-precision string directly. Pass `showTooltip={false}` to suppress. |
+| `PaginationPanel` | Exports the `buildPaginationConfig<T>(fetchData, fallbackSize, onChange, extras?)` helper that produces the `{ page, size, total, onChange, hideLastPage: true }` object expected by `Table.pagination`. |
+| `ResponsiveStack` | `Stack` that flips `direction` from `column` → `row` at a configurable breakpoint (default `md`). |
+| `ResponsiveTableWrapper` | `Box` with `overflowX: "auto"`, touch scrolling, and theme-aware `::-webkit-scrollbar` colors. Compose with `Table` via `tableWrapperProps={{ sx: ... }}`. |
+| `CopyButton` | Canonical copy-to-clipboard button. Do not re-implement inline. |
 
 ---
 
@@ -475,7 +517,18 @@ AVG_BLOCK_TIME_SECONDS = 20             // slot 1 s, ~5 % leadership rate
 | `axios` + `axios-case-converter` | HTTP (connector layer) | `case-converter` auto-maps snake_case ↔ camelCase |
 | `redux-persist` | Persist `theme` slice | Note: `provider` slice uses a cookie, **not** redux-persist |
 | `qs` | Querystring parsing | Used in `useFetchList` and pagination helpers |
-| `@cardano-foundation/cardano-connect-with-wallet` | Wallet integration | |
+| `@mui/material` `useMediaQuery` | Viewport breakpoint detection | Paired with `useBreakpoint` / `useIsGalaxyFoldSmall` from `src/hooks/useBreakpoint` |
+| `@cardano-foundation/cardano-connect-with-wallet` (+ `-core`) | Wallet integration | |
+| `@cardano-foundation/cf-flat-decoder-ts` | Decodes Plutus flat-encoded scripts | Used for script viewers |
+| `cardano-addresses` | Cardano address parsing / derivation | |
+| `cbor-x` | CBOR encode/decode | Parses on-chain metadata / script blobs |
+| `@textea/json-viewer` | Collapsible JSON viewer | Used in metadata / governance detail views |
+| `@mui/lab` / `@mui/x-tree-view` | MUI extensions | Tree view for nested data |
+| `lodash` | Utility library | Tree-shake via `lodash/<fn>` imports |
+| `sass` | SCSS compilation | Vite handles `.scss` imports |
+| `react-use` | React hooks grab-bag | |
+| `react-countup` | Animated number counter | Dashboard stat cards |
+| `react-circular-progressbar` | Circular progress | Epoch progress indicators |
 
 ---
 
@@ -525,6 +578,7 @@ Root `.env` (loaded by both the Vite build and the Express gateway; Gateway read
 | `REACT_APP_NETWORK` | `mainnet` | Label shown in UI |
 | `REACT_APP_BLOCKFROST_API_KEY` | — | Only when `REACT_APP_API_TYPE=BLOCKFROST` (exposed to browser) |
 | `REACT_APP_API_URL_COIN_GECKO` | CoinGecko markets endpoint | ADA price data source |
+| `REACT_APP_ADA_HANDLE_API` | — | Optional. Endpoint for resolving [ADA Handle](https://adahandle.com/) names. Consumed via `ADA_HANDLE_API`/`API_ADA_HANDLE_API` in [`src/commons/utils/constants.ts`](packages/frontend/src/commons/utils/constants.ts) and `useADAHandle`. |
 
 See [`.env.example`](.env.example) at the repo root.
 
@@ -570,3 +624,7 @@ npm run build --workspace=cardano-explorer-shared   # tsc → packages/shared/di
 | Saturation bar invisible | `SaturationBar` treated 0–1 fraction as 0–100 | Multiply by 100 for width pct; pass raw value to `formatPercent` |
 | Gateway dashboard showing empty stats | Cookie `baseUrl` missing `/api` suffix | Gateway routes are mounted at `/api/*` — base URL must include it |
 | Transaction metadata rendered as `"[object Object]"` (Yaci) | `meta.jsonMetadata?.toString()` on a JSON object | Use `JSON.stringify(meta.jsonMetadata)` — matches the existing pattern in `transactionService.ts` and `blockfrostConnector.ts` |
+| 15+ list views permanently empty (TokenAutocomplete, GovernanceVotes, VotesOverview, PolicyTable, ConstitutionalCommittees, TokenTableData) | `useFetchList.refresh` was hard-coded `() => {}` | Restored to an axios-based fetch that normalises `{ data \| items \| content }` envelopes; returned `refresh` is the real fetcher |
+| Header logo rendering broken image | `<HeaderLogo alt=.. />` missing `src` prop — `HeaderLogo` is `styled("img")` | Pass an actual asset URL via `src={logoSrc}`. Mobile uses `LogoFullIcon`/`LogoDarkmodeFullIcon` (full wordmark); tablet/`display:none` zone uses `CardanoBlueLogo`/`CardanoBlueDarkmodeLogo` |
+| Mobile drawer opened from wrong side / nav buttons on opposite side of drawer | Drawer anchored right on mobile; hamburger + search rendered after logo | `anchor="left"` always; `SideBarRight` (hamburger first, then search, then provider/theme) renders before `HeaderLogoLink` so space-between places actions left + logo right |
+| `AddressWalletDetail` page name shadowed `AddressDetail` DTO type | Folder renamed to match component intent | Page folder is now `pages/AddressDetail/`; inside `index.tsx` the DTO is aliased: `import { AddressDetail as AddressDetailData } from "@shared/dtos/address.dto"` |

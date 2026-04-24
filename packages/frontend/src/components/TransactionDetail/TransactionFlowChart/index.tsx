@@ -9,7 +9,7 @@ import { details } from "src/commons/routers";
 import { formatADAFull } from "src/commons/utils/helper";
 import ADAicon from "src/components/commons/ADAIcon";
 import CopyButton from "src/components/commons/CopyButton";
-import { useScreen } from "src/commons/hooks/useScreen";
+import { useBreakpoint } from "src/hooks/useBreakpoint";
 import {
   MintingIcon,
   TransactionDelegationIcon,
@@ -662,7 +662,7 @@ const WithdrawalsSection: React.FC<{ data: TransactionDetail }> = ({ data }) => 
 
 const CollateralsSection: React.FC<{ data: TransactionDetail }> = ({ data }) => {
   const { t } = useTranslation();
-  const { isTablet } = useScreen();
+  const { isTablet } = useBreakpoint();
   const [open, setOpen] = useState(false);
   const colIn = data.collaterals?.collateralInputResponses ?? [];
   const colOut = data.collaterals?.collateralOutputResponses ?? [];
@@ -750,7 +750,7 @@ interface Props {
 }
 
 const TransactionFlowChart: React.FC<Props> = ({ data }) => {
-  const { isTablet } = useScreen();
+  const { isTablet } = useBreakpoint();
   const containerRef = useRef<HTMLDivElement>(null);
   const centerRef = useRef<HTMLDivElement>(null);
 

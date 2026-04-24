@@ -13,7 +13,7 @@ import {
 import CustomIcon from "src/components/commons/CustomIcon";
 import { DetailsInfo, ValueCard } from "src/components/commons/DetailHeader/styles";
 import { TitleCard } from "src/pages/DrepDetail/styles";
-import useFetch from "src/commons/hooks/useFetch";
+import useFetch from "src/hooks/useFetch";
 import { API } from "src/commons/utils/api";
 import { formatDateTimeLocal, formatPercent } from "src/commons/utils/helper";
 import DatetimeTypeTooltip from "src/components/commons/DatetimeTypeTooltip";

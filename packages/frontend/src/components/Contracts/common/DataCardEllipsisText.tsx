@@ -3,7 +3,7 @@ import React, { useMemo } from "react";
 import DynamicEllipsisText from "src/components/DynamicEllipsisText";
 import { StyledLink } from "src/components/share/styled";
 import { details } from "src/commons/routers";
-import { useScreen } from "src/commons/hooks/useScreen";
+import { useBreakpoint } from "src/hooks/useBreakpoint";
 
 import { DataCardBox, DataTitle } from "./styles";
 
@@ -14,7 +14,7 @@ export interface DataCardProps {
 }
 
 const DataCardEllipsisText: React.FC<DataCardProps> = ({ title, value, purpose }) => {
-  const { isMobile, isTablet } = useScreen();
+  const { isMobile, isTablet } = useBreakpoint();
   const address = useMemo(() => {
     switch (purpose) {
       case "VOTING":

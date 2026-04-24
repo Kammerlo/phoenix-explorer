@@ -4,8 +4,8 @@ import { BiChevronDown } from "react-icons/bi";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 
-import useFetchList from "src/commons/hooks/useFetchList";
-import { useScreen } from "src/commons/hooks/useScreen";
+import useFetchList from "src/hooks/useFetchList";
+import { useBreakpoint } from "src/hooks/useBreakpoint";
 import { HeaderSearchIconComponent } from "src/commons/resources";
 import { details } from "src/commons/routers";
 import { API } from "src/commons/utils/api";
@@ -206,7 +206,7 @@ const ModalToken = ({
     page,
     size
   });
-  const { isTablet } = useScreen();
+  const { isTablet } = useBreakpoint();
 
   useEffect(() => {
     setSearch(searchProps);
@@ -289,7 +289,7 @@ const ModalToken = ({
             columns={columns}
             isModal={true}
             total={{ title: "Total", count: fetchData.total }}
-            maxHeight={isTablet ? "50vh" : "55vh"}
+            tableWrapperProps={{ sx: { maxHeight: isTablet ? "50vh" : "55vh" } }}
             pagination={{
               page,
               size,

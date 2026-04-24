@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 
 import { Column } from "src/components/commons/Table";
-import usePageInfo from "src/commons/hooks/usePageInfo";
+import usePageInfo from "src/hooks/usePageInfo";
 import CustomTooltip from "src/components/commons/CustomTooltip";
 import { getShortHash } from "src/commons/utils/helper";
 import { details } from "src/commons/routers";

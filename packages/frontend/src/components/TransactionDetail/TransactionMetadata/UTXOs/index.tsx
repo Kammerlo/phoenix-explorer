@@ -1,9 +1,9 @@
-import { Box, useTheme } from "@mui/material";
+import { Box, useMediaQuery, useTheme } from "@mui/material";
 import React from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
-import { useScreen } from "src/commons/hooks/useScreen";
+import { useBreakpoint } from "src/hooks/useBreakpoint";
 import receiveImg from "src/commons/resources/images/receiveImg.svg";
 import receiveImgFail from "src/commons/resources/images/receiveImgFail.svg";
 import sendImg from "src/commons/resources/images/sendImg.svg";
@@ -69,7 +69,8 @@ const Card = ({
       return prv + +item.value;
     }, 0);
 
-  const { isMobile, width } = useScreen();
+  const { isMobile } = useBreakpoint();
+  const isVeryNarrow = useMediaQuery("(max-width:400px)");
   const theme = useTheme();
   const ADAIconAmount = () => (
     <ADAicon sx={{ color: isFailed ? theme.palette.secondary[600] : theme.palette.secondary.main }} />
@@ -127,7 +128,7 @@ const Card = ({
               <WrapIcon type={type}>{renderIcon(type)}</WrapIcon>
               <WrapInfo
                 sx={
-                  width < 400
+                  isVeryNarrow
                     ? {
                         width: "calc(100% - 38px)"
                       }

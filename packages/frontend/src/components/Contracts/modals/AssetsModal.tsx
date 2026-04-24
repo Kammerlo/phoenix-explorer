@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 import CustomModal from "src/components/commons/CustomModal";
 import { CustomBadge } from "src/components/commons/ViewBlocks/styles";
 import { details } from "src/commons/routers";
-import { useScreen } from "src/commons/hooks/useScreen";
+import { useBreakpoint, useIsGalaxyFoldSmall } from "src/hooks/useBreakpoint";
 import CustomTooltip from "src/components/commons/CustomTooltip";
 import { getShortHash } from "src/commons/utils/helper";
 
@@ -31,7 +31,8 @@ export interface AssetsModalProps {
 }
 const AssetsModal: React.FC<AssetsModalProps> = ({ open = false, onClose, data, isBurned, isBurnType }) => {
   const { t } = useTranslation();
-  const { isMobile, isGalaxyFoldSmall } = useScreen();
+  const { isMobile } = useBreakpoint();
+  const isGalaxyFoldSmall = useIsGalaxyFoldSmall();
   const theme = useTheme();
   const handleCloseModal = () => onClose?.();
 
