@@ -4,7 +4,7 @@ import { stringify } from "qs";
 import { useTranslation } from "react-i18next";
 import { useSelector } from "react-redux";
 
-import useFetchList from "src/commons/hooks/useFetchList";
+import useFetchList from "src/hooks/useFetchList";
 import { details } from "src/commons/routers";
 import { formatNumberDivByDecimals, getPageInfo, getShortHash } from "src/commons/utils/helper";
 import CustomTooltip from "src/components/commons/CustomTooltip";

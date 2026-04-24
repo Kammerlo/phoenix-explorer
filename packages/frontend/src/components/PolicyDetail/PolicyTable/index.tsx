@@ -6,7 +6,7 @@ import { useNavigate, useLocation, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useSelector } from "react-redux";
 
-import useFetchList from "src/commons/hooks/useFetchList";
+import useFetchList from "src/hooks/useFetchList";
 import { API } from "src/commons/utils/api";
 import {
   formatAmount,

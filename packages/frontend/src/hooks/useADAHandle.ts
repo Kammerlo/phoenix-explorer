@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import axios, { AxiosError } from "axios";
 
-import { API } from "../utils/api";
-import { API_ADA_HANDLE_API } from "../utils/constants";
+import { API } from "src/commons/utils/api";
+import { API_ADA_HANDLE_API } from "src/commons/utils/constants";
 
 const useADAHandle = (name: string) => {
   const [data, setData] = useState<{ stakeAddress: string; paymentAddress: string } | null>(null);

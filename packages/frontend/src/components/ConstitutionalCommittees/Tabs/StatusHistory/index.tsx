@@ -26,7 +26,7 @@ import { TimeDuration } from "src/pages/BlockList/styles";
 import { formatDateTimeLocal } from "src/commons/utils/helper";
 import DynamicEllipsisText from "src/components/DynamicEllipsisText";
 import DatetimeTypeTooltip from "src/components/commons/DatetimeTypeTooltip";
-import useFetchList from "src/commons/hooks/useFetchList";
+import useFetchList from "src/hooks/useFetchList";
 import { API } from "src/commons/utils/api";
 import { FooterTable } from "src/components/commons/Table";
 import NoRecord from "src/components/commons/NoRecord";

@@ -2,7 +2,7 @@ import React from "react";
 import { screen } from "@testing-library/react";
 import { useTheme } from "@mui/material";
 
-import useFetch from "src/commons/hooks/useFetch";
+import useFetch from "src/hooks/useFetch";
 import themes from "src/themes";
 
 import { render } from "../../test-utils";
@@ -15,7 +15,7 @@ const mockData = {
   policyScript: `{"type":"all","scripts":[{"type":"before","slot":80888391},{"type":"sig","keyHash":"3e84a2dafe1fb49036f8b8a5cd9073255c2eb568362ce4c59256d828"}]}`
 };
 
-jest.mock("src/commons/hooks/useFetch");
+jest.mock("src/hooks/useFetch");
 jest.mock("@mui/material", () => ({
   __esModule: true,
   ...jest.requireActual("@mui/material"),

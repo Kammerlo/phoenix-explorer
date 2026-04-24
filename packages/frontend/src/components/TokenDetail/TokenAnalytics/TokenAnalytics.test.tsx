@@ -1,5 +1,5 @@
 import { render, screen } from "src/test-utils";
-import useFetchList from "src/commons/hooks/useFetchList";
+import useFetchList from "src/hooks/useFetchList";
 
 import TokenAnalytics from "./index";
 
@@ -8,7 +8,7 @@ const mockAnalyticsData = {
   value: 1000
 };
 
-jest.mock("src/commons/hooks/useFetchList");
+jest.mock("src/hooks/useFetchList");
 
 describe("TokenAnalytics component", () => {
   beforeEach(() => {

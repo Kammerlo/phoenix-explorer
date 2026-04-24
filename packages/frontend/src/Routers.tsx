@@ -10,7 +10,7 @@ import i18n from "./i18n";
 import { ApiConnector } from "./commons/connector/ApiConnector";
 import { FunctionEnum } from "./commons/connector/types/FunctionEnum";
 
-const AddressWalletDetail = React.lazy(() => import("./pages/AddressWalletDetail"));
+const AddressDetail = React.lazy(() => import("./pages/AddressDetail"));
 const BlockDetail = React.lazy(() => import("./pages/BlockDetail"));
 const BlockList = React.lazy(() => import("./pages/BlockList"));
 const Home = React.lazy(() => import("./pages/Home"));
@@ -72,8 +72,8 @@ const AppRoutes: React.FC = () => {
         <Route path={routers.EPOCH_DETAIL} element={isSupportedElement(EpochDetail, FunctionEnum.EPOCH)} />
         <Route path={routers.TRANSACTION_LIST} element={isSupportedElement(TransactionList, FunctionEnum.TRANSACTION)} />
         <Route path={routers.TRANSACTION_DETAIL} element={isSupportedElement(TransactionDetailView, FunctionEnum.TRANSACTION)} />
-        <Route path={routers.ADDRESS_DETAIL} element={isSupportedElement(AddressWalletDetail, FunctionEnum.ADDRESS)} />
-        <Route path={routers.STAKE_DETAIL} element={isSupportedElement(AddressWalletDetail, FunctionEnum.ADDRESS)} />
+        <Route path={routers.ADDRESS_DETAIL} element={isSupportedElement(AddressDetail, FunctionEnum.ADDRESS)} />
+        <Route path={routers.STAKE_DETAIL} element={isSupportedElement(AddressDetail, FunctionEnum.ADDRESS)} />
         <Route path={routers.POOLS} element={isSupportedElement(DelegationPools, FunctionEnum.POOL)} />
         <Route path={routers.POOL_DETAIL} element={isSupportedElement(PoolDetailView, FunctionEnum.POOL)} />
         <Route path={routers.TOKEN_LIST} element={isSupportedElement(Tokens, FunctionEnum.TOKENS)} />

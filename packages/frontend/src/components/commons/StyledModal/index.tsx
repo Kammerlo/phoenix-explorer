@@ -1,7 +1,7 @@
 import { Box, Modal, ModalProps, SxProps, useTheme } from "@mui/material";
 import { IoMdClose } from "react-icons/io";
 
-import { useScreen } from "src/commons/hooks/useScreen";
+import { useBreakpoint } from "src/hooks/useBreakpoint";
 
 import { CloseButton, ContentContainer, ModalContainer, WrapTitle } from "./styles";
 
@@ -27,7 +27,7 @@ const StyledModal: React.FC<IProps> = ({
   contentStyle = {},
   modalStyle = {}
 }) => {
-  const { isMobile } = useScreen();
+  const { isMobile } = useBreakpoint();
   const theme = useTheme();
   return (
     <Modal

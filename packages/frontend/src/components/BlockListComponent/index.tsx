@@ -11,7 +11,7 @@ import Table from "src/components/commons/Table";
 import Link from "src/components/commons/Link";
 import { Capitalize } from "src/components/commons/CustomText/styles";
 import FormNowMessage from "src/components/commons/FormNowMessage";
-import usePageInfo from "src/commons/hooks/usePageInfo";
+import usePageInfo from "src/hooks/usePageInfo";
 import DatetimeTypeTooltip from "src/components/commons/DatetimeTypeTooltip";
 import { BlockFillBarMini } from "src/components/commons/BlockFillBar";
 import CustomTooltip from "../commons/CustomTooltip";

@@ -2,7 +2,7 @@ import { useTheme } from "@mui/material";
 import { Router } from "react-router-dom";
 import { createBrowserHistory } from "history";
 
-import useFetchList from "src/commons/hooks/useFetchList";
+import useFetchList from "src/hooks/useFetchList";
 import { fireEvent, render, screen } from "src/test-utils";
 import themes from "src/themes";
 import { details } from "src/commons/routers";
@@ -22,7 +22,7 @@ jest.mock("@mui/material", () => ({
   useTheme: jest.fn()
 }));
 
-jest.mock("src/commons/hooks/useFetchList");
+jest.mock("src/hooks/useFetchList");
 jest.mock("@textea/json-viewer");
 
 describe("TokenMetadata component", () => {

@@ -1,5 +1,5 @@
 import { render, screen } from "src/test-utils";
-import useFetch from "src/commons/hooks/useFetch";
+import useFetch from "src/hooks/useFetch";
 
 import BlockDetail from "./index";
 
@@ -18,7 +18,7 @@ const blockDetail: BlockDetail = {
   confirmation: 6
 };
 
-jest.mock("src/commons/hooks/useFetch");
+jest.mock("src/hooks/useFetch");
 
 describe("BlockDetail page", () => {
   beforeEach(() => {

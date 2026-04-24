@@ -18,8 +18,8 @@ import { BsFillCheckCircleFill } from "react-icons/bs";
 import { IoIosArrowDown, IoIosArrowUp } from "react-icons/io";
 import { useNavigate, useLocation, useParams } from "react-router-dom";
 
-import useFetch from "src/commons/hooks/useFetch";
-import usePageInfo from "src/commons/hooks/usePageInfo";
+import useFetch from "src/hooks/useFetch";
+import usePageInfo from "src/hooks/usePageInfo";
 import { FilterIcon, GovBodycon, GovernanceIcon, GovIDIcon, ResetIcon, TimeStampIcon } from "src/commons/resources";
 import { API } from "src/commons/utils/api";
 import { formatADA, formatPercent, LARGE_NUMBER_ABBREVIATIONS, truncateDecimals } from "src/commons/utils/helper";

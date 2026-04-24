@@ -4,7 +4,7 @@ import { isNil } from "lodash";
 import React, { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import useDisableJsonKey from "src/commons/hooks/useDisableJsonKey";
+import useDisableJsonKey from "src/hooks/useDisableJsonKey";
 import { isJson } from "src/commons/utils/helper";
 import CIP60Modal from "src/components/CIPComplianceModal/CIP60Modal";
 import CIP60Badge from "src/components/commons/CIP60Badge";

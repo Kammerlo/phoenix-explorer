@@ -2,7 +2,7 @@ import React from "react";
 import { Box, useTheme } from "@mui/material";
 import { useTranslation } from "react-i18next";
 
-import { useScreen } from "src/commons/hooks/useScreen";
+import { useBreakpoint } from "src/hooks/useBreakpoint";
 import sendImg from "src/commons/resources/images/sendImg.svg";
 import { details } from "src/commons/routers";
 import { UpGreenUtxoDarkmode } from "src/commons/resources";
@@ -17,7 +17,7 @@ interface DelegationProps {
 const Delegations: React.FC<DelegationProps> = ({ data }) => {
   const { t } = useTranslation();
   const theme = useTheme();
-  const { isMobile } = useScreen();
+  const { isMobile } = useBreakpoint();
   return (
     <Wrapper>
       <Header>{t("common.stakeAddress")}</Header>

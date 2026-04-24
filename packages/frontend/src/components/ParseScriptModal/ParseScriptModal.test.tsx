@@ -2,7 +2,7 @@ import { useTheme } from "@mui/material";
 
 import { fireEvent, render, screen } from "src/test-utils";
 import themes from "src/themes";
-import { useScreen } from "src/commons/hooks/useScreen";
+import { useBreakpoint } from "src/hooks/useBreakpoint";
 
 import ParseScriptModal from "./index";
 
@@ -25,12 +25,12 @@ jest.mock("@mui/material", () => ({
   useTheme: jest.fn()
 }));
 
-jest.mock("src/commons/hooks/useScreen");
+jest.mock("src/hooks/useBreakpoint");
 jest.mock("@textea/json-viewer");
 describe("ParseScriptModal component", () => {
   beforeEach(() => {
     (useTheme as jest.Mock).mockReturnValue(themes["light"]);
-    (useScreen as jest.Mock).mockReturnValue({
+    (useBreakpoint as jest.Mock).mockReturnValue({
       isMobile: true,
       isTablet: true
     });

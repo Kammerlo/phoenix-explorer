@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import { useLocation } from "react-router-dom";
 
-import { useScreen } from "src/commons/hooks/useScreen";
+import { useBreakpoint } from "src/hooks/useBreakpoint";
 import { RootState } from "src/stores/types";
 import { setOnDetailView, setSidebar } from "src/stores/system";
 
@@ -23,7 +23,7 @@ const CustomLayout: React.FC<Props> = ({ children }) => {
   const [openNoticeModal, setOpenNoticeModal] = useState<boolean>(false);
   const location = useLocation();
 
-  const { isTablet } = useScreen();
+  const { isTablet } = useBreakpoint();
   const theme = useTheme();
   const mainRef = useRef<HTMLDivElement | null>(null);
   const matchesBreakpoint = useMediaQuery(theme.breakpoints.down("md"));

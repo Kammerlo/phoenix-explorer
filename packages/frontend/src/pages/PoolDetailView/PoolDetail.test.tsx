@@ -2,7 +2,7 @@ import { Router } from "react-router-dom";
 import { createBrowserHistory } from "history";
 
 import { fireEvent, render, screen } from "src/test-utils";
-import useFetch from "src/commons/hooks/useFetch";
+import useFetch from "src/hooks/useFetch";
 import { POOL_STATUS } from "src/commons/utils/constants";
 
 import DelegationDetail from "./index";
@@ -85,7 +85,7 @@ const analyticsDelegators = {
   }
 };
 
-jest.mock("src/commons/hooks/useFetch");
+jest.mock("src/hooks/useFetch");
 
 describe("BlockDetail page", () => {
   beforeEach(() => {

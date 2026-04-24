@@ -14,7 +14,7 @@ import {
 import { ChipContainer } from "src/components/share/ChipContainer";
 import { POOLS_ACTION_TYPE, STATUS_VOTE } from "src/commons/utils/constants";
 import { GovernanceVote } from "src/components/GovernanceVotes";
-import { useScreen } from "src/commons/hooks/useScreen";
+import { useIsGalaxyFoldSmall } from "src/hooks/useBreakpoint";
 
 import { CardGovernanceVote, StatusContainer, TitleCard } from "./styles";
 
@@ -155,7 +155,7 @@ export const VoteStatus: React.FC<{ status: string; isRepeatVote?: boolean }> = 
 export const GovernanceStatus: React.FC<{ status: string | null }> = ({ status }) => {
   const theme = useTheme();
   const { t } = useTranslation();
-  const { isGalaxyFoldSmall } = useScreen();
+  const isGalaxyFoldSmall = useIsGalaxyFoldSmall();
 
   const renderStatus = (key: string) => {
     switch (key) {

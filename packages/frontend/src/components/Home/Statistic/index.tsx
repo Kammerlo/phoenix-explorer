@@ -5,8 +5,8 @@ import { isAfter, parseISO } from "date-fns";
 import BigNumber from "bignumber.js";
 import { Box, useTheme } from "@mui/material";
 
-import useFetch from "src/commons/hooks/useFetch";
-import { useScreen } from "src/commons/hooks/useScreen";
+import useFetch from "src/hooks/useFetch";
+import { useIsGalaxyFoldSmall } from "src/hooks/useBreakpoint";
 import {
   AdaPriceDarkIcon,
   AdaPriceIcon,
@@ -95,7 +95,7 @@ const HomeStatistic = () => {
   const epochActiveText = `Started ${humanizedActive} ago`;
   const epochFinishText = `Finishes in ${humanized}`;
 
-  const { isGalaxyFoldSmall } = useScreen();
+  const isGalaxyFoldSmall = useIsGalaxyFoldSmall();
 
   const formattedDateTime = new Date();
   const numberActiveStake = new BigNumber(activeStake);

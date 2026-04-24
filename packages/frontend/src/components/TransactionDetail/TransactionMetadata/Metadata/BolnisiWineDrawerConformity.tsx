@@ -6,7 +6,7 @@ import { useNavigate, useParams } from "react-router-dom";
 
 import { AvatarIcon, InvalidIcon, ShowMore, VerifiedIcon } from "src/commons/resources";
 import CustomIcon from "src/components/commons/CustomIcon";
-import useFetch from "src/commons/hooks/useFetch";
+import useFetch from "src/hooks/useFetch";
 import { API } from "src/commons/utils/api";
 import { details } from "src/commons/routers";
 import { CommonSkeleton } from "src/components/commons/CustomSkeleton";

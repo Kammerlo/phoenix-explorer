@@ -1,7 +1,7 @@
 import { ClickAwayListener, Tooltip, TooltipProps, useTheme } from "@mui/material";
 import { Dispatch, SetStateAction, useEffect, useRef, useState } from "react";
 
-import { useScreen } from "src/commons/hooks/useScreen";
+import { useBreakpoint } from "src/hooks/useBreakpoint";
 
 interface Props extends TooltipProps {
   wOpacity?: boolean;
@@ -14,7 +14,7 @@ export const CustomTooltip = (props: Props) => {
   const [openTooltip, setOpenTooltip] = useState(false);
 
   const theme = useTheme();
-  const { isMobile } = useScreen();
+  const { isMobile } = useBreakpoint();
   const tooltipRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {

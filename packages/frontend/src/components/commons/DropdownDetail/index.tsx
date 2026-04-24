@@ -5,7 +5,7 @@ import { useTheme } from "@mui/material";
 import { details } from "src/commons/routers";
 import { StyledLink } from "src/components/share/styled";
 import DynamicEllipsisText from "src/components/DynamicEllipsisText";
-import { useScreen } from "src/commons/hooks/useScreen";
+import { useBreakpoint } from "src/hooks/useBreakpoint";
 
 import { ButtonClose, DropdownList, DropdownTitle, InfoValue, ListDropdownContainer } from "./styles";
 
@@ -20,7 +20,7 @@ interface IDropdownDetailProps {
 const DropdownDetail: React.FC<IDropdownDetailProps> = ({ title, value, close, minWidth, isStakeDetail = false }) => {
   const ref = useOutsideClick(close);
   const theme = useTheme();
-  const { isMobile } = useScreen();
+  const { isMobile } = useBreakpoint();
 
   return (
     <ListDropdownContainer minWidth={minWidth} ref={ref}>

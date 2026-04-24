@@ -8,16 +8,16 @@ import PluginSlotRenderer from "src/plugins/PluginSlotRenderer";
 import NoRecord from "../../components/commons/NoRecord";
 import FetchDataErr from "../../components/commons/FetchDataErr";
 import TransactionList from "src/components/TransactionLists";
-import { AddressDetail } from "@shared/dtos/address.dto";
+import { AddressDetail as AddressDetailData } from "@shared/dtos/address.dto";
 import { ApiReturnType } from "@shared/APIReturnType";
 import { Transaction } from "@shared/dtos/transaction.dto";
-import usePageInfo from "src/commons/hooks/usePageInfo";
+import usePageInfo from "src/hooks/usePageInfo";
 
-const AddressWalletDetail: React.FC = () => {
+const AddressDetail: React.FC = () => {
   const params = useParams<{ address: string; stakeId: string }>();
   const address = params.address || params.stakeId;
   const { pageInfo } = usePageInfo();
-  const [data, setData] = useState<AddressDetail>();
+  const [data, setData] = useState<AddressDetailData>();
   const [txData, setTxData] = useState<ApiReturnType<Transaction[]>>({
     data: [], lastUpdated: 0, total: 0, currentPage: 0
   });
@@ -71,4 +71,4 @@ const AddressWalletDetail: React.FC = () => {
   );
 };
 
-export default AddressWalletDetail;
+export default AddressDetail;

@@ -11,7 +11,7 @@ import { details } from "src/commons/routers";
 import { RootState } from "src/stores/types";
 import { SearchIcon } from "src/commons/resources";
 import { formatNumberDivByDecimals, getShortHash } from "src/commons/utils/helper";
-import { useScreen } from "src/commons/hooks/useScreen";
+import { useBreakpoint } from "src/hooks/useBreakpoint";
 import DynamicEllipsisText from "src/components/DynamicEllipsisText";
 import { TruncateSubTitleContainer } from "src/components/share/styled";
 
@@ -112,7 +112,7 @@ const DetailHeader: React.FC<DetailHeaderProps> = (props) => {
     subTitle
   } = props;
 
-  const { isMobile } = useScreen();
+  const { isMobile } = useBreakpoint();
   const navigate = useNavigate();
   const theme = useTheme();
   const currentEpoch = useSelector((state: RootState) => state.system.currentEpoch);
@@ -164,7 +164,8 @@ const DetailHeader: React.FC<DetailHeaderProps> = (props) => {
             return (
               <CardItem
                 size={{
-                  xs: isDetailToken && index === 0 ? 12 : 6,
+                  xs: 12,
+                  sm: isDetailToken && index === 0 ? 12 : 6,
                   md: 4,
                   lg: numberOfItems > 6 ? Math.round(12 / itemOnRow) : undefined
                 }}
@@ -273,7 +274,7 @@ const DetailHeader: React.FC<DetailHeaderProps> = (props) => {
             return (
               <CardItem
                 size={{
-                  xs: isDetailToken && index === 0 ? 12 : 6,
+                  xs: 12,
                   sm: isDetailToken && index === 0 ? 12 : 6,
                   md: numberOfItems === 4 ? 3 : 4,
                   lg: numberOfItems > 6 ? Math.round(12 / itemOnRow) : undefined
@@ -402,7 +403,8 @@ interface BufferListProps {
 }
 
 const BufferList = memo(({ numberOfItems, wide, children, itemOnRow }: BufferListProps) => {
-  const { isTablet, isLaptop } = useScreen();
+  const { isMobile, isTablet, isLaptop } = useBreakpoint();
+  if (isMobile) return null;
   const numberOfRow = isTablet ? 2 : isLaptop ? 3 : itemOnRow;
   // get number of buffer items. Ex: if numberOfItems = 8, first item token detail 2 slot (bufferWide = 1);
   const bufferWide = isTablet ? wide : 0;
@@ -416,7 +418,8 @@ const BufferList = memo(({ numberOfItems, wide, children, itemOnRow }: BufferLis
           return (
             <CardItem
               size={{
-                xs: 6,
+                xs: 12,
+                sm: 6,
                 md: numberOfItems === 4 ? 3 : 4,
                 lg: numberOfItems > 6 ? Math.round(12 / itemOnRow) : undefined
               }}

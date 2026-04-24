@@ -4,7 +4,7 @@ import { createMemoryHistory } from "history";
 
 import { render } from "src/test-utils";
 import Table, { Column } from "src/components/commons/Table";
-import useFetchList from "src/commons/hooks/useFetchList";
+import useFetchList from "src/hooks/useFetchList";
 
 import Tokens from "./index";
 
@@ -32,7 +32,7 @@ const mockData = {
   ]
 };
 
-jest.mock("src/commons/hooks/useFetchList");
+jest.mock("src/hooks/useFetchList");
 
 describe("Token view", () => {
   afterEach(() => {

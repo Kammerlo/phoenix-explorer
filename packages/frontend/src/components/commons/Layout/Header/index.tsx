@@ -3,7 +3,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import { useLocation } from "react-router-dom";
 
-import { useScreen } from "src/commons/hooks/useScreen";
+import { useBreakpoint } from "src/hooks/useBreakpoint";
 import {
   CardanoBlueDarkmodeLogo,
   CardanoBlueLogo,
@@ -39,11 +39,16 @@ import { RootState } from "src/stores/types";
 
 const Header: React.FC = () => {
   const location = useLocation();
-  const { isMobile } = useScreen();
+  const { isMobile } = useBreakpoint();
 
   const home = location.pathname === "/";
   const { sidebar } = useSelector(({ system }: RootState) => system);
   const { theme: themeMode } = useSelector(({ theme }: RootState) => theme);
+  const logoSrc = isMobile
+    ? LogoIcon
+    : themeMode === "dark"
+    ? CardanoBlueDarkmodeLogo
+    : CardanoBlueLogo;
   const providerConfig = useSelector((state: RootState) => state.provider?.config);
   const [openSearch, setOpenSearch] = React.useState(false);
   const [openProvider, setOpenProvider] = useState(false);
@@ -83,7 +88,7 @@ const Header: React.FC = () => {
         </HeaderMain>
         <HeaderTop data-testid="header-top" ref={refElement}>
           <HeaderLogoLink to="/" data-testid="header-logo" aria-label="Cardano Explorer Home">
-            {!sidebar && <HeaderLogo alt="Cardano Blockchain Explorer logo" />}
+            {!sidebar && <HeaderLogo src={logoSrc} alt="Cardano Blockchain Explorer logo" />}
           </HeaderLogoLink>
           <SideBarRight>
             <WrapButtonSelect>

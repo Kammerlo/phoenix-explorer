@@ -4,7 +4,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useSelector } from "react-redux";
 
-import useFetchList from "src/commons/hooks/useFetchList";
+import useFetchList from "src/hooks/useFetchList";
 import { details } from "src/commons/routers";
 import { formatAmount, formatDateTimeLocal, getPageInfo, getShortHash } from "src/commons/utils/helper";
 import { API } from "src/commons/utils/api";

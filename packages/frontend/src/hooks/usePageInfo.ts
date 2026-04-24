@@ -2,7 +2,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { stringify } from "qs";
 import { pick } from "lodash";
 
-import { getPageInfo } from "../utils/helper";
+import { getPageInfo } from "src/commons/utils/helper";
 
 const usePageInfo = () => {
   const { search } = useLocation();
