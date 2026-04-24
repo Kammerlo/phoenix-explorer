@@ -113,12 +113,7 @@ export class YaciConnector extends ConnectorBase {
       await this._enrichBlocksWithPoolNames(blocks);
       return {
         data: blocks,
-        extras: {
-          total: response.data.total,
-          totalPage: response.data.totalPages,
-          currentPage: Number(pageInfo.page ?? 0),
-          pageSize: Number(pageInfo.size ?? blocks.length)
-        }
+        extras: { total: response.data.total, totalPage: response.data.totalPages }
       };
     });
   }
@@ -132,12 +127,7 @@ export class YaciConnector extends ConnectorBase {
       await this._enrichBlocksWithPoolNames(blocks);
       return {
         data: blocks,
-        extras: {
-          total: response.data.total,
-          totalPage: response.data.totalPages,
-          currentPage: Number(pageInfo.page ?? 0),
-          pageSize: Number(pageInfo.size ?? blocks.length)
-        }
+        extras: { total: response.data.total, totalPage: response.data.totalPages }
       };
     });
   }
@@ -186,12 +176,7 @@ export class YaciConnector extends ConnectorBase {
       );
       return {
         data: transactions,
-        extras: {
-          total,
-          totalPage,
-          currentPage: Number(pageInfo.page ?? 0),
-          pageSize: Number(pageInfo.size ?? transactions.length)
-        }
+        extras: { total, totalPage }
       };
     });
   }

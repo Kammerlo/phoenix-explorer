@@ -46,9 +46,14 @@ export function toTransactionDetail<T>(
     },
     // signersInformation: mapToSignersInformation(txDetails), // TODO requiredSigners is not available in response
     metadata: metadata.map((meta) => {
+      const json = meta.jsonMetadata;
+      let value = "";
+      if (json != null) {
+        value = typeof json === "string" ? json : JSON.stringify(json);
+      }
       return {
         label: meta.label ? +meta.label : 0,
-        value: meta.jsonMetadata?.toString() || ""
+        value
       };
     }),
     metadataHash: "" // TODO

@@ -29,7 +29,9 @@ Root `npm run dev` uses `concurrently` to run the `gateway` and `frontend` works
 
 ## Architecture: Three-Connector System
 
-Pages fetch data through an abstract `ApiConnector` class (`src/commons/connector/ApiConnector.ts`) with three implementations:
+Full architecture + how-to-add-a-connector recipe: [`docs/connectors.md`](docs/connectors.md).
+
+Pages fetch data through an abstract `ApiConnector` class (`src/commons/connector/ApiConnector.ts`) with three implementations. `ConnectorBase` (`src/commons/connector/ConnectorBase.ts`) provides concrete default-unsupported impls for every method so subclasses only override what they serve; it also exposes `this.request(...)` / `this.requestList(...)` / `this.unsupported(...)` helpers that envelope responses via `@shared/helpers/envelope`.
 
 | Connector | Mode | File | When used |
 |-----------|------|------|-----------|
