@@ -90,10 +90,15 @@ const Header: React.FC = () => {
           <HeaderSearchContainer home={+home}><HeaderSearch home={home} /></HeaderSearchContainer>
         </HeaderMain>
         <HeaderTop data-testid="header-top" ref={refElement}>
-          <HeaderLogoLink to="/" data-testid="header-logo" aria-label="Cardano Explorer Home">
-            {!sidebar && <HeaderLogo src={logoSrc} alt="Cardano Blockchain Explorer logo" />}
-          </HeaderLogoLink>
           <SideBarRight>
+            <ButtonSideBar onClick={handleToggle} aria-label={sidebar ? "Close sidebar" : "Open sidebar"}>
+              <CustomIcon icon={MenuIconComponent} height={18} fill={theme.palette.secondary.light} />
+            </ButtonSideBar>
+            {location.pathname !== routers.STAKING_LIFECYCLE && (
+              <SearchButton onClick={handleOpenSearch} home={+home} aria-label="Open search">
+                <SearchIcon fontSize={24} stroke={theme.palette.secondary.light} fill={theme.palette.secondary[0]} />
+              </SearchButton>
+            )}
             <WrapButtonSelect>
               <Box
                 component="button"
@@ -125,16 +130,10 @@ const Header: React.FC = () => {
                 }}
               />
             </WrapButtonSelect>
-
-            {location.pathname !== routers.STAKING_LIFECYCLE && (
-              <SearchButton onClick={handleOpenSearch} home={+home} aria-label="Open search">
-                <SearchIcon fontSize={24} stroke={theme.palette.secondary.light} fill={theme.palette.secondary[0]} />
-              </SearchButton>
-            )}
-            <ButtonSideBar onClick={handleToggle} aria-label={sidebar ? "Close sidebar" : "Open sidebar"}>
-              <CustomIcon icon={MenuIconComponent} height={18} fill={theme.palette.secondary.light} />
-            </ButtonSideBar>
           </SideBarRight>
+          <HeaderLogoLink to="/" data-testid="header-logo" aria-label="Cardano Explorer Home">
+            {!sidebar && <HeaderLogo src={logoSrc} alt="Cardano Blockchain Explorer logo" />}
+          </HeaderLogoLink>
         </HeaderTop>
       </HeaderBox>
 
