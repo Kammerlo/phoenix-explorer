@@ -4,7 +4,7 @@
 
 Cardano blockchain explorer (fork of `cardano-foundation/cf-explorer-frontend`, revived and actively maintained). Live deployment: [phoenix-explorer.org](https://phoenix-explorer.org).
 
-- **Frontend**: React 18.3, TypeScript, MUI v7, Redux Toolkit v2, React Router v7, Highcharts v11, react-icons v4.6, date-fns v4, Vite (with `@vitejs/plugin-react`, automatic JSX transform — **no `import React` needed** in component files)
+- **Frontend**: React 18.3.1, TypeScript, MUI v7 (+ `@mui/lab`, `@mui/x-tree-view`), Redux Toolkit v2, React Router v7, Highcharts v11, react-icons v4.6, date-fns v4, Vite 5 (with `@vitejs/plugin-react`, automatic JSX transform — **no `import React` needed** in component files)
 - **Gateway**: Node.js + Express 5, Blockfrost SDK v6, `ts-node-dev` in dev, `tsc` build → `dist/`
 - **Shared**: `cardano-explorer-shared` package exposing DTOs and API types as `@shared/*`
 - **Monorepo**: npm workspaces — `packages/frontend`, `packages/gateway`, `packages/shared`
@@ -466,7 +466,17 @@ AVG_BLOCK_TIME_SECONDS = 20             // slot 1 s, ~5 % leadership rate
 | `axios` + `axios-case-converter` | HTTP (connector layer) | `case-converter` auto-maps snake_case ↔ camelCase |
 | `redux-persist` | Persist `theme` slice | Note: `provider` slice uses a cookie, **not** redux-persist |
 | `qs` | Querystring parsing | Used in `useFetchList` and pagination helpers |
-| `@cardano-foundation/cardano-connect-with-wallet` | Wallet integration | |
+| `@cardano-foundation/cardano-connect-with-wallet` (+ `-core`) | Wallet integration | |
+| `@cardano-foundation/cf-flat-decoder-ts` | Decodes Plutus flat-encoded scripts | Used for script viewers |
+| `cardano-addresses` | Cardano address parsing / derivation | |
+| `cbor-x` | CBOR encode/decode | Parses on-chain metadata / script blobs |
+| `@textea/json-viewer` | Collapsible JSON viewer | Used in metadata / governance detail views |
+| `@mui/lab` / `@mui/x-tree-view` | MUI extensions | Tree view for nested data |
+| `lodash` | Utility library | Tree-shake via `lodash/<fn>` imports |
+| `sass` | SCSS compilation | Vite handles `.scss` imports |
+| `react-use` | React hooks grab-bag | |
+| `react-countup` | Animated number counter | Dashboard stat cards |
+| `react-circular-progressbar` | Circular progress | Epoch progress indicators |
 
 ---
 
@@ -516,6 +526,7 @@ Root `.env` (loaded by both the Vite build and the Express gateway; Gateway read
 | `REACT_APP_NETWORK` | `mainnet` | Label shown in UI |
 | `REACT_APP_BLOCKFROST_API_KEY` | — | Only when `REACT_APP_API_TYPE=BLOCKFROST` (exposed to browser) |
 | `REACT_APP_API_URL_COIN_GECKO` | CoinGecko markets endpoint | ADA price data source |
+| `REACT_APP_ADA_HANDLE_API` | — | Optional. Endpoint for resolving [ADA Handle](https://adahandle.com/) names. Consumed via `ADA_HANDLE_API`/`API_ADA_HANDLE_API` in [`src/commons/utils/constants.ts`](packages/frontend/src/commons/utils/constants.ts) and `useADAHandle`. |
 
 See [`.env.example`](.env.example) at the repo root.
 
