@@ -7,7 +7,8 @@ import { useBreakpoint } from "src/hooks/useBreakpoint";
 import {
   CardanoBlueDarkmodeLogo,
   CardanoBlueLogo,
-  LogoIcon,
+  LogoDarkmodeFullIcon,
+  LogoFullIcon,
   MenuIconComponent,
   SearchIcon
 } from "src/commons/resources";
@@ -45,7 +46,9 @@ const Header: React.FC = () => {
   const { sidebar } = useSelector(({ system }: RootState) => system);
   const { theme: themeMode } = useSelector(({ theme }: RootState) => theme);
   const logoSrc = isMobile
-    ? LogoIcon
+    ? themeMode === "dark"
+      ? LogoDarkmodeFullIcon
+      : LogoFullIcon
     : themeMode === "dark"
     ? CardanoBlueDarkmodeLogo
     : CardanoBlueLogo;
