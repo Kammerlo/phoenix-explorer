@@ -14,7 +14,7 @@ import { AddressDetail, StakeAddressDetail } from "@shared/dtos/address.dto";
 import { PoolDetail, PoolOverview } from "@shared/dtos/pool.dto";
 import { Drep, DrepDelegates } from "@shared/dtos/drep.dto";
 import { SearchResult } from "@shared/dtos/seach.dto";
-import type { DashboardStats } from "src/components/Home/DashboardStats";
+import { DashboardStats } from "@shared/dtos/dashboard.dto";
 
 // Factory function set by ConnectorFactory.ts to avoid circular imports.
 // ConnectorFactory.ts must be imported before getApiConnector() is called.
@@ -110,5 +110,5 @@ export abstract class ApiConnector {
 
   abstract search(query: string): Promise<ApiReturnType<SearchResult[]>>;
 
-  abstract getDashboardStats(): Promise<DashboardStats | null>;
+  abstract getDashboardStats(): Promise<ApiReturnType<DashboardStats>>;
 }

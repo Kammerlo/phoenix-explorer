@@ -10,6 +10,7 @@ import { poolController } from "./controller/pool-controller";
 import { protocolParamsController } from "./controller/protocol-params-controller";
 import { dashboardController } from "./controller/dashboard-controller";
 import { searchController } from "./controller/search-controller";
+import { errorHandler } from "./middleware/errorHandler";
 
 const app = express();
 
@@ -26,5 +27,7 @@ app.use("/api/pools", poolController);
 app.use("/api/protocol-params", protocolParamsController);
 app.use("/api/dashboard", dashboardController);
 app.use("/api/search", searchController);
+
+app.use(errorHandler);
 
 export default app;
