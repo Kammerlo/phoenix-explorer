@@ -49,7 +49,9 @@ apiConnector.someMethod(...).then(data => { ... });
 
 **Connector selection:** `ConnectorFactory` reads `loadProviderConfig()` from `src/stores/provider.ts`. The active config lives in the `phoenix_provider` cookie (1-year `max-age`, `SameSite=Lax`). On first load, env defaults seed it. Changing the provider at runtime via the `ProviderSwitcher` UI (`src/components/commons/ProviderSwitcher/index.tsx`) writes a new cookie and re-dispatches the Redux slice. A one-time migration reads the old `phoenix_provider_config` localStorage key and moves it to the cookie.
 
-**Feature gating:** Each connector returns `getSupportedFunctions(): FunctionEnum[]`. [`Routers.tsx`](packages/frontend/src/Routers.tsx) wraps each route with `isSupportedElement(Component, FunctionEnum.X)` so unsupported routes fall through to `NotFound` when the active connector can't serve them.
+**Feature gating:** Each connector returns `getSupportedFunctions(): FunctionEnum[]`. [`Routers.tsx`](packages/frontend/src/Routers.tsx) wraps each route with `isSupportedElement(Component, FunctionEnum.X)` so unsupported routes fall through to `NotFound` when the active connector can't serve them. `ConnectorBase` also provides default-unsupported impls for every method (list → `{ data: [], error: "Not supported by current provider: <method>", lastUpdated }`; object → `{ data: null, error, lastUpdated }`) as a defensive fallback for call sites that bypass the route gate (search, deep links). The advertised `getSupportedFunctions()` list remains the single source of truth for gating.
+
+**Envelope helpers** (`packages/shared/src/helpers/envelope.ts`): use `envelope(data, extras?)`, `errorEnvelope(err, fallback?)`, `unsupportedEnvelope(method, fallback?)` instead of hand-writing `{ data, lastUpdated: Date.now() }`. `ConnectorBase` exposes `this.request(fn, fallback?, extras?)` and `this.requestList(fn)` (returns `{ data, extras? }`) — these wrap the envelope creation + try/catch, so connector methods never hand-roll error handling.
 
 **All connectors use `Date.now()` (milliseconds) for `lastUpdated`** in `ApiReturnType`. See [Timestamp Conventions](#timestamp-conventions).
 
@@ -81,6 +83,11 @@ All handlers return `ApiReturnType<T>` where applicable, with `lastUpdated: Date
 - [`config/env.ts`](packages/gateway/src/config/env.ts): loads `.env` from the **monorepo root** (`path.resolve(__dirname, "../../../../.env")`). Exposes `API_KEY`, `PORT` (default 3000), `HOST` (default `0.0.0.0`), `NETWORK` (default `mainnet`).
 - [`config/blockfrost.ts`](packages/gateway/src/config/blockfrost.ts): singleton `BlockFrostAPI` instance.
 - [`config/cache.ts`](packages/gateway/src/config/cache.ts): `NodeCache` with 5-minute default TTL. Helpers: `getEpoch`, `getBlock`, `getTransactions`, `getTxMetadata`, `getUtxos`, `getTxDetail`, `fetchAddressTotal`.
+
+### Middleware
+
+- [`middleware/asyncHandler.ts`](packages/gateway/src/middleware/asyncHandler.ts): `asyncHandler(fn)` forwards rejected promises from async handlers to the error middleware. Use for new controllers.
+- [`middleware/errorHandler.ts`](packages/gateway/src/middleware/errorHandler.ts): global error middleware registered as the last `app.use` in [`app.ts`](packages/gateway/src/app.ts). Emits `errorEnvelope<unknown>(err)` with `statusCode` if set on the error, else 500.
 
 ### TypeScript paths
 
@@ -562,3 +569,4 @@ npm run build --workspace=cardano-explorer-shared   # tsc → packages/shared/di
 | `BlockFillBarFull` missing | Only `BlockFillBarMini` was exported | Add `BlockFillBarFull` to `BlockFillBar/index.tsx` |
 | Saturation bar invisible | `SaturationBar` treated 0–1 fraction as 0–100 | Multiply by 100 for width pct; pass raw value to `formatPercent` |
 | Gateway dashboard showing empty stats | Cookie `baseUrl` missing `/api` suffix | Gateway routes are mounted at `/api/*` — base URL must include it |
+| Transaction metadata rendered as `"[object Object]"` (Yaci) | `meta.jsonMetadata?.toString()` on a JSON object | Use `JSON.stringify(meta.jsonMetadata)` — matches the existing pattern in `transactionService.ts` and `blockfrostConnector.ts` |
