@@ -46,7 +46,7 @@ const Home: React.FC = () => {
 
     api
       .getDashboardStats()
-      .then((stats) => setStatsData(stats))
+      .then((result) => setStatsData(result.data))
       .catch(() => {})
       .finally(() => setStatsLoading(false));
 

@@ -1,6 +1,7 @@
-import axios, { AxiosError, AxiosInstance } from "axios";
+import axios, { AxiosInstance } from "axios";
 
-import { ApiConnector, StakeAddressAction } from "../ApiConnector";
+import { StakeAddressAction } from "../ApiConnector";
+import { ConnectorBase } from "../ConnectorBase";
 import {
   AddressBalanceDto,
   AddressTransaction,
@@ -46,18 +47,19 @@ import { AddressDetail, StakeAddressDetail } from "@shared/dtos/address.dto";
 import { PoolDetail, PoolOverview } from "@shared/dtos/pool.dto";
 import { Drep, DrepDelegates } from "@shared/dtos/drep.dto";
 import { SearchResult } from "@shared/dtos/seach.dto";
+import { DashboardStats } from "@shared/dtos/dashboard.dto";
 import { addressBalanceDtoToWalletAddress } from "./mapper/AddressBalanceDtoToWalletAddress";
 
 /**
- * This ApiConnector implementation uses the YACI API to fetch data.
- * It is using axios for HTTP Requests, this is only working for non secured environements.
+ * Connector for Yaci Store (https://github.com/bloxbean/yaci-store) — a local /
+ * devnet-friendly Cardano indexer. Uses axios with case conversion so Yaci's
+ * snake_case fields arrive camelCased to our mappers.
  */
-export class YaciConnector implements ApiConnector {
-  baseUrl: string;
+export class YaciConnector extends ConnectorBase {
   client: AxiosInstance;
 
   constructor(baseUrl: string) {
-    this.baseUrl = baseUrl;
+    super(baseUrl);
     this.client = applyCaseMiddleware(axios.create());
   }
   getSupportedFunctions(): FunctionEnum[] {
@@ -103,480 +105,289 @@ export class YaciConnector implements ApiConnector {
   }
 
   async getBlocksPage(pageInfo: ParsedUrlQuery): Promise<ApiReturnType<Block[]>> {
-    try {
+    return this.requestList<Block>(async () => {
       const response = await this.client.get<BlocksPage>(`${this.baseUrl}/blocks`, {
         params: pageInfo
       });
-      const blocks: Block[] = [];
-      // getting additional data
-      for (const block of response.data.blocks!) {
-        blocks.push((await this.getBlockDetail(block.number!)).data as Block);
-      }
-      await this._enrichBlocksWithPoolNames(blocks);
-
-      const latestBlockResponse = await this.client.get<BlockDto>(`${this.baseUrl}/blocks/latest`);
-      return {
-        data: blocks,
-        total: latestBlockResponse.data.number!, // TODO - Check if this is correct
-        totalPage: latestBlockResponse.data.number! / 50,
-        lastUpdated: Date.now()
-      } as ApiReturnType<Block[]>;
-    } catch (e) {
-      return {
-        data: [],
-        error: "Couldn't fetch blocks",
-        lastUpdated: Date.now()
-      } as ApiReturnType<Block[]>;
-    }
-  }
-
-  async getBlocksByEpoch(epoch: number): Promise<ApiReturnType<Block[]>> {
-    try {
-      const response = await this.client.get<BlocksPage>(`${this.baseUrl}/blocks/epoch/${epoch}`);
-      const blocks: Block[] = [];
-      // getting additional data
-      for (const block of response.data.blocks!) {
-        blocks.push((await this.getBlockDetail(block.number!)).data as Block);
-      }
+      const blocks = (response.data.blocks ?? []).map(blockDTOToBlock);
       await this._enrichBlocksWithPoolNames(blocks);
       return {
         data: blocks,
-        total: response.data.total,
-        totalPage: response.data.totalPages,
-        lastUpdated: Date.now()
-      } as ApiReturnType<Block[]>;
-    } catch (e) {
-      return {
-        data: [],
-        error: "Couldn't fetch blocks by Epoch",
-        lastUpdated: Date.now()
-      } as ApiReturnType<Block[]>;
-    }
+        extras: {
+          total: response.data.total,
+          totalPage: response.data.totalPages,
+          currentPage: Number(pageInfo.page ?? 0),
+          pageSize: Number(pageInfo.size ?? blocks.length)
+        }
+      };
+    });
   }
 
-  async getBlockDetail(blockId: number | string): Promise<ApiReturnType<Block>> {
-    if (!blockId) {
-      return {
-        data: null,
-        lastUpdated: Date.now()
-      } as ApiReturnType<Block>;
-    }
-    return this.client
-      .get<BlockDto>(`${this.baseUrl}/blocks/${blockId}`)
-      .then((response) => {
-        const block: Block = blockDTOToBlock(response.data);
-        return {
-          data: block,
-          lastUpdated: Date.now()
-        } as ApiReturnType<Block>;
-      })
-      .catch((error: AxiosError) => {
-        return {
-          data: null,
-          error: error.message,
-          lastUpdated: Date.now()
-        } as ApiReturnType<Block>;
+  async getBlocksByEpoch(epoch: number, pageInfo: ParsedUrlQuery): Promise<ApiReturnType<Block[]>> {
+    return this.requestList<Block>(async () => {
+      const response = await this.client.get<BlocksPage>(`${this.baseUrl}/blocks/epoch/${epoch}`, {
+        params: pageInfo
       });
+      const blocks = (response.data.blocks ?? []).map(blockDTOToBlock);
+      await this._enrichBlocksWithPoolNames(blocks);
+      return {
+        data: blocks,
+        extras: {
+          total: response.data.total,
+          totalPage: response.data.totalPages,
+          currentPage: Number(pageInfo.page ?? 0),
+          pageSize: Number(pageInfo.size ?? blocks.length)
+        }
+      };
+    });
+  }
+
+  async getBlockDetail(blockId: string): Promise<ApiReturnType<Block>> {
+    if (!blockId) return this.unsupported<Block>("getBlockDetail");
+    return this.request<Block>(async () => {
+      const response = await this.client.get<BlockDto>(`${this.baseUrl}/blocks/${blockId}`);
+      return blockDTOToBlock(response.data);
+    });
   }
 
   async getTxDetail(txHash: string): Promise<ApiReturnType<TransactionDetail>> {
-    return this.client
-      .get<TransactionDetails>(`${this.baseUrl}/txs/${txHash}`)
-      .then((response) => {
-        const txDetails = response.data;
-        return this.getBlockDetail(txDetails.blockHeight!)
-          .then((blockResponse) => {
-            const block = blockResponse.data;
-            return this.client
-              .get<TxMetadataLabelDto[]>(`${this.baseUrl}/txs/${txHash}/metadata`)
-              .then((metadataResponse) => {
-                const metadata = metadataResponse.data;
-                const tx = toTransactionDetail(txDetails, block, metadata);
-                return {
-                  data: tx,
-                  lastUpdated: Date.now()
-                } as ApiReturnType<TransactionDetail>;
-              })
-              .catch((error: AxiosError) => {
-                return {
-                  data: null,
-                  error: error.message,
-                  lastUpdated: Date.now()
-                } as ApiReturnType<TransactionDetail>;
-              });
-          })
-          .catch((error: AxiosError) => {
-            return {
-              data: null,
-              error: error.message,
-              lastUpdated: Date.now()
-            } as ApiReturnType<TransactionDetail>;
-          });
-      })
-      .catch((error: AxiosError) => {
-        return {
-          data: null,
-          error: error.message,
-          lastUpdated: Date.now()
-        } as ApiReturnType<TransactionDetail>;
-      });
-  }
-
-  async getTxList(blockId: number | string): Promise<ApiReturnType<TransactionDetail[]>> {
-    return this.client
-      .get<TransactionSummary[]>(`${this.baseUrl}/blocks/${blockId}/txs`)
-      .then((response) => {
-        const txs: TransactionDetail[] = [];
-        for (const tx of response.data) {
-          // get transaction detail
-          this.getTxDetail(tx.txHash!).then((tx) => txs.push(tx.data as TransactionDetail));
-        }
-        return {
-          data: txs,
-          total: txs.length,
-          totalPage: 1, // TODO
-          currentPage: 1, // TODO
-          lastUpdated: Date.now()
-        } as ApiReturnType<TransactionDetail[]>;
-      })
-      .catch((error: AxiosError) => {
-        return {
-          data: [],
-          error: error.message,
-          lastUpdated: Date.now()
-        } as ApiReturnType<TransactionDetail[]>;
-      });
+    return this.request<TransactionDetail>(async () => {
+      const txDetails = (await this.client.get<TransactionDetails>(`${this.baseUrl}/txs/${txHash}`)).data;
+      const [blockResult, metadataResponse] = await Promise.all([
+        this.getBlockDetail(String(txDetails.blockHeight ?? "")),
+        this.client.get<TxMetadataLabelDto[]>(`${this.baseUrl}/txs/${txHash}/metadata`)
+      ]);
+      return toTransactionDetail(txDetails, blockResult.data, metadataResponse.data);
+    });
   }
 
   async getTransactions(
     blockId: number | string | undefined,
     pageInfo: ParsedUrlQuery
   ): Promise<ApiReturnType<Transaction[]>> {
-    try {
-      let transactionSummaries: TransactionSummary[] = [];
+    return this.requestList<Transaction>(async () => {
+      let summaries: TransactionSummary[];
+      let total: number | undefined;
+      let totalPage: number | undefined;
       if (blockId) {
-        const response = await this.client.get<TransactionSummary[]>(`${this.baseUrl}/blocks/${blockId}/txs`, {
-          params: pageInfo
-        });
-        transactionSummaries = response.data;
+        const r = await this.client.get<TransactionSummary[]>(`${this.baseUrl}/blocks/${blockId}/txs`, { params: pageInfo });
+        summaries = r.data ?? [];
       } else {
-        const txsResponse = await this.client.get<TransactionPage>(`${this.baseUrl}/txs`, {
-          params: pageInfo
-        });
-        transactionSummaries = txsResponse.data.transactionSummaries!;
+        const r = await this.client.get<TransactionPage>(`${this.baseUrl}/txs`, { params: pageInfo });
+        summaries = r.data.transactionSummaries ?? [];
+        total = r.data.total;
+        totalPage = r.data.totalPages;
       }
-      const transactions: Transaction[] = [];
-      for (const txSummary of transactionSummaries) {
-        const block = await this.getBlockDetail(txSummary.blockNumber!);
-        const tx = transactionSummaryAndBlockToTransaction(txSummary, block);
-        transactions.push(tx);
-      }
+      const blockNumbers = [...new Set(summaries.map((s) => s.blockNumber!).filter(Boolean))];
+      const blockMap = new Map<number, Awaited<ReturnType<typeof this.getBlockDetail>>>();
+      await Promise.all(blockNumbers.map(async (n) => blockMap.set(n, await this.getBlockDetail(String(n)))));
+      const transactions = summaries.map((s) =>
+        transactionSummaryAndBlockToTransaction(s, blockMap.get(s.blockNumber!) ?? { data: null, lastUpdated: Date.now() })
+      );
       return {
         data: transactions,
-        lastUpdated: Date.now()
-      } as ApiReturnType<Transaction[]>;
-    } catch (e) {
-      return {
-        data: [],
-        error: "Couldn't fetch transactions",
-        lastUpdated: Date.now()
-      } as ApiReturnType<Transaction[]>;
-    }
+        extras: {
+          total,
+          totalPage,
+          currentPage: Number(pageInfo.page ?? 0),
+          pageSize: Number(pageInfo.size ?? transactions.length)
+        }
+      };
+    });
   }
 
-  async getWalletStakeFromAddress(address: string): Promise<ApiReturnType<WalletStake>> {
-    return this.client
-      .get<StakeAccountInfo>(`${this.baseUrl}/accounts/${address}`)
-      .then((stakeResponse) => {
-        const stake = stakeResponse.data;
-        return {
-          data: {
-            stakeAddress: stake.stakeAddress || "",
-            totalStake: stake.controlledAmount || 0,
-            rewardAvailable: stake.withdrawableAmount || 0,
-            rewardWithdrawn: 0, // TODO
-            status: "ACTIVE", // TODO
-            pool: {
-              poolId: stake.poolId || "",
-              poolName: "",
-              tickerName: ""
-            }
-          },
-          error: null,
-          lastUpdated: Date.now()
-        } as ApiReturnType<WalletStake>;
-      })
-      .catch((error: AxiosError) => {
-        return {
-          data: null,
-          error: error.message,
-          lastUpdated: Date.now()
-        } as ApiReturnType<WalletStake>;
-      });
+  async getWalletStakeFromAddress(address: string): Promise<ApiReturnType<StakeAddressDetail>> {
+    return this.request<StakeAddressDetail>(async () => {
+      const stake = (await this.client.get<StakeAccountInfo>(`${this.baseUrl}/accounts/${address}`)).data;
+      let poolInfo = { poolId: stake.poolId ?? "", poolName: "", tickerName: "" };
+      if (stake.poolId) {
+        try {
+          const p = (await this.client.get<YaciPool>(`${this.baseUrl}/pools/${stake.poolId}`)).data;
+          poolInfo = {
+            poolId: stake.poolId,
+            poolName: p.metadata?.name ?? "",
+            tickerName: p.metadata?.ticker ?? ""
+          };
+        } catch { /* metadata unavailable */ }
+      }
+      return {
+        stakeAddress: stake.stakeAddress ?? "",
+        totalStake: stake.controlledAmount ?? 0,
+        rewardAvailable: stake.withdrawableAmount ?? 0,
+        rewardWithdrawn: 0,
+        status: stake.poolId ? "ACTIVE" : "INACTIVE",
+        pool: poolInfo
+      };
+    });
   }
 
   async getEpochs(pageInfo: ParsedUrlQuery): Promise<ApiReturnType<EpochOverview[]>> {
-    return this.client
-      .get<EpochsPage>(`${this.baseUrl}/epochs`, {
-        params: pageInfo
-      })
-      .then((response) => {
-        const epochs: EpochOverview[] = response.data.epochs!.map((epoch) => {
-          return epochToIEpochData(epoch);
-        });
-        return {
-          data: epochs,
-          totalPage: response.data.totalPages || 0,
-          total: response.data.total || 0,
-          lastUpdated: Date.now()
-        } as ApiReturnType<EpochOverview[]>;
-      })
-      .catch((error: AxiosError) => {
-        return {
-          data: [],
-          error: error.message,
-          lastUpdated: Date.now()
-        } as ApiReturnType<EpochOverview[]>;
-      });
+    return this.requestList<EpochOverview>(async () => {
+      const r = await this.client.get<EpochsPage>(`${this.baseUrl}/epochs`, { params: pageInfo });
+      const epochs = (r.data.epochs ?? []).map(epochToIEpochData);
+      return {
+        data: epochs,
+        extras: { total: r.data.total, totalPage: r.data.totalPages }
+      };
+    });
   }
 
   async getEpoch(epochId: number): Promise<ApiReturnType<EpochOverview>> {
-    return this.client
-      .get<Epoch>(`${this.baseUrl}/epochs/${epochId}`)
-      .then((response) => {
-        return {
-          data: epochToIEpochData(response.data),
-          lastUpdated: Date.now()
-        } as ApiReturnType<EpochOverview>;
-      })
-      .catch((error: AxiosError) => {
-        return {
-          data: null,
-          error: error.message,
-          lastUpdated: Date.now()
-        } as ApiReturnType<EpochOverview>;
-      });
+    return this.request<EpochOverview>(async () => {
+      const r = await this.client.get<Epoch>(`${this.baseUrl}/epochs/${epochId}`);
+      return epochToIEpochData(r.data);
+    });
   }
 
   async getStakeAddressRegistrations(stakeAddressAction: StakeAddressAction): Promise<ApiReturnType<IStakeKey[]>> {
-    try {
-      let stakeRegistrationDetails: StakeRegistrationDetail[] = [];
-      if (stakeAddressAction === StakeAddressAction.REGISTRATION) {
-        const response = await this.client.get<StakeRegistrationDetail[]>(`${this.baseUrl}/stake/registrations`);
-        stakeRegistrationDetails = response.data;
-      } else if (stakeAddressAction === StakeAddressAction.DEREGISTRATION) {
-        const response = await this.client.get<StakeRegistrationDetail[]>(`${this.baseUrl}/stake/deregistrations`);
-        stakeRegistrationDetails = response.data;
-      } else {
-        throw new Error("Invalid StakeAddressAction");
-      }
-      let iStakeKeys = stakeRegistrationDetails.map((stakeDetail) => {
-        return stakeRegistrationDetailToIStakeKey(stakeDetail);
-      });
-      return {
-        data: iStakeKeys,
-        lastUpdated: Date.now()
-      } as ApiReturnType<IStakeKey[]>;
-    } catch (e) {
-      console.error("Error fetching stakeAddressRegistrations");
-      return {
-        data: [],
-        error: "Couldn't fetch stakeAddressRegistrations",
-        lastUpdated: Date.now()
-      } as ApiReturnType<IStakeKey[]>;
-    }
+    return this.requestList<IStakeKey>(async () => {
+      const path = stakeAddressAction === StakeAddressAction.REGISTRATION
+        ? "/stake/registrations"
+        : "/stake/deregistrations";
+      const r = await this.client.get<StakeRegistrationDetail[]>(`${this.baseUrl}${path}`);
+      return { data: r.data.map(stakeRegistrationDetailToIStakeKey) };
+    });
   }
 
   async getStakeDelegations(): Promise<ApiReturnType<IStakeKey[]>> {
-    return this.client
-      .get<Delegation[]>(`${this.baseUrl}/stake/delegations`)
-      .then((response) => {
-        let iStakeKeys = response.data.map((stakeDetail) => {
-          return delegationToIStakeKey(stakeDetail);
-        });
-        return {
-          data: iStakeKeys,
-          lastUpdated: Date.now()
-        } as ApiReturnType<IStakeKey[]>;
-      })
-      .catch((error: AxiosError) => {
-        return {
-          data: [],
-          error: error.message,
-          lastUpdated: Date.now()
-        } as ApiReturnType<IStakeKey[]>;
-      });
+    return this.requestList<IStakeKey>(async () => {
+      const r = await this.client.get<Delegation[]>(`${this.baseUrl}/stake/delegations`);
+      return { data: r.data.map(delegationToIStakeKey) };
+    });
   }
 
   async getPoolRegistrations(type: POOL_TYPE): Promise<ApiReturnType<Registration[]>> {
-    try {
-      let registrations: Registration[];
+    return this.requestList<Registration>(async () => {
       if (type === POOL_TYPE.REGISTRATION) {
-        const response = await this.client.get<PoolRegistration[]>(`${this.baseUrl}/pools/registrations`);
-        registrations = await poolRegistrationsToRegistrations(response.data);
-      } else {
-        const response = await this.client.get<PoolRetirement[]>(`${this.baseUrl}/pools/retirements`);
-        registrations = poolRetirementsToRegistrations(response.data);
+        const r = await this.client.get<PoolRegistration[]>(`${this.baseUrl}/pools/registrations`);
+        return { data: await poolRegistrationsToRegistrations(r.data) };
       }
-      return {
-        data: registrations,
-        lastUpdated: Date.now()
-      } as ApiReturnType<Registration[]>;
-    } catch (e) {
-      return {
-        data: [],
-        error: "Couldn't fetch poolRegistrations",
-        lastUpdated: Date.now()
-      } as ApiReturnType<Registration[]>;
-    }
+      const r = await this.client.get<PoolRetirement[]>(`${this.baseUrl}/pools/retirements`);
+      return { data: poolRetirementsToRegistrations(r.data) };
+    });
   }
 
   async getCurrentProtocolParameters(): Promise<ApiReturnType<TProtocolParam>> {
-    return this.client
-      .get<ProtocolParamsDto>(`${this.baseUrl}/epochs/latest/parameters`)
-      .then((response) => {
-        return {
-          data: protocolParamsToTProtocolParam(response.data),
-          lastUpdated: Date.now()
-        } as ApiReturnType<TProtocolParam>;
-      })
-      .catch((error: AxiosError) => {
-        return {
-          data: null,
-          error: error.message,
-          lastUpdated: Date.now()
-        } as ApiReturnType<TProtocolParam>;
-      });
+    return this.request<TProtocolParam>(async () => {
+      const r = await this.client.get<ProtocolParamsDto>(`${this.baseUrl}/epochs/latest/parameters`);
+      return protocolParamsToTProtocolParam(r.data);
+    });
   }
 
   async getWalletAddressFromAddress(address: string): Promise<ApiReturnType<AddressDetail>> {
-    try {
-      const balanceResponse = await this.client.get<AddressBalanceDto>(`${this.baseUrl}/addresses/${address}`);
+    return this.request<AddressDetail>(async () => {
+      const balance = (await this.client.get<AddressBalanceDto>(`${this.baseUrl}/addresses/${address}`)).data;
       let stakeAddress = "";
       try {
         const stakeResp = await this.client.get<{ stakeAddress?: string }>(`${this.baseUrl}/addresses/${address}/stake`);
-        stakeAddress = stakeResp.data?.stakeAddress || "";
+        stakeAddress = stakeResp.data?.stakeAddress ?? "";
       } catch { /* stake address may not exist */ }
-      const walletAddress = addressBalanceDtoToWalletAddress(balanceResponse.data, stakeAddress, address);
-      return { data: walletAddress as unknown as AddressDetail, lastUpdated: Date.now() };
-    } catch (e: any) {
-      return { data: null, error: e.message, lastUpdated: Date.now() };
-    }
+      return addressBalanceDtoToWalletAddress(balance, stakeAddress, address);
+    });
   }
 
   async getAddressTxsFromAddress(address: string, pageInfo: ParsedUrlQuery): Promise<ApiReturnType<Transaction[]>> {
-    try {
-      const response = await this.client.get<AddressTransaction[]>(`${this.baseUrl}/addresses/${address}/txs`, {
-        params: pageInfo
-      });
-      const transactions: Transaction[] = [];
-      for (const atx of response.data ?? []) {
-        if (!atx.txHash) continue;
-        try {
-          const block = await this.getBlockDetail(atx.blockNumber!);
-          const txSummary = { txHash: atx.txHash, blockNumber: atx.blockNumber, blockTime: atx.blockTime };
-          transactions.push(transactionSummaryAndBlockToTransaction(txSummary as TransactionSummary, block));
-        } catch { /* skip tx on error */ }
-      }
-      return { data: transactions, lastUpdated: Date.now() };
-    } catch (e: any) {
-      return { data: [], error: e.message, lastUpdated: Date.now() };
-    }
+    return this.requestList<Transaction>(async () => {
+      const r = await this.client.get<AddressTransaction[]>(`${this.baseUrl}/addresses/${address}/txs`, { params: pageInfo });
+      const rows = r.data ?? [];
+      const blockNumbers = [...new Set(rows.map((a) => a.blockNumber!).filter(Boolean))];
+      const blockMap = new Map<number, Awaited<ReturnType<typeof this.getBlockDetail>>>();
+      await Promise.all(blockNumbers.map(async (n) => blockMap.set(n, await this.getBlockDetail(String(n)))));
+      const transactions = rows
+        .filter((a) => a.txHash)
+        .map((a) => transactionSummaryAndBlockToTransaction(
+          { txHash: a.txHash, blockNumber: a.blockNumber, blockTime: a.blockTime } as TransactionSummary,
+          blockMap.get(a.blockNumber!) ?? { data: null, lastUpdated: Date.now() }
+        ));
+      return { data: transactions };
+    });
   }
 
   async getTokensPage(pageInfo: ParsedUrlQuery): Promise<ApiReturnType<ITokenOverview[]>> {
-    try {
-      const response = await this.client.get<{ assetList?: YaciAsset[]; total?: number; totalPages?: number }>(
+    return this.requestList<ITokenOverview>(async () => {
+      const r = await this.client.get<{ assetList?: YaciAsset[]; total?: number; totalPages?: number }>(
         `${this.baseUrl}/assets`, { params: pageInfo }
       );
-      const tokens: ITokenOverview[] = (response.data.assetList ?? []).map(yaciAssetToTokenOverview);
-      return { data: tokens, total: response.data.total, totalPage: response.data.totalPages, lastUpdated: Date.now() };
-    } catch (e: any) {
-      return { data: [], error: e.message, lastUpdated: Date.now() };
-    }
+      return {
+        data: (r.data.assetList ?? []).map(yaciAssetToTokenOverview),
+        extras: { total: r.data.total, totalPage: r.data.totalPages }
+      };
+    });
   }
 
   async getTokenDetail(tokenId: string): Promise<ApiReturnType<ITokenOverview>> {
-    try {
-      const response = await this.client.get<YaciAsset>(`${this.baseUrl}/assets/${tokenId}`);
-      return { data: yaciAssetToTokenOverview(response.data), lastUpdated: Date.now() };
-    } catch (e: any) {
-      return { data: null, error: e.message, lastUpdated: Date.now() };
-    }
+    return this.request<ITokenOverview>(async () => {
+      const r = await this.client.get<YaciAsset>(`${this.baseUrl}/assets/${tokenId}`);
+      return yaciAssetToTokenOverview(r.data);
+    });
   }
 
   async getTokenTransactions(tokenId: string, pageInfo: ParsedUrlQuery): Promise<ApiReturnType<Transaction[]>> {
-    try {
-      const response = await this.client.get<{ transactions?: { txHash: string; blockNumber?: number; blockTime?: number }[]; total?: number }>(
+    return this.requestList<Transaction>(async () => {
+      const r = await this.client.get<{ transactions?: { txHash: string; blockNumber?: number; blockTime?: number }[]; total?: number }>(
         `${this.baseUrl}/assets/${tokenId}/transactions`, { params: pageInfo }
       );
-      const txs: Transaction[] = [];
-      for (const t of response.data.transactions ?? []) {
-        if (!t.txHash) continue;
-        try {
-          const block = await this.getBlockDetail(t.blockNumber!);
-          txs.push(transactionSummaryAndBlockToTransaction({ txHash: t.txHash, blockNumber: t.blockNumber, blockTime: t.blockTime } as TransactionSummary, block));
-        } catch { /* skip */ }
-      }
-      return { data: txs, total: response.data.total, lastUpdated: Date.now() };
-    } catch (e: any) {
-      return { data: [], error: e.message, lastUpdated: Date.now() };
-    }
+      const rows = r.data.transactions ?? [];
+      const blockNumbers = [...new Set(rows.map((t) => t.blockNumber!).filter(Boolean))];
+      const blockMap = new Map<number, Awaited<ReturnType<typeof this.getBlockDetail>>>();
+      await Promise.all(blockNumbers.map(async (n) => blockMap.set(n, await this.getBlockDetail(String(n)))));
+      const txs = rows
+        .filter((t) => t.txHash)
+        .map((t) => transactionSummaryAndBlockToTransaction(
+          { txHash: t.txHash, blockNumber: t.blockNumber, blockTime: t.blockTime } as TransactionSummary,
+          blockMap.get(t.blockNumber!) ?? { data: null, lastUpdated: Date.now() }
+        ));
+      return { data: txs, extras: { total: r.data.total } };
+    });
   }
 
   async getTokenHolders(tokenId: string, pageInfo: ParsedUrlQuery): Promise<ApiReturnType<TokenHolder[]>> {
-    try {
-      const response = await this.client.get<{ addressList?: { address?: string; quantity?: number }[]; total?: number }>(
+    return this.requestList<TokenHolder>(async () => {
+      const r = await this.client.get<{ addressList?: { address?: string; quantity?: number }[]; total?: number }>(
         `${this.baseUrl}/assets/${tokenId}/addresses`, { params: pageInfo }
       );
-      const total = response.data.total ?? response.data.addressList?.length ?? 0;
-      const holders: TokenHolder[] = (response.data.addressList ?? []).map((h) => ({
+      const total = r.data.total ?? r.data.addressList?.length ?? 0;
+      const holders: TokenHolder[] = (r.data.addressList ?? []).map((h) => ({
         address: h.address ?? "",
         amount: h.quantity ?? 0,
         ratio: total > 0 ? (h.quantity ?? 0) / total : 0
       }));
-      return { data: holders, total, lastUpdated: Date.now() };
-    } catch (e: any) {
-      return { data: [], error: e.message, lastUpdated: Date.now() };
-    }
+      return { data: holders, extras: { total } };
+    });
   }
 
   async getTokensByPolicy(policyId: string, pageInfo: ParsedUrlQuery): Promise<ApiReturnType<ITokenOverview[]>> {
-    try {
-      const response = await this.client.get<{ assetList?: YaciAsset[]; total?: number }>(
+    return this.requestList<ITokenOverview>(async () => {
+      const r = await this.client.get<{ assetList?: YaciAsset[]; total?: number }>(
         `${this.baseUrl}/assets/policy/${policyId}`, { params: pageInfo }
       );
-      const tokens: ITokenOverview[] = (response.data.assetList ?? []).map(yaciAssetToTokenOverview);
-      return { data: tokens, total: response.data.total ?? tokens.length, lastUpdated: Date.now() };
-    } catch (e: any) {
-      return { data: [], error: e.message, lastUpdated: Date.now() };
-    }
+      const tokens = (r.data.assetList ?? []).map(yaciAssetToTokenOverview);
+      return { data: tokens, extras: { total: r.data.total ?? tokens.length } };
+    });
   }
 
   async getGovernanceOverviewList(pageInfo: ParsedUrlQuery): Promise<ApiReturnType<GovernanceActionListItem[]>> {
-    try {
-      const response = await this.client.get<{ govActionProposalList?: GovActionProposal[]; total?: number; totalPages?: number }>(
-        `${this.baseUrl}/governance/gov_action_proposals`, { params: pageInfo }
+    return this.requestList<GovernanceActionListItem>(async () => {
+      const r = await this.client.get<{ proposalList?: GovActionProposal[]; govActionProposalList?: GovActionProposal[]; total?: number; totalPages?: number }>(
+        `${this.baseUrl}/governance/proposals`, { params: pageInfo }
       );
-      const items: GovernanceActionListItem[] = (response.data.govActionProposalList ?? []).map((p) => ({
+      const list = r.data.proposalList ?? r.data.govActionProposalList ?? [];
+      const items: GovernanceActionListItem[] = list.map((p) => ({
         txHash: p.txHash ?? "",
         index: p.index ?? 0,
         type: p.type,
-        status: "ACTIVE" as const,
+        status: "ACTIVE" as const
       }));
-      return { data: items, total: response.data.total, totalPage: response.data.totalPages, lastUpdated: Date.now() };
-    } catch (e: any) {
-      return { data: [], error: e.message, lastUpdated: Date.now() };
-    }
+      return { data: items, extras: { total: r.data.total, totalPage: r.data.totalPages } };
+    });
   }
 
   async getGovernanceDetail(txHash: string, index: string): Promise<ApiReturnType<GovernanceActionDetail>> {
-    try {
-      const response = await this.client.get<GovActionProposal>(
-        `${this.baseUrl}/governance/gov_action_proposals/${txHash}/${index}`
-      );
-      const p = response.data;
-      const detail: GovernanceActionDetail = {
+    return this.request<GovernanceActionDetail>(async () => {
+      const p = (await this.client.get<GovActionProposal>(
+        `${this.baseUrl}/governance/proposals/${txHash}/${index}`
+      )).data;
+      return {
         txHash: p.txHash ?? txHash,
         index: String(p.index ?? index),
         dateCreated: p.blockTime ? new Date(p.blockTime * 1000).toISOString() : "",
@@ -591,19 +402,16 @@ export class YaciConnector implements ApiConnector {
         abstract: null,
         votesStats: { drep: { yes: 0, no: 0, abstain: 0 }, spo: { yes: 0, no: 0, abstain: 0 }, committee: { yes: 0, no: 0, abstain: 0 } }
       };
-      return { data: detail, lastUpdated: Date.now() };
-    } catch (e: any) {
-      return { data: null, error: e.message, lastUpdated: Date.now() };
-    }
+    });
   }
 
   async getGovernanceActionVotes(txHash: string, index: string): Promise<ApiReturnType<GovActionVote[]>> {
-    try {
-      const response = await this.client.get<VotingProcedureDto[]>(
+    return this.requestList<GovActionVote>(async () => {
+      const r = await this.client.get<VotingProcedureDto[]>(
         `${this.baseUrl}/governance/voting_procedures`,
         { params: { govActionTxHash: txHash, govActionIndex: index } }
       );
-      const votes: GovActionVote[] = (response.data ?? []).map((v) => ({
+      const votes: GovActionVote[] = (r.data ?? []).map((v) => ({
         voter: v.voterHash ?? "",
         voterType: mapVoterType(v.voterType),
         vote: (v.vote?.toLowerCase() ?? "abstain") as "yes" | "no" | "abstain",
@@ -611,18 +419,16 @@ export class YaciConnector implements ApiConnector {
         certIndex: v.index ?? 0,
         voteTime: v.blockTime ? new Date(v.blockTime * 1000).toISOString() : ""
       }));
-      return { data: votes, lastUpdated: Date.now() };
-    } catch (e: any) {
-      return { data: [], error: e.message, lastUpdated: Date.now() };
-    }
+      return { data: votes };
+    });
   }
 
   async getPoolList(pageInfo: ParsedUrlQuery): Promise<ApiReturnType<PoolOverview[]>> {
-    try {
-      const response = await this.client.get<{ poolList?: YaciPool[]; total?: number; totalPages?: number }>(
+    return this.requestList<PoolOverview>(async () => {
+      const r = await this.client.get<{ poolList?: YaciPool[]; total?: number; totalPages?: number }>(
         `${this.baseUrl}/pools`, { params: pageInfo }
       );
-      const pools: PoolOverview[] = (response.data.poolList ?? []).map((p, i) => ({
+      const pools = (r.data.poolList ?? []).map((p, i) => ({
         id: i,
         poolId: p.poolIdBech32 ?? p.poolId ?? "",
         poolName: p.metadata?.name ?? p.poolId ?? "",
@@ -631,18 +437,15 @@ export class YaciConnector implements ApiConnector {
         declaredPledge: p.pledge ?? 0,
         saturation: 0,
         lifetimeBlock: 0
-      }));
-      return { data: pools, total: response.data.total, totalPage: response.data.totalPages, lastUpdated: Date.now() };
-    } catch (e: any) {
-      return { data: [], error: e.message, lastUpdated: Date.now() };
-    }
+      } as PoolOverview));
+      return { data: pools, extras: { total: r.data.total, totalPage: r.data.totalPages } };
+    });
   }
 
   async getPoolDetail(poolId: string): Promise<ApiReturnType<PoolDetail>> {
-    try {
-      const response = await this.client.get<YaciPool>(`${this.baseUrl}/pools/${poolId}`);
-      const p = response.data;
-      const detail: PoolDetail = {
+    return this.request<PoolDetail>(async () => {
+      const p = (await this.client.get<YaciPool>(`${this.baseUrl}/pools/${poolId}`)).data;
+      return {
         poolName: p.metadata?.name ?? p.poolId ?? poolId,
         tickerName: p.metadata?.ticker ?? "",
         poolView: p.poolIdBech32 ?? poolId,
@@ -665,72 +468,54 @@ export class YaciConnector implements ApiConnector {
         description: p.metadata?.description ?? "",
         homepage: p.metadata?.homepage ?? ""
       };
-      return { data: detail, lastUpdated: Date.now() };
-    } catch (e: any) {
-      return { data: null, error: e.message, lastUpdated: Date.now() };
-    }
-  }
-
-  async getPoolBlocks(poolId: string, pageInfo: ParsedUrlQuery): Promise<ApiReturnType<Block[]>> {
-    // Yaci does not expose a dedicated pool-blocks endpoint; return empty.
-    return { data: [], lastUpdated: Date.now(), total: 0, currentPage: 0, pageSize: Number(pageInfo.size ?? 20) };
+    });
   }
 
   async getDreps(pageInfo: ParsedUrlQuery): Promise<ApiReturnType<Drep[]>> {
-    try {
-      const response = await this.client.get<{ drepList?: YaciDrep[]; total?: number; totalPages?: number }>(
+    return this.requestList<Drep>(async () => {
+      const r = await this.client.get<{ drepList?: YaciDrep[]; total?: number; totalPages?: number }>(
         `${this.baseUrl}/governance/dreps`, { params: pageInfo }
       );
-      const dreps: Drep[] = (response.data.drepList ?? []).map(yaciDrepToDrep);
-      return { data: dreps, total: response.data.total, totalPage: response.data.totalPages, lastUpdated: Date.now() };
-    } catch (e: any) {
-      return { data: [], error: e.message, lastUpdated: Date.now() };
-    }
+      return {
+        data: (r.data.drepList ?? []).map(yaciDrepToDrep),
+        extras: { total: r.data.total, totalPage: r.data.totalPages }
+      };
+    });
   }
 
   async getDrep(drepId: string): Promise<ApiReturnType<Drep>> {
-    try {
-      const response = await this.client.get<YaciDrep>(`${this.baseUrl}/governance/dreps/${drepId}`);
-      return { data: yaciDrepToDrep(response.data), lastUpdated: Date.now() };
-    } catch (e: any) {
-      return { data: null, error: e.message, lastUpdated: Date.now() };
-    }
+    return this.request<Drep>(async () => {
+      const r = await this.client.get<YaciDrep>(`${this.baseUrl}/governance/dreps/${drepId}`);
+      return yaciDrepToDrep(r.data);
+    });
   }
 
   async getDrepVotes(drepId: string, pageInfo: ParsedUrlQuery): Promise<ApiReturnType<GovernanceActionListItem[]>> {
-    try {
-      const response = await this.client.get<{ votingProcedures?: VotingProcedureDto[]; total?: number }>(
+    return this.requestList<GovernanceActionListItem>(async () => {
+      const r = await this.client.get<{ votingProcedures?: VotingProcedureDto[]; total?: number }>(
         `${this.baseUrl}/governance/dreps/${drepId}/voting_procedures`, { params: pageInfo }
       );
-      const items: GovernanceActionListItem[] = (response.data.votingProcedures ?? []).map((v) => ({
+      const items: GovernanceActionListItem[] = (r.data.votingProcedures ?? []).map((v) => ({
         txHash: v.govActionTxHash ?? "",
         index: v.govActionIndex ?? 0,
         vote: (v.vote?.toLowerCase() ?? "abstain") as "yes" | "no" | "abstain"
       }));
-      return { data: items, total: response.data.total, lastUpdated: Date.now() };
-    } catch (e: any) {
-      return { data: [], error: e.message, lastUpdated: Date.now() };
-    }
+      return { data: items, extras: { total: r.data.total } };
+    });
   }
 
   async getDrepDelegates(drepId: string, pageInfo: ParsedUrlQuery): Promise<ApiReturnType<DrepDelegates[]>> {
-    try {
-      const response = await this.client.get<{ delegatorList?: { address?: string; amount?: number; stakeKeyHash?: string }[]; total?: number }>(
+    return this.requestList<DrepDelegates>(async () => {
+      const r = await this.client.get<{ delegatorList?: { address?: string; amount?: number; stakeKeyHash?: string }[]; total?: number }>(
         `${this.baseUrl}/governance/dreps/${drepId}/delegators`, { params: pageInfo }
       );
-      const delegates: DrepDelegates[] = (response.data.delegatorList ?? []).map((d) => ({
+      const delegates: DrepDelegates[] = (r.data.delegatorList ?? []).map((d) => ({
         address: d.address ?? "",
         amount: d.amount ?? 0,
         stakeKeyHash: d.stakeKeyHash
       }));
-      return { data: delegates, total: response.data.total, lastUpdated: Date.now() };
-    } catch (e: any) {
-      return { data: [], error: e.message, lastUpdated: Date.now() };
-    }
-  }
-
-  async getDashboardStats(): Promise<null> {
-    return null; // Yaci Store doesn't provide a network/supply endpoint
+      return { data: delegates, extras: { total: r.data.total } };
+    });
   }
 
   async search(query: string): Promise<ApiReturnType<SearchResult[]>> {

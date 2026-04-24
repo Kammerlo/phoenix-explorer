@@ -4,10 +4,11 @@ import { ParsedUrlQuery } from "querystring";
 // @ts-ignore
 import { TProtocolParam } from "src/types/protocol";
 
-import { ApiConnector, StakeAddressAction } from "../ApiConnector";
+import { StakeAddressAction } from "../ApiConnector";
+import { ConnectorBase } from "../ConnectorBase";
 import { FunctionEnum, POOL_TYPE } from "../types/FunctionEnum";
 import { ApiReturnType } from "@shared/APIReturnType";
-import type { DashboardStats } from "src/components/Home/DashboardStats";
+import { DashboardStats } from "@shared/dtos/dashboard.dto";
 import { EpochOverview } from "@shared/dtos/epoch.dto";
 import { Block } from "@shared/dtos/block.dto";
 import { Transaction, TransactionDetail, TRANSACTION_STATUS, Token, TPoolCertificated } from "@shared/dtos/transaction.dto";
@@ -28,7 +29,7 @@ import { getEpochStatus, getEpochProgress, computeEpochSlotNo, MAINNET_EPOCH_MAX
  * Direct Blockfrost connector — calls the Blockfrost REST API from the browser.
  * Produces the same DTO shapes as the Gateway connector.
  */
-export class BlockfrostConnector extends ApiConnector {
+export class BlockfrostConnector extends ConnectorBase {
   client: AxiosInstance;
 
   constructor(baseUrl: string, apiKey: string) {
@@ -817,8 +818,8 @@ export class BlockfrostConnector extends ApiConnector {
 
   // ── Dashboard stats ────────────────────────────────────────────────────────
 
-  async getDashboardStats(): Promise<DashboardStats | null> {
-    try {
+  async getDashboardStats(): Promise<ApiReturnType<DashboardStats>> {
+    return this.request<DashboardStats>(async () => {
       const [latestBlock, network, latestEpoch] = await Promise.all([
         this.client.get<BfBlock>("/blocks/latest"),
         this.client.get<{ supply: { circulating: string; total: string; max: string; locked: string }; stake: { live: string; active: string } }>("/network"),
@@ -855,7 +856,7 @@ export class BlockfrostConnector extends ApiConnector {
         supply: network.data.supply,
         stake: network.data.stake,
       };
-    } catch { return null; }
+    });
   }
 
   // ── Search ────────────────────────────────────────────────────────────────

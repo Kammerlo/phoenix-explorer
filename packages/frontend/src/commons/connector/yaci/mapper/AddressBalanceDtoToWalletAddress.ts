@@ -1,32 +1,33 @@
 import { AddressBalanceDto } from "../types";
+import { AddressDetail, Token } from "@shared/dtos/address.dto";
 
 export function addressBalanceDtoToWalletAddress(
   addressBalance: AddressBalanceDto,
   stakeAddress: string,
   address: string
-): WalletAddress {
+): AddressDetail {
   const amounts = addressBalance?.amounts ?? [];
 
   const balance = amounts
     .filter((amt) => amt.unit === "lovelace")
     .reduce((sum, amt) => sum + Number(amt.quantity ?? 0), 0);
 
-  const tokens  = amounts
+  const tokens: Token[] = amounts
     .filter((amt) => amt.unit !== "lovelace")
-    .map((token) => ({
+    .map((t) => ({
       address,
-      name: token.assetName ?? "",
-      displayName: token.assetName ?? "",
-      fingerprint: token.assetName ?? "",
-      quantity: token.quantity ?? 0,
-    } as WalletToken));
+      name: t.assetName ?? "",
+      displayName: t.assetName ?? "",
+      fingerprint: t.assetName ?? "",
+      quantity: Number(t.quantity ?? 0)
+    }));
 
   return {
-    isContract: false, // TODO
-    txCount: 0, // TODO
-    address: addressBalance?.address ?? "",
-    stakeAddress,
+    address: addressBalance?.address ?? address,
+    txCount: 0,
     balance,
-    tokens
+    tokens,
+    stakeAddress,
+    isContract: false
   };
 }

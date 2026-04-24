@@ -1,11 +1,12 @@
-import { ApiConnector, StakeAddressAction } from "../ApiConnector";
+import { StakeAddressAction } from "../ApiConnector";
+import { ConnectorBase } from "../ConnectorBase";
 import axios, { AxiosInstance, AxiosResponse } from "axios";
 // @ts-ignore
 import { ParsedUrlQuery } from "querystring";
-import { FunctionEnum, POOL_TYPE } from "src/commons/connector/types/FunctionEnum";
+import { FunctionEnum } from "src/commons/connector/types/FunctionEnum";
 import { ApiReturnType } from "@shared/APIReturnType";
 import applyCaseMiddleware from "axios-case-converter";
-import type { DashboardStats } from "src/components/Home/DashboardStats";
+import { DashboardStats } from "@shared/dtos/dashboard.dto";
 import { EpochOverview } from "@shared/dtos/epoch.dto";
 import { Block } from "@shared/dtos/block.dto";
 import { Transaction, TransactionDetail } from "@shared/dtos/transaction.dto";
@@ -16,12 +17,11 @@ import { PoolDetail, PoolOverview } from "@shared/dtos/pool.dto";
 import { Drep, DrepDelegates } from "@shared/dtos/drep.dto";
 import { SearchResult } from "@shared/dtos/seach.dto";
 
-export class GatewayConnector implements ApiConnector {
-  baseUrl: string;
+export class GatewayConnector extends ConnectorBase {
   client: AxiosInstance;
 
   constructor(baseUrl: string) {
-    this.baseUrl = baseUrl;
+    super(baseUrl);
     this.client = applyCaseMiddleware(axios.create());
   }
 
@@ -121,19 +121,6 @@ export class GatewayConnector implements ApiConnector {
     return response.data;
   }
 
-  async getPoolRegistrations(type: POOL_TYPE): Promise<ApiReturnType<Registration[]>> {
-    return { data: [], error: "Not supported by this provider", lastUpdated: Date.now() };
-  }
-
-  async getStakeAddressRegistrations(stakeAddressAction: StakeAddressAction): Promise<ApiReturnType<IStakeKey[]>> {
-    return { data: [], error: "Not supported by this provider", lastUpdated: Date.now() };
-  }
-
-  async getStakeDelegations(): Promise<ApiReturnType<IStakeKey[]>> {
-    return { data: [], error: "Not supported by this provider", lastUpdated: Date.now() };
-  }
-
-
   async getTransactions(blockId: number | string | undefined, pageInfo: ParsedUrlQuery): Promise<ApiReturnType<Transaction[]>> {
     let response: AxiosResponse<ApiReturnType<Transaction[]>>;
     if (blockId) {
@@ -227,10 +214,13 @@ export class GatewayConnector implements ApiConnector {
     return response.data;
   }
 
-  async getDashboardStats(): Promise<DashboardStats | null> {
-    try {
-      const response = await this.client.get<DashboardStats>(`${this.baseUrl}/dashboard/stats`);
-      return response.data;
-    } catch { return null; }
+  async getDashboardStats(): Promise<ApiReturnType<DashboardStats>> {
+    return this.request<DashboardStats>(async () => {
+      const response = await this.client.get<ApiReturnType<DashboardStats>>(`${this.baseUrl}/dashboard/stats`);
+      if (!response.data?.data) {
+        throw new Error(response.data?.error ?? "Empty dashboard response");
+      }
+      return response.data.data;
+    });
   }
 }

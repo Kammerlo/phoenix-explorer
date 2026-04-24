@@ -1,9 +1,11 @@
 import { Router } from 'express';
 import { API } from '../config/blockfrost';
+import { envelope, errorEnvelope } from '@shared/helpers/envelope';
+import { DashboardStats } from '@shared/dtos/dashboard.dto';
 
 export const dashboardController = Router();
 
-dashboardController.get('/stats', async (req, res) => {
+dashboardController.get('/stats', async (_req, res) => {
   try {
     const [latestBlock, network, latestEpoch] = await Promise.all([
       API.blocksLatest(),
@@ -24,7 +26,7 @@ dashboardController.get('/stats', async (req, res) => {
           )
         : 0;
 
-    res.json({
+    const data: DashboardStats = {
       currentEpoch: {
         no: latestEpoch.epoch,
         startTime: latestEpoch.start_time,
@@ -39,9 +41,9 @@ dashboardController.get('/stats', async (req, res) => {
       latestBlock: {
         height: latestBlock.height,
         hash: latestBlock.hash,
-        slot: latestBlock.slot,
-        epochNo: latestBlock.epoch,
-        epochSlot: latestBlock.epoch_slot,
+        slot: latestBlock.slot ?? null,
+        epochNo: latestBlock.epoch ?? null,
+        epochSlot: latestBlock.epoch_slot ?? null,
         time: latestBlock.time,
         txCount: latestBlock.tx_count,
         size: latestBlock.size,
@@ -56,9 +58,11 @@ dashboardController.get('/stats', async (req, res) => {
         live: network.stake.live,
         active: network.stake.active,
       },
-    });
+    };
+
+    res.json(envelope(data));
   } catch (err) {
     console.error('Dashboard stats error:', err);
-    res.status(500).json({ error: 'Failed to fetch dashboard stats' });
+    res.status(500).json(errorEnvelope<DashboardStats>(err));
   }
 });
