@@ -1,7 +1,7 @@
 import { render, screen, within } from "src/test-utils";
-import useFetch from "src/commons/hooks/useFetch";
+import useFetch from "src/hooks/useFetch";
 
-import AddressWalletDetail from "./index";
+import AddressDetail from "./index";
 
 const tokenMetadata: ITokenMetadata = {
   policy: "token_policy_hash",
@@ -43,9 +43,9 @@ const walletAddress: WalletAddress = {
   verifiedContract: true
 };
 
-jest.mock("src/commons/hooks/useFetch");
+jest.mock("src/hooks/useFetch");
 
-describe("AddressWalletDetail page", () => {
+describe("AddressDetail page", () => {
   beforeEach(() => {
     (useFetch as jest.Mock).mockImplementation((url: string) => {
       return {
@@ -57,7 +57,7 @@ describe("AddressWalletDetail page", () => {
     });
   });
   it("should component render", async () => {
-    render(<AddressWalletDetail />);
+    render(<AddressDetail />);
     await new Promise((r) => setTimeout(r, 500));
     const heading = screen.getByRole("heading", { name: /transactions/i });
     expect(screen.getByText(/analytics/i)).toBeInTheDocument();

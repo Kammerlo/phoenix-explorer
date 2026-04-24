@@ -2,6 +2,7 @@
 
 import React from "react";
 import { BoxProps } from "@mui/material";
+import { Breakpoint } from "@mui/material/styles";
 
 import { Option } from "src/components/commons/Filter";
 
@@ -18,6 +19,11 @@ export interface Column<T extends ColumnType = any> {
   maxWidth?: number | string;
   fixed?: boolean;
   leftFixed?: number | string;
+  /**
+   * Hide this column on viewports strictly below the given theme breakpoint.
+   * Omit to always show. Used to drop low-priority columns on mobile.
+   */
+  hideBelow?: Breakpoint;
   render?: (data: T, index: number) => ReactNode;
   sort?: ({ columnKey, sortValue }: { columnKey: string; sortValue: string }) => void;
 }
@@ -106,10 +112,6 @@ export interface TableProps<T extends ColumnType = any> {
   renderAction?: (items, clearSelection: () => void) => React.ReactElement;
   onFilterChange?: (value: string, option?: Option) => void;
   isShowingResult?: boolean;
-  /**
-   * @deprecated: This props is deprecated. Please pass maxHeight attribute to tableWrapperProps.
-   */
-  maxHeight?: number | string;
   minHeight?: number | string;
   height?: number | string;
   tableWrapperProps?: BoxProps;

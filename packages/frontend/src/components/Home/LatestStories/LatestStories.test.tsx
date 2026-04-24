@@ -2,12 +2,12 @@ import { cleanup, screen } from "@testing-library/react";
 import "@testing-library/jest-dom/extend-expect";
 
 import { render } from "src/test-utils";
-import useFetch from "src/commons/hooks/useFetch";
+import useFetch from "src/hooks/useFetch";
 import { formatDateTimeLocal } from "src/commons/utils/helper";
 
 import LatestStories from "./index";
 
-jest.mock("src/commons/hooks/useFetch");
+jest.mock("src/hooks/useFetch");
 
 const mockItem: Story = {
   title: "Cardano Foundation Launches Inaugural Annual Report",

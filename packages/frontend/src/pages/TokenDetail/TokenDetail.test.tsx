@@ -1,5 +1,5 @@
 import { render, screen } from "src/test-utils";
-import useFetch from "src/commons/hooks/useFetch";
+import useFetch from "src/hooks/useFetch";
 
 import TokenDetail from "./index";
 
@@ -30,7 +30,7 @@ const token: IToken = {
   policyIsNativeScript: false
 };
 
-jest.mock("src/commons/hooks/useFetch");
+jest.mock("src/hooks/useFetch");
 
 describe("TokenDetail page", () => {
   beforeEach(() => {

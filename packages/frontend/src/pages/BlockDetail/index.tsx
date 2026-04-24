@@ -11,7 +11,7 @@ import { ApiConnector } from "../../commons/connector/ApiConnector";
 import { ApiReturnType } from "@shared/APIReturnType";
 import { Block } from "@shared/dtos/block.dto";
 import { Transaction } from "@shared/dtos/transaction.dto";
-import usePageInfo from "../../commons/hooks/usePageInfo";
+import usePageInfo from "src/hooks/usePageInfo";
 
 const BlockDetail: React.FC = () => {
   const { blockId } = useParams<{ blockId: string }>();

@@ -2,9 +2,7 @@ import BigNumber from "bignumber.js";
 import { isNil } from "lodash";
 import { fromUnixTime, addDays as addDaysFn } from "date-fns";
 import { parse } from "qs";
-import { AxisInterval } from "recharts/types/util/types";
 
-import breakpoints from "src/themes/breakpoints";
 
 // Browser-compatible type definition instead of Node.js querystring
 type ParsedUrlQuery = Record<string, string | string[] | undefined>;
@@ -16,7 +14,7 @@ export function decryptCardanoMessage(encrypted_msg: string, passphrase = "carda
   return encrypted_msg;
 }
 
-import { APP_LANGUAGES, NETWORK, NETWORKS, OPTIONS_CHART_ANALYTICS } from "./constants";
+import { APP_LANGUAGES, NETWORK, NETWORKS } from "./constants";
 BigNumber.config({ EXPONENTIAL_AT: [-50, 50] });
 
 export const alphaNumeric = /[^0-9a-zA-Z]/;
@@ -444,34 +442,6 @@ export const formatNameBlockNo = (blockNo: blockEpochNoType, epochNo: blockEpoch
 
 export const getRandomInt = (max: number) => {
   return Math.floor(Math.random() * max);
-};
-
-export const getIntervalAnalyticChart = (rangeTime: OPTIONS_CHART_ANALYTICS): AxisInterval => {
-  const width = window.innerWidth;
-  switch (rangeTime) {
-    case OPTIONS_CHART_ANALYTICS.ONE_DAY:
-      if (width < breakpoints.values.sm) {
-        return 2;
-      }
-      return 0;
-    case OPTIONS_CHART_ANALYTICS.ONE_WEEK:
-      return 0;
-    case OPTIONS_CHART_ANALYTICS.ONE_MONTH:
-      if (width < breakpoints.values.sm) {
-        return 4;
-      }
-      if (width < breakpoints.values.laptop) {
-        return 3;
-      }
-      return "preserveStart";
-    case OPTIONS_CHART_ANALYTICS.THREE_MONTH:
-      if (width < breakpoints.values.sm) {
-        return 18;
-      }
-      return 7;
-    default:
-      return "preserveEnd";
-  }
 };
 
 export const isAssetId = (text: string) => {

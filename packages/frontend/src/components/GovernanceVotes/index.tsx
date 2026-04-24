@@ -49,7 +49,7 @@ import { formatDateTimeLocal } from "src/commons/utils/helper";
 import CustomIcon from "src/components/commons/CustomIcon";
 import CustomModal from "src/components/commons/CustomModal";
 import { FooterTable } from "src/components/commons/Table";
-import useFetchList from "src/commons/hooks/useFetchList";
+import useFetchList from "src/hooks/useFetchList";
 import {
   AccordionContainer,
   AccordionDetailsFilter,
@@ -61,8 +61,8 @@ import {
 import { StyledInput } from "src/components/share/styled";
 import DateRangeModal, { DATETIME_PARTTEN, DateRange } from "src/components/commons/CustomFilter/DateRangeModal";
 import FormNowMessage from "src/components/commons/FormNowMessage";
-import useFetch from "src/commons/hooks/useFetch";
-import { useScreen } from "src/commons/hooks/useScreen";
+import useFetch from "src/hooks/useFetch";
+import { useIsGalaxyFoldSmall } from "src/hooks/useBreakpoint";
 
 import { TimeDuration } from "../TransactionLists/styles";
 import NoRecord from "../commons/NoRecord";
@@ -209,7 +209,7 @@ const GovernanceVotesDetail: React.FC<{
   const theme = useTheme();
 
   const { t } = useTranslation();
-  const { isGalaxyFoldSmall } = useScreen();
+  const isGalaxyFoldSmall = useIsGalaxyFoldSmall();
   const { drepId, poolId } = useParams<{ drepId: string; poolId: string }>();
 
   const navigate = useNavigate();

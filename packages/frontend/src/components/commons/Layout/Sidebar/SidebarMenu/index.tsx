@@ -5,7 +5,7 @@ import { useSelector } from "react-redux";
 import { Link, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
-import { useScreen } from "src/commons/hooks/useScreen";
+import { useBreakpoint } from "src/hooks/useBreakpoint";
 import { footerMenus, menus } from "src/commons/menus";
 import { isExternalLink } from "src/commons/utils/helper";
 import { RootState } from "src/stores/types";
@@ -42,7 +42,7 @@ const SidebarMenu: React.FC = () => {
   const { pathname } = useLocation();
   const { sidebar } = useSelector(({ system }: RootState) => system);
   const specialPath = useSelector(({ system }: RootState) => system.specialPath);
-  const { isTablet } = useScreen();
+  const { isTablet } = useBreakpoint();
 
   const isActiveMenu = (href: string, isSpecialPath?: boolean): boolean => {
     if ((href === "/" && pathname.includes("reset-password")) || (href === "/" && pathname.includes("verify-email")))

@@ -2,17 +2,17 @@ import React from "react";
 import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
-import { useScreen } from "src/commons/hooks/useScreen";
+import { useBreakpoint } from "src/hooks/useBreakpoint";
 
 import { render } from "../../../test-utils";
 
 import PolicyOverview from "./index";
 
-jest.mock("src/commons/hooks/useScreen", () => {
+jest.mock("src/hooks/useBreakpoint", () => {
   return {
     __esModule: true,
-    ...jest.requireActual("src/commons/hooks/useScreen"),
-    useScreen: jest.fn()
+    ...jest.requireActual("src/hooks/useBreakpoint"),
+    useBreakpoint: jest.fn()
   };
 });
 
@@ -20,7 +20,7 @@ const mockData = {
   policyId: "a0028f350aaabe0545fdcb56b039bfb08e4bb4d8c4d7c3c7d481c235"
 } as PolicyDetail;
 describe("PolicyOverview", () => {
-  const mockUseScreen = useScreen as jest.Mock;
+  const mockUseScreen = useBreakpoint as jest.Mock;
 
   it("testing on mobile and tablet devices", async () => {
     mockUseScreen.mockReturnValue({ isMobile: true, isTablet: true });

@@ -7,7 +7,7 @@ import { useTranslation } from "react-i18next";
 import { details } from "src/commons/routers";
 import Table, { Column } from "src/components/commons/Table";
 import { Capitalize } from "src/components/commons/CustomText/styles";
-import usePageInfo from "src/commons/hooks/usePageInfo";
+import usePageInfo from "src/hooks/usePageInfo";
 import DatetimeTypeTooltip from "src/components/commons/DatetimeTypeTooltip";
 import FormNowMessage from "src/components/commons/FormNowMessage";
 import { formatADA, formatDateTimeLocal } from "src/commons/utils/helper";

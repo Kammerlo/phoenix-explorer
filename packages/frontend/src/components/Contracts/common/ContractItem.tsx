@@ -2,7 +2,7 @@ import { Box, Typography, useTheme } from "@mui/material";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { useScreen } from "src/commons/hooks/useScreen";
+import { useBreakpoint } from "src/hooks/useBreakpoint";
 import { details } from "src/commons/routers";
 import CustomTooltip from "src/components/commons/CustomTooltip";
 import { StyledLink } from "src/components/share/styled";
@@ -23,7 +23,7 @@ const ContractItem: React.FC<ContractItemProps> = ({ data, index, onClick }) => 
   const containerRef = useRef<SVGSVGElement>(null);
   const [open, setOpen] = useState(false);
   const theme = useTheme();
-  const { isMobile, isTablet } = useScreen();
+  const { isMobile, isTablet } = useBreakpoint();
 
   useEffect(() => {
     document.addEventListener("click", handleDocumentClick);

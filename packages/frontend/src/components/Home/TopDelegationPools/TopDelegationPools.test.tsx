@@ -6,13 +6,13 @@ import { createMemoryHistory } from "history";
 import "@testing-library/jest-dom/extend-expect";
 
 import { render } from "src/test-utils";
-import useFetch from "src/commons/hooks/useFetch";
+import useFetch from "src/hooks/useFetch";
 import { formatADAFull, formatPercent } from "src/commons/utils/helper";
 import { details, routers } from "src/commons/routers";
 
 import TopDelegationPools from "./index";
 
-jest.mock("src/commons/hooks/useFetch");
+jest.mock("src/hooks/useFetch");
 jest.mock("react-redux", () => ({
   ...jest.requireActual("react-redux"),
   useSelector: jest.fn()

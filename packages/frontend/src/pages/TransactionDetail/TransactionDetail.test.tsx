@@ -2,7 +2,7 @@ import { Router } from "react-router-dom";
 import { createBrowserHistory } from "history";
 
 import { fireEvent, render, screen } from "src/test-utils";
-import useFetch from "src/commons/hooks/useFetch";
+import useFetch from "src/hooks/useFetch";
 import { details } from "src/commons/routers";
 
 import Transaction from "./index";
@@ -205,7 +205,7 @@ const transaction = {
   ]
 } as Transaction;
 
-jest.mock("src/commons/hooks/useFetch");
+jest.mock("src/hooks/useFetch");
 
 describe("TransactionDetail page", () => {
   beforeEach(() => {

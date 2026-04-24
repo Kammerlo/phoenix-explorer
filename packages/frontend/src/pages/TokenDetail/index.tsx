@@ -16,7 +16,7 @@ import { ApiConnector } from "src/commons/connector/ApiConnector";
 import { ApiReturnType } from "@shared/APIReturnType";
 import { ITokenOverview, TokenHolder } from "@shared/dtos/token.dto";
 import { Transaction } from "@shared/dtos/transaction.dto";
-import usePageInfo from "src/commons/hooks/usePageInfo";
+import usePageInfo from "src/hooks/usePageInfo";
 
 interface IOverviewMetadataContext {
   txCountRealtime: number;

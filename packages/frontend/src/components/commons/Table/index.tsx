@@ -8,14 +8,16 @@ import {
   SelectChangeEvent,
   alpha,
   styled,
+  useMediaQuery,
   useScrollTrigger,
   useTheme
 } from "@mui/material";
+import { Breakpoint } from "@mui/material/styles";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation } from "react-router-dom";
 
-import { useScreen } from "src/commons/hooks/useScreen";
+import { useBreakpoint, useIsGalaxyFoldSmall } from "src/hooks/useBreakpoint";
 import {
   DownIcon,
   EndPage,
@@ -28,8 +30,8 @@ import {
   StartPage
 } from "src/commons/resources";
 import { formatADAFull, getPageInfo, handleClicktWithoutAnchor, numberWithCommas } from "src/commons/utils/helper";
-import breakpoints from "src/themes/breakpoints";
 import {
+  Column,
   ColumnType,
   FooterTableProps,
   TableHeaderProps,
@@ -205,7 +207,7 @@ const TableRow = <T extends ColumnType>({
 }: TableRowProps<T>) => {
   const colRef = useRef(null);
   const theme = useTheme();
-  const { isMobile } = useScreen();
+  const { isMobile } = useBreakpoint();
 
   const rowRef = useRef<HTMLTableRowElement>(null);
 
@@ -389,7 +391,7 @@ const TableSekeleton = () => {
 export const ExpandedRowContent: React.FC<{
   data: { label: string; value: string | number }[] | undefined;
 }> = ({ data }) => {
-  const { isMobile } = useScreen();
+  const { isMobile } = useBreakpoint();
 
   return (
     <Box display="flex" justifyContent="space-between" padding={2} gap={2}>
@@ -525,6 +527,35 @@ export const FooterTable: React.FC<FooterTableProps> = ({
   );
 };
 
+const useVisibleColumns = <T extends ColumnType>(columns: Column<T>[]): Column<T>[] => {
+  const theme = useTheme();
+  const belowXs = useMediaQuery(theme.breakpoints.down("sm"));
+  const belowSm = useMediaQuery(theme.breakpoints.down("md"));
+  const belowMd = useMediaQuery(theme.breakpoints.down("lg"));
+  const belowLg = useMediaQuery(theme.breakpoints.down("xl"));
+  const isBelow = (bp: Breakpoint): boolean => {
+    switch (bp) {
+      case "xs":
+        return false;
+      case "sm":
+        return belowXs;
+      case "md":
+        return belowSm;
+      case "lg":
+        return belowMd;
+      case "xl":
+        return belowLg;
+      default:
+        return false;
+    }
+  };
+  return useMemo(
+    () => columns.filter((c) => !c.hideBelow || !isBelow(c.hideBelow)),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [columns, belowXs, belowSm, belowMd, belowLg]
+  );
+};
+
 const Table: React.FC<TableProps> = ({
   columns,
   data,
@@ -552,7 +583,6 @@ const Table: React.FC<TableProps> = ({
   renderAction,
   fliterOptions,
   onFilterChange,
-  maxHeight,
   isShowingResult,
   isModal,
   height,
@@ -566,10 +596,12 @@ const Table: React.FC<TableProps> = ({
     onSelectionChange
   });
 
+  const visibleColumns = useVisibleColumns(columns);
+
   const tableRef = useRef<HTMLTableElement>(null);
   const [maxHeightTable, setMaxHeightTable] = useState<number>(0);
   const wrapperRef = useRef<HTMLElement>(null);
-  const { width } = useScreen();
+  const { isMobile } = useBreakpoint();
   const scrollHeight = 5;
 
   const tableFullHeight = useMemo(
@@ -580,7 +612,7 @@ const Table: React.FC<TableProps> = ({
   const heightTable = useMemo(() => {
     let heightTable = Math.min((tableRef?.current?.clientHeight || 0) + scrollHeight, window.innerHeight * 0.5);
 
-    if (width >= breakpoints.values.sm && (data || []).length >= 9) {
+    if (!isMobile && (data || []).length >= 9) {
       const footerHeight = document.getElementById("footer")?.offsetHeight || SPACING_TOP_TABLE;
       const spaceTop =
         Math.min(tableRef?.current?.clientHeight || 0, window.innerHeight) - (footerHeight + SPACING_TOP_TABLE) < 200
@@ -627,7 +659,7 @@ const Table: React.FC<TableProps> = ({
       />
       <Wrapper
         ref={wrapperRef}
-        maxHeight={maxHeight || maxHeightTable}
+        maxHeight={maxHeightTable}
         minHeight={minHeight ? minHeight : (!data || data.length === 0) && !loading ? 360 : loading ? 400 : 15}
         height={height || (isFullTableHeight ? tableFullHeight : heightTable)}
         ismodal={+!!isModal}
@@ -637,7 +669,7 @@ const Table: React.FC<TableProps> = ({
       >
         <TableFullWidth ref={tableRef}>
           <TableHeader
-            columns={columns}
+            columns={visibleColumns}
             loading={loading}
             defaultSort={defaultSort}
             showTabView={showTabView}
@@ -648,7 +680,7 @@ const Table: React.FC<TableProps> = ({
             isSelectAll={isSelectAll}
           />
           <TableBody
-            columns={columns}
+            columns={visibleColumns}
             screen={screen}
             data={data}
             onClickRow={onClickRow}
@@ -728,7 +760,7 @@ const PaginationCustom = ({
     setInputPage(page);
   }, [page]);
 
-  const { isGalaxyFoldSmall } = useScreen();
+  const isGalaxyFoldSmall = useIsGalaxyFoldSmall();
 
   const totalPage = Math.ceil((pagination?.total || 0) / size);
   const renderItem = (item: PaginationRenderItemParams) => {

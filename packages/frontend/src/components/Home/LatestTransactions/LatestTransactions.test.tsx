@@ -6,12 +6,12 @@ import "@testing-library/jest-dom/extend-expect";
 
 import { render } from "src/test-utils";
 import { details, routers } from "src/commons/routers";
-import useFetch from "src/commons/hooks/useFetch";
+import useFetch from "src/hooks/useFetch";
 import { formatADAFull, formatDateTimeLocal } from "src/commons/utils/helper";
 
 import LatestTransactions from "./index";
 
-jest.mock("src/commons/hooks/useFetch");
+jest.mock("src/hooks/useFetch");
 
 const mockItem: CurrentTransactions = {
   blockNo: 8871993,

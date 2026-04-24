@@ -4,7 +4,7 @@ import userEvent from "@testing-library/user-event";
 import { useTheme } from "@mui/material";
 
 import themes from "src/themes";
-import useFetchList from "src/commons/hooks/useFetchList";
+import useFetchList from "src/hooks/useFetchList";
 
 import { render } from "../../../test-utils";
 
@@ -27,7 +27,7 @@ jest.mock("@mui/material", () => ({
   useTheme: jest.fn()
 }));
 
-jest.mock("src/commons/hooks/useFetchList");
+jest.mock("src/hooks/useFetchList");
 
 describe("PolicyTable", () => {
   beforeEach(() => {

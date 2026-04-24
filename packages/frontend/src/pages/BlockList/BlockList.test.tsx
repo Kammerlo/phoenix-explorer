@@ -3,7 +3,7 @@ import { Router } from "react-router";
 import { createMemoryHistory } from "history";
 
 import { render } from "src/test-utils";
-import useFetchList from "src/commons/hooks/useFetchList";
+import useFetchList from "src/hooks/useFetchList";
 import { details } from "src/commons/routers";
 
 import BlockList from "./index";
@@ -18,7 +18,7 @@ const mockData = {
   ]
 };
 
-jest.mock("src/commons/hooks/useFetchList");
+jest.mock("src/hooks/useFetchList");
 
 describe("Blocks view", () => {
   beforeEach(() => {

@@ -2,7 +2,7 @@ import { Router } from "react-router-dom";
 import { createBrowserHistory } from "history";
 
 import { fireEvent, render, screen } from "src/test-utils";
-import useFetchList from "src/commons/hooks/useFetchList";
+import useFetchList from "src/hooks/useFetchList";
 import { details } from "src/commons/routers";
 
 import PoolList from "./index";
@@ -23,7 +23,7 @@ const mockData: Delegators = {
   epochBlock: 100
 };
 
-jest.mock("src/commons/hooks/useFetchList");
+jest.mock("src/hooks/useFetchList");
 
 describe("DelegationList component", () => {
   beforeEach(() => {

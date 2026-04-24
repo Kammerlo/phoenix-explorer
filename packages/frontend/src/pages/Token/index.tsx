@@ -8,7 +8,7 @@ import { details } from "src/commons/routers";
 import { formatNumberTotalSupply, getShortHash } from "src/commons/utils/helper";
 import Table, { Column } from "src/components/commons/Table";
 import FormNowMessage from "src/components/commons/FormNowMessage";
-import usePageInfo from "src/commons/hooks/usePageInfo";
+import usePageInfo from "src/hooks/usePageInfo";
 import { ApiConnector } from "src/commons/connector/ApiConnector";
 import { ApiReturnType } from "@shared/APIReturnType";
 import { ITokenOverview } from "@shared/dtos/token.dto";

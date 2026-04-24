@@ -1,4 +1,4 @@
-import { Box, Grid, useTheme } from "@mui/material";
+import { Box, Grid, useMediaQuery, useTheme } from "@mui/material";
 import { format, parseISO } from "date-fns";
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -6,8 +6,8 @@ import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, TooltipPr
 import { useSelector } from "react-redux";
 import { Payload } from "recharts/types/component/DefaultTooltipContent";
 
-import useFetch from "src/commons/hooks/useFetch";
-import { useScreen } from "src/commons/hooks/useScreen";
+import useFetch from "src/hooks/useFetch";
+import { useBreakpoint } from "src/hooks/useBreakpoint";
 import { API } from "src/commons/utils/api";
 import { numberWithCommas } from "src/commons/utils/helper";
 import { TooltipBody } from "src/components/commons/Layout/styles";
@@ -41,7 +41,7 @@ const TransactionChart: React.FC = () => {
   const { t } = useTranslation();
   const [rangeTime, setRangeTime] = useState<Time>("ONE_MONTH");
   const blockKey = useSelector(({ system }: RootState) => system.blockKey);
-  const { isMobile } = useScreen();
+  const { isMobile } = useBreakpoint();
   const optionsTime: Record<Time, { label: string; displayName: string }> = {
     ONE_MONTH: {
       label: t("time.1m"),
@@ -262,11 +262,12 @@ const renderTooltipContent = (o: TooltipProps<string | number | (string | number
 
 const Chart = ({ data, range }: { data: TransactionChartIF[] | null; range: Time }) => {
   const theme = useTheme();
-  const { isLanrgeScreen } = useScreen();
+  const isLargeScreen = useMediaQuery(theme.breakpoints.down("xl"));
   const { theme: themeMode } = useSelector(({ theme }: RootState) => theme);
   if (!data) return <></>;
   return (
-    <ResponsiveContainer width="100%" height={400}>
+    <Box sx={{ width: "100%", height: { xs: 260, sm: 320, md: 400 } }}>
+    <ResponsiveContainer width="100%" height="100%">
       <AreaChart
         height={500}
         width={500}
@@ -297,7 +298,7 @@ const Chart = ({ data, range }: { data: TransactionChartIF[] | null; range: Time
           tick={{ fill: themeMode === "light" ? theme.palette.secondary.light : theme.palette.secondary[800] }}
           dataKey="date"
           tickFormatter={(date: string) => formatX(date, range)}
-          minTickGap={isLanrgeScreen ? 15 : 3}
+          minTickGap={isLargeScreen ? 15 : 3}
         />
         <YAxis
           tick={{ fill: themeMode === "light" ? theme.palette.secondary.light : theme.palette.secondary[800] }}
@@ -331,5 +332,6 @@ const Chart = ({ data, range }: { data: TransactionChartIF[] | null; range: Time
         />
       </AreaChart>
     </ResponsiveContainer>
+    </Box>
   );
 };

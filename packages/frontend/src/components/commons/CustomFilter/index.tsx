@@ -7,7 +7,7 @@ import { useNavigate } from "react-router-dom";
 import { stringify } from "qs";
 import { omit, pick } from "lodash";
 
-import { useScreen } from "src/commons/hooks/useScreen";
+import { useBreakpoint } from "src/hooks/useBreakpoint";
 import {
   ArrowFromBottomIcon,
   ArrowFromTopIcon,
@@ -61,7 +61,7 @@ const CustomFilter: React.FC<Props> = (props) => {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const timeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const theme = useTheme();
-  const { isMobile } = useScreen();
+  const { isMobile } = useBreakpoint();
   const navigate = useNavigate();
 
   const options: Option[] = [

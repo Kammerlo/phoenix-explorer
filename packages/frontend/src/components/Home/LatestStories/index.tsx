@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Settings } from "react-slick";
 
-import useFetch from "src/commons/hooks/useFetch";
+import useFetch from "src/hooks/useFetch";
 import { CalenderPaleIcon, SliderRight } from "src/commons/resources";
 import { API } from "src/commons/utils/api";
 import { CARDANO_NEWS_URL } from "src/commons/utils/constants";

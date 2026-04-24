@@ -4,8 +4,8 @@ import { stringify } from "qs";
 import { Link, useNavigate, useParams } from "react-router-dom";
 
 import { details } from "src/commons/routers";
-import useFetchList from "src/commons/hooks/useFetchList";
-import usePageInfo from "src/commons/hooks/usePageInfo";
+import useFetchList from "src/hooks/useFetchList";
+import usePageInfo from "src/hooks/usePageInfo";
 import { API } from "src/commons/utils/api";
 import Table from "src/components/commons/Table";
 import { Column } from "src/types/table";
