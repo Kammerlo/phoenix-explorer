@@ -474,7 +474,6 @@ AVG_BLOCK_TIME_SECONDS = 20             // slot 1 s, ~5 % leadership rate
 | `@mui/lab` / `@mui/x-tree-view` | MUI extensions | Tree view for nested data |
 | `lodash` | Utility library | Tree-shake via `lodash/<fn>` imports |
 | `sass` | SCSS compilation | Vite handles `.scss` imports |
-| `react-lottie` + `@lottiefiles/lottie-player` | Lottie animations | |
 | `react-use` | React hooks grab-bag | |
 | `react-countup` | Animated number counter | Dashboard stat cards |
 | `react-circular-progressbar` | Circular progress | Epoch progress indicators |
