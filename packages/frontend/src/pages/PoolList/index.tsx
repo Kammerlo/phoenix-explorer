@@ -7,7 +7,7 @@ import { StyledContainer } from "./styles";
 
 const PoolListPage = () => {
   useEffect(() => {
-    document.title = `Pools | Cardano Blockchain Explorer`;
+    document.title = `Pools | Phoenix Explorer`;
   }, []);
 
   return (

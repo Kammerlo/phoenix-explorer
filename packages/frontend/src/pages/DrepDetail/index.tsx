@@ -77,7 +77,7 @@ const DrepDetail = () => {
   const network = process.env.REACT_APP_NETWORK || "mainnet";
 
   useEffect(() => {
-    document.title = `DRep Detail | Cardano Blockchain Explorer`;
+    document.title = `DRep Detail | Phoenix Explorer`;
     apiConnector
       .getDrep(drepId)
       .then((result) => setData(result))

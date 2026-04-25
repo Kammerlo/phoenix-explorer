@@ -50,7 +50,7 @@ poolController.get('/:poolId/blocks', async (req, res) => {
     const count = Number.parseInt(String(pageInfo.size || 20));
     try {
         const [blockHashes, poolInfo] = await Promise.all([
-            API.poolsByIdBlocks(poolId, { page, count }),
+            API.poolsByIdBlocks(poolId, { page, count, order: "desc" }),
             API.poolsById(poolId)
         ]);
         const blocks = await Promise.all(blockHashes.map(hash => getBlock(hash)));

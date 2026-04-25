@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { Box, Chip, Divider, Paper, Skeleton, useTheme } from "@mui/material";
+import { Box, Chip, Divider, Paper, Skeleton, Tooltip, useTheme } from "@mui/material";
 import { alpha } from "@mui/material/styles";
 import { HiArrowLongLeft } from "react-icons/hi2";
 import { MdContentCopy } from "react-icons/md";
@@ -29,8 +29,23 @@ function copyToClipboard(text: string) {
 
 // ─── Stat card ────────────────────────────────────────────────────────────────
 
-function StatCard({ label, value }: { label: React.ReactNode; value: React.ReactNode }) {
+function StatCard({ label, value, tooltip }: { label: React.ReactNode; value: React.ReactNode; tooltip?: React.ReactNode }) {
   const theme = useTheme();
+  const labelEl = (
+    <Box
+      sx={{
+        fontSize: "0.72rem",
+        fontWeight: 600,
+        textTransform: "uppercase",
+        letterSpacing: "0.05em",
+        color: "secondary.light",
+        mb: 0.5,
+        ...(tooltip ? { cursor: "help", borderBottom: "1px dashed", borderColor: "secondary.light", display: "inline-block", lineHeight: 1.4 } : {})
+      }}
+    >
+      {label}
+    </Box>
+  );
   return (
     <Paper
       elevation={0}
@@ -46,18 +61,9 @@ function StatCard({ label, value }: { label: React.ReactNode; value: React.React
         minWidth: 120
       }}
     >
-      <Box
-        sx={{
-          fontSize: "0.72rem",
-          fontWeight: 600,
-          textTransform: "uppercase",
-          letterSpacing: "0.05em",
-          color: "secondary.light",
-          mb: 0.5
-        }}
-      >
-        {label}
-      </Box>
+      {tooltip ? (
+        <Tooltip arrow placement="top" title={tooltip}>{labelEl}</Tooltip>
+      ) : labelEl}
       <Box sx={{ fontWeight: 700, fontSize: "0.9rem", color: "text.primary", wordBreak: "break-word" }}>
         {value}
       </Box>
@@ -273,7 +279,8 @@ const AddressHeader: React.FC<Props> = ({ data, loading }) => {
           />
           {dataStake && (
             <StatCard
-              label={t("drawer.totalStake")}
+              label="Live Stake"
+              tooltip="Current observable stake (controlled amount on the stake key, including rewards). Differs from the active-epoch snapshot used for rewards."
               value={
                 <Box display="flex" alignItems="center" gap={0.5}>
                   {formatADAFull(dataStake.totalStake)} <ADAicon />

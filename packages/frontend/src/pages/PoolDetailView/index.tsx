@@ -106,10 +106,25 @@ interface StatCardProps {
   label: React.ReactNode;
   value: React.ReactNode;
   accent?: boolean;
+  tooltip?: React.ReactNode;
 }
 
-function StatCard({ label, value, accent }: StatCardProps) {
+function StatCard({ label, value, accent, tooltip }: StatCardProps) {
   const theme = useTheme();
+  const labelEl = (
+    <Typography
+      variant="caption"
+      color="text.secondary"
+      sx={{
+        fontWeight: 600,
+        textTransform: "uppercase",
+        letterSpacing: "0.05em",
+        ...(tooltip ? { cursor: "help", borderBottom: "1px dashed", borderColor: "secondary.light", display: "inline-block", lineHeight: 1.4 } : {})
+      }}
+    >
+      {label}
+    </Typography>
+  );
   return (
     <Paper
       elevation={0}
@@ -131,9 +146,9 @@ function StatCard({ label, value, accent }: StatCardProps) {
         gap: 0.5
       }}
     >
-      <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em" }}>
-        {label}
-      </Typography>
+      {tooltip ? (
+        <Tooltip arrow placement="top" title={tooltip}>{labelEl}</Tooltip>
+      ) : labelEl}
       <Box sx={{ fontWeight: 700, fontSize: "0.95rem", color: "text.primary" }}>
         {value}
       </Box>
@@ -245,7 +260,7 @@ const DelegationDetail: React.FC = () => {
   };
 
   useEffect(() => {
-    document.title = `Pool ${poolId} | Cardano Explorer`;
+    document.title = `Pool ${poolId} | Phoenix Explorer`;
     window.scrollTo(0, 0);
     setLoading(true);
     setLogoError(false);
@@ -401,6 +416,7 @@ const DelegationDetail: React.FC = () => {
 
         <StatCard
           label={<>Pool Size (<ADAicon />)</>}
+          tooltip="Live stake delegated to the pool right now (sum of stake-key balances)."
           value={
             data.poolSize != null
               ? <Box display="inline-flex" alignItems="center" gap={0.4}>{formatADA(data.poolSize)}<ADAicon /></Box>
@@ -411,11 +427,13 @@ const DelegationDetail: React.FC = () => {
 
         <StatCard
           label="Delegators"
+          tooltip="Number of stake addresses currently delegating to this pool. Includes all-time delegators reported by the indexer; some may have undelegated."
           value={data.delegators != null ? data.delegators.toLocaleString() : "—"}
         />
 
         <StatCard
           label="Fixed Cost (₳)"
+          tooltip="Fixed ADA cost per epoch the pool deducts from rewards before splitting between operator and delegators."
           value={
             <Box display="inline-flex" alignItems="center" gap={0.4}>{formatADA(data.cost)}<ADAicon /></Box>
           }
@@ -423,6 +441,7 @@ const DelegationDetail: React.FC = () => {
 
         <StatCard
           label="Margin"
+          tooltip="Operator's variable fee — percentage of remaining rewards taken after the fixed cost."
           value={formatPercent(data.margin)}
         />
 
@@ -456,6 +475,7 @@ const DelegationDetail: React.FC = () => {
         {data.livePledge !== undefined && (
           <StatCard
             label="Live Pledge (₳)"
+            tooltip="Current observable balance of the pool's owner addresses (live snapshot, may differ slightly from active-epoch pledge)."
             value={<Box display="inline-flex" alignItems="center" gap={0.4}>{formatADA(data.livePledge)}<ADAicon /></Box>}
           />
         )}
@@ -499,24 +519,37 @@ const DelegationDetail: React.FC = () => {
                   Reward Account{data.rewardAccounts.length > 1 ? "s" : ""}
                 </Box>
                 {data.rewardAccounts.map((acc, i) => (
-                  <Box
-                    key={i}
-                    component={Link}
-                    to={details.stake(acc)}
-                    sx={{
-                      display: "block",
-                      fontSize: "0.75rem",
-                      fontFamily: "monospace",
-                      color: "primary.main",
-                      textDecoration: "none",
-                      mb: 0.5,
-                      "&:hover": { textDecoration: "underline" },
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                      whiteSpace: "nowrap"
-                    }}
-                  >
-                    {acc}
+                  <Box key={i} display="flex" alignItems="center" gap={0.5} mb={0.5} minWidth={0}>
+                    <Box
+                      component={Link}
+                      to={details.stake(acc)}
+                      sx={{
+                        flex: 1,
+                        minWidth: 0,
+                        fontSize: "0.75rem",
+                        fontFamily: "monospace",
+                        color: "primary.main",
+                        textDecoration: "none",
+                        "&:hover": { textDecoration: "underline" },
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap"
+                      }}
+                    >
+                      {acc}
+                    </Box>
+                    <Box
+                      component="button"
+                      onClick={() => copyToClipboard(acc)}
+                      title="Copy"
+                      sx={{
+                        cursor: "pointer", border: "none", background: "transparent",
+                        color: "secondary.light", display: "inline-flex", alignItems: "center",
+                        p: 0.5, "&:hover": { color: "primary.main" }
+                      }}
+                    >
+                      <MdContentCopy size={13} />
+                    </Box>
                   </Box>
                 ))}
               </Box>
@@ -528,24 +561,37 @@ const DelegationDetail: React.FC = () => {
                   Owner Account{data.ownerAccounts.length > 1 ? "s" : ""}
                 </Box>
                 {data.ownerAccounts.map((acc, i) => (
-                  <Box
-                    key={i}
-                    component={Link}
-                    to={details.stake(acc)}
-                    sx={{
-                      display: "block",
-                      fontSize: "0.75rem",
-                      fontFamily: "monospace",
-                      color: "primary.main",
-                      textDecoration: "none",
-                      mb: 0.5,
-                      "&:hover": { textDecoration: "underline" },
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                      whiteSpace: "nowrap"
-                    }}
-                  >
-                    {acc}
+                  <Box key={i} display="flex" alignItems="center" gap={0.5} mb={0.5} minWidth={0}>
+                    <Box
+                      component={Link}
+                      to={details.stake(acc)}
+                      sx={{
+                        flex: 1,
+                        minWidth: 0,
+                        fontSize: "0.75rem",
+                        fontFamily: "monospace",
+                        color: "primary.main",
+                        textDecoration: "none",
+                        "&:hover": { textDecoration: "underline" },
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap"
+                      }}
+                    >
+                      {acc}
+                    </Box>
+                    <Box
+                      component="button"
+                      onClick={() => copyToClipboard(acc)}
+                      title="Copy"
+                      sx={{
+                        cursor: "pointer", border: "none", background: "transparent",
+                        color: "secondary.light", display: "inline-flex", alignItems: "center",
+                        p: 0.5, "&:hover": { color: "primary.main" }
+                      }}
+                    >
+                      <MdContentCopy size={13} />
+                    </Box>
                   </Box>
                 ))}
               </Box>

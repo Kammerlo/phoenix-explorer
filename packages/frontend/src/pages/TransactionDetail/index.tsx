@@ -67,7 +67,7 @@ const TransactionDetailView: React.FC = () => {
   const network = process.env.REACT_APP_NETWORK || "mainnet";
 
   useEffect(() => {
-    document.title = `Transaction ${trxHash} | Cardano Explorer`;
+    document.title = `Transaction ${trxHash} | Phoenix Explorer`;
     setLoading(true);
     apiConnector.getTxDetail(trxHash).then((data) => {
       setTxData(data);

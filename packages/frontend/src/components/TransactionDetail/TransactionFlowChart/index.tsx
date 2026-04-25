@@ -59,7 +59,7 @@ const MAX_VISIBLE_MOBILE = 3;
 
 // ─── Helpers ─────────────────────────────────────────────
 
-const truncate = (s: string, pre = 8, post = 6) =>
+const truncate = (s: string, pre = 12, post = 8) =>
   s.length <= pre + post + 3 ? s : `${s.slice(0, pre)}...${s.slice(-post)}`;
 
 /** Smooth cubic bezier from (x1,y1) to (x2,y2) with horizontal tangents */
@@ -279,7 +279,15 @@ const UtxoCardItem: React.FC<UtxoCardProps> = ({
             SC
           </ContractTag>
         )}
-        {isChange && <ChangeBadge>{t("flow.change") || "Change"}</ChangeBadge>}
+        {isChange && (
+          <Tooltip
+            arrow
+            placement="top"
+            title="Change output: ADA returned to the sender after fees and outputs are paid."
+          >
+            <ChangeBadge>{t("flow.change") || "Change"}</ChangeBadge>
+          </Tooltip>
+        )}
       </Box>
 
       {/* UTXO ref for inputs */}

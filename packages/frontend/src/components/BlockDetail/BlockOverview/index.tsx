@@ -197,7 +197,12 @@ const BlockOverview: React.FC<BlockOverviewProps> = ({ data, loading, lastUpdate
             {t("common.slot")}
           </TitleCard>
           <CustomTooltip title={slotTooltip}>
-            <span><TooltipIcon /></span>
+            <Box
+              component="span"
+              sx={{ display: "inline-flex", alignItems: "center", cursor: "help", lineHeight: 1 }}
+            >
+              <TooltipIcon style={{ pointerEvents: "none" }} />
+            </Box>
           </CustomTooltip>
         </Box>
       ),
@@ -221,15 +226,24 @@ const BlockOverview: React.FC<BlockOverviewProps> = ({ data, loading, lastUpdate
           </TitleCard>
         </Box>
       ),
-      value: data?.slotLeader ? (
-        <Box data-testid="block.detail.overview.value.producer">
-          <StyledLink to={details.delegation(data.slotLeader)}>
-            {data.poolTicker
-              ? `[${data.poolTicker}]`
-              : data.poolName || `${data.slotLeader.slice(0, 10)}...`}
-          </StyledLink>
-        </Box>
-      ) : (
+      value: data?.slotLeader ? (() => {
+        const leader = data.slotLeader;
+        const isPoolId = /^pool1[a-z0-9]+$/i.test(leader);
+        const labelText = data.poolTicker
+          ? `[${data.poolTicker}]`
+          : data.poolName
+            ? data.poolName
+            : isPoolId
+              ? `${leader.slice(0, 10)}...`
+              : leader.replace(/-/g, " ").replace(/([A-Z])/g, " $1").trim().replace(/\s+/g, " ");
+        return (
+          <Box data-testid="block.detail.overview.value.producer">
+            {isPoolId
+              ? <StyledLink to={details.delegation(leader)}>{labelText}</StyledLink>
+              : <Box component="span" sx={{ color: "secondary.main" }}>{labelText}</Box>}
+          </Box>
+        );
+      })() : (
         <Box sx={{ color: "secondary.light" }}>—</Box>
       )
     }

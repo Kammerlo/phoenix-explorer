@@ -199,9 +199,12 @@ const TokenOverview: React.FC<TokenOverViewProps> = ({ data, loading, lastUpdate
                   />
                 )}
               </Box>
-              {/* Hex name / fingerprint */}
-              <Box sx={{ fontSize: "0.72rem", color: "secondary.light", mt: 0.4, fontFamily: "monospace" }}>
-                {data.fingerprint || data.name}
+              {/* Asset fingerprint (CIP-14) */}
+              <Box sx={{ fontSize: "0.72rem", color: "secondary.light", mt: 0.4 }}>
+                <Box component="span" sx={{ fontWeight: 600, mr: 0.5 }}>Fingerprint (CIP-14):</Box>
+                <Box component="span" sx={{ fontFamily: "monospace" }}>
+                  {data.fingerprint || data.name}
+                </Box>
               </Box>
             </Box>
           </Box>

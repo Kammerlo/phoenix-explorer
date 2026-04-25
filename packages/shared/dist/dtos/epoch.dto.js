@@ -7,4 +7,4 @@ var EpochStatus;
     EpochStatus["REWARDING"] = "Rewarding";
     EpochStatus["IN_PROGRESS"] = "In Progress";
     EpochStatus["SYNCING"] = "Syncing";
-})(EpochStatus = exports.EpochStatus || (exports.EpochStatus = {}));
+})(EpochStatus || (exports.EpochStatus = EpochStatus = {}));

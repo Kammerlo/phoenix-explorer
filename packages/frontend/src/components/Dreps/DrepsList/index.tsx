@@ -94,13 +94,25 @@ const DrepsList: React.FC = () => {
       ),
       key: "anchorLink",
       minWidth: "180px",
-      render: (r) =>
-        r.anchorUrl ? (
-          <CustomTooltip title={r.anchorUrl} sx={{ width: 200 }}>
+      render: (r) => {
+        const trimmed = (r.anchorUrl ?? "").trim();
+        if (!trimmed) {
+          return (
+            <Box padding={"6px 8px 6px 0"} color="secondary.light">
+              {t("common.N/A")}
+            </Box>
+          );
+        }
+        const href = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+        return (
+          <CustomTooltip title={trimmed} sx={{ width: 200 }}>
             <Box
               padding={"6px 0px"}
               data-testid="drepList.anchorLinkValue"
-              component={Button}
+              component="a"
+              href={href}
+              target="_blank"
+              rel="noopener noreferrer"
               textTransform={"lowercase"}
               fontWeight={400}
               display={"inline-block"}
@@ -110,23 +122,14 @@ const DrepsList: React.FC = () => {
               whiteSpace={"nowrap"}
               overflow={"hidden"}
               color={(theme) => `${theme.palette.primary.main} !important`}
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                const url = r.anchorUrl.includes("http") ? r.anchorUrl : `https://${r.anchorUrl}`;
-                window.open(url, "_blank", "noopener,noreferrer");
-              }}
-              disableRipple={true}
-              sx={{ ":hover": { background: "none" }, textAlign: "left" }}
+              onClick={(e) => e.stopPropagation()}
+              sx={{ textAlign: "left", textDecoration: "none", "&:hover": { textDecoration: "underline" } }}
             >
-              {r.anchorUrl}
+              {trimmed}
             </Box>
           </CustomTooltip>
-        ) : (
-          <Box padding={"6px 8px 6px 0"} color="secondary.light">
-            {t("common.N/A")}
-          </Box>
-        )
+        );
+      }
     },
     {
       title: (

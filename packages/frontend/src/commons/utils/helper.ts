@@ -216,7 +216,8 @@ export const formatDateTimeLocal = (date: string, addDaysCount: number = 0) => {
       year: "numeric",
       second: "2-digit",
       hourCycle: "h23",
-      timeZone: timeZone == "UTC" ? "UTC" : Intl.DateTimeFormat().resolvedOptions().timeZone
+      timeZone: timeZone == "UTC" ? "UTC" : Intl.DateTimeFormat().resolvedOptions().timeZone,
+      timeZoneName: "short"
     });
 
     const adjusted = addDaysCount > 0 ? addDaysFn(parsed, addDaysCount) : parsed;
