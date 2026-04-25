@@ -13,6 +13,7 @@ import DashboardStatsGrid, { DashboardStats } from "src/components/Home/Dashboar
 import LatestBlocks from "src/components/Home/LatestBlocks";
 import LatestTransactions from "src/components/Home/LatestTransactions";
 import TopDelegationPools from "src/components/Home/TopDelegationPools";
+import { Fade } from "src/commons/animation";
 
 // ─── Layout ───────────────────────────────────────────────────────────────────
 
@@ -71,22 +72,32 @@ const Home: React.FC = () => {
 
   return (
     <HomeContainer data-testid="home-container">
-      <DashboardStatsGrid statsData={statsData} loading={statsLoading} />
+      <Fade duration={0.32}>
+        <DashboardStatsGrid statsData={statsData} loading={statsLoading} />
+      </Fade>
 
-      <BlockChainVisualizer />
+      <Fade duration={0.32} delay={0.08}>
+        <BlockChainVisualizer />
+      </Fade>
 
-      <ActivityChart />
+      <Fade duration={0.32} delay={0.14} whileInView>
+        <ActivityChart />
+      </Fade>
 
-      <Grid container spacing={2} mb={3}>
-        <Grid size={{ xs: 12, md: 6 }}>
-          <LatestBlocks blocks={blocks} loading={blocksLoading} rows={TABLE_ROWS} />
+      <Fade duration={0.32} whileInView>
+        <Grid container spacing={2} mb={3}>
+          <Grid size={{ xs: 12, md: 6 }}>
+            <LatestBlocks blocks={blocks} loading={blocksLoading} rows={TABLE_ROWS} />
+          </Grid>
+          <Grid size={{ xs: 12, md: 6 }}>
+            <LatestTransactions txs={txs} loading={txsLoading} rows={TABLE_ROWS} />
+          </Grid>
         </Grid>
-        <Grid size={{ xs: 12, md: 6 }}>
-          <LatestTransactions txs={txs} loading={txsLoading} rows={TABLE_ROWS} />
-        </Grid>
-      </Grid>
+      </Fade>
 
-      <TopDelegationPools pools={pools} loading={poolsLoading} />
+      <Fade duration={0.32} whileInView>
+        <TopDelegationPools pools={pools} loading={poolsLoading} />
+      </Fade>
     </HomeContainer>
   );
 };

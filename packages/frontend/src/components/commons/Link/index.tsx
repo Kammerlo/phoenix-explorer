@@ -10,4 +10,11 @@ export default Link;
 const LinkStyled = styled(LinkDom)`
   color: ${(props) => props.theme.palette.primary.main} !important;
   font-family: var(--font-family-text) !important;
+  transition: opacity 150ms cubic-bezier(0.16, 1, 0.3, 1);
+  &:hover {
+    opacity: 0.78;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
 `;

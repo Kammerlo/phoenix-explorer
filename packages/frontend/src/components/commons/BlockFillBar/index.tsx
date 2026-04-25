@@ -42,7 +42,8 @@ export const BlockFillBarMini: React.FC<Props> = ({ size }) => {
             height: "100%",
             borderRadius: 3,
             bgcolor: barColor,
-            transition: "width 0.3s ease"
+            transition: "width 600ms cubic-bezier(0.22, 1, 0.36, 1)",
+            "@media (prefers-reduced-motion: reduce)": { transition: "none" }
           }}
         />
       </Box>

@@ -1,6 +1,6 @@
 import { changeLanguage } from "i18next";
 import React, { Suspense, useEffect } from "react";
-import { Route, Routes, useNavigate } from "react-router-dom";
+import { Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import { CircularProgress, Box } from "@mui/material";
 
 import { routers } from "./commons/routers";
@@ -9,6 +9,7 @@ import { APP_LANGUAGES, SUPPORTED_LANGUAGES } from "./commons/utils/constants";
 import i18n from "./i18n";
 import { ApiConnector } from "./commons/connector/ApiConnector";
 import { FunctionEnum } from "./commons/connector/types/FunctionEnum";
+import { PageTransition } from "./commons/animation";
 
 const AddressDetail = React.lazy(() => import("./pages/AddressDetail"));
 const BlockDetail = React.lazy(() => import("./pages/BlockDetail"));
@@ -39,6 +40,7 @@ const PageLoader = () => (
 
 const AppRoutes: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const supportedFunctions = ApiConnector.getApiConnector().getSupportedFunctions();
   useEffect(() => {
     const pattern = /^\/([a-z]{2})\//;
@@ -60,6 +62,7 @@ const AppRoutes: React.FC = () => {
 
   return (
     <Suspense fallback={<PageLoader />}>
+      <PageTransition routeKey={location.pathname}>
       <Routes>
         <Route path={routers.HOME} element={<Home />} />
 
@@ -86,6 +89,7 @@ const AppRoutes: React.FC = () => {
         <Route path={routers.POLICY_DETAIL} element={isSupportedElement(PolicyDetail, FunctionEnum.TOKENS)} />
         <Route path="*" element={<NotFound />} />
       </Routes>
+      </PageTransition>
     </Suspense>
   );
 };

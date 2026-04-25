@@ -56,12 +56,43 @@ export const TRow = styled("tr")<{ selected?: number }>`
   font-size: 14px;
   position: relative;
   background-color: ${({ selected, theme }) => (selected ? theme.palette.primary[100] : "transparent")};
+  opacity: 0;
+  animation: rowReveal 320ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  @keyframes rowReveal {
+    from {
+      opacity: 0;
+      transform: translateY(4px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  &:nth-of-type(1) { animation-delay: 0ms; }
+  &:nth-of-type(2) { animation-delay: 30ms; }
+  &:nth-of-type(3) { animation-delay: 60ms; }
+  &:nth-of-type(4) { animation-delay: 90ms; }
+  &:nth-of-type(5) { animation-delay: 120ms; }
+  &:nth-of-type(6) { animation-delay: 150ms; }
+  &:nth-of-type(7) { animation-delay: 180ms; }
+  &:nth-of-type(8) { animation-delay: 210ms; }
+  &:nth-of-type(9) { animation-delay: 240ms; }
+  &:nth-of-type(10) { animation-delay: 270ms; }
+  &:nth-of-type(11) { animation-delay: 300ms; }
+  &:nth-of-type(12) { animation-delay: 330ms; }
+  > td {
+    transition: background-color 180ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
   &:hover {
     border-radius: 10px;
     > td {
       background-color: ${({ theme }) =>
         theme.isDark ? alpha(theme.palette.primary[100], 0.7) : theme.palette.primary[100]} !important;
     }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    opacity: 1;
+    animation: none;
   }
 `;
 

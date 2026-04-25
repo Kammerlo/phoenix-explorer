@@ -1,7 +1,7 @@
 import { LegacyRef } from "react";
 import { Easing, motion, Target } from "framer-motion";
 
-import useInView from "../hooks/useInView";
+import useInView from "../../hooks/useInView";
 
 interface Props {
   className?: string;

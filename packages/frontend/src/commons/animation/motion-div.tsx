@@ -1,7 +1,7 @@
 import { Easing, motion, MotionStyle, Target } from "framer-motion";
 import { LegacyRef, ReactNode } from "react";
 
-import useInView from "../hooks/useInView";
+import useInView from "../../hooks/useInView";
 
 interface Props {
   children: ReactNode;

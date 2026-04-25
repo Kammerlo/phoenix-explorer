@@ -1,4 +1,5 @@
 import { useTheme } from "@mui/material";
+import { useReducedMotion } from "framer-motion";
 import React from "react";
 import { CircularProgressbarWithChildren } from "react-circular-progressbar";
 import "react-circular-progressbar/dist/styles.css";
@@ -17,6 +18,7 @@ export interface Props {
 
 const ProgressCircle: React.FC<Props> = (props) => {
   const theme = useTheme();
+  const reduce = useReducedMotion();
   const {
     percent,
     children,
@@ -47,7 +49,10 @@ const ProgressCircle: React.FC<Props> = (props) => {
             stroke: `url(#progress)`,
             strokeWidth: pathWidth,
             strokeLinecap: pathLineCap,
-            transformOrigin: "center center"
+            transformOrigin: "center center",
+            transition: reduce
+              ? "none"
+              : "stroke-dashoffset 800ms cubic-bezier(0.22, 1, 0.36, 1)"
           },
           trail: {
             strokeWidth: trailWidth,

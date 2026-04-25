@@ -4,6 +4,7 @@ import { alpha } from "@mui/material/styles";
 import { Link, useNavigate } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
 import { IoCopyOutline, IoCheckmarkSharp } from "react-icons/io5";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 
 import { BLOCK_MAX_SIZE } from "src/components/commons/BlockFillBar";
 import { ApiConnector } from "src/commons/connector/ApiConnector";
@@ -171,9 +172,10 @@ const BlockChainCard: React.FC<{ block: Block; isLatest?: boolean }> = ({ block,
                   boxShadow: `0 0 0 3px ${alpha(theme.palette.success.main, 0.28)}`,
                   "@keyframes livePulse": {
                     "0%, 100%": { boxShadow: `0 0 0 3px ${alpha(theme.palette.success.main, 0.28)}` },
-                    "50%":       { boxShadow: `0 0 0 5px ${alpha(theme.palette.success.main, 0.10)}` },
+                    "50%":       { boxShadow: `0 0 0 6px ${alpha(theme.palette.success.main, 0.08)}` },
                   },
-                  animation: "livePulse 2s ease-in-out infinite",
+                  animation: "livePulse 2.4s cubic-bezier(0.4, 0, 0.6, 1) infinite",
+                  "@media (prefers-reduced-motion: reduce)": { animation: "none" }
                 }} />
               ) : (
                 <Box sx={{
@@ -241,6 +243,7 @@ const BlockChainConnector: React.FC<{ gap: number }> = ({ gap }) => {
 
 const BlockChainVisualizer: React.FC = () => {
   const theme = useTheme();
+  const reduce = useReducedMotion();
   const [blocks, setBlocks] = useState<Block[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -372,14 +375,29 @@ const BlockChainVisualizer: React.FC = () => {
             "&::-webkit-scrollbar-thumb": { bgcolor: alpha(theme.palette.secondary.light, 0.18), borderRadius: 2 }
           }}
         >
-          {blocks.map((block, i) => (
-            <Box key={block.hash} display="flex" alignItems="center">
-              <BlockChainCard block={block} isLatest={i === 0} />
-              {i < blocks.length - 1 && (
-                <BlockChainConnector gap={block.blockNo - (blocks[i + 1]?.blockNo ?? block.blockNo) - 1} />
-              )}
-            </Box>
-          ))}
+          <AnimatePresence initial={false}>
+            {blocks.map((block, i) => (
+              <motion.div
+                key={block.hash}
+                layout
+                initial={
+                  reduce
+                    ? { opacity: 0 }
+                    : i === 0
+                    ? { opacity: 0, x: -32, scale: 0.96 }
+                    : { opacity: 0 }
+                }
+                animate={{ opacity: 1, x: 0, scale: 1 }}
+                transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
+                style={{ display: "flex", alignItems: "center" }}
+              >
+                <BlockChainCard block={block} isLatest={i === 0} />
+                {i < blocks.length - 1 && (
+                  <BlockChainConnector gap={block.blockNo - (blocks[i + 1]?.blockNo ?? block.blockNo) - 1} />
+                )}
+              </motion.div>
+            ))}
+          </AnimatePresence>
 
           {blocks.length > 0 && (loadingMore || hasMore) && <BlockChainConnector gap={0} />}
 

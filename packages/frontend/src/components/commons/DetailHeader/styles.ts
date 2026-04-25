@@ -72,6 +72,20 @@ export const HeaderTitle = styled(Box)`
   ${({ theme }) => theme.breakpoints.down("sm")} {
     font-size: 1.5rem;
   }
+  opacity: 0;
+  transform: translateY(6px);
+  animation: detailTitleReveal 360ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  @keyframes detailTitleReveal {
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    opacity: 1;
+    transform: none;
+    animation: none;
+  }
 `;
 
 export const HeaderTitleSkeleton = styled(CommonSkeleton)`
@@ -118,6 +132,11 @@ export const HeaderStatus = styled("small")<{ status?: TransactionStatus | Epoch
   text-transform: uppercase;
   padding: 5px 10px;
   border-radius: 2px;
+  transition: background-color 200ms cubic-bezier(0.16, 1, 0.3, 1),
+    color 200ms cubic-bezier(0.16, 1, 0.3, 1);
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
 `;
 
 export const StakeKeyStatus = styled("small")<{ status?: StakeStatus }>`
@@ -294,6 +313,12 @@ export const ProgressLiner = styled("div")<{ progress: number }>`
     height: 100%;
     border-radius: 12px;
     background: ${(props) => props.theme.palette.gradient[4]};
+    transition: width 600ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    &::after {
+      transition: none;
+    }
   }
 `;
 
@@ -321,6 +346,24 @@ export const CardItem = styled(Grid)<CardItemProps>(({ theme, length, wide, item
   padding: length > 6 ? "20px 25px" : "0px 15px",
   borderLeft: `1px solid ${theme.palette.primary[200]}`,
   borderBottom: `1px solid ${theme.palette.primary[200]}`,
+  opacity: 0,
+  animation: "cardItemReveal 360ms cubic-bezier(0.16, 1, 0.3, 1) forwards",
+  "@keyframes cardItemReveal": {
+    from: { opacity: 0, transform: "translateY(6px)" },
+    to: { opacity: 1, transform: "translateY(0)" }
+  },
+  ":nth-of-type(1)": { animationDelay: "60ms" },
+  ":nth-of-type(2)": { animationDelay: "100ms" },
+  ":nth-of-type(3)": { animationDelay: "140ms" },
+  ":nth-of-type(4)": { animationDelay: "180ms" },
+  ":nth-of-type(5)": { animationDelay: "220ms" },
+  ":nth-of-type(6)": { animationDelay: "260ms" },
+  ":nth-of-type(7)": { animationDelay: "300ms" },
+  ":nth-of-type(8)": { animationDelay: "340ms" },
+  "@media (prefers-reduced-motion: reduce)": {
+    opacity: 1,
+    animation: "none"
+  },
   ":first-of-type": {
     borderLeft: "none"
   },
