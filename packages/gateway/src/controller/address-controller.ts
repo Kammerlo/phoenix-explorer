@@ -13,15 +13,19 @@ addressController.get('/:address', async (req, res) => {
     const isByron = /^(DdzFF|Ae2)/.test(address);
 
     try {
-        // Stake addresses (stake1...) need different handling — use accounts endpoint
+        // Stake addresses (stake1...) need different handling — use accounts endpoint.
+        // The /accounts/{stake} endpoint does NOT return tx_count — that lives on
+        // /accounts/{stake}/addresses/total, which aggregates across all payment
+        // addresses controlled by the stake key.
         if (address.startsWith('stake')) {
-            const [accountData, accountAssets] = await Promise.all([
+            const [accountData, accountTotals, accountAssets] = await Promise.all([
                 API.accounts(address),
+                API.accountsAddressesTotal(address).catch(() => null),
                 API.accountsAddressesAssetsAll(address).catch(() => [] as any[])
             ]);
             const addressDetail: AddressDetail = {
                 address: address,
-                txCount: (accountData as any).tx_count ?? 0,
+                txCount: accountTotals?.tx_count ?? 0,
                 balance: Number.parseInt(accountData.controlled_amount || '0'),
                 tokens: accountAssets.map((a: any) => ({
                     address: '',
