@@ -2,22 +2,29 @@ import React from "react";
 import { Box, useTheme } from "@mui/material";
 import { alpha } from "@mui/material/styles";
 
-export const BLOCK_MAX_SIZE = 90_112; // bytes — Cardano protocol max block size
-const MAX_BLOCK_SIZE = BLOCK_MAX_SIZE;
+export const BLOCK_MAX_SIZE = 90_112; // bytes — Cardano Conway-era max block size
 
 interface Props {
   size: number | undefined;
+  /**
+   * Optional protocol-era max for this block. Defaults to current Conway max.
+   * Pre-Conway / Byron / EBB blocks have a different limit; pass the epoch's
+   * `maxBlockSize` to render an accurate fill ratio. Falls back to clamping
+   * the displayed max so the bar never displays > 100% nonsense.
+   */
+  maxSize?: number;
 }
 
 /**
  * Compact block-fill progress bar + percentage label.
  * Used in the block list table "Fill" column.
  */
-export const BlockFillBarMini: React.FC<Props> = ({ size }) => {
+export const BlockFillBarMini: React.FC<Props> = ({ size, maxSize }) => {
   const theme = useTheme();
   if (size == null) return <Box sx={{ color: "secondary.light", fontSize: "0.78rem" }}>—</Box>;
 
-  const pct = Math.min(100, Math.round((size / MAX_BLOCK_SIZE) * 100));
+  const effectiveMax = Math.max(maxSize || BLOCK_MAX_SIZE, size);
+  const pct = Math.min(100, Math.round((size / effectiveMax) * 100));
   const barColor =
     pct >= 90 ? theme.palette.error.main :
     pct >= 70 ? theme.palette.warning.main :
@@ -57,15 +64,20 @@ export const BlockFillBarMini: React.FC<Props> = ({ size }) => {
  * Full block-fill bar with label and byte count.
  * Used in the block detail visual stats panel.
  */
-export const BlockFillBarFull: React.FC<Props> = ({ size }) => {
+export const BlockFillBarFull: React.FC<Props> = ({ size, maxSize }) => {
   const theme = useTheme();
   if (size == null) return <Box sx={{ color: "secondary.light", fontSize: "0.78rem" }}>—</Box>;
 
-  const pct = Math.min(100, Math.round((size / MAX_BLOCK_SIZE) * 100));
-  const barColor =
-    pct >= 90 ? theme.palette.error.main :
-    pct >= 70 ? theme.palette.warning.main :
-    theme.palette.success.main;
+  const protocolMax = maxSize || BLOCK_MAX_SIZE;
+  const exceedsCurrentMax = size > protocolMax;
+  const effectiveMax = Math.max(protocolMax, size);
+  const pct = Math.min(100, Math.round((size / effectiveMax) * 100));
+  const barColor = exceedsCurrentMax
+    ? theme.palette.secondary.light
+    : pct >= 90 ? theme.palette.error.main :
+      pct >= 70 ? theme.palette.warning.main :
+      theme.palette.success.main;
+  const barWidthPct = exceedsCurrentMax ? 100 : pct;
 
   return (
     <Box>
@@ -76,10 +88,12 @@ export const BlockFillBarFull: React.FC<Props> = ({ size }) => {
       </Box>
       <Box display="flex" alignItems="baseline" gap={0.5} mb={0.75}>
         <Box sx={{ fontSize: "1.1rem", fontWeight: 700, color: barColor }}>
-          {pct}%
+          {exceedsCurrentMax ? "—" : `${pct}%`}
         </Box>
         <Box sx={{ fontSize: "0.72rem", color: "secondary.light" }}>
-          {size.toLocaleString()} / {MAX_BLOCK_SIZE.toLocaleString()} bytes
+          {exceedsCurrentMax
+            ? `${size.toLocaleString()} bytes (pre-Conway era)`
+            : `${size.toLocaleString()} / ${protocolMax.toLocaleString()} bytes`}
         </Box>
       </Box>
       <Box
@@ -94,7 +108,7 @@ export const BlockFillBarFull: React.FC<Props> = ({ size }) => {
       >
         <Box
           sx={{
-            width: `${pct}%`,
+            width: `${barWidthPct}%`,
             height: "100%",
             borderRadius: 4,
             background: `linear-gradient(90deg, ${alpha(barColor, 0.7)} 0%, ${barColor} 100%)`,

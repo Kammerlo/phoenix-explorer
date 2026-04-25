@@ -13,6 +13,7 @@ export const routers = {
   TOKEN_LIST: "/tokens",
   TOKEN_DETAIL: "/token/:tokenId",
   STAKE_DETAIL: "/stake-address/:stakeId",
+  STAKE_DETAIL_ALIAS: "/stake/:stakeId",
   CONTRACT_DETAIL: "/contracts/:address",
   SMART_CONTRACT: "/smart-contract/:address",
   NATIVE_SCRIPTS_AND_SC: "/native-scripts-sc",

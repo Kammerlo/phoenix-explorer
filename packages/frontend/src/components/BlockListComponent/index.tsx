@@ -147,16 +147,33 @@ const BlockListComponent: React.FC<BlockListComponentProps> = ({ fetchData, upda
       title: <Capitalize data-testid="blocks.table.title.producer">Producer</Capitalize>,
       key: "slotLeader",
       minWidth: "100px",
+      hideBelow: "md",
       render: (r) => {
         if (!r.slotLeader) return <Box sx={{ color: "secondary.light" }}>—</Box>;
-        const label = r.poolTicker
-          ? `[${r.poolTicker}]`
-          : r.poolName || getShortHash(r.slotLeader);
+        const isPoolId = /^pool1[a-z0-9]+$/i.test(r.slotLeader);
+        const hasMeta = Boolean(r.poolTicker || r.poolName);
         return (
           <CustomTooltip title={r.slotLeader}>
-            <StyledLink to={details.delegation(r.slotLeader)}>
-              {label}
-            </StyledLink>
+            {isPoolId ? (
+              hasMeta ? (
+                <StyledLink to={details.delegation(r.slotLeader)}>
+                  {r.poolTicker ? `[${r.poolTicker}]` : r.poolName}
+                </StyledLink>
+              ) : (
+                <StyledLink to={details.delegation(r.slotLeader)}>
+                  <Box component="span" sx={{ display: "inline-flex", flexDirection: "column", lineHeight: 1.1 }}>
+                    <Box component="span" sx={{ color: "secondary.light", fontStyle: "italic" }}>Unknown pool</Box>
+                    <Box component="span" sx={{ fontSize: "0.7rem", color: "secondary.light", fontFamily: "monospace" }}>
+                      {getShortHash(r.slotLeader)}
+                    </Box>
+                  </Box>
+                </StyledLink>
+              )
+            ) : (
+              <Box component="span" sx={{ color: "secondary.main" }}>
+                {r.slotLeader.replace(/-/g, " ").replace(/([A-Z])/g, " $1").trim().replace(/\s+/g, " ")}
+              </Box>
+            )}
           </CustomTooltip>
         );
       }
@@ -165,6 +182,7 @@ const BlockListComponent: React.FC<BlockListComponentProps> = ({ fetchData, upda
       title: <Capitalize data-testid="blocks.table.title.createAt">{t("createdAt")}</Capitalize>,
       key: "time",
       minWidth: "170px",
+      hideBelow: "lg",
       render: (r, index) => (
         <DatetimeTypeTooltip>
           <PriceWrapper data-testid={`blocks.table.value.createAt#${index}`}>

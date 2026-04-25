@@ -11,7 +11,7 @@ export default function GovernanceActionDetails() {
   const network = process.env.REACT_APP_NETWORK || "mainnet";
 
   useEffect(() => {
-    document.title = `Governance Action Details | Cardano Blockchain Explorer`;
+    document.title = `Governance Action Details | Phoenix Explorer`;
   }, []);
   return (
     <StyledContainer>

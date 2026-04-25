@@ -185,18 +185,18 @@ const BlockChainCard: React.FC<{ block: Block; isLatest?: boolean }> = ({ block,
                 </Box>
               )}
             </Box>
-            <Box sx={{ fontSize: "0.68rem", color: "secondary.light", mb: 0.3 }}>
+            <Box sx={{ fontSize: "0.68rem", color: "text.secondary", mb: 0.3 }}>
               <Box component="span" sx={{ fontWeight: 700, color: "text.primary", fontSize: "0.78rem" }}>{block.txCount}</Box>
               {" txs"}
             </Box>
             {block.size != null && (
-              <Box sx={{ fontSize: "0.64rem", color: "secondary.light", mb: 0.3 }}>
+              <Box sx={{ fontSize: "0.64rem", color: "text.secondary", mb: 0.3 }}>
                 {(block.size / 1024).toFixed(1)} KB
               </Box>
             )}
           </Box>
           <Box>
-            <Box sx={{ fontSize: "0.63rem", color: "secondary.light", mb: 0.25 }}>
+            <Box sx={{ fontSize: "0.63rem", color: "text.secondary", mb: 0.25 }}>
               {block.time ? formatDistanceToNow(new Date(Number(block.time) * 1000), { addSuffix: true }) : "—"}
             </Box>
             {(block.poolTicker || block.poolName) && (
