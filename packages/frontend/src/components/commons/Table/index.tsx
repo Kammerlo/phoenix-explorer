@@ -455,7 +455,7 @@ export const FooterTable: React.FC<FooterTableProps> = ({
   return (
     <TFooter>
       <Box display={"flex"} alignItems="center" margin="15px 0px">
-        {pagination?.total ? (
+        {pagination?.total || pagination?.unknownTotal ? (
           <Box display="flex" alignItems="center">
             <SelectMui
               open={open}
@@ -498,7 +498,7 @@ export const FooterTable: React.FC<FooterTableProps> = ({
         ) : (
           ""
         )}
-        {total && total.count ? (
+        {total && total.count && !total.unknown ? (
           <StyledResult>
             <TotalNumber>{numberWithCommas(total.count)}</TotalNumber>{" "}
             {total.isDataOverSize
@@ -511,7 +511,17 @@ export const FooterTable: React.FC<FooterTableProps> = ({
           ""
         )}
       </Box>
-      {pagination?.total && pagination.size && pagination.total > (pagination.size || 10) ? (
+      {pagination?.unknownTotal ? (
+        <PaginationCustom
+          key={page}
+          pagination={pagination}
+          total={Number.MAX_SAFE_INTEGER}
+          page={page}
+          size={size}
+          handleChangePage={handleChangePage}
+          loading={loading}
+        />
+      ) : pagination?.total && pagination.size && pagination.total > (pagination.size || 10) ? (
         <PaginationCustom
           key={page}
           pagination={pagination}
@@ -779,7 +789,7 @@ const PaginationCustom = ({
         </IconButton>
       );
     }
-    if (!pagination?.hideLastPage && item.type === "last") {
+    if (!pagination?.hideLastPage && !pagination?.unknownTotal && item.type === "last") {
       return (
         <IconButton
           disabled={page === totalPage || loading}
@@ -794,16 +804,17 @@ const PaginationCustom = ({
       );
     }
     if (item.type === "next") {
+      const disableNext = pagination?.unknownTotal ? loading : (page === totalPage || loading);
       return (
         <IconButton
-          disabled={page === totalPage || loading}
+          disabled={disableNext}
           onClick={() => {
             setInputPage(page + 1);
             handleChangePage(null, page + 1);
             pagination?.handleCloseDetailView && pagination.handleCloseDetailView();
           }}
         >
-          <NextPageIcon disabled={page === totalPage || loading} />
+          <NextPageIcon disabled={disableNext} />
         </IconButton>
       );
     }
@@ -823,6 +834,8 @@ const PaginationCustom = ({
     }
     if (item.type === "page") {
       if (item.page === 1) {
+        const startIndex = (page - 1 >= 0 ? page - 1 : -0) * size + 1;
+        const endIndex = (page > 0 ? page : 1) * size > total ? total : (page > 0 ? page : 1) * size;
         return (
           <Box textAlign={isGalaxyFoldSmall ? "left" : "center"}>
             <InputNumber
@@ -835,9 +848,16 @@ const PaginationCustom = ({
               disabled={true}
             />
             <Box component={"span"} color={(theme) => theme.palette.secondary.main} fontSize="0.875rem">
-              {numberWithCommas((page - 1 >= 0 ? page - 1 : -0) * size + 1)} -{" "}
-              {numberWithCommas((page > 0 ? page : 1) * size > total ? total : (page > 0 ? page : 1) * size)}{" "}
-              <Lowercase>{t("common.of")}</Lowercase> {numberWithCommas(pagination?.total || 0)}
+              {pagination?.unknownTotal ? (
+                <>
+                  {numberWithCommas(startIndex)} - {numberWithCommas((page > 0 ? page : 1) * size)}
+                </>
+              ) : (
+                <>
+                  {numberWithCommas(startIndex)} - {numberWithCommas(endIndex)}{" "}
+                  <Lowercase>{t("common.of")}</Lowercase> {numberWithCommas(pagination?.total || 0)}
+                </>
+              )}
             </Box>
           </Box>
         );
@@ -848,8 +868,8 @@ const PaginationCustom = ({
     <StyledPagination
       count={total || 0}
       page={page}
-      showFirstButton={true}
-      showLastButton={true}
+      showFirstButton={!pagination?.unknownTotal}
+      showLastButton={!pagination?.unknownTotal}
       renderItem={renderItem}
     />
   );

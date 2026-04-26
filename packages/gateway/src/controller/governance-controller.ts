@@ -54,16 +54,20 @@ governanceController.get('/actions/:txHash/:indexStr', async (req, res) => {
     let governanceDetail = undefined;
     let error = undefined;
     try {
+        // Proposal is required; metadata + votes are best-effort. Without this split
+        // a proposal with no off-chain metadata 404'd via proposalMetadata and the
+        // entire detail page rendered "Governance Action Not Found".
         const proposal = await API.governance.proposal(txHash, index);
-        const metadata = await API.governance.proposalMetadata(txHash, index);
-        const votes = await API.governance.proposalVotesAll(txHash, index);
+        const [metadata, votes, transaction] = await Promise.all([
+            API.governance.proposalMetadata(txHash, index).catch(() => null as any),
+            API.governance.proposalVotesAll(txHash, index).catch(() => [] as any[]),
+            getTransactions(txHash).catch(() => ({ block_time: undefined } as any))
+        ]);
 
-        const transaction = await getTransactions(txHash);
-        
         // Safely parse metadata.json_metadata
         let jsonMetadata: any = {};
         try {
-            if (metadata.json_metadata) {
+            if (metadata?.json_metadata) {
                 if (typeof metadata.json_metadata === 'string') {
                     jsonMetadata = JSON.parse(metadata.json_metadata);
                 } else {
@@ -201,6 +205,24 @@ governanceController.get('/dreps', async (req, res) => {
             drepId: drep.drep_id,
             status: "ACTIVE",
         } as Drep);
+    }
+    // Apply client-supplied sort (e.g. ?sort=activeVoteStake,DESC). The values that come
+    // from Blockfrost are strings or numbers — coerce to a numeric comparator for stake/amount fields.
+    const sortParam = String(pageInfo.sort || '');
+    if (sortParam) {
+        const [rawKey, rawDir] = sortParam.split(',');
+        const dir = (rawDir || 'ASC').toUpperCase() === 'DESC' ? -1 : 1;
+        const numericKeys = new Set(['activeVoteStake']);
+        if (rawKey) {
+            dreps.sort((a: any, b: any) => {
+                const av = a[rawKey];
+                const bv = b[rawKey];
+                if (numericKeys.has(rawKey)) {
+                    return ((Number(av) || 0) - (Number(bv) || 0)) * dir;
+                }
+                return String(av ?? '').localeCompare(String(bv ?? '')) * dir;
+            });
+        }
     }
     // Estimate total so the pagination panel keeps a "next" button visible
     // until we reach a short page (Blockfrost doesn't return a global count).

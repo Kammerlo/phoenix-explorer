@@ -79,7 +79,7 @@ const PolicyDetail: React.FC = () => {
   const [size, setSize] = useState(50);
 
   useEffect(() => {
-    document.title = `Policy ${policyId} | Cardano Explorer`;
+    document.title = `Policy ${policyId} | Phoenix Explorer`;
     setLoading(true);
     ApiConnector.getApiConnector()
       .getTokensByPolicy(policyId, { page: String(page), size: String(size) })
@@ -120,7 +120,7 @@ const PolicyDetail: React.FC = () => {
       minWidth: "120px",
       render: (r) => (
         <Box sx={{ fontWeight: 600, fontSize: "0.85rem" }}>
-          {formatNumberTotalSupply(r.supply)}
+          {formatNumberTotalSupply(r.supply, r.metadata?.decimals ?? 0)}
         </Box>
       )
     }

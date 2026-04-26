@@ -83,7 +83,7 @@ const BackToHome = styled(Link)`
 
 const NotFound = () => {
   useEffect(() => {
-    document.title = `Page Not Found | Cardano Blockchain Explorer`;
+    document.title = `Page Not Found | Phoenix Explorer`;
   }, []);
 
   return (

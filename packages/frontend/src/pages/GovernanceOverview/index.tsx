@@ -5,7 +5,7 @@ import OverviewComponent from "src/components/Overview";
 import { StyledContainer } from "./styles";
 const GovernanceOverview = () => {
   useEffect(() => {
-    document.title = `Governance Overview | Cardano Blockchain Explorer`;
+    document.title = `Governance Overview | Phoenix Explorer`;
   }, []);
 
   return (

@@ -129,6 +129,8 @@ details.governanceAction(tx, idx)   // /governance-action/:txHash/:index
 details.governanceActionList()      // /governance-actions
 ```
 
+`/stake/:stakeId` is registered as an alias for `/stake-address/:stakeId` (`STAKE_DETAIL_ALIAS`) so external links using the shorter `/stake/...` path resolve to the same `AddressDetail` component. `details.stake()` continues to emit the canonical `/stake-address/...` form.
+
 ### Plugin system
 
 [`src/plugins/`](packages/frontend/src/plugins/) — slot-based runtime extension points.
@@ -174,6 +176,7 @@ Frontend build output: `packages/frontend/build/`.
   data: T | null;
   error?: string | null;
   total?: number;
+  totalUnknown?: boolean;       // set when COUNT(*) isn't available cheaply
   totalPage?: number;
   currentPage?: number;
   pageSize?: number;
@@ -181,6 +184,8 @@ Frontend build output: `packages/frontend/build/`.
 }
 ```
 Only `data` and `lastUpdated` are required; the rest are optional pagination fields.
+
+`totalUnknown` is for Blockfrost-backed endpoints where COUNT(*) isn't exposed (e.g. `/api/transactions`, stake-address aggregated tx list). Setting it to `true` and omitting `total` lets the `Table` footer render "Page N" with prev/next instead of a misleading "X of Y" — see [Table Component](#table-component).
 
 ### Key DTOs (from `@shared/dtos/`)
 
@@ -370,6 +375,7 @@ For horizontally scrollable containers: `overflowX: "auto"` + custom `"&::-webki
 - `pagination` — see pattern above
 - `tableWrapperProps` — pass `{ sx: { overflowX: "auto" } }` for wide tables, or `{ sx: { maxHeight: "50vh" } }` to constrain vertical scroll
 - `Column.hideBelow?: Breakpoint` — hides a column on viewports strictly below the given theme breakpoint. `useVisibleColumns` in the same file reads the current viewport via four `useMediaQuery(theme.breakpoints.down(...))` calls and filters the columns array before rendering. Omit to always show. **Only supports `sm`/`md`/`lg`/`xl`** — custom keys (`laptop`/`hd`/`fhd`) are not resolved, treated as always visible.
+- `pagination.unknownTotal?: boolean` + `total.unknown?: boolean` — opt-in mode for endpoints that can't return a real count. When true: footer suppresses "X results", "Showing N-M" replaces "of Y", first/last buttons hide, next stays enabled while loading, and pagination renders even if `total === 0`. Pair with the gateway envelope's `totalUnknown` flag (e.g. tx list, stake-address tx list).
 
 **Removed props:** `maxHeight` on `TableProps` was the previously-deprecated path — gone. Use `tableWrapperProps.sx.maxHeight` instead.
 
@@ -432,7 +438,9 @@ useEffect(() => {
 ```
 
 ### Block fill — canonical constant
-`BLOCK_MAX_SIZE = 90_112` bytes. Used in both `BlockChainCard` (Home) and `BlockFillBarMini/Full` ([`src/components/commons/BlockFillBar/index.tsx`](packages/frontend/src/components/commons/BlockFillBar/index.tsx)). Keep in sync if the protocol max ever changes.
+`BLOCK_MAX_SIZE = 90_112` bytes (Conway-era). Used in both `BlockChainCard` (Home) and `BlockFillBarMini/Full` ([`src/components/commons/BlockFillBar/index.tsx`](packages/frontend/src/components/commons/BlockFillBar/index.tsx)). Keep in sync if the protocol max ever changes.
+
+`BlockFillBarMini`/`BlockFillBarFull` accept an optional `maxSize` prop for the protocol-era max (pass the epoch's `maxBlockSize` for accurate pre-Conway / Byron / EBB rendering). When `size > maxSize` the bar auto-detects a different era, renders neutral grey at 100% with the label "(pre-Conway era)" instead of meaningless "100% full" against the Conway max. Defaults to `BLOCK_MAX_SIZE` so existing call sites are unaffected.
 
 ### Saturation fix (PoolList)
 Blockfrost `live_saturation` is a **0–1 fraction**. The `SaturationBar` component and the Home pool table must multiply by 100 before passing to `LinearProgress` or width calculations. `formatPercent(value)` expects 0–1.
@@ -628,3 +636,13 @@ npm run build --workspace=cardano-explorer-shared   # tsc → packages/shared/di
 | Header logo rendering broken image | `<HeaderLogo alt=.. />` missing `src` prop — `HeaderLogo` is `styled("img")` | Pass an actual asset URL via `src={logoSrc}`. Mobile uses `LogoFullIcon`/`LogoDarkmodeFullIcon` (full wordmark); tablet/`display:none` zone uses `CardanoBlueLogo`/`CardanoBlueDarkmodeLogo` |
 | Mobile drawer opened from wrong side / nav buttons on opposite side of drawer | Drawer anchored right on mobile; hamburger + search rendered after logo | `anchor="left"` always; `SideBarRight` (hamburger first, then search, then provider/theme) renders before `HeaderLogoLink` so space-between places actions left + logo right |
 | `AddressWalletDetail` page name shadowed `AddressDetail` DTO type | Folder renamed to match component intent | Page folder is now `pages/AddressDetail/`; inside `index.tsx` the DTO is aliased: `import { AddressDetail as AddressDetailData } from "@shared/dtos/address.dto"` |
+| Tx list / stake-address tx list showed "1-50 of 13,336,888 results" (block height = bogus tx total) | Blockfrost has no cheap COUNT(*) for txs | Gateway sets `totalUnknown: true` (omits `total`); `Table` reads `pagination.unknownTotal` + `total.unknown` to render "Page N" (1-50) with prev/next, no "of Y", no first/last buttons |
+| Block fill bar showed "100% (648,085 / 90,112 bytes)" on Byron EBBs | `BlockFillBar` clamped against the Conway-era `BLOCK_MAX_SIZE` for every block | Component now accepts optional `maxSize`; `size > maxSize` renders a muted grey bar at 100% with a "(pre-Conway era)" label instead of meaningless overflow |
+| Block / Tx slot tooltip didn't appear on hover | MUI `Tooltip` couldn't catch hover events on a bare `<span><TooltipIcon /></span>` because the SVG had no explicit hit area | Wrap the icon in a Box `display: inline-flex, cursor: help` and apply `pointer-events: none` to the SVG so the wrapper receives hover. Apply this pattern to any `TooltipIcon` use |
+| Stake-address detail showed 0 transactions and 0 native tokens | Gateway hard-coded empty arrays for `stake1...` addresses | `address-controller.ts` now branches on `stake1` prefix and uses Blockfrost `accountsTransactions` (with `order: "desc"`) + `accountsAddressesAssetsAll` to aggregate across the underlying payment addresses; `tx_count` from `accounts` populates the count |
+| Byron `DdzFF…/Ae2…` addresses surfaced as a generic "data fetch error" | Address controller swallowed the Blockfrost error into a generic message | Detect Byron prefix server-side and return `error: "Byron-era addresses (DdzFF.../Ae2...) are not yet supported by this explorer."`; `pages/AddressDetail/index.tsx` now renders `error` strings in an MUI `Alert` instead of just the generic `<FetchDataErr />` image |
+| HOSKY (1 quadrillion supply, fungible) tagged as `NFT` | Gateway used `assetById.onchain_metadata ? 'NFT' : 'FT'` — onchain CIP-25 metadata is common on FTs too | Classifier now requires `supply == 1 && decimals == 0 && mint_or_burn_count == 1` for `NFT`. Anything with off-chain metadata is `FT`; bare onchain-metadata defaults to `FT`, not `NFT` |
+| Governance action click → "Governance Action Not Found" for every proposal | Detail handler awaited `proposalMetadata` and `proposalVotesAll` sequentially; either failure (e.g. proposal with no off-chain anchor) threw and skipped the rest | Detail endpoint now treats metadata + votes + transaction as best-effort: `Promise.all([…, .catch(() => null/[])])`. Only the `proposal` itself is required for the page to render |
+| DReps "Sort by Active Stake" did nothing — URL updated, rows didn't reorder | Frontend set `?sort=activeVoteStake,DESC` in the URL; gateway didn't read it | `governance-controller.ts /dreps` now reads `req.query.sort` and applies a numeric comparator for known numeric keys (currently `activeVoteStake`). Add new keys to the `numericKeys` set when extending |
+| Datetime cells displayed without a timezone label ("25/04/2026, 15:22:04") | `formatDateTimeLocal` omitted `timeZoneName` from `Intl.DateTimeFormat` | Now passes `timeZoneName: "short"` so values render as e.g. "25/04/2026, 15:22:04 UTC" |
+| Page title branded as "Cardano Explorer" / "Cardano Blockchain Explorer" | Inconsistent with the actual product name | All `document.title = "... | Phoenix Explorer"` across every page. `BlockDetail` refines its title to `Block #N | Phoenix Explorer` after data loads (placeholder during loading) so tab names are scannable; address detail prefixes `Stake Address` when the path is a `stake1...`

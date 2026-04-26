@@ -36,12 +36,17 @@ const BlockDetail: React.FC = () => {
 
   useEffect(() => {
     if (!blockId) return;
-    document.title = `Block ${blockId} | Cardano Explorer`;
+    // Friendly placeholder while loading; refined to "Block #N" once we have the block data.
+    document.title = `Block | Phoenix Explorer`;
 
     setLoading(true);
     apiConnector.getBlockDetail(blockId).then((data) => {
       setBlockData(data);
       setLoading(false);
+      const blockNo = data?.data?.blockNo;
+      document.title = blockNo != null
+        ? `Block #${blockNo} | Phoenix Explorer`
+        : `Block | Phoenix Explorer`;
     });
     updateTransactions(0);
   }, [blockId]);

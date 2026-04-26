@@ -4,11 +4,12 @@ import { Box, Chip, Skeleton, useTheme } from "@mui/material";
 import { alpha } from "@mui/material/styles";
 import { useTranslation } from "react-i18next";
 
-import { formatADAFull, formatDateTimeLocal, getShortHash } from "src/commons/utils/helper";
+import { formatDateTimeLocal, getShortHash } from "src/commons/utils/helper";
 import { details } from "src/commons/routers";
 import usePageInfo from "src/hooks/usePageInfo";
 
 import CustomTooltip from "../commons/CustomTooltip";
+import AdaAmount from "../commons/AdaAmount";
 import ADAicon from "../commons/ADAIcon";
 import FormNowMessage from "../commons/FormNowMessage";
 import Table, { Column } from "../commons/Table";
@@ -262,10 +263,12 @@ const TransactionList: React.FC<TransactionListProps> = ({
       key: "totalOutput",
       minWidth: 120,
       render: (r) => (
-        <Box display="inline-flex" alignItems="center" gap={0.35} sx={{ fontWeight: 700, fontSize: "0.88rem" }}>
-          <span>{formatADAFull(r.totalOutput)}</span>
-          <ADAicon />
-        </Box>
+        <AdaAmount
+          value={r.totalOutput}
+          variant="short"
+          sx={{ display: "inline-flex", alignItems: "center", gap: 0.35, fontWeight: 700, fontSize: "0.88rem" }}
+          suffix={<ADAicon />}
+        />
       )
     },
     {
@@ -277,15 +280,19 @@ const TransactionList: React.FC<TransactionListProps> = ({
       key: "fee",
       minWidth: 100,
       render: (r) => (
-        <Box
-          display="inline-flex"
-          alignItems="center"
-          gap={0.35}
-          sx={{ fontSize: "0.82rem", color: "secondary.light", fontWeight: 500 }}
-        >
-          <span>{formatADAFull(r.fee)}</span>
-          <ADAicon />
-        </Box>
+        <AdaAmount
+          value={r.fee}
+          variant="short"
+          sx={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 0.35,
+            fontSize: "0.82rem",
+            color: "secondary.light",
+            fontWeight: 500
+          }}
+          suffix={<ADAicon />}
+        />
       )
     }
   ];
@@ -310,7 +317,15 @@ const TransactionList: React.FC<TransactionListProps> = ({
           columns={columns}
           onClickRow={onClickRow}
           rowKey="hash"
-          total={paginated ? { title: t("common.totalTransactions"), count: transactions?.total || 0 } : undefined}
+          total={
+            paginated
+              ? {
+                  title: t("common.totalTransactions"),
+                  count: transactions?.total || 0,
+                  unknown: transactions?.totalUnknown
+                }
+              : undefined
+          }
           tableWrapperProps={{
             sx: (theme) => ({
               minHeight: "60vh",
@@ -326,7 +341,8 @@ const TransactionList: React.FC<TransactionListProps> = ({
                   page: transactions?.currentPage || 0,
                   size: transactions?.pageSize || pageInfo.size,
                   onChange: (page, size) => updateData(page, size),
-                  hideLastPage: true
+                  hideLastPage: true,
+                  unknownTotal: transactions?.totalUnknown
                 }
               : undefined
           }

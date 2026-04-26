@@ -84,7 +84,7 @@ const TokenDetail: React.FC = () => {
   }, [tabValue]);
 
   useEffect(() => {
-    document.title = `Token ${tokenId} | Cardano Explorer`;
+    document.title = `Token ${tokenId} | Phoenix Explorer`;
     mainRef.current?.scrollTo({ top: 0, behavior: "smooth" });
   }, [tokenId]);
 
@@ -92,7 +92,9 @@ const TokenDetail: React.FC = () => {
   if (!loading && !fetchData?.data) return <NoRecord />;
 
   const hasAnalytics = (fetchData?.data?.analytics?.length ?? 0) > 0;
-  const txCount = fetchData?.data?.txCount ?? tokenTransactions.total ?? 0;
+  // Prefer the real transactions count (assetsTransactions endpoint); fall back to the
+  // mint/burn history length only if the transactions endpoint hasn't returned yet.
+  const txCount = tokenTransactions.total || fetchData?.data?.txCount || 0;
   const holdersCount = fetchData?.data?.numberOfHolders ?? tokenHolders.total ?? 0;
 
   return (

@@ -1,4 +1,4 @@
-import { Box, useTheme } from "@mui/material";
+import { Box, Tooltip, useTheme } from "@mui/material";
 import React, { useEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import { useLocation } from "react-router-dom";
@@ -100,26 +100,32 @@ const Header: React.FC = () => {
               </SearchButton>
             )}
             <WrapButtonSelect>
-              <Box
-                component="button"
-                onClick={() => setOpenProvider(true)}
-                aria-label="Switch data provider"
-                sx={{
-                  background: "none",
-                  border: `1px solid ${theme.palette.primary.main}`,
-                  borderRadius: "6px",
-                  px: 1,
-                  py: 0.25,
-                  cursor: "pointer",
-                  color: theme.palette.primary.main,
-                  fontSize: "0.7rem",
-                  fontWeight: "bold",
-                  whiteSpace: "nowrap",
-                  display: { xs: "none", md: "block" }
-                }}
+              <Tooltip
+                arrow
+                placement="bottom"
+                title={`Active data provider: ${providerConfig?.type ?? "GATEWAY"}. Click to switch between Gateway (Blockfrost-backed), Yaci, and direct Blockfrost.`}
               >
-                {providerConfig?.type ?? "GATEWAY"}
-              </Box>
+                <Box
+                  component="button"
+                  onClick={() => setOpenProvider(true)}
+                  aria-label="Switch data provider"
+                  sx={{
+                    background: "none",
+                    border: `1px solid ${theme.palette.primary.main}`,
+                    borderRadius: "6px",
+                    px: 1,
+                    py: 0.25,
+                    cursor: "pointer",
+                    color: theme.palette.primary.main,
+                    fontSize: "0.7rem",
+                    fontWeight: "bold",
+                    whiteSpace: "nowrap",
+                    display: { xs: "none", md: "block" }
+                  }}
+                >
+                  {providerConfig?.type ?? "GATEWAY"}
+                </Box>
+              </Tooltip>
               <SwitchMode
                 data-testid="theme-toggle"
                 checked={themeMode === "dark"}

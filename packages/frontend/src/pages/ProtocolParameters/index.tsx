@@ -1156,7 +1156,7 @@ const ProtocolParameters: React.FC = () => {
   const [viewMode, setViewMode] = useState<"visual" | "detail">("visual");
 
   useEffect(() => {
-    document.title = "Protocol Parameters | Cardano Explorer";
+    document.title = "Protocol Parameters | Phoenix Explorer";
     ApiConnector.getApiConnector()
       .getCurrentProtocolParameters()
       .then((r) => {

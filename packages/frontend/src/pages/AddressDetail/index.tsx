@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { Container } from "@mui/material";
+import { Alert, Container } from "@mui/material";
 
 import { ApiConnector } from "../../commons/connector/ApiConnector";
 import AddressHeader from "../../components/AddressDetail/AddressHeader";
@@ -37,7 +37,8 @@ const AddressDetail: React.FC = () => {
   }
 
   useEffect(() => {
-    document.title = `Address ${address} | Cardano Explorer`;
+    const isStake = address?.startsWith("stake");
+    document.title = `${isStake ? "Stake Address" : "Address"} ${address ?? ""} | Phoenix Explorer`;
     document.documentElement.scrollTop = 0;
 
     setLoading(true);
@@ -54,7 +55,14 @@ const AddressDetail: React.FC = () => {
     updateTxPage(0);
   }, [address]);
 
-  if (error) return <FetchDataErr />;
+  if (error) {
+    return (
+      <Container sx={{ pt: 4 }}>
+        <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>
+        <FetchDataErr />
+      </Container>
+    );
+  }
   if (!loading && !data) return <NoRecord />;
 
   return (

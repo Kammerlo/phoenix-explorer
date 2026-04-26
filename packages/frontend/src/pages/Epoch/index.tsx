@@ -302,7 +302,7 @@ const Epoch: React.FC = () => {
       )
     },
     {
-      title: <Capitalize>{t("glossary.transactionCount")}</Capitalize>,
+      title: <Capitalize>{t("glossary.TxCount")}</Capitalize>,
       key: "txCount",
       minWidth: "70px",
       render: (r, idx) => (

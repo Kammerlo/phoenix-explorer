@@ -75,6 +75,8 @@ export interface TableProps<T extends ColumnType = any> {
     count: number;
     title: string;
     isDataOverSize?: boolean | null;
+    /** Skip the result-count display when the backend can't compute a real total. */
+    unknown?: boolean;
   };
   defaultSort?: string;
   pagination?: {
@@ -84,6 +86,12 @@ export interface TableProps<T extends ColumnType = any> {
     total?: number;
     handleCloseDetailView?: () => void;
     hideLastPage?: boolean;
+    /**
+     * When true, render prev/next pagination without a known total
+     * (e.g. Blockfrost-backed lists where COUNT(*) isn't available).
+     * `total` is treated as a hint of "is there at least one more page".
+     */
+    unknownTotal?: boolean;
   };
   allowSelect?: boolean;
   onClickRow?: (e: React.MouseEvent, record: T) => void;

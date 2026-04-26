@@ -22,7 +22,7 @@ const Transactions: React.FC = () => {
   }
 
   useEffect(() => {
-    document.title = "Latest Transactions | Cardano Explorer";
+    document.title = "Latest Transactions | Phoenix Explorer";
     updateData(0);
   }, []);
 

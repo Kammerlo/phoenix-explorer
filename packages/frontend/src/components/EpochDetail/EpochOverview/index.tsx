@@ -207,40 +207,40 @@ const EpochOverviewView: React.FC<EpochOverviewProps> = ({ data, loading, lastUp
         </Box>
       )
     },
-    ...(data?.activeStake !== undefined && data.activeStake > 0
-      ? [{
-          icon: DropIconComponent,
-          title: (
-            <Box display="flex" alignItems="center">
-              <TitleCard data-testId="epoch.overview.activeStakeTitle" mr={1}>
-                Active Stake
-              </TitleCard>
-            </Box>
-          ),
-          value: (
-            <Box display="inline-flex" alignItems="center" gap={0.35} data-testId="epoch.overview.activeStakeValue">
-              {formatADA(data.activeStake)} <ADAicon />
-            </Box>
-          )
-        }]
-      : []),
-    ...(data?.rewardsDistributed
-      ? [{
-          icon: RewardIconComponent,
-          title: (
-            <Box display="flex" alignItems="center">
-              <TitleCard data-testId="epoch.overview.rewardsTitle" mr={1}>
-                {t("glossary.rewardsDistributed")}
-              </TitleCard>
-            </Box>
-          ),
-          value: (
-            <Box display="inline-flex" alignItems="center" gap={0.35} data-testId="epoch.overview.rewardsValue">
-              {formatADA(data.rewardsDistributed)} <ADAicon />
-            </Box>
-          )
-        }]
-      : [])
+    {
+      icon: DropIconComponent,
+      title: (
+        <Box display="flex" alignItems="center">
+          <TitleCard data-testId="epoch.overview.activeStakeTitle" mr={1}>
+            Active Stake
+          </TitleCard>
+        </Box>
+      ),
+      value: data?.activeStake !== undefined && data.activeStake > 0 ? (
+        <Box display="inline-flex" alignItems="center" gap={0.35} data-testId="epoch.overview.activeStakeValue">
+          {formatADA(data.activeStake)} <ADAicon />
+        </Box>
+      ) : (
+        <Box sx={{ color: "secondary.light" }} data-testId="epoch.overview.activeStakeValue">—</Box>
+      )
+    },
+    {
+      icon: RewardIconComponent,
+      title: (
+        <Box display="flex" alignItems="center">
+          <TitleCard data-testId="epoch.overview.rewardsTitle" mr={1}>
+            {t("glossary.rewardsDistributed")}
+          </TitleCard>
+        </Box>
+      ),
+      value: data?.rewardsDistributed ? (
+        <Box display="inline-flex" alignItems="center" gap={0.35} data-testId="epoch.overview.rewardsValue">
+          {formatADA(data.rewardsDistributed)} <ADAicon />
+        </Box>
+      ) : (
+        <Box sx={{ color: "secondary.light" }} data-testId="epoch.overview.rewardsValue">—</Box>
+      )
+    }
   ];
 
   return (
