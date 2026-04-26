@@ -104,6 +104,7 @@ epochController.get('/:epochNo/blocks', async (req, res) => {
   const epochBlocks = await API.epochsBlocks(Number.parseInt(epochNo), {
     page: epochBlocksPage + 1, // Blockfrost uses 1-based pagination
     count: Number.parseInt(String(pageInfo.size ?? 100)),
+    order: "desc", // Newest blocks of the epoch first
   });
 
   // Fetch full block data for each hash

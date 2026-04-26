@@ -18,7 +18,7 @@ const EpochDetail: React.FC = () => {
 
   const apiConnector = ApiConnector.getApiConnector();
   useEffect(() => {
-    document.title = `Epoch ${epochId} | Cardano Explorer`;
+    document.title = `Epoch ${epochId} | Phoenix Explorer`;
 
     setLoading(true);
     apiConnector.getEpoch(Number(epochId)).then((res: ApiReturnType<EpochOverview>) => {

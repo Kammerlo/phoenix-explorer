@@ -7,7 +7,7 @@ import { StyledContainer } from "./styles";
 
 const Dreps = () => {
   useEffect(() => {
-    document.title = `Delegated Representatives | Cardano Blockchain Explorer`;
+    document.title = `Delegated Representatives | Phoenix Explorer`;
   }, []);
 
   return (

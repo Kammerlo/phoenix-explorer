@@ -54,7 +54,7 @@ const ProtocolParameters: React.FC = () => {
   });
 
   useEffect(() => {
-    document.title = "Protocol Parameters | Cardano Explorer";
+    document.title = "Protocol Parameters | Phoenix Explorer";
     const apiConnector = ApiConnector.getApiConnector();
 
     apiConnector

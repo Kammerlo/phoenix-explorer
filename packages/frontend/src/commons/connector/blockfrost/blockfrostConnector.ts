@@ -425,7 +425,37 @@ export class BlockfrostConnector extends ConnectorBase {
 
   async getWalletAddressFromAddress(address: string): Promise<ApiReturnType<AddressDetail>> {
     try {
-      const resp = await this.client.get<BfAddress>(`/addresses/${address}`);
+      // Stake addresses: aggregate across the stake key's payment addresses.
+      // /addresses/{stake1...} returns 404 from Blockfrost — we have to use the
+      // /accounts/* family.
+      if (address.startsWith("stake1")) {
+        const [acct, totals, assets] = await Promise.all([
+          this.client.get<{ controlled_amount?: string; stake_address?: string }>(`/accounts/${address}`).then((r) => r.data),
+          this.client.get<{ tx_count?: number }>(`/accounts/${address}/addresses/total`).then((r) => r.data).catch(() => ({} as any)),
+          this.client.get<{ unit: string; quantity: string }[]>(`/accounts/${address}/addresses/assets`, { params: { count: 100, page: 1 } })
+            .then((r) => r.data ?? [])
+            .catch(() => [] as { unit: string; quantity: string }[])
+        ]);
+        const balance = parseInt(acct.controlled_amount ?? "0");
+        const tokens = assets.map((x) => ({
+          address,
+          name: x.unit.slice(56) ?? "",
+          displayName: x.unit.slice(56) ?? "",
+          fingerprint: x.unit,
+          quantity: parseInt(x.quantity)
+        }));
+        return {
+          data: { address, balance, txCount: totals.tx_count ?? 0, tokens, stakeAddress: address, isContract: false },
+          lastUpdated: Date.now()
+        };
+      }
+
+      // Payment address: /addresses/{addr} returns balance + tokens but NOT tx_count;
+      // tx_count lives on /addresses/{addr}/total.
+      const [resp, totalResp] = await Promise.all([
+        this.client.get<BfAddress>(`/addresses/${address}`),
+        this.client.get<{ tx_count?: number }>(`/addresses/${address}/total`).catch(() => ({ data: {} as any }))
+      ]);
       const a = resp.data;
       const balance = parseInt(a.amount?.find((x: any) => x.unit === "lovelace")?.quantity ?? "0");
       const tokens = (a.amount ?? []).filter((x: any) => x.unit !== "lovelace").map((x: any) => ({
@@ -436,7 +466,7 @@ export class BlockfrostConnector extends ConnectorBase {
         quantity: parseInt(x.quantity)
       }));
       return {
-        data: { address, balance, txCount: a.tx_count ?? 0, tokens, stakeAddress: a.stake_address ?? "", isContract: a.script ?? false },
+        data: { address, balance, txCount: totalResp.data?.tx_count ?? 0, tokens, stakeAddress: a.stake_address ?? "", isContract: a.script ?? false },
         lastUpdated: Date.now()
       };
     } catch (e: any) {
@@ -448,8 +478,14 @@ export class BlockfrostConnector extends ConnectorBase {
     try {
       const page = Math.max(1, Number(pageInfo.page ?? 1));
       const count = Number(pageInfo.size ?? 20);
+      // Stake addresses use /accounts/{stake}/addresses/transactions (aggregates across
+      // payment addresses controlled by the stake key); payment addresses use
+      // /addresses/{addr}/transactions.
+      const path = address.startsWith("stake1")
+        ? `/accounts/${address}/addresses/transactions`
+        : `/addresses/${address}/transactions`;
       const resp = await this.client.get<{ tx_hash: string; block_height: number; block_time: number }[]>(
-        `/addresses/${address}/transactions`, { params: { page, count, order: "desc" } }
+        path, { params: { page, count, order: "desc" } }
       );
       const txs = await Promise.all(
         (resp.data ?? []).map(async (t) => {

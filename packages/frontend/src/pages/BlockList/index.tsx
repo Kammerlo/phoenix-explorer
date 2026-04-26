@@ -20,7 +20,7 @@ const BlockList: React.FC = () => {
   }
 
   useEffect(() => {
-    document.title = "Latest Blocks | Cardano Explorer";
+    document.title = "Latest Blocks | Phoenix Explorer";
     updateData({ page: 1, size: 10 });
   }, []);
 

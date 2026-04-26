@@ -177,9 +177,12 @@ const TransactionOverview: React.FC<Props> = ({ data, loading }) => {
               </Box>
             }
           >
-            <span>
-              <TooltipIcon />
-            </span>
+            <Box
+              component="span"
+              sx={{ display: "inline-flex", alignItems: "center", cursor: "help", lineHeight: 1 }}
+            >
+              <TooltipIcon style={{ pointerEvents: "none" }} />
+            </Box>
           </CustomTooltip>
         </Box>
       ),

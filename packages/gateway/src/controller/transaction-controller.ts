@@ -54,15 +54,14 @@ transactionController.get("", async (req, res) => {
     })
   );
 
-  // Estimate a reasonable total for pagination
-  const estimatedTotal = latestBlock.height ?? 10000;
-
+  // Blockfrost does not expose a total tx count; mark the total as unknown so the
+  // UI can render "Page N" instead of a misleading "X of Y" derived from block height.
   res.json({
-    total: estimatedTotal,
     data: txs,
     lastUpdated: Date.now(),
     currentPage: page - 1,
     pageSize: size,
+    totalUnknown: true,
   } as ApiReturnType<Transaction[]>);
 });
 

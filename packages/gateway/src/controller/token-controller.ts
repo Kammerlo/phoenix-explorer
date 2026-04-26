@@ -137,7 +137,17 @@ tokenController.get('/:tokenId', async (req, res) => {
     tokenLastActivity: lastActivity.block_time + "",
     analytics: activityData,
     mintOrBurnCount: assetById.mint_or_burn_count,
-    tokenType: assetById.onchain_metadata ? 'NFT' : (assetById.metadata ? 'FT' : 'unknown'),
+    // NFT classification: per CIP-25/CIP-68, NFT means total supply == 1 with 0 decimals
+    // and only a single mint event. Tokens with large supply (e.g. HOSKY) carry CIP-25 onchain
+    // metadata too, so the presence of onchain_metadata alone is not sufficient.
+    tokenType: (() => {
+      const supply = Number.parseInt(assetById.quantity ?? '0');
+      const decimals = assetById.metadata?.decimals ?? 0;
+      const mintCount = (assetById as any).mint_or_burn_count ?? 1;
+      if (supply === 1 && decimals === 0 && mintCount === 1) return 'NFT';
+      if (assetById.metadata) return 'FT';
+      return assetById.onchain_metadata ? 'FT' : 'unknown';
+    })(),
     metadata: assetById.metadata ? {
       policy: assetById.policy_id,
       decimals: assetById.metadata.decimals ?? 0,

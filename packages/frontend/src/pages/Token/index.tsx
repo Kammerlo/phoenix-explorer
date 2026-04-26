@@ -7,6 +7,7 @@ import { useTranslation } from "react-i18next";
 import { details } from "src/commons/routers";
 import { formatNumberTotalSupply, getShortHash } from "src/commons/utils/helper";
 import Table, { Column } from "src/components/commons/Table";
+import CustomTooltip from "src/components/commons/CustomTooltip";
 import FormNowMessage from "src/components/commons/FormNowMessage";
 import usePageInfo from "src/hooks/usePageInfo";
 import { ApiConnector } from "src/commons/connector/ApiConnector";
@@ -84,7 +85,7 @@ const Tokens: React.FC = () => {
   }
 
   useEffect(() => {
-    document.title = "Native Tokens | Cardano Explorer";
+    document.title = "Native Tokens | Phoenix Explorer";
     updateData(0);
   }, []);
 
@@ -147,9 +148,15 @@ const Tokens: React.FC = () => {
     },
     {
       title: (
-        <Box data-testid="tokens.table.title.totalSupply" component="span">
-          {t("common.totalSupply")}
-        </Box>
+        <CustomTooltip title="Token supply scaled by registered decimals where available, otherwise raw on-chain quantity. Hover the row for the asset's full fingerprint.">
+          <Box
+            data-testid="tokens.table.title.totalSupply"
+            component="span"
+            sx={{ cursor: "help", borderBottom: "1px dashed", borderColor: "secondary.light", display: "inline-block", lineHeight: 1.4 }}
+          >
+            {t("common.totalSupply")}
+          </Box>
+        </CustomTooltip>
       ),
       key: "supply",
       minWidth: "140px",
