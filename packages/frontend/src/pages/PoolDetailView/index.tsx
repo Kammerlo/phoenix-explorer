@@ -238,7 +238,8 @@ const DelegationDetail: React.FC = () => {
 
   const fetchBlocks = (pageInfo: { page: number; size?: number }) => {
     setBlocksLoading(true);
-    apiConnector.getPoolBlocks(poolId!, { page: pageInfo.page + 1, size: pageInfo.size ?? 20 } as any).then((res) => {
+    // page arg is already 1-based (from BlockListComponent's PaginationCustom)
+    apiConnector.getPoolBlocks(poolId!, { page: pageInfo.page, size: pageInfo.size ?? 20 } as any).then((res) => {
       setBlocksData(res);
       setBlocksLoading(false);
     });
@@ -253,7 +254,7 @@ const DelegationDetail: React.FC = () => {
       setPoolData(response);
       setLoading(false);
     });
-    fetchBlocks({ page: 0 });
+    fetchBlocks({ page: 1 });
   }, [poolId]);
 
   if (loading) return <PoolDetailSkeleton />;

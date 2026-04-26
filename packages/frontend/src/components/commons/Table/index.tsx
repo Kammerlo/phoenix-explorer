@@ -426,22 +426,23 @@ export const FooterTable: React.FC<FooterTableProps> = ({
   optionList = [10, 20, 50, 100]
 }) => {
   const { t } = useTranslation();
-  const defaultPage = pagination?.page && (pagination?.page === 0 ? 1 : pagination?.page + 1);
-  const [page, setPage] = useState(defaultPage || 1);
+  // `pagination.page` is the 0-based page from the API; display is 1-based.
+  const apiVisualPage = (Number(pagination?.page) || 0) + 1;
+  const [page, setPage] = useState(apiVisualPage);
   const [size, setSize] = useState(pagination?.size || 50);
   const [open, setOpen] = useState(false);
   const trigger = useScrollTrigger();
   const handleChangePage = (event: React.MouseEvent<HTMLButtonElement> | null, page: number) => {
     pagination && pagination.onChange && pagination.onChange(page, size);
-    setPage(page);
+    setPage(page); // optimistic; will be reconciled when the API response lands
     clearSelection?.();
   };
 
+  // Always reconcile local page state to whatever the API says is current.
+  // Prevents drift if the parent resets the page or if a request races.
   useEffect(() => {
-    if (pagination?.page === 0) {
-      setPage(1);
-    }
-  }, [pagination?.page]);
+    setPage(apiVisualPage);
+  }, [apiVisualPage]);
   useEffect(() => {
     if (pagination?.size) {
       setSize(pagination?.size);

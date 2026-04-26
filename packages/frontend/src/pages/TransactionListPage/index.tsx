@@ -13,9 +13,9 @@ const Transactions: React.FC = () => {
   });
   const apiConnector = ApiConnector.getApiConnector();
 
-  function updateData(page: number = 0) {
+  function updateData(page: number = 0, size: number = 50) {
     setLoading(true);
-    apiConnector.getTransactions(undefined, { size: "50", page: String(page) }).then((data) => {
+    apiConnector.getTransactions(undefined, { size: String(size), page: String(page) }).then((data) => {
       setTransactions(data);
       setLoading(false);
     });

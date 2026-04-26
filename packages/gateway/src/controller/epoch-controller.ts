@@ -12,12 +12,15 @@ epochController.get('', async (req, res) => {
   const pageInfo = req.query;
   const unixTimestamp = Math.floor(Date.now() / 1000);
   const latestEpoch = await API.epochsLatest();
-  const requestedPage = Number.parseInt(String(pageInfo.page || 0));
+  // Frontend pagination is 1-based (page 1 = first page). Accept legacy 0
+  // as "first page" so existing callers don't break.
+  const rawPage = Number.parseInt(String(pageInfo.page || 1));
+  const requestedPage = Math.max(1, rawPage);
+  const requestedSize = Number.parseInt(String(pageInfo.size || 100));
   const epochs = await API.epochsPrevious(latestEpoch.epoch,
-    {page: requestedPage + 1, count: Number.parseInt(String(pageInfo.size || 100))});
-  if(requestedPage === 0) {
-    // If page is 0, we need to add the latest epoch to the list
-    // since the API does not return it
+    {page: requestedPage, count: requestedSize});
+  if (requestedPage === 1) {
+    // epochsPrevious doesn't include the latest epoch; surface it on page 1.
     epochs.push(latestEpoch);
   }
   const epochsData = epochs.map((epoch => {
@@ -46,13 +49,15 @@ epochController.get('', async (req, res) => {
     };
     return dataEpoch;
   }));
+  // Total epoch count = latest epoch number + 1 (epochs are zero-indexed on Cardano).
+  const totalEpochs = (latestEpoch.epoch ?? 0) + 1;
   res.json({
     data: epochsData.reverse(), // Reverse to show the latest epoch first
     lastUpdated: Date.now(),
-    total: epochsData.length,
-    currentPage: Number.parseInt(String(pageInfo.page ?? 0)),
-    pageSize: Number.parseInt(String(pageInfo.size ?? 100)),
-    totalPages: Math.ceil(epochsData.length / (pageInfo.size ? Number.parseInt(String(pageInfo.size)) : 100)),
+    total: totalEpochs,
+    currentPage: requestedPage - 1, // FooterTable expects 0-based
+    pageSize: requestedSize,
+    totalPages: Math.ceil(totalEpochs / requestedSize),
   } as ApiReturnType<EpochOverview[]>);
 });
 
@@ -100,10 +105,12 @@ epochController.get('/:epochNo/blocks', async (req, res) => {
   const {epochNo} = req.params;
   const pageInfo = req.query;
   let epoch = await getEpoch(epochNo);
-  const epochBlocksPage = Number.parseInt(String(pageInfo.page ?? 0));
+  // Frontend pagination is 1-based; accept legacy 0 as "first page".
+  const epochBlocksPage = Math.max(1, Number.parseInt(String(pageInfo.page ?? 1)));
+  const epochBlocksSize = Number.parseInt(String(pageInfo.size ?? 100));
   const epochBlocks = await API.epochsBlocks(Number.parseInt(epochNo), {
-    page: epochBlocksPage + 1, // Blockfrost uses 1-based pagination
-    count: Number.parseInt(String(pageInfo.size ?? 100)),
+    page: epochBlocksPage,
+    count: epochBlocksSize,
   });
 
   // Fetch full block data for each hash
@@ -146,9 +153,9 @@ epochController.get('/:epochNo/blocks', async (req, res) => {
     total: epoch.block_count,
     data: blocks,
     lastUpdated: Date.now(),
-    currentPage: Number.parseInt(String(pageInfo.page ?? 0)),
-    pageSize: Number.parseInt(String(pageInfo.size ?? 100)),
-    totalPages: Math.ceil(epoch.block_count / (pageInfo.size ? Number.parseInt(String(pageInfo.size)) : 100)),
+    currentPage: epochBlocksPage - 1, // FooterTable expects 0-based
+    pageSize: epochBlocksSize,
+    totalPages: Math.ceil(epoch.block_count / epochBlocksSize),
   } as ApiReturnType<Block[]>);
 });
 

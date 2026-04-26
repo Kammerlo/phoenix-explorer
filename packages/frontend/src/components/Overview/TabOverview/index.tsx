@@ -88,7 +88,8 @@ export default function TabOverview() {
 
   useEffect(() => {
     setLoading(true);
-    apiConnector.getGovernanceOverviewList(pageInfo).then((res) => {
+    // pageInfo.page is 0-based (getPageInfo subtracts 1); the gateway expects 1-based.
+    apiConnector.getGovernanceOverviewList({ ...pageInfo, page: (pageInfo.page ?? 0) + 1 }).then((res) => {
       setFetchData(res);
       setLoading(false);
     });
