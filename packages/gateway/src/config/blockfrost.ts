@@ -26,12 +26,17 @@ function logCall(label: string, fullName: string, args: readonly unknown[]) {
   console.log(`[${new Date().toISOString()}] [${label}] ${fullName}${formatArgs(args)}`);
 }
 
-function isRateLimitError(err: unknown): boolean {
+// Fallback triggers: 429 (rate-limited) and 501 (endpoint not implemented by
+// the provider — e.g. demeter rejecting a Cardano method it doesn't proxy).
+const FALLBACK_STATUS_CODES = new Set([429, 501]);
+
+function isFallbackError(err: unknown): boolean {
   // Blockfrost SDK errors carry `status_code`; underlying got errors expose
-  // `response.statusCode` / `statusCode`. Any of them == 429 means rate-limited.
+  // `response.statusCode` / `statusCode`. Treat any layer matching as eligible.
   const e = err as { status_code?: number; statusCode?: number; response?: { statusCode?: number } } | null | undefined;
   if (!e) return false;
-  return e.status_code === 429 || e.statusCode === 429 || e.response?.statusCode === 429;
+  const status = e.status_code ?? e.statusCode ?? e.response?.statusCode;
+  return typeof status === "number" && FALLBACK_STATUS_CODES.has(status);
 }
 
 function navigate(root: object | null, path: readonly string[]): object | null {
@@ -69,11 +74,13 @@ function wrapClient<T extends object>(
           try {
             return await (value as (...a: unknown[]) => unknown).apply(obj, args);
           } catch (err) {
-            if (fallback && isRateLimitError(err)) {
+            if (fallback && isFallbackError(err)) {
               const fbParent = navigate(fallback, path);
               const fbFn = fbParent ? (fbParent as Record<string, unknown>)[propName] : undefined;
               if (typeof fbFn === "function") {
-                console.log(`[${new Date().toISOString()}] [fallback] ${label} → ${fallbackLabel} on 429: ${fullName}`);
+                const status = (err as { status_code?: number; statusCode?: number; response?: { statusCode?: number } } | null)
+                  ?.status_code ?? (err as any)?.statusCode ?? (err as any)?.response?.statusCode;
+                console.log(`[${new Date().toISOString()}] [fallback] ${label} → ${fallbackLabel} on ${status}: ${fullName}`);
                 // The fallback target is itself a logged Proxy, so the
                 // `[blockfrost] ${fullName}` line is emitted by its own wrapper.
                 return await (fbFn as (...a: unknown[]) => unknown).apply(fbParent, args);
@@ -141,7 +148,7 @@ export const IS_DEMETER_ACTIVE = isDemeterConfigured;
 // One-shot startup banner so the operator can see which providers are loaded
 // and how routing is wired without having to wait for a request.
 const primaryLabel = isDemeterConfigured ? "demeter" : "blockfrost";
-const fallbackNote = isDemeterConfigured && isBlockfrostConfigured ? " (429 → blockfrost)" : "";
+const fallbackNote = isDemeterConfigured && isBlockfrostConfigured ? " (429/501 → blockfrost)" : "";
 console.log(`[gateway] Blockfrost provider: ${isBlockfrostConfigured ? `configured (network=${ENV.NETWORK})` : "not configured"}`);
 console.log(`[gateway] Demeter provider:    ${isDemeterConfigured ? `configured (URL=${ENV.DEMETER_URL})` : "not configured"}`);
 console.log(`[gateway] Primary client (all endpoints except /api/pools/*): ${primaryLabel}${fallbackNote}`);
