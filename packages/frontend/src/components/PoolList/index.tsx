@@ -111,7 +111,8 @@ const PoolList: React.FC = () => {
 
   useEffect(() => {
     setLoading(true);
-    apiConnector.getPoolList(pageInfo).then((response) => {
+    // pageInfo.page is 0-based (getPageInfo subtracts 1); the gateway expects 1-based.
+    apiConnector.getPoolList({ ...pageInfo, page: (pageInfo.page ?? 0) + 1 }).then((response) => {
       setFetchData(response);
       setLoading(false);
     });
@@ -267,9 +268,9 @@ const PoolList: React.FC = () => {
             total: fetchData?.total ?? 0,
             page: fetchData?.currentPage ?? 0,
             size: fetchData?.pageSize ?? pageInfo.size,
-            onChange: (page) => {
+            onChange: (page, size) => {
               setLoading(true);
-              apiConnector.getPoolList({ ...pageInfo, page }).then((response) => {
+              apiConnector.getPoolList({ ...pageInfo, page, size: size ?? pageInfo.size }).then((response) => {
                 setFetchData(response);
                 setLoading(false);
               });

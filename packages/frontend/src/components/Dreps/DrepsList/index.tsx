@@ -40,7 +40,8 @@ const DrepsList: React.FC = () => {
   const fetchDreps = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await apiConnector.getDreps(pageInfo);
+      // pageInfo.page is 0-based (getPageInfo subtracts 1); the gateway expects 1-based.
+      const data = await apiConnector.getDreps({ ...pageInfo, page: (pageInfo.page ?? 0) + 1 });
       setFetchData(data);
     } catch {
       // ignore
@@ -204,10 +205,12 @@ const DrepsList: React.FC = () => {
           navigate(details.drep(r.drepId));
         }}
         pagination={{
-          page: pageInfo.page,
-          size: pageInfo.size,
+          page: fetchData.currentPage ?? 0, // 0-based for FooterTable
+          size: fetchData.pageSize ?? pageInfo.size,
           total: fetchData.total,
           onChange: (page, size) => {
+            // PaginationCustom emits a 1-based page; persist that to the URL
+            // so getPageInfo's -1 normalization gives the right pageInfo.page.
             navigate({ search: stringify({ ...pageInfo, page, size }) }, { replace: true });
             tableRef.current?.scrollIntoView();
           }

@@ -197,9 +197,9 @@ const Epoch: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const apiConnector = ApiConnector.getApiConnector();
 
-  function updateData(page: number) {
+  function updateData(page: number, size?: number) {
     setLoading(true);
-    apiConnector.getEpochs({ ...pageInfo, page }).then((data: ApiReturnType<EpochOverview[]>) => {
+    apiConnector.getEpochs({ ...pageInfo, page, size: size ?? pageInfo.size }).then((data: ApiReturnType<EpochOverview[]>) => {
       setEpochData(data);
       setLoading(false);
     });
@@ -374,7 +374,7 @@ const Epoch: React.FC = () => {
             total: epochData?.total || 0,
             page: epochData?.currentPage || 0,
             size: epochData?.pageSize || pageInfo.size,
-            onChange: (page) => updateData(page),
+            onChange: (page, size) => updateData(page, size),
             hideLastPage: true
           }}
         />

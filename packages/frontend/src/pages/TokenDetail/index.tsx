@@ -50,17 +50,17 @@ const TokenDetail: React.FC = () => {
   const apiConnector = ApiConnector.getApiConnector();
   const network = process.env.REACT_APP_NETWORK || "mainnet";
 
-  function updateTransactions(page: number = 0) {
+  function updateTransactions(page: number = 0, size?: number) {
     setTransactionsLoading(true);
-    apiConnector.getTokenTransactions(tokenId, { ...pageInfo, page: String(page) }).then((data) => {
+    apiConnector.getTokenTransactions(tokenId, { ...pageInfo, page: String(page), size: String(size ?? pageInfo.size) }).then((data) => {
       setTokenTransactions(data);
       setTransactionsLoading(false);
     });
   }
 
-  function updateTokenHolders(page: number = 0) {
+  function updateTokenHolders(page: number = 0, size?: number) {
     setHoldersLoading(true);
-    apiConnector.getTokenHolders(tokenId, { ...pageInfo, page: String(page) }).then((data) => {
+    apiConnector.getTokenHolders(tokenId, { ...pageInfo, page: String(page), size: String(size ?? pageInfo.size) }).then((data) => {
       setTokenHolders(data);
       setHoldersLoading(false);
     });

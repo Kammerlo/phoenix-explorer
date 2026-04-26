@@ -9,10 +9,12 @@ export const poolController = Router();
 
 poolController.get('', async (req, res) => {
     const pageInfo = req.query;
-    const requestedPage = Number.parseInt(String(pageInfo.page || 0));
+    // Frontend pagination is 1-based; accept legacy 0 as "first page".
+    const requestedPage = Math.max(1, Number.parseInt(String(pageInfo.page || 1)));
+    const requestedSize = Number.parseInt(String(pageInfo.size || 100));
     const poolExtended = await API.poolsExtended({
-        page: requestedPage + 1, // Blockfrost uses 1-based pagination
-        count: Number.parseInt(String(pageInfo.size || 100))
+        page: requestedPage,
+        count: requestedSize
     });
 
     // Currently the trick with (pool as any) is necessary because blockfrost-js is returning the wrong types
@@ -28,17 +30,19 @@ poolController.get('', async (req, res) => {
             lifetimeBlock: Number.parseInt((pool as any).blocks_minted ?? '0'),
         } as PoolOverview;
     });
-    const pageSize = Number.parseInt(String(pageInfo.size ?? 100));
-    const currentPage = Number.parseInt(String(pageInfo.page ?? 0));
-    const hasMore = poolData.length >= pageSize;
-    const estimatedTotal = hasMore ? (currentPage + 2) * pageSize : currentPage * pageSize + poolData.length;
+    const hasMore = poolData.length >= requestedSize;
+    // Estimate total so the pagination panel keeps rendering a "next" button
+    // until we reach a short page (Blockfrost doesn't return a global count).
+    const estimatedTotal = hasMore
+        ? (requestedPage + 1) * requestedSize
+        : (requestedPage - 1) * requestedSize + poolData.length;
 
     res.json({
         data: poolData,
         lastUpdated: Date.now(),
         total: estimatedTotal,
-        currentPage,
-        pageSize,
+        currentPage: requestedPage - 1, // FooterTable expects 0-based
+        pageSize: requestedSize,
     } as ApiReturnType<PoolOverview[]>);
 
 });

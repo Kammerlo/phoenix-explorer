@@ -11,10 +11,12 @@ export const governanceController = Router();
 governanceController.get('/actions', async (req, res) => {
     const pageInfo = req.query;
 
-    const requestedPage = Number.parseInt(String(pageInfo.page || 0));
+    // Frontend pagination is 1-based; accept legacy 0 as "first page".
+    const requestedPage = Math.max(1, Number.parseInt(String(pageInfo.page || 1)));
+    const requestedSize = Number.parseInt(String(pageInfo.size || 10));
     const proposals = await API.governance.proposals({
-        page: requestedPage + 1, // Blockfrost uses 1-based pagination
-        count: Number.parseInt(String(pageInfo.size || 100))
+        page: requestedPage,
+        count: requestedSize
     });
 
     const govActionListItems: GovernanceActionListItem[] = proposals.map((proposal: any) => {
@@ -30,13 +32,19 @@ governanceController.get('/actions', async (req, res) => {
             enactedEpoch: proposal.enacted_epoch ?? null,
         } as GovernanceActionListItem;
     });
+    // Estimate total so the pagination panel keeps a "next" button visible
+    // until we reach a short page (Blockfrost doesn't return a global count).
+    const hasMore = govActionListItems.length >= requestedSize;
+    const estimatedTotal = hasMore
+        ? (requestedPage + 1) * requestedSize
+        : (requestedPage - 1) * requestedSize + govActionListItems.length;
     res.json({
         data: govActionListItems,
         lastUpdated: Date.now(),
-        total: govActionListItems.length, // TODO need to find the total number of blocks
-        currentPage: Number.parseInt(String(pageInfo.page ?? 0)),
-        pageSize: Number.parseInt(String(pageInfo.size ?? 10)),
-        totalPages: Math.ceil(govActionListItems.length / (pageInfo.size ? Number.parseInt(String(pageInfo.size)) : 100)),
+        total: estimatedTotal,
+        currentPage: requestedPage - 1, // FooterTable expects 0-based
+        pageSize: requestedSize,
+        totalPages: Math.ceil(estimatedTotal / requestedSize),
     } as ApiReturnType<GovernanceActionListItem[]>);
 });
 
@@ -149,9 +157,12 @@ governanceController.get('/actions/:txHash/:indexStr/votes', async (req, res) =>
 
 governanceController.get('/dreps', async (req, res) => {
     const pageInfo = req.query;
+    // Frontend pagination is 1-based; accept legacy 0 as "first page".
+    const requestedPage = Math.max(1, Number.parseInt(String(pageInfo.page || 1)));
+    const requestedSize = Number.parseInt(String(pageInfo.size || 100));
     const drepsData = await API.governance.dreps({
-        page: Number.parseInt(String(pageInfo.page || 0)) + 1, // Blockfrost uses 1-based pagination
-        count: Number.parseInt(String(pageInfo.size || 100))
+        page: requestedPage,
+        count: requestedSize
     });
 
     let dreps: Drep[] = [];
@@ -213,13 +224,19 @@ governanceController.get('/dreps', async (req, res) => {
             });
         }
     }
+    // Estimate total so the pagination panel keeps a "next" button visible
+    // until we reach a short page (Blockfrost doesn't return a global count).
+    const hasMore = dreps.length >= requestedSize;
+    const estimatedTotal = hasMore
+        ? (requestedPage + 1) * requestedSize
+        : (requestedPage - 1) * requestedSize + dreps.length;
     res.json({
         data: dreps,
         lastUpdated: Date.now(),
-        total: dreps.length,
-        currentPage: 1,
-        pageSize: dreps.length,
-        totalPages: 1,
+        total: estimatedTotal,
+        currentPage: requestedPage - 1, // FooterTable expects 0-based
+        pageSize: requestedSize,
+        totalPages: Math.ceil(estimatedTotal / requestedSize),
     } as ApiReturnType<Drep[]>);
 });
 
@@ -309,11 +326,12 @@ governanceController.get('/dreps/:drepId/votes', async (req, res) => {
     const { drepId } = req.params;
     const pageInfo = req.query;
     const votesData = await API.governance.drepsByIdVotes(drepId);
-    const page = Number.parseInt(String(pageInfo.page ?? 0));
-    const size = Number.parseInt(String(pageInfo.size ?? 10));
-    const safePage = Number.isNaN(page) ? 0 : Math.max(0, page);
-    const safeSize = Number.isNaN(size) ? 10 : Math.max(1, size);
-    const start = safePage * safeSize;
+    // Frontend pagination is 1-based; accept legacy 0 as "first page".
+    const rawPage = Number.parseInt(String(pageInfo.page ?? 1));
+    const rawSize = Number.parseInt(String(pageInfo.size ?? 10));
+    const safePage = Number.isNaN(rawPage) ? 1 : Math.max(1, rawPage);
+    const safeSize = Number.isNaN(rawSize) ? 10 : Math.max(1, rawSize);
+    const start = (safePage - 1) * safeSize;
     const end = start + safeSize;
 
     const votes: GovernanceActionListItem[] = votesData
@@ -329,9 +347,9 @@ governanceController.get('/dreps/:drepId/votes', async (req, res) => {
         data: votes,
         lastUpdated: Date.now(),
         total: votesData.length,
-        currentPage: Number.parseInt(String(pageInfo.page ?? 0)),
-        pageSize: Number.parseInt(String(pageInfo.size ?? 10)),
-        totalPages: Math.ceil(votesData.length / (pageInfo.size ? Number.parseInt(String(pageInfo.size)) : 100)),
+        currentPage: safePage - 1, // FooterTable expects 0-based
+        pageSize: safeSize,
+        totalPages: Math.ceil(votesData.length / safeSize),
     } as ApiReturnType<GovernanceActionListItem[]>);
 });
 
@@ -339,11 +357,12 @@ governanceController.get('/dreps/:drepId/delegates', async (req, res) => {
     const { drepId } = req.params;
     const pageInfo = req.query;
     const delegatorsData = await API.governance.drepsByIdDelegatorsAll(drepId);
-    const page = Number.parseInt(String(pageInfo.page ?? 0));
-    const size = Number.parseInt(String(pageInfo.size ?? 10));
-    const safePage = Number.isNaN(page) ? 0 : Math.max(0, page);
-    const safeSize = Number.isNaN(size) ? 10 : Math.max(1, size);
-    const start = safePage * safeSize;
+    // Frontend pagination is 1-based; accept legacy 0 as "first page".
+    const rawPage = Number.parseInt(String(pageInfo.page ?? 1));
+    const rawSize = Number.parseInt(String(pageInfo.size ?? 10));
+    const safePage = Number.isNaN(rawPage) ? 1 : Math.max(1, rawPage);
+    const safeSize = Number.isNaN(rawSize) ? 10 : Math.max(1, rawSize);
+    const start = (safePage - 1) * safeSize;
     const end = start + safeSize;
 
     const delegates = delegatorsData
@@ -358,8 +377,8 @@ governanceController.get('/dreps/:drepId/delegates', async (req, res) => {
         data: delegates,
         lastUpdated: Date.now(),
         total: delegatorsData.length,
-        currentPage: Number.parseInt(String(pageInfo.page ?? 0)),
-        pageSize: Number.parseInt(String(pageInfo.size ?? 10)),
-        totalPages: Math.ceil(delegatorsData.length / (pageInfo.size ? Number.parseInt(String(pageInfo.size)) : 100)),
+        currentPage: safePage - 1, // FooterTable expects 0-based
+        pageSize: safeSize,
+        totalPages: Math.ceil(delegatorsData.length / safeSize),
     } as ApiReturnType<DrepDelegates[]>);
 });

@@ -145,7 +145,7 @@ const SkeletonRows: React.FC = () => {
 
 interface TransactionListProps {
   transactions: ApiReturnType<Transaction[]>;
-  updateData?: (page: number) => void;
+  updateData?: (page: number, size?: number) => void;
   loading: boolean;
   paginated?: boolean;
 }
@@ -340,7 +340,7 @@ const TransactionList: React.FC<TransactionListProps> = ({
                   total: transactions?.total || 0,
                   page: transactions?.currentPage || 0,
                   size: transactions?.pageSize || pageInfo.size,
-                  onChange: (page) => updateData(page),
+                  onChange: (page, size) => updateData(page, size),
                   hideLastPage: true,
                   unknownTotal: transactions?.totalUnknown
                 }

@@ -28,9 +28,9 @@ const AddressDetail: React.FC = () => {
   const apiConnector = ApiConnector.getApiConnector();
   const network = process.env.REACT_APP_NETWORK || "mainnet";
 
-  function updateTxPage(page: number = 0) {
+  function updateTxPage(page: number = 0, size?: number) {
     setTxLoading(true);
-    apiConnector.getAddressTxsFromAddress(address, { ...pageInfo, page: String(page) }).then((res) => {
+    apiConnector.getAddressTxsFromAddress(address, { ...pageInfo, page: String(page), size: String(size ?? pageInfo.size) }).then((res) => {
       setTxData(res);
       setTxLoading(false);
     });

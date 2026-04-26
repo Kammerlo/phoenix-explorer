@@ -75,19 +75,20 @@ const PolicyDetail: React.FC = () => {
   const theme = useTheme();
   const [fetchData, setFetchData] = useState<ApiReturnType<ITokenOverview[]> | null>(null);
   const [loading, setLoading] = useState(true);
-  const [page, setPage] = useState(0);
+  const [page, setPage] = useState(1); // 1-based — what the gateway expects
+  const [size, setSize] = useState(50);
 
   useEffect(() => {
     document.title = `Policy ${policyId} | Phoenix Explorer`;
     setLoading(true);
     ApiConnector.getApiConnector()
-      .getTokensByPolicy(policyId, { page: String(page), size: "50" })
+      .getTokensByPolicy(policyId, { page: String(page), size: String(size) })
       .then((data) => {
         setFetchData(data);
         setLoading(false);
       })
       .catch(() => setLoading(false));
-  }, [policyId, page]);
+  }, [policyId, page, size]);
 
   const columns: Column<ITokenOverview>[] = [
     {
@@ -212,10 +213,13 @@ const PolicyDetail: React.FC = () => {
               })
             }}
             pagination={{
-              page,
-              size: 50,
+              page: fetchData?.currentPage ?? 0, // 0-based for FooterTable
+              size: fetchData?.pageSize ?? size,
               total: tokenCount,
-              onChange: (newPage) => setPage(newPage),
+              onChange: (newPage, newSize) => {
+                setPage(newPage);
+                if (newSize) setSize(newSize);
+              },
               hideLastPage: true
             }}
             onClickRow={(_e, r) => navigate(details.token(r.fingerprint))}

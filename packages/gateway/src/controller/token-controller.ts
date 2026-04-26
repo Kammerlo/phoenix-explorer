@@ -36,10 +36,12 @@ export const tokenController = Router();
 tokenController.get('', async (req, res) => {
   const pageInfo = req.query;
 
-  const requestedPage = Number.parseInt(String(pageInfo.page || 0));
+  // Frontend pagination is 1-based; accept legacy 0 as "first page".
+  const requestedPage = Math.max(1, Number.parseInt(String(pageInfo.page || 1)));
+  const pageSize = Number.parseInt(String(pageInfo.size ?? 100));
   const assets = await API.assets({
-    page: requestedPage + 1, // Blockfrost uses 1-based pagination
-    count: Number.parseInt(String(pageInfo.size || 100))
+    page: requestedPage,
+    count: pageSize
   });
 
   const assetData: ITokenOverview[] = assets.map((asset) => {
@@ -51,18 +53,18 @@ tokenController.get('', async (req, res) => {
     } as ITokenOverview;
   });
 
-  const pageSize = Number.parseInt(String(pageInfo.size ?? 100));
   // Blockfrost doesn't return total asset count; if a full page was returned
   // there are likely more pages, so report a high total for pagination to work.
   const hasMore = assetData.length >= pageSize;
-  const currentPage = Number.parseInt(String(pageInfo.page ?? 0));
-  const estimatedTotal = hasMore ? (currentPage + 2) * pageSize : currentPage * pageSize + assetData.length;
+  const estimatedTotal = hasMore
+    ? (requestedPage + 1) * pageSize
+    : (requestedPage - 1) * pageSize + assetData.length;
 
   res.json({
     data: assetData.reverse(),
     lastUpdated: Date.now(),
     total: estimatedTotal,
-    currentPage,
+    currentPage: requestedPage - 1, // FooterTable expects 0-based
     pageSize,
   } as ApiReturnType<ITokenOverview[]>);
 });
@@ -86,9 +88,11 @@ tokenController.get('', async (req, res) => {
  */
 tokenController.get('/policy/:policyId', async (req, res) => {
   const pageInfo = req.query;
+  const requestedPage = Math.max(1, Number.parseInt(String(pageInfo.page || 1)));
+  const requestedSize = Number.parseInt(String(pageInfo.size || 50));
   const assets = await API.assetsPolicyById(req.params.policyId, {
-    page: Number.parseInt(String(pageInfo.page || 1)),
-    count: Number.parseInt(String(pageInfo.size || 50))
+    page: requestedPage,
+    count: requestedSize
   });
   const assetData: ITokenOverview[] = assets.map((asset: { asset: string; quantity: string }) => ({
     policy: req.params.policyId,
@@ -96,13 +100,19 @@ tokenController.get('/policy/:policyId', async (req, res) => {
     supply: asset.quantity ? Number.parseInt(asset.quantity) : 0,
     fingerprint: asset.asset,
   } as ITokenOverview));
+  // Estimate total so the pagination panel keeps a "next" button visible
+  // until we reach a short page (Blockfrost doesn't return a global count).
+  const hasMore = assetData.length >= requestedSize;
+  const estimatedTotal = hasMore
+    ? (requestedPage + 1) * requestedSize
+    : (requestedPage - 1) * requestedSize + assetData.length;
   res.json({
     data: assetData,
     lastUpdated: Date.now(),
-    total: assetData.length,
-    currentPage: Number.parseInt(String(pageInfo.page ?? 1)),
-    pageSize: Number.parseInt(String(pageInfo.size ?? 50)),
-    totalPages: Math.ceil(assetData.length / (pageInfo.size ? Number.parseInt(String(pageInfo.size)) : 50)),
+    total: estimatedTotal,
+    currentPage: requestedPage - 1, // FooterTable expects 0-based
+    pageSize: requestedSize,
+    totalPages: Math.ceil(estimatedTotal / requestedSize),
   } as ApiReturnType<ITokenOverview[]>);
 });
 
@@ -171,10 +181,11 @@ tokenController.get('/:tokenId/holders', async (req, res) => {
   const pageInfo = req.query;
   const assetById = await API.assetsById(req.params.tokenId);
   const pageSize = Number.parseInt(String(pageInfo.size || 100));
-  const currentPage = Number.parseInt(String(pageInfo.page || 0));
+  // Frontend pagination is 1-based; accept legacy 0 as "first page".
+  const requestedPage = Math.max(1, Number.parseInt(String(pageInfo.page || 1)));
 
   const assetAddresses = await API.assetsAddresses(req.params.tokenId, {
-    page: currentPage + 1, // Blockfrost uses 1-based pagination
+    page: requestedPage,
     count: pageSize
   });
 
@@ -187,13 +198,15 @@ tokenController.get('/:tokenId/holders', async (req, res) => {
   });
 
   const hasMore = holders.length >= pageSize;
-  const estimatedTotal = hasMore ? (currentPage + 2) * pageSize : currentPage * pageSize + holders.length;
+  const estimatedTotal = hasMore
+    ? (requestedPage + 1) * pageSize
+    : (requestedPage - 1) * pageSize + holders.length;
 
   res.json({
     data: holders,
     lastUpdated: Date.now(),
     total: estimatedTotal,
-    currentPage,
+    currentPage: requestedPage - 1, // FooterTable expects 0-based
     pageSize,
   } as ApiReturnType<TokenHolder[]>);
 });
@@ -201,10 +214,11 @@ tokenController.get('/:tokenId/holders', async (req, res) => {
 tokenController.get('/:tokenId/transactions', async (req, res) => {
   const pageInfo = req.query;
   const pageSize = Number.parseInt(String(pageInfo.size || 100));
-  const currentPage = Number.parseInt(String(pageInfo.page || 0));
+  // Frontend pagination is 1-based; accept legacy 0 as "first page".
+  const requestedPage = Math.max(1, Number.parseInt(String(pageInfo.page || 1)));
 
   const assetTransactions = await API.assetsTransactions(req.params.tokenId, {
-    page: currentPage + 1, // Blockfrost uses 1-based pagination
+    page: requestedPage,
     count: pageSize
   });
 
@@ -225,13 +239,15 @@ tokenController.get('/:tokenId/transactions', async (req, res) => {
   } ));
 
   const hasMore = transactions.length >= pageSize;
-  const estimatedTotal = hasMore ? (currentPage + 2) * pageSize : currentPage * pageSize + transactions.length;
+  const estimatedTotal = hasMore
+    ? (requestedPage + 1) * pageSize
+    : (requestedPage - 1) * pageSize + transactions.length;
 
   res.json({
     data: transactions,
     lastUpdated: Date.now(),
     total: estimatedTotal,
-    currentPage,
+    currentPage: requestedPage - 1, // FooterTable expects 0-based
     pageSize,
   } as ApiReturnType<Transaction[]>);
 });

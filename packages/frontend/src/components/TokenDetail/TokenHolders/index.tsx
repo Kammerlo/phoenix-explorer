@@ -55,7 +55,7 @@ const SkeletonRows: React.FC = () => {
 
 interface TokenHoldersProps {
   tokenHolders: ApiReturnType<TokenHolder[]>;
-  updateData?: (page: number) => void;
+  updateData?: (page: number, size?: number) => void;
   loading: boolean;
   paginated?: boolean;
 }
@@ -167,8 +167,9 @@ const TokenHolders: React.FC<TokenHoldersProps> = ({
           ? {
               pagination: {
                 page: tokenHolders.currentPage ?? 0,
+                size: tokenHolders.pageSize,
                 total: tokenHolders.total ?? 0,
-                onChange: (page) => updateData(page),
+                onChange: (page, size) => updateData(page, size),
                 hideLastPage: true
               }
             }

@@ -87,7 +87,8 @@ addressController.get('/:address/transactions', async (req, res) => {
     try {
         // Stake addresses use a different Blockfrost endpoint for transactions
         const isStakeAddress = address.startsWith('stake');
-        const page = Number.parseInt(String(pageInfo.page || 1));
+        // Frontend pagination is 1-based; accept legacy 0 as "first page".
+        const page = Math.max(1, Number.parseInt(String(pageInfo.page || 1)));
         const count = Number.parseInt(String(pageInfo.size || 10));
 
         if (isStakeAddress) {
@@ -120,7 +121,7 @@ addressController.get('/:address/transactions', async (req, res) => {
             res.json({
                 data: txData,
                 lastUpdated: Date.now(),
-                currentPage: page,
+                currentPage: page - 1, // FooterTable expects 0-based
                 pageSize: count,
                 total: totalTxs,
                 totalUnknown: totalTxs == null,
@@ -159,7 +160,8 @@ addressController.get('/:address/transactions', async (req, res) => {
         res.json({
             data: txData,
             lastUpdated: Date.now(),
-            currentPage: page,
+            currentPage: page - 1, // FooterTable expects 0-based
+            pageSize: count,
             total: addressData.tx_count
         } as ApiReturnType<Transaction[]>);
     } catch (err: any) {

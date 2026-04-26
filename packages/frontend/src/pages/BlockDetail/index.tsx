@@ -26,9 +26,9 @@ const BlockDetail: React.FC = () => {
   const apiConnector = ApiConnector.getApiConnector();
   const network = process.env.REACT_APP_NETWORK || "mainnet";
 
-  function updateTransactions(page: number = 0) {
+  function updateTransactions(page: number = 0, size?: number) {
     setTxLoading(true);
-    apiConnector.getTransactions(blockId, { ...pageInfo, page }).then((data) => {
+    apiConnector.getTransactions(blockId, { ...pageInfo, page, size: size ?? pageInfo.size }).then((data) => {
       setTransactions(data);
       setTxLoading(false);
     });

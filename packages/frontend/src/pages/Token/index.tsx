@@ -76,9 +76,9 @@ const Tokens: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const apiConnector = ApiConnector.getApiConnector();
 
-  function updateData(page: number) {
+  function updateData(page: number, size?: number) {
     setLoading(true);
-    apiConnector.getTokensPage({ ...pageInfo, page }).then((data: ApiReturnType<ITokenOverview[]>) => {
+    apiConnector.getTokensPage({ ...pageInfo, page, size: size ?? pageInfo.size }).then((data: ApiReturnType<ITokenOverview[]>) => {
       setFetchData(data);
       setLoading(false);
     });
@@ -205,7 +205,7 @@ const Tokens: React.FC = () => {
             total: fetchData?.total || 0,
             page: fetchData?.currentPage || 0,
             size: fetchData?.pageSize || pageInfo.size,
-            onChange: (page) => updateData(page),
+            onChange: (page, size) => updateData(page, size),
             hideLastPage: true
           }}
         />
