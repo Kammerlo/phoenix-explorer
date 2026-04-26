@@ -81,7 +81,7 @@ All handlers return `ApiReturnType<T>` where applicable, with `lastUpdated: Date
 ### Config & cache
 
 - [`config/env.ts`](packages/gateway/src/config/env.ts): loads `.env` from the **monorepo root** (`path.resolve(__dirname, "../../../../.env")`). Exposes `API_KEY`, `PORT` (default 3000), `HOST` (default `0.0.0.0`), `NETWORK` (default `mainnet`).
-- [`config/blockfrost.ts`](packages/gateway/src/config/blockfrost.ts): singleton `BlockFrostAPI` instance.
+- [`config/blockfrost.ts`](packages/gateway/src/config/blockfrost.ts): exports two `BlockFrostAPI` clients. `API` is the primary client used by every controller — when `DEMETER_URL` + `DEMETER_API_KEY` are set it points at demeter.run (custom backend, `dmtr-api-key` header injected via `gotOptions.headers`); otherwise it falls back to blockfrost.io with `API_KEY`. `POOL_API` is **strictly** the blockfrost.io client and is `null` when only demeter is configured. Demeter does not implement `/pools/*`, so `pool-controller.ts` mounts a catch-all stub returning `unsupportedEnvelope("/api/pools/*")` (HTTP 501) when `POOL_API === null`. At least one of `API_KEY` or the `DEMETER_*` pair must be set or the gateway throws on startup.
 - [`config/cache.ts`](packages/gateway/src/config/cache.ts): `NodeCache` with 5-minute default TTL. Helpers: `getEpoch`, `getBlock`, `getTransactions`, `getTxMetadata`, `getUtxos`, `getTxDetail`, `fetchAddressTotal`.
 
 ### Middleware
@@ -659,9 +659,13 @@ Both services declare `image:` **and** `build:` — `docker compose up` pulls fr
 Root `.env` (loaded by both the Vite build and the Express gateway; Gateway reads it via `dotenv` from the monorepo root):
 
 ### Gateway
+At least one of `API_KEY` **or** the `DEMETER_*` pair must be configured. When both are set, demeter handles every endpoint except `/api/pools/*` (which always uses blockfrost.io). When only demeter is set, `/api/pools/*` returns `unsupportedEnvelope` with HTTP 501.
+
 | Variable | Default | Required | Description |
 |----------|---------|----------|-------------|
-| `API_KEY` | — | Yes (when `REACT_APP_API_TYPE=GATEWAY`) | Blockfrost project key. Prefix must match `NETWORK`. |
+| `API_KEY` | — | Required for `/api/pools/*`; otherwise optional if demeter is configured | blockfrost.io project key. Prefix must match `NETWORK`. |
+| `DEMETER_URL` | — | Both required together to enable demeter | demeter.run Blockfrost-extension URL, e.g. `https://cardano-mainnet.blockfrost.m1.demeter.run/api/v0` |
+| `DEMETER_API_KEY` | — | Both required together to enable demeter | demeter project API key (sent as `dmtr-api-key` header) |
 | `NETWORK` | `mainnet` | No | `mainnet` \| `preprod` \| `preview` |
 | `PORT` | `3000` | No | |
 | `HOST` | `0.0.0.0` | No | |

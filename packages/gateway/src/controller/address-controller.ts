@@ -2,7 +2,7 @@ import { ApiReturnType } from "@shared/APIReturnType";
 import { AddressDetail, StakeAddressDetail } from "@shared/dtos/address.dto";
 import { Transaction } from "@shared/dtos/transaction.dto";
 import { Router, Request, Response } from "express";
-import { API } from "../config/blockfrost";
+import { API, POOL_API } from "../config/blockfrost";
 import { cache, fetchAddressTotal } from "../config/cache";
 import { fetchTransactionDetail } from "../service/transactionService";
 
@@ -194,11 +194,18 @@ addressController.get('/:address/stake', async (req, res) => {
             }
         };
 
-        if (stakeAddressData.pool_id) {
-            const pool = await API.poolMetadata(stakeAddressData.pool_id);
-            stakeAddressDetail.pool.tickerName = pool.ticker || '';
-            stakeAddressDetail.pool.poolName = pool.name || '';
-            stakeAddressDetail.pool.poolId = pool.pool_id || '';
+        // Pool metadata enrichment is best-effort and requires blockfrost.io
+        // (POOL_API). When only demeter is configured the pool fields stay
+        // blank rather than failing the whole stake-address response.
+        if (stakeAddressData.pool_id && POOL_API) {
+            try {
+                const pool = await POOL_API.poolMetadata(stakeAddressData.pool_id);
+                stakeAddressDetail.pool.tickerName = pool.ticker || '';
+                stakeAddressDetail.pool.poolName = pool.name || '';
+                stakeAddressDetail.pool.poolId = pool.pool_id || '';
+            } catch { /* no metadata */ }
+        } else if (stakeAddressData.pool_id) {
+            stakeAddressDetail.pool.poolId = stakeAddressData.pool_id;
         }
 
         res.json({

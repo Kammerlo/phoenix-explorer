@@ -1,5 +1,5 @@
 import {Router} from 'express';
-import {API} from "../config/blockfrost";
+import {API, POOL_API} from "../config/blockfrost";
 import {EpochOverview} from "@shared/dtos/epoch.dto";
 import {Block} from "@shared/dtos/block.dto";
 import {ApiReturnType} from "@shared/APIReturnType";
@@ -117,19 +117,23 @@ epochController.get('/:epochNo/blocks', async (req, res) => {
   // Fetch full block data for each hash
   const rawBlocks = await Promise.all(epochBlocks.map(hash => getBlock(hash)));
 
-  // Batch-fetch pool metadata for unique slot leaders
-  const uniqueLeaders = [...new Set(rawBlocks.map(b => b.slot_leader).filter(Boolean))] as string[];
+  // Batch-fetch pool metadata for unique slot leaders. Skipped entirely when
+  // only demeter is configured — `/pools/*` is blockfrost.io-only.
   const poolMeta = new Map<string, { name: string; ticker: string }>();
-  await Promise.all(
-    uniqueLeaders
-      .filter(l => l.startsWith('pool'))
-      .map(async (leader) => {
-        try {
-          const meta = await API.poolMetadata(leader);
-          poolMeta.set(leader, { name: meta.name ?? '', ticker: meta.ticker ?? '' });
-        } catch { /* no metadata */ }
-      })
-  );
+  if (POOL_API) {
+    const blockfrost = POOL_API;
+    const uniqueLeaders = [...new Set(rawBlocks.map(b => b.slot_leader).filter(Boolean))] as string[];
+    await Promise.all(
+      uniqueLeaders
+        .filter(l => l.startsWith('pool'))
+        .map(async (leader) => {
+          try {
+            const meta = await blockfrost.poolMetadata(leader);
+            poolMeta.set(leader, { name: meta.name ?? '', ticker: meta.ticker ?? '' });
+          } catch { /* no metadata */ }
+        })
+    );
+  }
 
   const blocks: Block[] = rawBlocks.map((block) => {
     const meta = block.slot_leader ? poolMeta.get(block.slot_leader) : undefined;

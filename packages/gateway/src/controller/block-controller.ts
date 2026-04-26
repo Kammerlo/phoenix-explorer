@@ -1,5 +1,5 @@
 import {Router} from "express";
-import {API} from "../config/blockfrost";
+import {API, POOL_API} from "../config/blockfrost";
 import {Block} from "@shared/dtos/block.dto";
 import {ApiReturnType} from "@shared/APIReturnType";
 import {getBlock, getTransactions} from "../config/cache";
@@ -71,16 +71,19 @@ blockController.get('', async (req, res) => {
   allBfBlocks.length = 0;
   allBfBlocks.push(...pageBlocks);
 
-  // Batch-fetch pool metadata for unique slot leaders (skipped for bulk/chart requests)
+  // Batch-fetch pool metadata for unique slot leaders (skipped for bulk/chart
+  // requests, and entirely when only demeter is configured — `/pools/*` is a
+  // blockfrost.io-only endpoint).
   const poolMeta = new Map<string, { name: string; ticker: string }>();
-  if (!skipMeta) {
+  if (!skipMeta && POOL_API) {
+    const blockfrost = POOL_API;
     const uniqueLeaders = [...new Set(allBfBlocks.map(b => b.slot_leader).filter(Boolean))] as string[];
     await Promise.all(
       uniqueLeaders
         .filter(l => l.startsWith("pool"))
         .map(async (leader) => {
           try {
-            const meta = await API.poolMetadata(leader);
+            const meta = await blockfrost.poolMetadata(leader);
             poolMeta.set(leader, { name: meta.name ?? "", ticker: meta.ticker ?? "" });
           } catch { /* no metadata */ }
         })
@@ -125,12 +128,13 @@ blockController.get('', async (req, res) => {
 blockController.get('/:blockId', async (req, res) => {
   const block = await getBlock(req.params.blockId);
 
-  // Fetch pool metadata if the slot leader is a pool
+  // Fetch pool metadata if the slot leader is a pool. Skipped when only demeter
+  // is configured (POOL_API is null) — demeter does not implement /pools/*.
   let poolName = "";
   let poolTicker = "";
-  if (block.slot_leader?.startsWith("pool")) {
+  if (POOL_API && block.slot_leader?.startsWith("pool")) {
     try {
-      const meta = await API.poolMetadata(block.slot_leader);
+      const meta = await POOL_API.poolMetadata(block.slot_leader);
       poolName = meta.name ?? "";
       poolTicker = meta.ticker ?? "";
     } catch { /* no metadata */ }

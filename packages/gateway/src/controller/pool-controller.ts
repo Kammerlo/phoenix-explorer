@@ -1,18 +1,29 @@
 import { ApiReturnType } from "@shared/APIReturnType";
+import { unsupportedEnvelope } from "@shared/helpers/envelope";
 import { PoolDetail, PoolOverview } from "@shared/dtos/pool.dto";
 import { Block } from "@shared/dtos/block.dto";
 import { Router } from "express";
-import { API } from "../config/blockfrost";
+import { API, POOL_API } from "../config/blockfrost";
 import { getBlock, getTransactions } from "../config/cache";
 
 export const poolController = Router();
 
-poolController.get('', async (req, res) => {
+if (!POOL_API) {
+  // demeter.run does not implement Blockfrost's `/pools/*` endpoints. When
+  // only DEMETER_* is configured the pool routes return a structured
+  // "not supported" envelope so the frontend can degrade gracefully.
+  poolController.use((_req, res) => {
+    res.status(501).json(unsupportedEnvelope("/api/pools/*"));
+  });
+} else {
+  const blockfrost = POOL_API;
+
+  poolController.get('', async (req, res) => {
     const pageInfo = req.query;
     // Frontend pagination is 1-based; accept legacy 0 as "first page".
     const requestedPage = Math.max(1, Number.parseInt(String(pageInfo.page || 1)));
     const requestedSize = Number.parseInt(String(pageInfo.size || 100));
-    const poolExtended = await API.poolsExtended({
+    const poolExtended = await blockfrost.poolsExtended({
         page: requestedPage,
         count: requestedSize
     });
@@ -45,17 +56,17 @@ poolController.get('', async (req, res) => {
         pageSize: requestedSize,
     } as ApiReturnType<PoolOverview[]>);
 
-});
+  });
 
-poolController.get('/:poolId/blocks', async (req, res) => {
+  poolController.get('/:poolId/blocks', async (req, res) => {
     const { poolId } = req.params;
     const pageInfo = req.query;
     const page = Math.max(1, Number.parseInt(String(pageInfo.page || 1)));
     const count = Number.parseInt(String(pageInfo.size || 20));
     try {
         const [blockHashes, poolInfo] = await Promise.all([
-            API.poolsByIdBlocks(poolId, { page, count, order: "desc" }),
-            API.poolsById(poolId)
+            blockfrost.poolsByIdBlocks(poolId, { page, count, order: "desc" }),
+            blockfrost.poolsById(poolId)
         ]);
         const blocks = await Promise.all(blockHashes.map(hash => getBlock(hash)));
         const total = poolInfo.blocks_minted || 0;
@@ -90,14 +101,14 @@ poolController.get('/:poolId/blocks', async (req, res) => {
     } catch (error) {
         res.status(404).json({ message: 'Pool blocks not available' });
     }
-});
+  });
 
-poolController.get('/:poolId', async (req, res) => {
+  poolController.get('/:poolId', async (req, res) => {
     const { poolId } = req.params;
     try {
-        const pool = await API.poolsById(poolId);
-        const poolMetadata = await API.poolMetadata(poolId);
-        const relays = await API.poolsByIdRelays(poolId);
+        const pool = await blockfrost.poolsById(poolId);
+        const poolMetadata = await blockfrost.poolMetadata(poolId);
+        const relays = await blockfrost.poolsByIdRelays(poolId);
         const createTx = await getTransactions(pool.registration[0]);
         let totalBalanceOfPoolOwners = 0;
         for (const owner of pool.owners) {
@@ -152,4 +163,5 @@ poolController.get('/:poolId', async (req, res) => {
     } catch (error) {
         res.status(404).json({ message: 'Pool not found' });
     }
-});
+  });
+}

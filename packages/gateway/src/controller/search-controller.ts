@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { API } from "../config/blockfrost";
+import { API, POOL_API } from "../config/blockfrost";
 import { SearchResult } from "@shared/dtos/seach.dto";
 import { ApiReturnType } from "@shared/APIReturnType";
 
@@ -70,12 +70,18 @@ searchController.get("", async (req, res) => {
   }
 
   // ── Stake pool ───────────────────────────────────────────────────────────────
+  // Pool lookups require blockfrost.io. When only demeter is configured we
+  // skip the lookup and return no result so the search bar simply doesn't
+  // resolve pool IDs (rather than failing).
   if (/^pool1[a-z0-9]{50,}$/i.test(q)) {
-    const poolResult = await probe(() => API.poolsById(q));
-    if (poolResult) {
-      const meta = await probe(() => API.poolMetadata(q));
-      const label = meta?.ticker ?? meta?.name ?? undefined;
-      results.push({ type: "pool", id: q, label });
+    if (POOL_API) {
+      const blockfrost = POOL_API;
+      const poolResult = await probe(() => blockfrost.poolsById(q));
+      if (poolResult) {
+        const meta = await probe(() => blockfrost.poolMetadata(q));
+        const label = meta?.ticker ?? meta?.name ?? undefined;
+        results.push({ type: "pool", id: q, label });
+      }
     }
     return res.json({ data: results, lastUpdated: Date.now(), total: results.length });
   }
