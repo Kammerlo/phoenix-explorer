@@ -75,15 +75,15 @@ const DashboardStatsGrid: React.FC<Props> = ({ statsData, loading }) => {
       <Grid size={{ xs: 12, sm: 6, md: 3 }} component={motion.div} variants={itemVariants}>
         <StatCard title="Current Epoch" loading={loading}>
           <Box display="flex" alignItems="baseline" gap={1}>
-            <Link to={details.epoch(statsData?.currentEpoch.no ?? "")} style={{ textDecoration: "none" }}>
+            <Link to={details.epoch(statsData?.currentEpoch?.no ?? "")} style={{ textDecoration: "none" }}>
               <Typography variant="h4" fontWeight={700} color={theme.palette.primary.main}>
-                {statsData?.currentEpoch.no ?? "—"}
+                {statsData?.currentEpoch?.no ?? "—"}
               </Typography>
             </Link>
-            <Chip label={`${statsData?.currentEpoch.progressPercent ?? 0}%`} size="small" color="primary" variant="outlined" />
+            <Chip label={`${statsData?.currentEpoch?.progressPercent ?? 0}%`} size="small" color="primary" variant="outlined" />
           </Box>
           <Box mt={1} mb={0.5}>
-            <LinearProgress variant="determinate" value={statsData?.currentEpoch.progressPercent ?? 0} sx={{
+            <LinearProgress variant="determinate" value={statsData?.currentEpoch?.progressPercent ?? 0} sx={{
                 borderRadius: 2,
                 height: 6,
                 "& .MuiLinearProgress-bar": {
@@ -92,10 +92,10 @@ const DashboardStatsGrid: React.FC<Props> = ({ statsData, loading }) => {
               }} />
           </Box>
           <Typography variant="caption" color="text.secondary">
-            {formatTimeRemaining(statsData?.currentEpoch.endTime ?? null)}
+            {formatTimeRemaining(statsData?.currentEpoch?.endTime ?? null)}
           </Typography>
           <Typography variant="body2" color="text.secondary" mt={0.5}>
-            Txs: {numberWithCommas(statsData?.currentEpoch.txCount ?? 0, 0)}
+            Txs: {numberWithCommas(statsData?.currentEpoch?.txCount ?? 0, 0)}
           </Typography>
         </StatCard>
       </Grid>
@@ -103,19 +103,19 @@ const DashboardStatsGrid: React.FC<Props> = ({ statsData, loading }) => {
       {/* Latest Block */}
       <Grid size={{ xs: 12, sm: 6, md: 3 }} component={motion.div} variants={itemVariants}>
         <StatCard title="Latest Block" loading={loading}>
-          <Link to={details.block(statsData?.latestBlock.height ?? "")} style={{ textDecoration: "none" }}>
+          <Link to={details.block(statsData?.latestBlock?.height ?? "")} style={{ textDecoration: "none" }}>
             <Typography variant="h4" fontWeight={700} color={theme.palette.primary.main}>
-              {statsData?.latestBlock.height != null ? numberWithCommas(statsData.latestBlock.height, 0) : "—"}
+              {statsData?.latestBlock?.height != null ? numberWithCommas(statsData.latestBlock.height, 0) : "—"}
             </Typography>
           </Link>
           <Typography variant="body2" color="text.secondary" mt={0.5}>
-            Epoch {statsData?.latestBlock.epochNo ?? "—"} / Slot {statsData?.latestBlock.epochSlot ?? "—"}
+            Epoch {statsData?.latestBlock?.epochNo ?? "—"} / Slot {statsData?.latestBlock?.epochSlot ?? "—"}
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            Txs: {statsData?.latestBlock.txCount ?? "—"}
+            Txs: {statsData?.latestBlock?.txCount ?? "—"}
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            Size: {formatBytes(statsData?.latestBlock.size)}
+            Size: {formatBytes(statsData?.latestBlock?.size)}
           </Typography>
         </StatCard>
       </Grid>
@@ -124,9 +124,9 @@ const DashboardStatsGrid: React.FC<Props> = ({ statsData, loading }) => {
       <Grid size={{ xs: 12, sm: 6, md: 3 }} component={motion.div} variants={itemVariants}>
         <StatCard title="Circulating Supply" loading={loading}>
           <Typography variant="h4" fontWeight={700} color={theme.palette.primary.main}>
-            {lovelaceToADA(statsData?.supply.circulating)} ₳
+            {lovelaceToADA(statsData?.supply?.circulating)} ₳
           </Typography>
-          {statsData && (
+          {statsData?.supply && (
             <>
               <Box mt={1} mb={0.5}>
                 <LinearProgress variant="determinate" value={supplyPercent(statsData.supply.circulating, statsData.supply.max)} sx={{
@@ -149,12 +149,12 @@ const DashboardStatsGrid: React.FC<Props> = ({ statsData, loading }) => {
       <Grid size={{ xs: 12, sm: 6, md: 3 }} component={motion.div} variants={itemVariants}>
         <StatCard title="Active Stake" loading={loading}>
           <Typography variant="h4" fontWeight={700} color={theme.palette.primary.main}>
-            {lovelaceToADA(statsData?.stake.active)} ₳
+            {lovelaceToADA(statsData?.stake?.active)} ₳
           </Typography>
           <Typography variant="body2" color="text.secondary" mt={0.5}>
-            Live: {lovelaceToADA(statsData?.stake.live)} ₳
+            Live: {lovelaceToADA(statsData?.stake?.live)} ₳
           </Typography>
-          {statsData && (
+          {statsData?.stake && statsData?.supply && (
             <Typography variant="caption" color="text.secondary">
               {Math.round((parseFloat(statsData.stake.active || "0") / parseFloat(statsData.supply.circulating || "1")) * 100)}% of circulating supply staked
             </Typography>

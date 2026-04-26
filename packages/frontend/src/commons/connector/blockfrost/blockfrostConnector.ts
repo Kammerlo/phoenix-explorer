@@ -62,18 +62,19 @@ export class BlockfrostConnector extends ConnectorBase {
   async getEpochs(pageInfo: ParsedUrlQuery): Promise<ApiReturnType<EpochOverview[]>> {
     try {
       const latest = await this.client.get<BfEpoch>("/epochs/latest");
-      const page = Number(pageInfo.page ?? 0);
+      // Frontend pagination is 1-based; accept legacy 0 as "first page".
+      const page = Math.max(1, Number(pageInfo.page ?? 1));
       const count = Number(pageInfo.size ?? 20);
       const response = await this.client.get<BfEpoch[]>(`/epochs/${latest.data.epoch}/previous`, {
-        params: { page: page + 1, count }
+        params: { page, count }
       });
       const epochs = response.data.map((e) => bfEpochToOverview(e, latest.data.epoch));
-      if (page === 0) epochs.unshift(bfEpochToOverview(latest.data, latest.data.epoch));
+      if (page === 1) epochs.unshift(bfEpochToOverview(latest.data, latest.data.epoch));
       return {
         data: epochs.reverse(),
-        total: latest.data.epoch,
+        total: (latest.data.epoch ?? 0) + 1,
         lastUpdated: Date.now(),
-        currentPage: page,
+        currentPage: page - 1, // FooterTable expects 0-based
         pageSize: count,
       };
     } catch (e: any) {
@@ -135,10 +136,11 @@ export class BlockfrostConnector extends ConnectorBase {
 
   async getBlocksByEpoch(epoch: number, pageInfo: ParsedUrlQuery): Promise<ApiReturnType<Block[]>> {
     try {
-      const page = Number(pageInfo.page ?? 0);
+      // Frontend pagination is 1-based; accept legacy 0 as "first page".
+      const page = Math.max(1, Number(pageInfo.page ?? 1));
       const count = Number(pageInfo.size ?? 20);
       const [hashesResp, epochResp] = await Promise.all([
-        this.client.get<string[]>(`/epochs/${epoch}/blocks`, { params: { page: page + 1, count } }),
+        this.client.get<string[]>(`/epochs/${epoch}/blocks`, { params: { page, count, order: "desc" } }),
         this.client.get<BfEpoch>(`/epochs/${epoch}`)
       ]);
       const rawBlocks = await Promise.all(hashesResp.data.map(h => this._fetchBlockRaw(h)));
@@ -148,7 +150,7 @@ export class BlockfrostConnector extends ConnectorBase {
         data: blocks,
         total: epochResp.data.block_count,
         lastUpdated: Date.now(),
-        currentPage: page,
+        currentPage: page - 1, // FooterTable expects 0-based
         pageSize: count,
       };
     } catch (e: any) {
