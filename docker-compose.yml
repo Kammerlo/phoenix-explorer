@@ -11,6 +11,10 @@ services:
       HOST: "0.0.0.0"
       NETWORK: "${NETWORK:-mainnet}"
       API_KEY: "${API_KEY}"
+      # demeter.run hosted Blockfrost — both must be set together. When
+      # provided, every endpoint except /api/pools/* is routed through demeter.
+      DEMETER_URL: "${DEMETER_URL}"
+      DEMETER_API_KEY: "${DEMETER_API_KEY}"
     restart: unless-stopped
 
   frontend:
