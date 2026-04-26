@@ -439,41 +439,129 @@ Blockfrost `live_saturation` is a **0–1 fraction**. The `SaturationBar` compon
 
 ---
 
-## Protocol Parameters — Structure & Playground
+## Protocol Parameters — Structure
 
-### Page & Components
-- **Page**: [`src/pages/ProtocolParameters/index.tsx`](packages/frontend/src/pages/ProtocolParameters/index.tsx) — fetches live params via `apiConnector.getCurrentProtocolParameters()`, splits into 4 groups (Network, Economic, Technical, Governance), passes each to `GroupProtocoParameters`.
-- **Group card**: [`src/components/ProtocolParameters/GroupProtocolParameters/GroupProtocolParameters.tsx`](packages/frontend/src/components/ProtocolParameters/GroupProtocolParameters/GroupProtocolParameters.tsx) — parameter cards + tooltips. Accepts `playgroundComponent?: React.ReactNode`; if provided, an "Open Playground" toggle appears and MUI `Collapse` reveals it.
-- **Detail drawer**: `DetailViewGroupProtocol` — right-side drawer with full explanatory text per group.
+The Protocol Parameters page is the canonical example of the **Section Storytelling** design language documented below. Use it as a reference whenever you build an explanation- or simulator-heavy feature.
 
-### Playground components ([`src/components/ProtocolParameters/Playground/`](packages/frontend/src/components/ProtocolParameters/Playground/))
+### Page shell — `pages/ProtocolParameters/index.tsx` (~175 lines)
+- Fetches `getCurrentProtocolParameters()` once on mount; passes the result to every section.
+- Holds an `activeId` tab-state, **synced to the URL hash** via `history.replaceState` (no scroll, no history bloat). `hashchange` listener restores from back/forward navigation.
+- Renders the **single active section** inside `AnimatePresence mode="wait"` with a 220 ms cross-fade. `useReducedMotion()` collapses the animation.
+- Two view modes: `Visual` (the storytelling layout) and `All Parameters` (a flat detail table).
 
-| File | Group | Simulations |
-|------|-------|-------------|
-| `EconomicPlayground.tsx` | Economic | Transaction Fee Calculator; Epoch Rewards (rho/tau split); UTxO Min ADA |
-| `TechnicalPlayground.tsx` | Technical | Pool Saturation (nOpt/k); Pledge Influence (a0) |
-| `NetworkPlayground.tsx` | Network | Block Throughput / TPS; Script Execution Budget |
-| `GovernancePlayground.tsx` | Governance | Timeline converter (epochs → days/months/years) + deposit cost simulator |
+### Components — `components/ProtocolParameters/`
+| Folder | What's inside |
+|--------|---------------|
+| `Hero/` | `Hero.tsx` (title, "Live · Epoch N" badge with pulse keyframe, era chip) + `HeroStatTile.tsx` (count-up tile with corner glyph) |
+| `Sections/` | One file per topic: `FeesSection`, `ThroughputSection`, `DepositsSection`, `RewardsSection`, `PoolsSection`, `ScriptsSection`, `CollateralSection`, `GovernanceSection`, `ProtocolVersionFooter` |
+| `Common/` | The reusable primitives — see "Section Storytelling Design Language" below |
+| `DetailedView/` | The flat all-parameters table for the `Detail` view mode |
+| `playground/` | `calculations.ts` (pure unit-testable math), `scenarios.ts` (typed preset packs), `liveContext.ts` (era table, accent palette, section descriptors) |
 
-### Design patterns
-- Sliders start at the live on-chain value (passed via props).
-- A MUI `Chip` shows the live value whenever the slider diverges.
-- An `IoRefresh` reset link snaps the slider back.
-- Only `@mui/material` primitives (Slider, LinearProgress, Chip, Collapse, Grid, Paper) — no extra chart lib.
-- Playground panels are `unmountOnExit` → state resets each re-open.
-- Playground is **not rendered** while `loading`, to avoid seeding simulators with `0` / `NaN`.
-
-### Cardano constants used in simulations
+### Cardano constants (sourced live from yaci-store, refresh periodically)
+Defined in `components/ProtocolParameters/playground/calculations.ts`. **Adjust here, not inline in components.**
 ```
-TOTAL_ADA_SUPPLY    = 45_000_000_000    // max supply
-CIRCULATING         ≈ 37_000_000_000
-RESERVES            ≈  8_000_000_000
-ACTIVE_STAKE        ≈ 26_000_000_000
-LOVELACE_PER_ADA    = 1_000_000
-EPOCHS_PER_YEAR     ≈ 73
-MAINNET_EPOCH_DAYS  = 5
-AVG_BLOCK_TIME_SECONDS = 20             // slot 1 s, ~5 % leadership rate
+TOTAL_ADA_SUPPLY     = 45_000_000_000   // max supply (fixed)
+CIRCULATING          ≈ 38_600_000_000
+TREASURY             ≈  1_620_000_000
+RESERVES             ≈  6_410_000_000
+ACTIVE_STAKE         ≈ 21_800_000_000
+ACTIVE_STAKE_KEYS    ≈  1_280_000
+ACTIVE_POOLS         ≈      3_000
+LOVELACE_PER_ADA     =  1_000_000
+EPOCHS_PER_YEAR      ≈         73
+MAINNET_EPOCH_DAYS   =          5
+AVG_BLOCK_TIME_SECONDS =       20       // slot 1 s, ~5 % leadership rate
 ```
+
+---
+
+## Section Storytelling Design Language
+
+The Protocol Parameters overhaul established a reusable pattern for explanation-heavy and interactive feature pages. **When you build a new feature that mixes live data, real-world context, and "what if" exploration, follow this pattern.** All primitives live under `packages/frontend/src/components/ProtocolParameters/Common/` today — promote them to `src/components/commons/` once a second feature adopts them.
+
+### When to use it
+- Pages that teach: protocol parameters, governance flows, fee structures, staking mechanics.
+- Dashboards where each tile invites deeper exploration via a sub-simulator.
+- Anywhere you'd otherwise reach for "tabs + tables + an info icon".
+
+**Don't use it** for plain list/detail flows or transactional UI. The visual weight is wrong for those.
+
+### The vertical rhythm (one per section)
+
+Every section follows the same eight-step rhythm. Skip steps that don't apply, but never reorder them:
+
+```
+SectionShell  (accent-tinted panel, 3 px left stripe)
+└── SectionHeader      icon · title · single-line intent
+    "Why this matters" 2–4 sentences of plain-English framing
+    LiveAnchorStat     one big animated number with caption
+    [ParamCard …]      one tile per relevant parameter
+    ScenarioPills      named real-world preset chips
+    SimulatorPanel     two-column: inputs ⇢ result
+    WhatIfExpander     opinionated "if we doubled X" comparison
+    BackgroundExpander 100–200 words of sourced deeper context
+```
+
+### Reusable primitives — `components/ProtocolParameters/Common/`
+
+| Primitive | Purpose | Key props |
+|-----------|---------|-----------|
+| `SectionShell` | The visual frame for each section. Accent-tinted background, 3 px gradient left stripe, rounded corners. **Visually neutral on entry** — page-level `AnimatePresence` owns the swap animation. | `id`, `accent`, `children` |
+| `SectionHeader` | Tinted icon chip + headline + one-line intent. Keep the intent under 80 chars. | `Icon`, `title`, `intent`, `accent` |
+| `LiveAnchorStat` | The big animated number that opens every section. `react-countup` for entry; `useReducedMotion` collapses to instant. Optional `(estimate)` italic when not directly observed. Optional `abbreviated` for SI suffixes (B/M/k). | `value`, `decimals`, `unit`, `prefix`, `caption`, `accent`, `estimate`, `abbreviated` |
+| `ParamCard` | Single parameter tile — name + value + unit + description. Hover lifts via `framer-motion`. Optional `subValue` (e.g. ADA equivalent below lovelace). | `label`, `value`, `unit`, `description`, `accent`, `subValue` |
+| `ScenarioPills` | Horizontal chip row of named presets. Active pill fills with the section accent; inactive use a soft tint. Renders `<button role="tab" aria-selected>` for keyboard / screen readers. | `items`, `selectedId`, `onSelect`, `accent`, `caption` |
+| `SimulatorPanel` | Two-column layout: inputs (paper-tinted) → result (accent-tinted). Stacks on `xs`. | `inputs`, `result`, `accent`, `inputsCaption`, `resultCaption` |
+| `WhatIfExpander` | Opinionated callout with a "What if?" pill, closed by default. Used for the "if we doubled / halved X" comparator. | `prompt`, `body`, `accent` |
+| `BackgroundExpander` | Quieter, dashed-border deep-context block. Optional `sources` render as outbound links at the bottom. | `title`, `body`, `sources?` |
+| `SectionAnchorNav` | Controlled tab selector. Vertical rail on `md+`, horizontal sticky pills on mobile/tablet via `useBreakpoint`. ARIA `role="tablist"`. | `activeId`, `onSelect` |
+
+### Hero pattern — `components/ProtocolParameters/Hero/`
+
+A flagship-quality top zone for any feature that wants to lead with live numbers:
+- `Hero.tsx` — title + "LIVE · Epoch N" badge with a 2 s `box-shadow` pulse keyframe (collapsed by `prefers-reduced-motion`) + an era / version chip + a 6-tile responsive grid (`xs: 2-col`, `sm: 3-col`, `md: 6-col`).
+- `HeroStatTile.tsx` — `react-countup` value with `useReducedMotion` (drops to `duration={0}` when reduced); `framer-motion whileHover={{ y: -3 }}`; corner glyph at low opacity; soft accent radial-gradient backdrop. Optional `tooltip`.
+
+### Visual system — theme tokens only, no raw hex
+- **Accent roles** live in `playground/liveContext.ts` as `AccentRole = "primary" | "info" | "success" | "warning" | "error" | "secondary" | "violet"`. Each section descriptor declares one. Resolve to a CSS color via `accentColor(role, theme)` — never write a hex literal in a component.
+- `theme.isDark` (custom flag) gates background tints. **Never** read `theme.palette.mode`.
+- Card background: `alpha(accent, isDark ? 0.05 : 0.025)`; border: `alpha(accent, 0.18–0.45)`; hover ring: `alpha(accent, 0.5)`; result glow: `0 6px 24px -8px alpha(accent, 0.25–0.4)`.
+- Radii: card `1.5`, section panel `2`, chip `999`. Tabular numerals for any displayed number: `fontVariantNumeric: "tabular-nums"`.
+- Backdrop blur: `backdropFilter: "blur(6–10px)"` on hero tiles and sticky mobile nav.
+
+### Motion rules
+- Page-level: tab swap inside `AnimatePresence mode="wait"` + `motion.div` with `initial={{ opacity: 0, y: 8 }}` → `animate={{ opacity: 1, y: 0 }}` → `exit={{ opacity: 0, y: -6 }}`, 220 ms `[0.22, 1, 0.36, 1]` ease.
+- Hero tile entry: `react-countup` 1.4 s; hover lift via `framer-motion whileHover={{ y: -3 }}` (spring 280/22).
+- Card hover: `whileHover={{ y: -2 }}` + 200 ms `border-color` + `box-shadow` transition.
+- Pill change / scenario swap: spring 220/24.
+- **Always honour `prefers-reduced-motion`.** Three patterns:
+  1. `const reduced = useReducedMotion();` then conditionally pass `initial`/`animate`/`exit`.
+  2. `react-countup` `duration={reduced ? 0 : 1.4}`.
+  3. CSS keyframes — wrap in `"@media (prefers-reduced-motion: reduce)": { animation: "none" }`.
+- **Define `@keyframes` in the same `sx` prop as `animation:` use.** Emotion scopes keyframe names; defining on a parent and using on a child silently breaks.
+
+### Tab-swap navigation (no scroll)
+For long pages where each section is independently meaningful, prefer **click-to-swap tabs** over a scrolling narrative:
+1. Page holds `activeId` state, initialized from `window.location.hash`.
+2. `SectionAnchorNav` is controlled (`activeId` / `onSelect`).
+3. `onSelect` calls `setActiveId` + `history.replaceState(null, "", "#" + id)` (no scroll, no history bloat).
+4. `hashchange` listener handles back / forward.
+5. Render only the active section inside `AnimatePresence mode="wait"` for a small cross-fade.
+
+### Speaking-examples content rule
+Every interactive sub-feature must offer **named real-world scenarios** (chip presets that snap inputs to realistic values), not just sliders with default 0. Define the scenario shapes in a typed `playground/scenarios.ts`. Each scenario carries `id`, `label`, one-sentence `description`, and the input values it should set. Cross-check empirical values against live data (yaci-store MCP, cexplorer.io) — don't ship invented numbers.
+
+### Pure-math separation
+All formulas live in `playground/calculations.ts` as pure functions (`txFeeLovelace`, `tpsEstimate`, `saturationPct`, `pledgeBonusPct`, `halfLifeYears`, `epochsToDays`, …). Keeps components thin, makes math unit-testable, and prevents subtle copy/paste drift between simulators and "What if?" prose.
+
+### How to adopt for a new feature
+1. Create `src/components/<Feature>/{Sections,Common,Hero,playground}/`.
+2. **Reuse the Common primitives** by importing from `src/components/ProtocolParameters/Common/` — don't fork them. (When the second feature lands, promote `Common/` to `src/components/commons/sectionStorytelling/`.)
+3. Define a `SECTIONS` array in your `playground/liveContext.ts` with `{ id, label, short, Icon, accent }` per section.
+4. Put pure math in `playground/calculations.ts`, scenario presets in `playground/scenarios.ts`.
+5. Each section file follows the eight-step rhythm above. Cap "Background" copy at 200 words; link out for more.
+6. Audit before commit: `grep -E '#[0-9a-fA-F]{3,8}'` over your new files — zero raw hex.
 
 ---
 
@@ -508,7 +596,7 @@ AVG_BLOCK_TIME_SECONDS = 20             // slot 1 s, ~5 % leadership rate
 |---------|---------|-------|
 | `highcharts` + `highcharts-react-official` | Charts (pie, area, line) | Primary charting lib |
 | `recharts` | Secondary charts | Used in `TokenAnalytics` ComposedChart — retained for mixed bar/line renders |
-| `framer-motion` | Animations | Installed, lightly used |
+| `framer-motion` | Animations | Used by the Section Storytelling primitives (hover lift, tab cross-fade, count-up). Always pair with `useReducedMotion`. |
 | `bignumber.js` | Precise math for ADA/lovelace | Always use for ADA arithmetic |
 | `date-fns` + `date-fns-tz` | Dates | Prefer over `moment` |
 | `moment` / `moment-timezone` | Legacy dates | Present but should be replaced with `date-fns` |
@@ -527,7 +615,7 @@ AVG_BLOCK_TIME_SECONDS = 20             // slot 1 s, ~5 % leadership rate
 | `lodash` | Utility library | Tree-shake via `lodash/<fn>` imports |
 | `sass` | SCSS compilation | Vite handles `.scss` imports |
 | `react-use` | React hooks grab-bag | |
-| `react-countup` | Animated number counter | Dashboard stat cards |
+| `react-countup` | Animated number counter | Dashboard stat cards + every `LiveAnchorStat` / `HeroStatTile` in the Section Storytelling pattern. Drop `duration` to 0 under `useReducedMotion`. |
 | `react-circular-progressbar` | Circular progress | Epoch progress indicators |
 
 ---

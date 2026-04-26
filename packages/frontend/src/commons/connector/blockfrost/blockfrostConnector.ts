@@ -24,6 +24,7 @@ import {
 } from "@shared/dtos/GovernanceOverview";
 import { computeTxTags, computeTotalLovelaceOutput } from "@shared/helpers/txTags";
 import { getEpochStatus, getEpochProgress, computeEpochSlotNo, MAINNET_EPOCH_MAX_SLOT } from "@shared/helpers/epochHelpers";
+import { mapBfProtocolParams, BfProtocolParamsRaw } from "./mapper/protocolParams";
 
 /**
  * Direct Blockfrost connector — calls the Blockfrost REST API from the browser.
@@ -796,12 +797,10 @@ export class BlockfrostConnector extends ConnectorBase {
   // ── Protocol params & Staking stubs ───────────────────────────────────────
 
   async getCurrentProtocolParameters(): Promise<ApiReturnType<TProtocolParam>> {
-    try {
-      const resp = await this.client.get<any>("/epochs/latest/parameters");
-      return { data: resp.data as TProtocolParam, lastUpdated: Date.now() };
-    } catch (e: any) {
-      return { data: null, error: e.message, lastUpdated: Date.now() };
-    }
+    return this.request<TProtocolParam>(async () => {
+      const resp = await this.client.get<BfProtocolParamsRaw>("/epochs/latest/parameters");
+      return mapBfProtocolParams(resp.data);
+    });
   }
 
   async getStakeAddressRegistrations(): Promise<ApiReturnType<IStakeKey[]>> {
