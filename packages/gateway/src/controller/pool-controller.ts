@@ -12,7 +12,8 @@ if (!POOL_API) {
   // demeter.run does not implement Blockfrost's `/pools/*` endpoints. When
   // only DEMETER_* is configured the pool routes return a structured
   // "not supported" envelope so the frontend can degrade gracefully.
-  poolController.use((_req, res) => {
+  poolController.use((req, res) => {
+    console.log(`[${new Date().toISOString()}] [gateway] /api/pools/* unsupported (no blockfrost.io key) — ${req.method} ${req.originalUrl}`);
     res.status(501).json(unsupportedEnvelope("/api/pools/*"));
   });
 } else {
