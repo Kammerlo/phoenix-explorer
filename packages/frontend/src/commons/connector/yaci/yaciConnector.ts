@@ -44,7 +44,7 @@ import { ParsedUrlQuery } from "querystring";
 import { Block } from "@shared/dtos/block.dto";
 import { ApiReturnType } from "@shared/APIReturnType";
 import { Transaction, TransactionDetail } from "@shared/dtos/transaction.dto";
-import { ITokenOverview, TokenHolder } from "@shared/dtos/token.dto";
+import { ITokenOverview } from "@shared/dtos/token.dto";
 import { GovActionVote, GovernanceActionDetail, GovernanceActionListItem } from "@shared/dtos/GovernanceOverview";
 import { DrepDelegates } from "@shared/dtos/drep.dto";
 import { SearchResult } from "@shared/dtos/seach.dto";
@@ -501,64 +501,69 @@ export class YaciConnector extends ConnectorBase {
       return { data: results, lastUpdated: Date.now(), total: results.length };
     }
 
-    // pool1... stake pool
+    // pool1... stake pool — yaci-store has no /pools/{poolId} detail endpoint.
     if (/^pool1[a-z0-9]{50,}$/i.test(q)) {
-      const poolResult = await probe(() => this.client.get<any>(`${this.baseUrl}/pools/${q}`));
-      if (poolResult) {
-        const label: string | undefined = poolResult.data?.metadata?.ticker ?? poolResult.data?.metadata?.name ?? undefined;
-        results.push({ type: "pool", id: q, label });
-      }
       return { data: results, lastUpdated: Date.now(), total: results.length };
     }
 
-    // drep1... DRep
+    // drep1... DRep — yaci-store has no /governance/dreps/{id} detail endpoint.
     if (/^drep1[a-z0-9]+$/i.test(q)) {
-      const drepResult = await probe(() => this.client.get(`${this.baseUrl}/governance/dreps/${q}`));
-      if (drepResult) results.push({ type: "drep", id: q });
       return { data: results, lastUpdated: Date.now(), total: results.length };
     }
 
     // asset1... token fingerprint
     if (/^asset1[a-z0-9]+$/i.test(q)) {
-      const assetResult = await probe(() => this.client.get<YaciAsset>(`${this.baseUrl}/assets/${q}`));
-      if (assetResult) {
-        const label: string | undefined = assetResult.data?.metadata?.ticker ?? (assetResult.data?.onchainMetadata?.name as string | undefined) ?? undefined;
-        results.push({ type: "token", id: q, label });
-      }
+      results.push({ type: "token", id: q });
       return { data: results, lastUpdated: Date.now(), total: results.length };
     }
 
-    // Pure number: epoch or block
+    // Pure number: block only (yaci-store has no /epochs/{n} detail endpoint).
     if (/^\d+$/.test(q)) {
       const n = Number(q);
-      const [epochResult, blockResult] = await Promise.all([
-        probe(() => this.client.get<any>(`${this.baseUrl}/epochs/${n}`)),
-        probe(() => this.client.get<BlockDto>(`${this.baseUrl}/blocks/${n}`)),
-      ]);
-      if (epochResult) results.push({ type: "epoch", id: q });
+      const blockResult = await probe(() => this.client.get<BlockDto>(`${this.baseUrl}/blocks/${n}`));
       if (blockResult) results.push({ type: "block", id: q, label: String(n) });
       return { data: results, lastUpdated: Date.now(), total: results.length };
     }
 
-    // Free-text: use Yaci's native asset name search
-    if (/^[a-zA-Z0-9$.\-_ ]+$/.test(q)) {
-      const tokenResult = await probe(() =>
-        this.client.get<{ assetList?: YaciAsset[] }>(
-          `${this.baseUrl}/assets`,
-          { params: { search: q, size: 5, page: 0 } }
-        )
-      );
-      for (const asset of tokenResult?.data?.assetList ?? []) {
-        const overview = yaciAssetToTokenOverview(asset);
-        const id = overview.fingerprint || asset.unit || "";
-        if (!id) continue;
-        const label = overview.displayName || overview.metadata?.ticker || q;
-        results.push({ type: "token", id, label });
-        if (results.length >= 5) break;
-      }
-    }
-
+    // Free-text: yaci-store has no /assets listing/search endpoint.
     return { data: results, lastUpdated: Date.now(), total: results.length };
+  }
+
+  async getDashboardStats(): Promise<ApiReturnType<DashboardStats>> {
+    return this.request<DashboardStats>(async () => {
+      const [latestBlock, latestEpoch] = await Promise.all([
+        this.client.get<BlockDto>(`${this.baseUrl}/blocks/latest`).then((r) => r.data).catch(() => null),
+        this.client.get<Epoch>(`${this.baseUrl}/epochs/latest`).then((r) => r.data).catch(() => null)
+      ]);
+      return {
+        currentEpoch: {
+          no: latestEpoch?.number ?? latestBlock?.epoch ?? 0,
+          startTime: null,
+          endTime: null,
+          txCount: latestEpoch?.txCount ?? 0,
+          blkCount: latestEpoch?.blockCount ?? 0,
+          outSum: latestEpoch?.outputSum ? String(latestEpoch.outputSum) : null,
+          fees: latestEpoch?.fees ? String(latestEpoch.fees) : null,
+          activeStake: latestEpoch?.activeStake ? String(latestEpoch.activeStake) : null,
+          progressPercent: 0
+        },
+        latestBlock: {
+          height: latestBlock?.number ?? null,
+          hash: latestBlock?.hash ?? "",
+          slot: latestBlock?.slot ?? null,
+          epochNo: latestBlock?.epoch ?? null,
+          epochSlot: latestBlock?.epochSlot ?? null,
+          time: latestBlock?.time ?? 0,
+          txCount: latestBlock?.txCount ?? 0,
+          size: latestBlock?.size ?? 0
+        },
+        supply: { circulating: "", total: "", max: "", locked: "" },
+        stake: {
+          live: "",
+          active: latestEpoch?.activeStake ? String(latestEpoch.activeStake) : ""
+        }
+      };
+    });
   }
 }
 
