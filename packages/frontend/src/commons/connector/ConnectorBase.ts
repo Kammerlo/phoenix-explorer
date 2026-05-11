@@ -16,6 +16,7 @@ import { Drep, DrepDelegates } from "@shared/dtos/drep.dto";
 import { SearchResult } from "@shared/dtos/seach.dto";
 import { DashboardStats } from "@shared/dtos/dashboard.dto";
 import { FunctionEnum, POOL_TYPE } from "./types/FunctionEnum";
+import { Capability } from "./types/Capability";
 // @ts-ignore — generated TProtocolParam lives outside strict shared DTOs
 import { TProtocolParam } from "../../types/protocol";
 import { ApiConnector, StakeAddressAction } from "./ApiConnector";
@@ -38,6 +39,10 @@ export abstract class ConnectorBase extends ApiConnector {
 
   getSupportedFunctions(): FunctionEnum[] {
     return [];
+  }
+
+  getCapabilities(): ReadonlySet<Capability> {
+    return new Set();
   }
 
   // ── Helpers available to subclasses ──────────────────────────────────────
