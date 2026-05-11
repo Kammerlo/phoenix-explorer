@@ -8,24 +8,26 @@ import { GatewayConnector } from "./gateway/gatewayConnector";
 import { YaciConnector } from "./yaci/yaciConnector";
 import { BlockfrostConnector } from "./blockfrost/blockfrostConnector";
 import { loadProviderConfig } from "src/stores/provider";
+import { verifyCapabilityImplementations } from "./capabilities/verifyCapabilityImplementations";
 
 const API_URL: string = process.env.REACT_APP_API_URL || "";
 const API_CONNECTOR_TYPE: string = process.env.REACT_APP_API_TYPE || "";
 
 _setConnectorFactory(() => {
   const config = loadProviderConfig();
+  let connector;
   if (config.type === "YACI") {
-    return new YaciConnector(config.baseUrl);
+    connector = new YaciConnector(config.baseUrl);
+  } else if (config.type === "BLOCKFROST") {
+    connector = new BlockfrostConnector(config.baseUrl, config.apiKey ?? "");
+  } else if (config.baseUrl) {
+    connector = new GatewayConnector(config.baseUrl);
+  } else if (API_CONNECTOR_TYPE === "GATEWAY" || !API_CONNECTOR_TYPE) {
+    connector = new GatewayConnector(API_URL);
+  } else {
+    throw new Error("Invalid provider configuration");
   }
-  if (config.type === "BLOCKFROST") {
-    return new BlockfrostConnector(config.baseUrl, config.apiKey ?? "");
-  }
-  // Default: GATEWAY
-  if (config.baseUrl) {
-    return new GatewayConnector(config.baseUrl);
-  }
-  if (API_CONNECTOR_TYPE === "GATEWAY" || !API_CONNECTOR_TYPE) {
-    return new GatewayConnector(API_URL);
-  }
-  throw new Error("Invalid provider configuration");
+  // Dev-mode drift check: warns if declared capabilities and overrides disagree.
+  if (import.meta.env.DEV) verifyCapabilityImplementations(connector);
+  return connector;
 });
