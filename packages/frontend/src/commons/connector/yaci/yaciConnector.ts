@@ -166,18 +166,19 @@ export class YaciConnector extends ConnectorBase {
 
   async getPoolBlocks(poolId: string, pageInfo: ParsedUrlQuery): Promise<ApiReturnType<Block[]>> {
     return this.requestList<Block>(async () => {
-      const r = await this.client.get<{ poolBlocks?: PoolBlock[]; total?: number; totalPages?: number }>(
+      const r = await this.client.get<PoolBlock[]>(
         `${this.baseUrl}/blocks/pool/${poolId}`, { params: pageInfo }
       );
-      const blocks: Block[] = (r.data.poolBlocks ?? []).map((b) => ({
-        blockNo: b.blockNumber ?? b.number ?? 0,
-        epochNo: b.epochNumber ?? b.epoch ?? 0,
-        hash: b.blockHash ?? b.hash ?? "",
+      const rows = r.data ?? [];
+      const blocks: Block[] = rows.map((b) => ({
+        blockNo: (b.blockNumber ?? b.number) ?? 0,
+        epochNo: (b.epochNumber ?? b.epoch) ?? 0,
+        hash: (b.blockHash ?? b.hash) ?? "",
         time: "",
         txCount: 0,
         slotLeader: poolId
       } as Block));
-      return { data: blocks, extras: { total: r.data.total, totalPage: r.data.totalPages } };
+      return { data: blocks };
     });
   }
 
@@ -343,17 +344,16 @@ export class YaciConnector extends ConnectorBase {
 
   async getGovernanceOverviewList(pageInfo: ParsedUrlQuery): Promise<ApiReturnType<GovernanceActionListItem[]>> {
     return this.requestList<GovernanceActionListItem>(async () => {
-      const r = await this.client.get<{ proposalList?: GovActionProposal[]; govActionProposalList?: GovActionProposal[]; total?: number; totalPages?: number }>(
+      const r = await this.client.get<GovActionProposal[]>(
         `${this.baseUrl}/governance/proposals`, { params: pageInfo }
       );
-      const list = r.data.proposalList ?? r.data.govActionProposalList ?? [];
-      const items: GovernanceActionListItem[] = list.map((p) => ({
+      const items: GovernanceActionListItem[] = (r.data ?? []).map((p) => ({
         txHash: p.txHash ?? "",
         index: p.index ?? 0,
         type: p.type,
         status: "ACTIVE" as const
       }));
-      return { data: items, extras: { total: r.data.total, totalPage: r.data.totalPages } };
+      return { data: items };
     });
   }
 
