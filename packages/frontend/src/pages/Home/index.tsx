@@ -3,6 +3,7 @@ import { Container, Grid, styled } from "@mui/material";
 import { useTranslation } from "react-i18next";
 
 import { ApiConnector } from "src/commons/connector/ApiConnector";
+import { useCapability } from "src/commons/connector/capabilities/useCapability";
 import { Block } from "@shared/dtos/block.dto";
 import { Transaction } from "@shared/dtos/transaction.dto";
 import { PoolOverview } from "@shared/dtos/pool.dto";
@@ -38,6 +39,11 @@ const Home: React.FC = () => {
   const [pools, setPools]             = useState<PoolOverview[]>([]);
   const [poolsLoading, setPoolsLoading] = useState(true);
 
+  const canShowPools = useCapability("getPoolList");
+  const canShowBlocks = useCapability("getBlocksPage");
+  const canShowTxs = useCapability("getTransactions");
+  const canShowDashboardStats = useCapability("getDashboardStats");
+
   useEffect(() => {
     document.title = t("head.page.dashboard");
   }, [t]);
@@ -45,59 +51,85 @@ const Home: React.FC = () => {
   useEffect(() => {
     const api = ApiConnector.getApiConnector();
 
-    api
-      .getDashboardStats()
-      .then((result) => setStatsData(result.data))
-      .catch(() => {})
-      .finally(() => setStatsLoading(false));
+    if (canShowDashboardStats) {
+      api.getDashboardStats()
+        .then((result) => setStatsData(result.data))
+        .catch(() => {})
+        .finally(() => setStatsLoading(false));
+    } else {
+      setStatsLoading(false);
+    }
 
-    api
-      .getBlocksPage({ page: "1", size: String(TABLE_ROWS) })
-      .then((r) => setBlocks((r.data ?? []).slice(0, TABLE_ROWS)))
-      .catch(() => {})
-      .finally(() => setBlocksLoading(false));
+    if (canShowBlocks) {
+      api.getBlocksPage({ page: "1", size: String(TABLE_ROWS) })
+        .then((r) => setBlocks((r.data ?? []).slice(0, TABLE_ROWS)))
+        .catch(() => {})
+        .finally(() => setBlocksLoading(false));
+    } else {
+      setBlocksLoading(false);
+    }
 
-    api
-      .getTransactions(undefined, { page: "1", size: String(TABLE_ROWS) })
-      .then((r) => setTxs((r.data ?? []).slice(0, TABLE_ROWS)))
-      .catch(() => {})
-      .finally(() => setTxsLoading(false));
+    if (canShowTxs) {
+      api.getTransactions(undefined, { page: "1", size: String(TABLE_ROWS) })
+        .then((r) => setTxs((r.data ?? []).slice(0, TABLE_ROWS)))
+        .catch(() => {})
+        .finally(() => setTxsLoading(false));
+    } else {
+      setTxsLoading(false);
+    }
 
-    api
-      .getPoolList({ page: "1", size: "5" })
-      .then((r) => setPools(r.data ?? []))
-      .catch(() => {})
-      .finally(() => setPoolsLoading(false));
-  }, []);
+    if (canShowPools) {
+      api.getPoolList({ page: "1", size: "5" })
+        .then((r) => setPools(r.data ?? []))
+        .catch(() => {})
+        .finally(() => setPoolsLoading(false));
+    } else {
+      setPoolsLoading(false);
+    }
+  }, [canShowDashboardStats, canShowBlocks, canShowTxs, canShowPools]);
 
   return (
     <HomeContainer data-testid="home-container">
-      <Fade duration={0.32}>
-        <DashboardStatsGrid statsData={statsData} loading={statsLoading} />
-      </Fade>
+      {canShowDashboardStats && (
+        <Fade duration={0.32}>
+          <DashboardStatsGrid statsData={statsData} loading={statsLoading} />
+        </Fade>
+      )}
 
-      <Fade duration={0.32} delay={0.08}>
-        <BlockChainVisualizer />
-      </Fade>
+      {canShowBlocks && (
+        <Fade duration={0.32} delay={0.08}>
+          <BlockChainVisualizer />
+        </Fade>
+      )}
 
-      <Fade duration={0.32} delay={0.14} whileInView>
-        <ActivityChart />
-      </Fade>
+      {(canShowBlocks || canShowTxs) && (
+        <Fade duration={0.32} delay={0.14} whileInView>
+          <ActivityChart />
+        </Fade>
+      )}
 
-      <Fade duration={0.32} whileInView>
-        <Grid container spacing={2} mb={3}>
-          <Grid size={{ xs: 12, md: 6 }}>
-            <LatestBlocks blocks={blocks} loading={blocksLoading} rows={TABLE_ROWS} />
+      {(canShowBlocks || canShowTxs) && (
+        <Fade duration={0.32} whileInView>
+          <Grid container spacing={2} mb={3}>
+            {canShowBlocks && (
+              <Grid size={{ xs: 12, md: canShowTxs ? 6 : 12 }}>
+                <LatestBlocks blocks={blocks} loading={blocksLoading} rows={TABLE_ROWS} />
+              </Grid>
+            )}
+            {canShowTxs && (
+              <Grid size={{ xs: 12, md: canShowBlocks ? 6 : 12 }}>
+                <LatestTransactions txs={txs} loading={txsLoading} rows={TABLE_ROWS} />
+              </Grid>
+            )}
           </Grid>
-          <Grid size={{ xs: 12, md: 6 }}>
-            <LatestTransactions txs={txs} loading={txsLoading} rows={TABLE_ROWS} />
-          </Grid>
-        </Grid>
-      </Fade>
+        </Fade>
+      )}
 
-      <Fade duration={0.32} whileInView>
-        <TopDelegationPools pools={pools} loading={poolsLoading} />
-      </Fade>
+      {canShowPools && (
+        <Fade duration={0.32} whileInView>
+          <TopDelegationPools pools={pools} loading={poolsLoading} />
+        </Fade>
+      )}
     </HomeContainer>
   );
 };
