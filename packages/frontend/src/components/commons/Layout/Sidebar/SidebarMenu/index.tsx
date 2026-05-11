@@ -6,7 +6,8 @@ import { Link, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
 import { useBreakpoint } from "src/hooks/useBreakpoint";
-import { footerMenus, menus } from "src/commons/menus";
+import { useMenus, useFooterMenus } from "src/commons/connector/capabilities/useMenus";
+import { MenuItem as SharedMenuItem } from "src/commons/connector/capabilities/filterMenus";
 import { isExternalLink } from "src/commons/utils/helper";
 import { RootState } from "src/stores/types";
 import { setSidebar } from "src/stores/system";
@@ -25,23 +26,15 @@ import {
   itemStyle
 } from "./styles";
 
-interface MenuItem {
-  title: string;
-  key?: string;
-  href?: string;
-  children?: MenuItem[];
-  icon?: string | React.FunctionComponent<React.SVGProps<SVGSVGElement>>;
-  tooltip?: string;
-  isSpecialPath?: boolean;
-  hidden: boolean;
-  collapsable?: boolean;
-}
+type MenuItem = SharedMenuItem;
 
 const SidebarMenu: React.FC = () => {
   const { t } = useTranslation();
   const { pathname } = useLocation();
   const { sidebar } = useSelector(({ system }: RootState) => system);
   const specialPath = useSelector(({ system }: RootState) => system.specialPath);
+  const menus = useMenus();
+  const footerMenus = useFooterMenus();
   const { isTablet } = useBreakpoint();
 
   const isActiveMenu = (href: string, isSpecialPath?: boolean): boolean => {
@@ -170,7 +163,7 @@ const SidebarMenu: React.FC = () => {
           sx={(theme) => getMenuItemStyles(theme, isActive)}
         >
           {icon && (
-            <MenuIcon src={icon.toString()} alt={title} iconOnly={+!sidebar} active={+isActive} />
+            <MenuIcon src={String(icon)} alt={title} iconOnly={+!sidebar} active={+isActive} />
           )}
           <MenuText primary={title} open={+sidebar} active={+isActive} disable={+!!tooltip} />
           {sidebar && children?.length && collapsable && (
@@ -208,7 +201,7 @@ const SidebarMenu: React.FC = () => {
         sx={(theme) => getSubMenuItemStyles(theme, isActive)}
       >
         {icon && (
-          <MenuIcon src={icon.toString()} alt={title} iconOnly={+!sidebar} active={+isActive} />
+          <MenuIcon src={String(icon)} alt={title} iconOnly={+!sidebar} active={+isActive} />
         )}
         <SubMenuText primary={title} open={+sidebar} active={+isActive} />
       </ListItem>
