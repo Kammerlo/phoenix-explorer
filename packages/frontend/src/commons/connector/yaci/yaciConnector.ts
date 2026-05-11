@@ -46,8 +46,7 @@ import { ApiReturnType } from "@shared/APIReturnType";
 import { Transaction, TransactionDetail } from "@shared/dtos/transaction.dto";
 import { ITokenOverview, TokenHolder } from "@shared/dtos/token.dto";
 import { GovActionVote, GovernanceActionDetail, GovernanceActionListItem } from "@shared/dtos/GovernanceOverview";
-import { PoolDetail, PoolOverview } from "@shared/dtos/pool.dto";
-import { Drep, DrepDelegates } from "@shared/dtos/drep.dto";
+import { DrepDelegates } from "@shared/dtos/drep.dto";
 import { SearchResult } from "@shared/dtos/seach.dto";
 import { DashboardStats } from "@shared/dtos/dashboard.dto";
 
@@ -116,34 +115,23 @@ export class YaciConnector extends ConnectorBase {
   }
 
   getCapabilities(): ReadonlySet<Capability> {
-    // Initial wide set — narrowed in Task 22 after endpoint rewrites.
     return new Set<Capability>([
-      "getEpochs",
-      "getEpoch",
       "getBlocksPage",
       "getBlocksByEpoch",
       "getBlockDetail",
+      "getPoolBlocks",
       "getTxDetail",
       "getTransactions",
-      "getWalletAddressFromAddress",
       "getAddressTxsFromAddress",
-      "getWalletStakeFromAddress",
       "getStakeAddressRegistrations",
       "getStakeDelegations",
       "getPoolRegistrations",
       "getCurrentProtocolParameters",
-      "getTokensPage",
       "getTokenDetail",
       "getTokenTransactions",
-      "getTokenHolders",
-      "getTokensByPolicy",
       "getGovernanceOverviewList",
       "getGovernanceDetail",
       "getGovernanceActionVotes",
-      "getPoolList",
-      "getPoolDetail",
-      "getDreps",
-      "getDrep",
       "getDrepVotes",
       "getDrepDelegates",
       "search",
@@ -151,30 +139,9 @@ export class YaciConnector extends ConnectorBase {
     ]);
   }
 
-  /** Batch-fetch pool names for unique slot leaders and mutate blocks in-place. */
   private async _enrichBlocksWithPoolNames(blocks: Block[]): Promise<void> {
-    const uniqueLeaders = [...new Set(blocks.map((b) => b.slotLeader).filter(Boolean))] as string[];
-    if (uniqueLeaders.length === 0) return;
-    const poolNames = new Map<string, { name: string; ticker: string }>();
-    await Promise.all(
-      uniqueLeaders.map(async (leader) => {
-        try {
-          const resp = await this.client.get<any>(`${this.baseUrl}/pools/${leader}`);
-          const p = resp.data;
-          poolNames.set(leader, {
-            name: p.metadata?.name || p.poolId || leader,
-            ticker: p.metadata?.ticker || ""
-          });
-        } catch { /* no metadata or pool not found */ }
-      })
-    );
-    blocks.forEach((b) => {
-      if (b.slotLeader && poolNames.has(b.slotLeader)) {
-        const info = poolNames.get(b.slotLeader)!;
-        b.poolName = info.name;
-        b.poolTicker = info.ticker;
-      }
-    });
+    // Yaci-store has no /pools/{poolId} endpoint — leave pool names unresolved.
+    void blocks;
   }
 
   async getBlocksPage(pageInfo: ParsedUrlQuery): Promise<ApiReturnType<Block[]>> {
@@ -408,9 +375,14 @@ export class YaciConnector extends ConnectorBase {
 
   async getGovernanceDetail(txHash: string, index: string): Promise<ApiReturnType<GovernanceActionDetail>> {
     return this.request<GovernanceActionDetail>(async () => {
-      const p = (await this.client.get<GovActionProposal>(
-        `${this.baseUrl}/governance/proposals/${txHash}/${index}`
-      )).data;
+      // Yaci-store: /governance/proposals/{txHash} returns an array of proposals
+      // for the transaction. Pick the one matching the requested index when
+      // possible, otherwise fall back to the first.
+      const list = (await this.client.get<GovActionProposal[]>(
+        `${this.baseUrl}/governance/proposals/${txHash}`
+      )).data ?? [];
+      const requestedIdx = Number(index);
+      const p = list.find((x) => x.index === requestedIdx) ?? list[0] ?? {} as GovActionProposal;
       return {
         txHash: p.txHash ?? txHash,
         index: String(p.index ?? index),
@@ -432,8 +404,7 @@ export class YaciConnector extends ConnectorBase {
   async getGovernanceActionVotes(txHash: string, index: string): Promise<ApiReturnType<GovActionVote[]>> {
     return this.requestList<GovActionVote>(async () => {
       const r = await this.client.get<VotingProcedureDto[]>(
-        `${this.baseUrl}/governance/voting_procedures`,
-        { params: { govActionTxHash: txHash, govActionIndex: index } }
+        `${this.baseUrl}/governance/proposals/${txHash}/${index}/votes`
       );
       const votes: GovActionVote[] = (r.data ?? []).map((v) => ({
         voter: v.voterHash ?? "",
@@ -447,98 +418,31 @@ export class YaciConnector extends ConnectorBase {
     });
   }
 
-  async getPoolList(pageInfo: ParsedUrlQuery): Promise<ApiReturnType<PoolOverview[]>> {
-    return this.requestList<PoolOverview>(async () => {
-      const r = await this.client.get<{ poolList?: YaciPool[]; total?: number; totalPages?: number }>(
-        `${this.baseUrl}/pools`, { params: pageInfo }
-      );
-      const pools = (r.data.poolList ?? []).map((p, i) => ({
-        id: i,
-        poolId: p.poolIdBech32 ?? p.poolId ?? "",
-        poolName: p.metadata?.name ?? p.poolId ?? "",
-        tickerName: p.metadata?.ticker ?? "",
-        poolSize: 0,
-        declaredPledge: p.pledge ?? 0,
-        saturation: 0,
-        lifetimeBlock: 0
-      } as PoolOverview));
-      return { data: pools, extras: { total: r.data.total, totalPage: r.data.totalPages } };
-    });
-  }
-
-  async getPoolDetail(poolId: string): Promise<ApiReturnType<PoolDetail>> {
-    return this.request<PoolDetail>(async () => {
-      const p = (await this.client.get<YaciPool>(`${this.baseUrl}/pools/${poolId}`)).data;
-      return {
-        poolName: p.metadata?.name ?? p.poolId ?? poolId,
-        tickerName: p.metadata?.ticker ?? "",
-        poolView: p.poolIdBech32 ?? poolId,
-        poolStatus: "ACTIVE" as any,
-        createDate: "",
-        rewardAccounts: p.rewardAccount ? [p.rewardAccount] : [],
-        ownerAccounts: p.owners ?? [],
-        poolSize: 0,
-        stakeLimit: 0,
-        delegators: 0,
-        saturation: 0,
-        totalBalanceOfPoolOwners: 0,
-        reward: 0,
-        ros: 0,
-        pledge: p.pledge ?? 0,
-        cost: p.cost ?? 0,
-        margin: p.margin ?? 0,
-        epochBlock: 0,
-        lifetimeBlock: 0,
-        description: p.metadata?.description ?? "",
-        homepage: p.metadata?.homepage ?? ""
-      };
-    });
-  }
-
-  async getDreps(pageInfo: ParsedUrlQuery): Promise<ApiReturnType<Drep[]>> {
-    return this.requestList<Drep>(async () => {
-      const r = await this.client.get<{ drepList?: YaciDrep[]; total?: number; totalPages?: number }>(
-        `${this.baseUrl}/governance/dreps`, { params: pageInfo }
-      );
-      return {
-        data: (r.data.drepList ?? []).map(yaciDrepToDrep),
-        extras: { total: r.data.total, totalPage: r.data.totalPages }
-      };
-    });
-  }
-
-  async getDrep(drepId: string): Promise<ApiReturnType<Drep>> {
-    return this.request<Drep>(async () => {
-      const r = await this.client.get<YaciDrep>(`${this.baseUrl}/governance/dreps/${drepId}`);
-      return yaciDrepToDrep(r.data);
-    });
-  }
-
   async getDrepVotes(drepId: string, pageInfo: ParsedUrlQuery): Promise<ApiReturnType<GovernanceActionListItem[]>> {
     return this.requestList<GovernanceActionListItem>(async () => {
-      const r = await this.client.get<{ votingProcedures?: VotingProcedureDto[]; total?: number }>(
-        `${this.baseUrl}/governance/dreps/${drepId}/voting_procedures`, { params: pageInfo }
+      const r = await this.client.get<VotingProcedureDto[]>(
+        `${this.baseUrl}/governance/votes`, { params: { ...pageInfo, dRepId: drepId } }
       );
-      const items: GovernanceActionListItem[] = (r.data.votingProcedures ?? []).map((v) => ({
+      const items: GovernanceActionListItem[] = (r.data ?? []).map((v) => ({
         txHash: v.govActionTxHash ?? "",
         index: v.govActionIndex ?? 0,
         vote: (v.vote?.toLowerCase() ?? "abstain") as "yes" | "no" | "abstain"
       }));
-      return { data: items, extras: { total: r.data.total } };
+      return { data: items };
     });
   }
 
   async getDrepDelegates(drepId: string, pageInfo: ParsedUrlQuery): Promise<ApiReturnType<DrepDelegates[]>> {
     return this.requestList<DrepDelegates>(async () => {
-      const r = await this.client.get<{ delegatorList?: { address?: string; amount?: number; stakeKeyHash?: string }[]; total?: number }>(
-        `${this.baseUrl}/governance/dreps/${drepId}/delegators`, { params: pageInfo }
+      const r = await this.client.get<DelegationVote[]>(
+        `${this.baseUrl}/governance/delegation-votes/drep/${drepId}`, { params: pageInfo }
       );
-      const delegates: DrepDelegates[] = (r.data.delegatorList ?? []).map((d) => ({
+      const delegates: DrepDelegates[] = (r.data ?? []).map((d) => ({
         address: d.address ?? "",
         amount: d.amount ?? 0,
-        stakeKeyHash: d.stakeKeyHash
+        stakeKeyHash: undefined
       }));
-      return { data: delegates, extras: { total: r.data.total } };
+      return { data: delegates };
     });
   }
 
