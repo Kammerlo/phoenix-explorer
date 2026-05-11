@@ -8,9 +8,8 @@ import {
   BlockDto,
   BlocksPage,
   Delegation,
-  Epoch,
-  EpochsPage,
   GovActionProposal,
+  PoolBlock,
   PoolRegistration,
   PoolRetirement,
   ProtocolParamsDto,
@@ -25,7 +24,6 @@ import {
 import applyCaseMiddleware from "axios-case-converter";
 import { FunctionEnum, POOL_TYPE } from "../types/FunctionEnum";
 import { Capability } from "../types/Capability";
-import { epochToIEpochData } from "./mapper/EpochToIEpochData";
 import { poolRegistrationsToRegistrations } from "./mapper/PoolRegistrationsToRegistrations";
 import { poolRetirementsToRegistrations } from "./mapper/PoolRetirementsToRegistrations";
 import { blockDTOToBlock } from "./mapper/BlockDTOToBlock";
@@ -40,7 +38,6 @@ import { protocolParamsToTProtocolParam } from "./mapper/ProtocolParamsToTProtoc
 import { ParsedUrlQuery } from "querystring";
 import { Block } from "@shared/dtos/block.dto";
 import { ApiReturnType } from "@shared/APIReturnType";
-import { EpochOverview } from "@shared/dtos/epoch.dto";
 import { Transaction, TransactionDetail } from "@shared/dtos/transaction.dto";
 import { ITokenOverview, TokenHolder } from "@shared/dtos/token.dto";
 import { GovActionVote, GovernanceActionDetail, GovernanceActionListItem } from "@shared/dtos/GovernanceOverview";
@@ -177,6 +174,23 @@ export class YaciConnector extends ConnectorBase {
     });
   }
 
+  async getPoolBlocks(poolId: string, pageInfo: ParsedUrlQuery): Promise<ApiReturnType<Block[]>> {
+    return this.requestList<Block>(async () => {
+      const r = await this.client.get<{ poolBlocks?: PoolBlock[]; total?: number; totalPages?: number }>(
+        `${this.baseUrl}/blocks/pool/${poolId}`, { params: pageInfo }
+      );
+      const blocks: Block[] = (r.data.poolBlocks ?? []).map((b) => ({
+        blockNo: b.blockNumber ?? b.number ?? 0,
+        epochNo: b.epochNumber ?? b.epoch ?? 0,
+        hash: b.blockHash ?? b.hash ?? "",
+        time: "",
+        txCount: 0,
+        slotLeader: poolId
+      } as Block));
+      return { data: blocks, extras: { total: r.data.total, totalPage: r.data.totalPages } };
+    });
+  }
+
   async getTxDetail(txHash: string): Promise<ApiReturnType<TransactionDetail>> {
     return this.request<TransactionDetail>(async () => {
       const txDetails = (await this.client.get<TransactionDetails>(`${this.baseUrl}/txs/${txHash}`)).data;
@@ -240,24 +254,6 @@ export class YaciConnector extends ConnectorBase {
         status: stake.poolId ? "ACTIVE" : "INACTIVE",
         pool: poolInfo
       };
-    });
-  }
-
-  async getEpochs(pageInfo: ParsedUrlQuery): Promise<ApiReturnType<EpochOverview[]>> {
-    return this.requestList<EpochOverview>(async () => {
-      const r = await this.client.get<EpochsPage>(`${this.baseUrl}/epochs`, { params: pageInfo });
-      const epochs = (r.data.epochs ?? []).map(epochToIEpochData);
-      return {
-        data: epochs,
-        extras: { total: r.data.total, totalPage: r.data.totalPages }
-      };
-    });
-  }
-
-  async getEpoch(epochId: number): Promise<ApiReturnType<EpochOverview>> {
-    return this.request<EpochOverview>(async () => {
-      const r = await this.client.get<Epoch>(`${this.baseUrl}/epochs/${epochId}`);
-      return epochToIEpochData(r.data);
     });
   }
 
