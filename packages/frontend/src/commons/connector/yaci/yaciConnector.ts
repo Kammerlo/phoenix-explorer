@@ -3,7 +3,6 @@ import axios, { AxiosInstance } from "axios";
 import { StakeAddressAction } from "../ApiConnector";
 import { ConnectorBase } from "../ConnectorBase";
 import {
-  AddressBalanceDto,
   AddressTransaction,
   BlockDto,
   BlocksPage,
@@ -13,7 +12,6 @@ import {
   PoolRegistration,
   PoolRetirement,
   ProtocolParamsDto,
-  StakeAccountInfo,
   StakeRegistrationDetail,
   TransactionDetails,
   TransactionPage,
@@ -43,12 +41,10 @@ import { ApiReturnType } from "@shared/APIReturnType";
 import { Transaction, TransactionDetail } from "@shared/dtos/transaction.dto";
 import { ITokenOverview, TokenHolder } from "@shared/dtos/token.dto";
 import { GovActionVote, GovernanceActionDetail, GovernanceActionListItem } from "@shared/dtos/GovernanceOverview";
-import { AddressDetail, StakeAddressDetail, Token } from "@shared/dtos/address.dto";
 import { PoolDetail, PoolOverview } from "@shared/dtos/pool.dto";
 import { Drep, DrepDelegates } from "@shared/dtos/drep.dto";
 import { SearchResult } from "@shared/dtos/seach.dto";
 import { DashboardStats } from "@shared/dtos/dashboard.dto";
-import { addressBalanceDtoToWalletAddress } from "./mapper/AddressBalanceDtoToWalletAddress";
 
 /**
  * Connector for Yaci Store (https://github.com/bloxbean/yaci-store) — a local /
@@ -238,31 +234,6 @@ export class YaciConnector extends ConnectorBase {
     });
   }
 
-  async getWalletStakeFromAddress(address: string): Promise<ApiReturnType<StakeAddressDetail>> {
-    return this.request<StakeAddressDetail>(async () => {
-      const stake = (await this.client.get<StakeAccountInfo>(`${this.baseUrl}/accounts/${address}`)).data;
-      let poolInfo = { poolId: stake.poolId ?? "", poolName: "", tickerName: "" };
-      if (stake.poolId) {
-        try {
-          const p = (await this.client.get<YaciPool>(`${this.baseUrl}/pools/${stake.poolId}`)).data;
-          poolInfo = {
-            poolId: stake.poolId,
-            poolName: p.metadata?.name ?? "",
-            tickerName: p.metadata?.ticker ?? ""
-          };
-        } catch { /* metadata unavailable */ }
-      }
-      return {
-        stakeAddress: stake.stakeAddress ?? "",
-        totalStake: stake.controlledAmount ?? 0,
-        rewardAvailable: stake.withdrawableAmount ?? 0,
-        rewardWithdrawn: 0,
-        status: stake.poolId ? "ACTIVE" : "INACTIVE",
-        pool: poolInfo
-      };
-    });
-  }
-
   async getStakeAddressRegistrations(stakeAddressAction: StakeAddressAction): Promise<ApiReturnType<IStakeKey[]>> {
     return this.requestList<IStakeKey>(async () => {
       const path = stakeAddressAction === StakeAddressAction.REGISTRATION
@@ -298,60 +269,15 @@ export class YaciConnector extends ConnectorBase {
     });
   }
 
-  async getWalletAddressFromAddress(address: string): Promise<ApiReturnType<AddressDetail>> {
-    return this.request<AddressDetail>(async () => {
-      // Stake addresses: yaci-store's /addresses/{addr} endpoint is for payment addresses only.
-      // Use /accounts/{stake} for balance + delegation info, and aggregate token balances by
-      // walking the stake key's payment addresses if yaci-store supports it.
-      if (address.startsWith("stake1")) {
-        const stake = (await this.client.get<StakeAccountInfo>(`${this.baseUrl}/accounts/${address}`)).data;
-        const tokens: Token[] = [];
-        try {
-          // yaci-store exposes aggregated assets per stake account on this path
-          const assetsResp = await this.client.get<{ amounts?: { unit: string; quantity: number; assetName?: string }[] }>(
-            `${this.baseUrl}/accounts/${address}/balance`
-          );
-          (assetsResp.data?.amounts ?? [])
-            .filter((a) => a.unit !== "lovelace")
-            .forEach((a) =>
-              tokens.push({
-                address,
-                name: a.assetName ?? "",
-                displayName: a.assetName ?? "",
-                fingerprint: a.unit,
-                quantity: Number(a.quantity ?? 0)
-              })
-            );
-        } catch { /* aggregated assets endpoint may not be available — list stays empty */ }
-        return {
-          address,
-          balance: stake.controlledAmount ?? 0,
-          // yaci-store doesn't expose a tx_count field for stake accounts cheaply; leave 0.
-          // The transactions tab queries /accounts/{stake}/addresses/transactions for the list.
-          txCount: 0,
-          tokens,
-          stakeAddress: address,
-          isContract: false
-        };
-      }
-      const balance = (await this.client.get<AddressBalanceDto>(`${this.baseUrl}/addresses/${address}`)).data;
-      let stakeAddress = "";
-      try {
-        const stakeResp = await this.client.get<{ stakeAddress?: string }>(`${this.baseUrl}/addresses/${address}/stake`);
-        stakeAddress = stakeResp.data?.stakeAddress ?? "";
-      } catch { /* stake address may not exist */ }
-      return addressBalanceDtoToWalletAddress(balance, stakeAddress, address);
-    });
-  }
-
   async getAddressTxsFromAddress(address: string, pageInfo: ParsedUrlQuery): Promise<ApiReturnType<Transaction[]>> {
     return this.requestList<Transaction>(async () => {
-      // Stake addresses go through the /accounts/{stake}/addresses/transactions
-      // endpoint which yaci-store exposes for cross-payment-address aggregation.
-      const path = address.startsWith("stake1")
-        ? `${this.baseUrl}/accounts/${address}/addresses/transactions`
-        : `${this.baseUrl}/addresses/${address}/txs`;
-      const r = await this.client.get<AddressTransaction[]>(path, { params: pageInfo });
+      // Yaci-store exposes /addresses/{address}/transactions for payment addresses.
+      // There is no aggregated transactions endpoint for stake addresses — return
+      // an empty list so callers fall through to the unsupported state.
+      if (address.startsWith("stake1")) return { data: [] };
+      const r = await this.client.get<AddressTransaction[]>(
+        `${this.baseUrl}/addresses/${address}/transactions`, { params: pageInfo }
+      );
       const rows = r.data ?? [];
       const blockNumbers = [...new Set(rows.map((a) => a.blockNumber!).filter(Boolean))];
       const blockMap = new Map<number, Awaited<ReturnType<typeof this.getBlockDetail>>>();
