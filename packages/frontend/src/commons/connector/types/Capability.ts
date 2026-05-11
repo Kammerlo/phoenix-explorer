@@ -57,5 +57,9 @@ import type { ApiConnector } from "../ApiConnector";
 type _MethodOf<T, K extends keyof T> = T[K] extends (...args: never[]) => unknown ? K : never;
 type _MethodNames<T> = { [K in keyof T]: _MethodOf<T, K> }[keyof T];
 
+// Force the guard to be evaluated. If any Capability isn't a real method name,
+// `_capabilitiesAreMethodNames` resolves to `never` and the explicit `true`
+// assignment fails to compile (TS2322).
+const _capabilitiesAreMethodNames: Capability extends _MethodNames<ApiConnector> ? true : never = true;
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-type _CapabilitiesAreMethodNames = Capability extends _MethodNames<ApiConnector> ? true : never;
+void _capabilitiesAreMethodNames;

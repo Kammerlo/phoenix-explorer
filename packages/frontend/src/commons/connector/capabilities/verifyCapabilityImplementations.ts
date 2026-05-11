@@ -10,7 +10,7 @@ import { ApiConnector } from "../ApiConnector";
  */
 export function verifyCapabilityImplementations(connector: ApiConnector): void {
   const declared = connector.getCapabilities();
-  const basePrototype = ConnectorBase.prototype as Record<string, unknown>;
+  const basePrototype = ConnectorBase.prototype as unknown as Record<string, unknown>;
   const ownPrototype = Object.getPrototypeOf(connector) as Record<string, unknown>;
 
   for (const cap of ALL_CAPABILITIES) {

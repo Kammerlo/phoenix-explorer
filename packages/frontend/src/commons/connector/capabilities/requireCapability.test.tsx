@@ -5,10 +5,11 @@ import { MemoryRouter } from "react-router-dom";
 
 import { requireCapability } from "./requireCapability";
 import { ApiConnector, _setConnectorFactory } from "../ApiConnector";
+import { Capability } from "../types/Capability";
 
 class TestConnector extends ApiConnector {
   constructor(private readonly caps: string[]) { super(""); }
-  getCapabilities() { return new Set(this.caps as any); }
+  getCapabilities(): ReadonlySet<Capability> { return new Set(this.caps as Capability[]); }
   // dummy abstract impls
   getEpochs() { return Promise.resolve({} as any); }
   getEpoch() { return Promise.resolve({} as any); }
