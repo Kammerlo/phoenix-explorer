@@ -18,8 +18,10 @@ import {
   TransactionDetails,
   TransactionPage,
   TransactionSummary,
+  TxInputsOutputs,
   TxMetadataLabelDto,
-  VotingProcedureDto
+  VotingProcedureDto,
+  Withdrawal
 } from "./types";
 import applyCaseMiddleware from "axios-case-converter";
 import { FunctionEnum, POOL_TYPE } from "../types/FunctionEnum";
@@ -193,12 +195,16 @@ export class YaciConnector extends ConnectorBase {
 
   async getTxDetail(txHash: string): Promise<ApiReturnType<TransactionDetail>> {
     return this.request<TransactionDetail>(async () => {
-      const txDetails = (await this.client.get<TransactionDetails>(`${this.baseUrl}/txs/${txHash}`)).data;
-      const [blockResult, metadataResponse] = await Promise.all([
-        this.getBlockDetail(String(txDetails.blockHeight ?? "")),
-        this.client.get<TxMetadataLabelDto[]>(`${this.baseUrl}/txs/${txHash}/metadata`)
+      // yaci-store does not include UTXOs / withdrawals on /txs/{hash}; compose
+      // the detail from the supplemental sub-endpoints.
+      const [txDetails, utxos, metadata, withdrawals] = await Promise.all([
+        this.client.get<TransactionDetails>(`${this.baseUrl}/txs/${txHash}`).then((r) => r.data),
+        this.client.get<TxInputsOutputs>(`${this.baseUrl}/txs/${txHash}/utxos`).then((r) => r.data).catch(() => ({} as TxInputsOutputs)),
+        this.client.get<TxMetadataLabelDto[]>(`${this.baseUrl}/txs/${txHash}/metadata`).then((r) => r.data).catch(() => [] as TxMetadataLabelDto[]),
+        this.client.get<Withdrawal[]>(`${this.baseUrl}/txs/${txHash}/withdrawals`).then((r) => r.data).catch(() => [] as Withdrawal[])
       ]);
-      return toTransactionDetail(txDetails, blockResult.data, metadataResponse.data);
+      const blockResult = await this.getBlockDetail(String(txDetails.blockHeight ?? ""));
+      return toTransactionDetail(txDetails, blockResult.data, metadata, utxos, withdrawals);
     });
   }
 
