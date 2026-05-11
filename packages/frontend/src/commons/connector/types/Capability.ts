@@ -45,3 +45,17 @@ export const ALL_CAPABILITIES = [
 ] as const;
 
 export type Capability = (typeof ALL_CAPABILITIES)[number];
+
+// ─── Compile-time guard ──────────────────────────────────────────────────────
+//
+// Forces every Capability string to be the name of a real method on
+// ApiConnector. If you add to ALL_CAPABILITIES and the string is misspelled
+// or the method doesn't exist, `_CapabilitiesAreMethodNames` fails to compile.
+
+import type { ApiConnector } from "../ApiConnector";
+
+type _MethodOf<T, K extends keyof T> = T[K] extends (...args: never[]) => unknown ? K : never;
+type _MethodNames<T> = { [K in keyof T]: _MethodOf<T, K> }[keyof T];
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+type _CapabilitiesAreMethodNames = Capability extends _MethodNames<ApiConnector> ? true : never;
