@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import {
   Box,
   Button,
-  Chip,
   Dialog,
   DialogContent,
   DialogTitle,
@@ -18,17 +17,12 @@ import { MdClose } from "react-icons/md";
 import { useSelector } from "react-redux";
 import { RootState } from "src/stores/types";
 import { ProviderConfig, ProviderType, setProviderConfig } from "src/stores/provider";
-import { FunctionEnum } from "src/commons/connector/types/FunctionEnum";
-import { GatewayConnector } from "src/commons/connector/gateway/gatewayConnector";
-import { YaciConnector } from "src/commons/connector/yaci/yaciConnector";
-import { BlockfrostConnector } from "src/commons/connector/blockfrost/blockfrostConnector";
 
 interface ProviderOption {
   type: ProviderType;
   label: string;
   description: string;
   defaultUrl: string;
-  supportedFeatures: FunctionEnum[];
   requiresApiKey?: boolean;
 }
 
@@ -38,41 +32,24 @@ const BLOCKFROST_URLS: Record<string, string> = {
   preview: "https://cardano-preview.blockfrost.io/api/v0"
 };
 
-const FEATURE_LABELS: Record<FunctionEnum, string> = {
-  [FunctionEnum.EPOCH]: "Epochs",
-  [FunctionEnum.BLOCK]: "Blocks",
-  [FunctionEnum.TRANSACTION]: "Transactions",
-  [FunctionEnum.ADDRESS]: "Addresses",
-  [FunctionEnum.TOKENS]: "Tokens",
-  [FunctionEnum.POOL]: "Pools",
-  [FunctionEnum.GOVERNANCE]: "Governance",
-  [FunctionEnum.DREP]: "DReps",
-  [FunctionEnum.PROTOCOL_PARAMETER]: "Protocol Params",
-  [FunctionEnum.STAKE_ADDRESS_REGISTRATION]: "Stake Registrations",
-  [FunctionEnum.POOL_REGISTRATION]: "Pool Registrations"
-};
-
 const PROVIDERS: ProviderOption[] = [
   {
     type: "GATEWAY",
     label: "Gateway (Blockfrost via Gateway)",
     description: "Proxies requests through the Phoenix Explorer gateway to Blockfrost.",
-    defaultUrl: process.env.REACT_APP_API_URL || "",
-    supportedFeatures: new GatewayConnector("").getSupportedFunctions()
+    defaultUrl: process.env.REACT_APP_API_URL || ""
   },
   {
     type: "YACI",
     label: "Yaci Store (Direct)",
     description: "Connects directly to a Yaci Store instance. Supports private testnets.",
-    defaultUrl: "https://api.mainnet.yaci.xyz/api/v1",
-    supportedFeatures: new YaciConnector("").getSupportedFunctions()
+    defaultUrl: "https://api.mainnet.yaci.xyz/api/v1"
   },
   {
     type: "BLOCKFROST",
     label: "Blockfrost (Direct)",
     description: "Connects directly to Blockfrost API from the browser. Requires an API key.",
     defaultUrl: BLOCKFROST_URLS[process.env.REACT_APP_NETWORK || "mainnet"],
-    supportedFeatures: new BlockfrostConnector("", "").getSupportedFunctions(),
     requiresApiKey: true
   }
 ];
@@ -152,14 +129,9 @@ const ProviderSwitcher: React.FC<ProviderSwitcherProps> = ({ open, onClose }) =>
                 label={<Typography fontWeight="bold">{provider.label}</Typography>}
                 sx={{ mb: 0.5 }}
               />
-              <Typography variant="body2" color="text.secondary" ml={4} mb={1}>
+              <Typography variant="body2" color="text.secondary" ml={4}>
                 {provider.description}
               </Typography>
-              <Box display="flex" flexWrap="wrap" gap={0.5} ml={4}>
-                {provider.supportedFeatures.map((f) => (
-                  <Chip key={f} label={FEATURE_LABELS[f] ?? f} size="small" color="primary" variant="outlined" />
-                ))}
-              </Box>
             </Box>
           ))}
         </RadioGroup>
