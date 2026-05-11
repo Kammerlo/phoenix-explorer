@@ -340,6 +340,19 @@ export interface FingerprintSupply {
   totalSupply?: string;
 }
 
+export interface TxAsset {
+  blockNumber?: number;
+  blockTime?: number;
+  slot?: number;
+  txHash?: string;
+  policy?: string;
+  assetName?: string;
+  unit?: string;
+  fingerprint?: string;
+  quantity?: string | number;
+  mintType?: "MINT" | "BURN";
+}
+
 // ── Withdrawals ──────────────────────────────────────────────────────────────
 export interface Withdrawal {
   blockNumber?: number;
