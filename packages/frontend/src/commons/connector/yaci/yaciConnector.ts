@@ -116,7 +116,6 @@ export class YaciConnector extends ConnectorBase {
       "getGovernanceOverviewList",
       "getGovernanceDetail",
       "getGovernanceActionVotes",
-      "getDrepVotes",
       "getDrepDelegates",
       "search",
       "getDashboardStats"
@@ -402,20 +401,6 @@ export class YaciConnector extends ConnectorBase {
     });
   }
 
-  async getDrepVotes(drepId: string, pageInfo: ParsedUrlQuery): Promise<ApiReturnType<GovernanceActionListItem[]>> {
-    return this.requestList<GovernanceActionListItem>(async () => {
-      const r = await this.client.get<VotingProcedureDto[]>(
-        `${this.baseUrl}/governance/votes`, { params: { ...pageInfo, dRepId: drepId } }
-      );
-      const items: GovernanceActionListItem[] = (r.data ?? []).map((v) => ({
-        txHash: v.govActionTxHash ?? "",
-        index: v.govActionIndex ?? 0,
-        vote: (v.vote?.toLowerCase() ?? "abstain") as "yes" | "no" | "abstain"
-      }));
-      return { data: items };
-    });
-  }
-
   async getDrepDelegates(drepId: string, pageInfo: ParsedUrlQuery): Promise<ApiReturnType<DrepDelegates[]>> {
     return this.requestList<DrepDelegates>(async () => {
       const r = await this.client.get<DelegationVote[]>(
@@ -444,11 +429,13 @@ export class YaciConnector extends ConnectorBase {
     const govMatch = /^([0-9a-f]{64})#(\d+)$/i.exec(q);
     if (govMatch) {
       const [, txHash, indexStr] = govMatch;
+      const idx = Number(indexStr);
       const [govResult, txResult] = await Promise.all([
-        probe(() => this.client.get(`${this.baseUrl}/governance/proposals/${txHash}/${indexStr}`)),
+        probe(() => this.client.get<GovActionProposal[]>(`${this.baseUrl}/governance/proposals/${txHash}`)),
         probe(() => this.client.get(`${this.baseUrl}/txs/${txHash}`)),
       ]);
-      if (govResult) results.push({ type: "gov_action", id: txHash, extraId: indexStr });
+      const matched = govResult?.data?.some((p) => p.index === idx) ?? false;
+      if (matched) results.push({ type: "gov_action", id: txHash, extraId: indexStr });
       else if (txResult) results.push({ type: "transaction", id: txHash });
       return { data: results, lastUpdated: Date.now(), total: results.length };
     }
@@ -464,12 +451,8 @@ export class YaciConnector extends ConnectorBase {
       return { data: results, lastUpdated: Date.now(), total: results.length };
     }
 
-    // 56-char hex: policy ID
+    // 56-char hex: policy ID — yaci-store has no policy-existence endpoint; emit no result.
     if (/^[0-9a-f]{56}$/i.test(q)) {
-      const policyResult = await probe(() => this.client.get<{ assetList?: unknown[] }>(`${this.baseUrl}/assets/policy/${q}`, { params: { page: 0, size: 1 } }));
-      if (policyResult?.data?.assetList && policyResult.data.assetList.length > 0) {
-        results.push({ type: "policy", id: q });
-      }
       return { data: results, lastUpdated: Date.now(), total: results.length };
     }
 
