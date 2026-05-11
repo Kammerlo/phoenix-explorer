@@ -3,28 +3,32 @@ import axios, { AxiosInstance } from "axios";
 import { StakeAddressAction } from "../ApiConnector";
 import { ConnectorBase } from "../ConnectorBase";
 import {
-  AddressBalanceDto,
   AddressTransaction,
+  AssetTransaction,
   BlockDto,
   BlocksPage,
   Delegation,
+  DelegationVote,
   Epoch,
-  EpochsPage,
+  FingerprintSupply,
   GovActionProposal,
+  PoolBlock,
   PoolRegistration,
   PoolRetirement,
   ProtocolParamsDto,
-  StakeAccountInfo,
   StakeRegistrationDetail,
   TransactionDetails,
   TransactionPage,
   TransactionSummary,
+  TxAsset,
+  TxInputsOutputs,
   TxMetadataLabelDto,
-  VotingProcedureDto
+  VotingProcedureDto,
+  Withdrawal
 } from "./types";
 import applyCaseMiddleware from "axios-case-converter";
-import { FunctionEnum, POOL_TYPE } from "../types/FunctionEnum";
-import { epochToIEpochData } from "./mapper/EpochToIEpochData";
+import { POOL_TYPE } from "../types/FunctionEnum";
+import { Capability } from "../types/Capability";
 import { poolRegistrationsToRegistrations } from "./mapper/PoolRegistrationsToRegistrations";
 import { poolRetirementsToRegistrations } from "./mapper/PoolRetirementsToRegistrations";
 import { blockDTOToBlock } from "./mapper/BlockDTOToBlock";
@@ -39,16 +43,48 @@ import { protocolParamsToTProtocolParam } from "./mapper/ProtocolParamsToTProtoc
 import { ParsedUrlQuery } from "querystring";
 import { Block } from "@shared/dtos/block.dto";
 import { ApiReturnType } from "@shared/APIReturnType";
-import { EpochOverview } from "@shared/dtos/epoch.dto";
 import { Transaction, TransactionDetail } from "@shared/dtos/transaction.dto";
-import { ITokenOverview, TokenHolder } from "@shared/dtos/token.dto";
+import { ITokenOverview } from "@shared/dtos/token.dto";
 import { GovActionVote, GovernanceActionDetail, GovernanceActionListItem } from "@shared/dtos/GovernanceOverview";
-import { AddressDetail, StakeAddressDetail, Token } from "@shared/dtos/address.dto";
-import { PoolDetail, PoolOverview } from "@shared/dtos/pool.dto";
-import { Drep, DrepDelegates } from "@shared/dtos/drep.dto";
+import { DrepDelegates } from "@shared/dtos/drep.dto";
 import { SearchResult } from "@shared/dtos/seach.dto";
 import { DashboardStats } from "@shared/dtos/dashboard.dto";
-import { addressBalanceDtoToWalletAddress } from "./mapper/AddressBalanceDtoToWalletAddress";
+
+interface YaciAssetDto {
+  unit?: string;
+  policyId?: string;
+  assetName?: string;
+  fingerprint?: string;
+  totalSupply?: string;
+  initialMintTxHash?: string;
+  mintOrBurnCount?: number;
+  onchainMetadata?: Record<string, unknown>;
+  metadata?: {
+    ticker?: string;
+    description?: string;
+    url?: string;
+    logo?: string;
+    decimals?: number;
+  };
+}
+
+function yaciAssetToTokenOverview(a: YaciAssetDto): ITokenOverview {
+  return {
+    name: a.assetName ?? a.unit ?? "",
+    displayName: (a.onchainMetadata?.name as string) ?? a.assetName ?? a.unit ?? "",
+    policy: a.policyId ?? (a.unit ? a.unit.slice(0, 56) : ""),
+    fingerprint: a.fingerprint ?? "",
+    txCount: a.mintOrBurnCount ?? 0,
+    supply: a.totalSupply ? Number(a.totalSupply) : 0,
+    metadata: a.metadata ? {
+      ticker: a.metadata.ticker,
+      description: a.metadata.description,
+      url: a.metadata.url,
+      logo: a.metadata.logo,
+      decimals: a.metadata.decimals
+    } : undefined
+  };
+}
 
 /**
  * Connector for Yaci Store (https://github.com/bloxbean/yaci-store) — a local /
@@ -62,46 +98,33 @@ export class YaciConnector extends ConnectorBase {
     super(baseUrl);
     this.client = applyCaseMiddleware(axios.create());
   }
-  getSupportedFunctions(): FunctionEnum[] {
-    return [
-      FunctionEnum.EPOCH,
-      FunctionEnum.BLOCK,
-      FunctionEnum.TRANSACTION,
-      FunctionEnum.ADDRESS,
-      FunctionEnum.STAKE_ADDRESS_REGISTRATION,
-      FunctionEnum.POOL_REGISTRATION,
-      FunctionEnum.PROTOCOL_PARAMETER,
-      FunctionEnum.TOKENS,
-      FunctionEnum.GOVERNANCE,
-      FunctionEnum.DREP,
-      FunctionEnum.POOL
-    ];
+  getCapabilities(): ReadonlySet<Capability> {
+    return new Set<Capability>([
+      "getBlocksPage",
+      "getBlocksByEpoch",
+      "getBlockDetail",
+      "getPoolBlocks",
+      "getTxDetail",
+      "getTransactions",
+      "getAddressTxsFromAddress",
+      "getStakeAddressRegistrations",
+      "getStakeDelegations",
+      "getPoolRegistrations",
+      "getCurrentProtocolParameters",
+      "getTokenDetail",
+      "getTokenTransactions",
+      "getGovernanceOverviewList",
+      "getGovernanceDetail",
+      "getGovernanceActionVotes",
+      "getDrepDelegates",
+      "search",
+      "getDashboardStats"
+    ]);
   }
 
-  /** Batch-fetch pool names for unique slot leaders and mutate blocks in-place. */
   private async _enrichBlocksWithPoolNames(blocks: Block[]): Promise<void> {
-    const uniqueLeaders = [...new Set(blocks.map((b) => b.slotLeader).filter(Boolean))] as string[];
-    if (uniqueLeaders.length === 0) return;
-    const poolNames = new Map<string, { name: string; ticker: string }>();
-    await Promise.all(
-      uniqueLeaders.map(async (leader) => {
-        try {
-          const resp = await this.client.get<any>(`${this.baseUrl}/pools/${leader}`);
-          const p = resp.data;
-          poolNames.set(leader, {
-            name: p.metadata?.name || p.poolId || leader,
-            ticker: p.metadata?.ticker || ""
-          });
-        } catch { /* no metadata or pool not found */ }
-      })
-    );
-    blocks.forEach((b) => {
-      if (b.slotLeader && poolNames.has(b.slotLeader)) {
-        const info = poolNames.get(b.slotLeader)!;
-        b.poolName = info.name;
-        b.poolTicker = info.ticker;
-      }
-    });
+    // Yaci-store has no /pools/{poolId} endpoint — leave pool names unresolved.
+    void blocks;
   }
 
   async getBlocksPage(pageInfo: ParsedUrlQuery): Promise<ApiReturnType<Block[]>> {
@@ -140,14 +163,36 @@ export class YaciConnector extends ConnectorBase {
     });
   }
 
+  async getPoolBlocks(poolId: string, pageInfo: ParsedUrlQuery): Promise<ApiReturnType<Block[]>> {
+    return this.requestList<Block>(async () => {
+      const r = await this.client.get<PoolBlock[]>(
+        `${this.baseUrl}/blocks/pool/${poolId}`, { params: pageInfo }
+      );
+      const rows = r.data ?? [];
+      const blocks: Block[] = rows.map((b) => ({
+        blockNo: (b.blockNumber ?? b.number) ?? 0,
+        epochNo: (b.epochNumber ?? b.epoch) ?? 0,
+        hash: (b.blockHash ?? b.hash) ?? "",
+        time: "",
+        txCount: 0,
+        slotLeader: poolId
+      } as Block));
+      return { data: blocks };
+    });
+  }
+
   async getTxDetail(txHash: string): Promise<ApiReturnType<TransactionDetail>> {
     return this.request<TransactionDetail>(async () => {
-      const txDetails = (await this.client.get<TransactionDetails>(`${this.baseUrl}/txs/${txHash}`)).data;
-      const [blockResult, metadataResponse] = await Promise.all([
-        this.getBlockDetail(String(txDetails.blockHeight ?? "")),
-        this.client.get<TxMetadataLabelDto[]>(`${this.baseUrl}/txs/${txHash}/metadata`)
+      // yaci-store does not include UTXOs / withdrawals on /txs/{hash}; compose
+      // the detail from the supplemental sub-endpoints.
+      const [txDetails, utxos, metadata, withdrawals] = await Promise.all([
+        this.client.get<TransactionDetails>(`${this.baseUrl}/txs/${txHash}`).then((r) => r.data),
+        this.client.get<TxInputsOutputs>(`${this.baseUrl}/txs/${txHash}/utxos`).then((r) => r.data).catch(() => ({} as TxInputsOutputs)),
+        this.client.get<TxMetadataLabelDto[]>(`${this.baseUrl}/txs/${txHash}/metadata`).then((r) => r.data).catch(() => [] as TxMetadataLabelDto[]),
+        this.client.get<Withdrawal[]>(`${this.baseUrl}/txs/${txHash}/withdrawals`).then((r) => r.data).catch(() => [] as Withdrawal[])
       ]);
-      return toTransactionDetail(txDetails, blockResult.data, metadataResponse.data);
+      const blockResult = await this.getBlockDetail(String(txDetails.blockHeight ?? ""));
+      return toTransactionDetail(txDetails, blockResult.data, metadata, utxos, withdrawals);
     });
   }
 
@@ -178,49 +223,6 @@ export class YaciConnector extends ConnectorBase {
         data: transactions,
         extras: { total, totalPage }
       };
-    });
-  }
-
-  async getWalletStakeFromAddress(address: string): Promise<ApiReturnType<StakeAddressDetail>> {
-    return this.request<StakeAddressDetail>(async () => {
-      const stake = (await this.client.get<StakeAccountInfo>(`${this.baseUrl}/accounts/${address}`)).data;
-      let poolInfo = { poolId: stake.poolId ?? "", poolName: "", tickerName: "" };
-      if (stake.poolId) {
-        try {
-          const p = (await this.client.get<YaciPool>(`${this.baseUrl}/pools/${stake.poolId}`)).data;
-          poolInfo = {
-            poolId: stake.poolId,
-            poolName: p.metadata?.name ?? "",
-            tickerName: p.metadata?.ticker ?? ""
-          };
-        } catch { /* metadata unavailable */ }
-      }
-      return {
-        stakeAddress: stake.stakeAddress ?? "",
-        totalStake: stake.controlledAmount ?? 0,
-        rewardAvailable: stake.withdrawableAmount ?? 0,
-        rewardWithdrawn: 0,
-        status: stake.poolId ? "ACTIVE" : "INACTIVE",
-        pool: poolInfo
-      };
-    });
-  }
-
-  async getEpochs(pageInfo: ParsedUrlQuery): Promise<ApiReturnType<EpochOverview[]>> {
-    return this.requestList<EpochOverview>(async () => {
-      const r = await this.client.get<EpochsPage>(`${this.baseUrl}/epochs`, { params: pageInfo });
-      const epochs = (r.data.epochs ?? []).map(epochToIEpochData);
-      return {
-        data: epochs,
-        extras: { total: r.data.total, totalPage: r.data.totalPages }
-      };
-    });
-  }
-
-  async getEpoch(epochId: number): Promise<ApiReturnType<EpochOverview>> {
-    return this.request<EpochOverview>(async () => {
-      const r = await this.client.get<Epoch>(`${this.baseUrl}/epochs/${epochId}`);
-      return epochToIEpochData(r.data);
     });
   }
 
@@ -259,60 +261,15 @@ export class YaciConnector extends ConnectorBase {
     });
   }
 
-  async getWalletAddressFromAddress(address: string): Promise<ApiReturnType<AddressDetail>> {
-    return this.request<AddressDetail>(async () => {
-      // Stake addresses: yaci-store's /addresses/{addr} endpoint is for payment addresses only.
-      // Use /accounts/{stake} for balance + delegation info, and aggregate token balances by
-      // walking the stake key's payment addresses if yaci-store supports it.
-      if (address.startsWith("stake1")) {
-        const stake = (await this.client.get<StakeAccountInfo>(`${this.baseUrl}/accounts/${address}`)).data;
-        const tokens: Token[] = [];
-        try {
-          // yaci-store exposes aggregated assets per stake account on this path
-          const assetsResp = await this.client.get<{ amounts?: { unit: string; quantity: number; assetName?: string }[] }>(
-            `${this.baseUrl}/accounts/${address}/balance`
-          );
-          (assetsResp.data?.amounts ?? [])
-            .filter((a) => a.unit !== "lovelace")
-            .forEach((a) =>
-              tokens.push({
-                address,
-                name: a.assetName ?? "",
-                displayName: a.assetName ?? "",
-                fingerprint: a.unit,
-                quantity: Number(a.quantity ?? 0)
-              })
-            );
-        } catch { /* aggregated assets endpoint may not be available — list stays empty */ }
-        return {
-          address,
-          balance: stake.controlledAmount ?? 0,
-          // yaci-store doesn't expose a tx_count field for stake accounts cheaply; leave 0.
-          // The transactions tab queries /accounts/{stake}/addresses/transactions for the list.
-          txCount: 0,
-          tokens,
-          stakeAddress: address,
-          isContract: false
-        };
-      }
-      const balance = (await this.client.get<AddressBalanceDto>(`${this.baseUrl}/addresses/${address}`)).data;
-      let stakeAddress = "";
-      try {
-        const stakeResp = await this.client.get<{ stakeAddress?: string }>(`${this.baseUrl}/addresses/${address}/stake`);
-        stakeAddress = stakeResp.data?.stakeAddress ?? "";
-      } catch { /* stake address may not exist */ }
-      return addressBalanceDtoToWalletAddress(balance, stakeAddress, address);
-    });
-  }
-
   async getAddressTxsFromAddress(address: string, pageInfo: ParsedUrlQuery): Promise<ApiReturnType<Transaction[]>> {
     return this.requestList<Transaction>(async () => {
-      // Stake addresses go through the /accounts/{stake}/addresses/transactions
-      // endpoint which yaci-store exposes for cross-payment-address aggregation.
-      const path = address.startsWith("stake1")
-        ? `${this.baseUrl}/accounts/${address}/addresses/transactions`
-        : `${this.baseUrl}/addresses/${address}/txs`;
-      const r = await this.client.get<AddressTransaction[]>(path, { params: pageInfo });
+      // Yaci-store exposes /addresses/{address}/transactions for payment addresses.
+      // There is no aggregated transactions endpoint for stake addresses — return
+      // an empty list so callers fall through to the unsupported state.
+      if (address.startsWith("stake1")) return { data: [] };
+      const r = await this.client.get<AddressTransaction[]>(
+        `${this.baseUrl}/addresses/${address}/transactions`, { params: pageInfo }
+      );
       const rows = r.data ?? [];
       const blockNumbers = [...new Set(rows.map((a) => a.blockNumber!).filter(Boolean))];
       const blockMap = new Map<number, Awaited<ReturnType<typeof this.getBlockDetail>>>();
@@ -327,31 +284,50 @@ export class YaciConnector extends ConnectorBase {
     });
   }
 
-  async getTokensPage(pageInfo: ParsedUrlQuery): Promise<ApiReturnType<ITokenOverview[]>> {
-    return this.requestList<ITokenOverview>(async () => {
-      const r = await this.client.get<{ assetList?: YaciAsset[]; total?: number; totalPages?: number }>(
-        `${this.baseUrl}/assets`, { params: pageInfo }
-      );
-      return {
-        data: (r.data.assetList ?? []).map(yaciAssetToTokenOverview),
-        extras: { total: r.data.total, totalPage: r.data.totalPages }
-      };
-    });
-  }
-
   async getTokenDetail(tokenId: string): Promise<ApiReturnType<ITokenOverview>> {
     return this.request<ITokenOverview>(async () => {
-      const r = await this.client.get<YaciAsset>(`${this.baseUrl}/assets/${tokenId}`);
-      return yaciAssetToTokenOverview(r.data);
+      const isFingerprint = tokenId.startsWith("asset1");
+      // Yaci-store has no asset metadata endpoint; compose detail from the
+      // mint/burn history (first row gives policy + assetName + fingerprint)
+      // and the supply endpoint.
+      const historyPath = isFingerprint
+        ? `${this.baseUrl}/assets/fingerprint/${tokenId}/history`
+        : `${this.baseUrl}/assets/${tokenId}/history`;
+      const supplyPath = isFingerprint
+        ? `${this.baseUrl}/assets/fingerprint/${tokenId}/supply`
+        : `${this.baseUrl}/assets/${tokenId}/supply`;
+      const [history, supply] = await Promise.all([
+        this.client.get<TxAsset[]>(historyPath, { params: { page: 0, count: 1 } }).then((r) => r.data ?? []).catch(() => [] as TxAsset[]),
+        this.client.get<FingerprintSupply>(supplyPath).then((r) => r.data).catch(() => ({} as FingerprintSupply))
+      ]);
+      const head = history[0] ?? {};
+      const dto: YaciAssetDto = {
+        unit: head.unit ?? (isFingerprint ? undefined : tokenId),
+        policyId: head.policy,
+        assetName: head.assetName,
+        fingerprint: head.fingerprint ?? (isFingerprint ? tokenId : undefined),
+        totalSupply: supply?.supply != null ? String(supply.supply) : (supply?.totalSupply != null ? String(supply.totalSupply) : undefined),
+        mintOrBurnCount: undefined
+      };
+      return yaciAssetToTokenOverview(dto);
     });
   }
 
   async getTokenTransactions(tokenId: string, pageInfo: ParsedUrlQuery): Promise<ApiReturnType<Transaction[]>> {
     return this.requestList<Transaction>(async () => {
-      const r = await this.client.get<{ transactions?: { txHash: string; blockNumber?: number; blockTime?: number }[]; total?: number }>(
-        `${this.baseUrl}/assets/${tokenId}/transactions`, { params: pageInfo }
+      // Yaci-store: /assets/{unit}/transactions. Endpoint requires unit (policy+name hex), not fingerprint.
+      // If the caller passes a fingerprint (asset1…), resolve it to the unit first via the history endpoint.
+      let unit = tokenId;
+      if (tokenId.startsWith("asset1")) {
+        const r = await this.client.get<TxAsset[]>(
+          `${this.baseUrl}/assets/fingerprint/${tokenId}/history`, { params: { page: 0, count: 1 } }
+        ).catch(() => ({ data: [] as TxAsset[] }));
+        unit = r.data?.[0]?.unit ?? tokenId;
+      }
+      const r = await this.client.get<AssetTransaction[]>(
+        `${this.baseUrl}/assets/${unit}/transactions`, { params: pageInfo }
       );
-      const rows = r.data.transactions ?? [];
+      const rows = r.data ?? [];
       const blockNumbers = [...new Set(rows.map((t) => t.blockNumber!).filter(Boolean))];
       const blockMap = new Map<number, Awaited<ReturnType<typeof this.getBlockDetail>>>();
       await Promise.all(blockNumbers.map(async (n) => blockMap.set(n, await this.getBlockDetail(String(n)))));
@@ -361,56 +337,35 @@ export class YaciConnector extends ConnectorBase {
           { txHash: t.txHash, blockNumber: t.blockNumber, blockTime: t.blockTime } as TransactionSummary,
           blockMap.get(t.blockNumber!) ?? { data: null, lastUpdated: Date.now() }
         ));
-      return { data: txs, extras: { total: r.data.total } };
-    });
-  }
-
-  async getTokenHolders(tokenId: string, pageInfo: ParsedUrlQuery): Promise<ApiReturnType<TokenHolder[]>> {
-    return this.requestList<TokenHolder>(async () => {
-      const r = await this.client.get<{ addressList?: { address?: string; quantity?: number }[]; total?: number }>(
-        `${this.baseUrl}/assets/${tokenId}/addresses`, { params: pageInfo }
-      );
-      const total = r.data.total ?? r.data.addressList?.length ?? 0;
-      const holders: TokenHolder[] = (r.data.addressList ?? []).map((h) => ({
-        address: h.address ?? "",
-        amount: h.quantity ?? 0,
-        ratio: total > 0 ? (h.quantity ?? 0) / total : 0
-      }));
-      return { data: holders, extras: { total } };
-    });
-  }
-
-  async getTokensByPolicy(policyId: string, pageInfo: ParsedUrlQuery): Promise<ApiReturnType<ITokenOverview[]>> {
-    return this.requestList<ITokenOverview>(async () => {
-      const r = await this.client.get<{ assetList?: YaciAsset[]; total?: number }>(
-        `${this.baseUrl}/assets/policy/${policyId}`, { params: pageInfo }
-      );
-      const tokens = (r.data.assetList ?? []).map(yaciAssetToTokenOverview);
-      return { data: tokens, extras: { total: r.data.total ?? tokens.length } };
+      return { data: txs };
     });
   }
 
   async getGovernanceOverviewList(pageInfo: ParsedUrlQuery): Promise<ApiReturnType<GovernanceActionListItem[]>> {
     return this.requestList<GovernanceActionListItem>(async () => {
-      const r = await this.client.get<{ proposalList?: GovActionProposal[]; govActionProposalList?: GovActionProposal[]; total?: number; totalPages?: number }>(
+      const r = await this.client.get<GovActionProposal[]>(
         `${this.baseUrl}/governance/proposals`, { params: pageInfo }
       );
-      const list = r.data.proposalList ?? r.data.govActionProposalList ?? [];
-      const items: GovernanceActionListItem[] = list.map((p) => ({
+      const items: GovernanceActionListItem[] = (r.data ?? []).map((p) => ({
         txHash: p.txHash ?? "",
         index: p.index ?? 0,
         type: p.type,
         status: "ACTIVE" as const
       }));
-      return { data: items, extras: { total: r.data.total, totalPage: r.data.totalPages } };
+      return { data: items };
     });
   }
 
   async getGovernanceDetail(txHash: string, index: string): Promise<ApiReturnType<GovernanceActionDetail>> {
     return this.request<GovernanceActionDetail>(async () => {
-      const p = (await this.client.get<GovActionProposal>(
-        `${this.baseUrl}/governance/proposals/${txHash}/${index}`
-      )).data;
+      // Yaci-store: /governance/proposals/{txHash} returns an array of proposals
+      // for the transaction. Pick the one matching the requested index when
+      // possible, otherwise fall back to the first.
+      const list = (await this.client.get<GovActionProposal[]>(
+        `${this.baseUrl}/governance/proposals/${txHash}`
+      )).data ?? [];
+      const requestedIdx = Number(index);
+      const p = list.find((x) => x.index === requestedIdx) ?? list[0] ?? {} as GovActionProposal;
       return {
         txHash: p.txHash ?? txHash,
         index: String(p.index ?? index),
@@ -432,8 +387,7 @@ export class YaciConnector extends ConnectorBase {
   async getGovernanceActionVotes(txHash: string, index: string): Promise<ApiReturnType<GovActionVote[]>> {
     return this.requestList<GovActionVote>(async () => {
       const r = await this.client.get<VotingProcedureDto[]>(
-        `${this.baseUrl}/governance/voting_procedures`,
-        { params: { govActionTxHash: txHash, govActionIndex: index } }
+        `${this.baseUrl}/governance/proposals/${txHash}/${index}/votes`
       );
       const votes: GovActionVote[] = (r.data ?? []).map((v) => ({
         voter: v.voterHash ?? "",
@@ -447,98 +401,17 @@ export class YaciConnector extends ConnectorBase {
     });
   }
 
-  async getPoolList(pageInfo: ParsedUrlQuery): Promise<ApiReturnType<PoolOverview[]>> {
-    return this.requestList<PoolOverview>(async () => {
-      const r = await this.client.get<{ poolList?: YaciPool[]; total?: number; totalPages?: number }>(
-        `${this.baseUrl}/pools`, { params: pageInfo }
-      );
-      const pools = (r.data.poolList ?? []).map((p, i) => ({
-        id: i,
-        poolId: p.poolIdBech32 ?? p.poolId ?? "",
-        poolName: p.metadata?.name ?? p.poolId ?? "",
-        tickerName: p.metadata?.ticker ?? "",
-        poolSize: 0,
-        declaredPledge: p.pledge ?? 0,
-        saturation: 0,
-        lifetimeBlock: 0
-      } as PoolOverview));
-      return { data: pools, extras: { total: r.data.total, totalPage: r.data.totalPages } };
-    });
-  }
-
-  async getPoolDetail(poolId: string): Promise<ApiReturnType<PoolDetail>> {
-    return this.request<PoolDetail>(async () => {
-      const p = (await this.client.get<YaciPool>(`${this.baseUrl}/pools/${poolId}`)).data;
-      return {
-        poolName: p.metadata?.name ?? p.poolId ?? poolId,
-        tickerName: p.metadata?.ticker ?? "",
-        poolView: p.poolIdBech32 ?? poolId,
-        poolStatus: "ACTIVE" as any,
-        createDate: "",
-        rewardAccounts: p.rewardAccount ? [p.rewardAccount] : [],
-        ownerAccounts: p.owners ?? [],
-        poolSize: 0,
-        stakeLimit: 0,
-        delegators: 0,
-        saturation: 0,
-        totalBalanceOfPoolOwners: 0,
-        reward: 0,
-        ros: 0,
-        pledge: p.pledge ?? 0,
-        cost: p.cost ?? 0,
-        margin: p.margin ?? 0,
-        epochBlock: 0,
-        lifetimeBlock: 0,
-        description: p.metadata?.description ?? "",
-        homepage: p.metadata?.homepage ?? ""
-      };
-    });
-  }
-
-  async getDreps(pageInfo: ParsedUrlQuery): Promise<ApiReturnType<Drep[]>> {
-    return this.requestList<Drep>(async () => {
-      const r = await this.client.get<{ drepList?: YaciDrep[]; total?: number; totalPages?: number }>(
-        `${this.baseUrl}/governance/dreps`, { params: pageInfo }
-      );
-      return {
-        data: (r.data.drepList ?? []).map(yaciDrepToDrep),
-        extras: { total: r.data.total, totalPage: r.data.totalPages }
-      };
-    });
-  }
-
-  async getDrep(drepId: string): Promise<ApiReturnType<Drep>> {
-    return this.request<Drep>(async () => {
-      const r = await this.client.get<YaciDrep>(`${this.baseUrl}/governance/dreps/${drepId}`);
-      return yaciDrepToDrep(r.data);
-    });
-  }
-
-  async getDrepVotes(drepId: string, pageInfo: ParsedUrlQuery): Promise<ApiReturnType<GovernanceActionListItem[]>> {
-    return this.requestList<GovernanceActionListItem>(async () => {
-      const r = await this.client.get<{ votingProcedures?: VotingProcedureDto[]; total?: number }>(
-        `${this.baseUrl}/governance/dreps/${drepId}/voting_procedures`, { params: pageInfo }
-      );
-      const items: GovernanceActionListItem[] = (r.data.votingProcedures ?? []).map((v) => ({
-        txHash: v.govActionTxHash ?? "",
-        index: v.govActionIndex ?? 0,
-        vote: (v.vote?.toLowerCase() ?? "abstain") as "yes" | "no" | "abstain"
-      }));
-      return { data: items, extras: { total: r.data.total } };
-    });
-  }
-
   async getDrepDelegates(drepId: string, pageInfo: ParsedUrlQuery): Promise<ApiReturnType<DrepDelegates[]>> {
     return this.requestList<DrepDelegates>(async () => {
-      const r = await this.client.get<{ delegatorList?: { address?: string; amount?: number; stakeKeyHash?: string }[]; total?: number }>(
-        `${this.baseUrl}/governance/dreps/${drepId}/delegators`, { params: pageInfo }
+      const r = await this.client.get<DelegationVote[]>(
+        `${this.baseUrl}/governance/delegation-votes/drep/${drepId}`, { params: pageInfo }
       );
-      const delegates: DrepDelegates[] = (r.data.delegatorList ?? []).map((d) => ({
+      const delegates: DrepDelegates[] = (r.data ?? []).map((d) => ({
         address: d.address ?? "",
         amount: d.amount ?? 0,
-        stakeKeyHash: d.stakeKeyHash
+        stakeKeyHash: undefined
       }));
-      return { data: delegates, extras: { total: r.data.total } };
+      return { data: delegates };
     });
   }
 
@@ -556,11 +429,13 @@ export class YaciConnector extends ConnectorBase {
     const govMatch = /^([0-9a-f]{64})#(\d+)$/i.exec(q);
     if (govMatch) {
       const [, txHash, indexStr] = govMatch;
+      const idx = Number(indexStr);
       const [govResult, txResult] = await Promise.all([
-        probe(() => this.client.get(`${this.baseUrl}/governance/proposals/${txHash}/${indexStr}`)),
+        probe(() => this.client.get<GovActionProposal[]>(`${this.baseUrl}/governance/proposals/${txHash}`)),
         probe(() => this.client.get(`${this.baseUrl}/txs/${txHash}`)),
       ]);
-      if (govResult) results.push({ type: "gov_action", id: txHash, extraId: indexStr });
+      const matched = govResult?.data?.some((p) => p.index === idx) ?? false;
+      if (matched) results.push({ type: "gov_action", id: txHash, extraId: indexStr });
       else if (txResult) results.push({ type: "transaction", id: txHash });
       return { data: results, lastUpdated: Date.now(), total: results.length };
     }
@@ -576,12 +451,8 @@ export class YaciConnector extends ConnectorBase {
       return { data: results, lastUpdated: Date.now(), total: results.length };
     }
 
-    // 56-char hex: policy ID
+    // 56-char hex: policy ID — yaci-store has no policy-existence endpoint; emit no result.
     if (/^[0-9a-f]{56}$/i.test(q)) {
-      const policyResult = await probe(() => this.client.get<{ assetList?: unknown[] }>(`${this.baseUrl}/assets/policy/${q}`, { params: { page: 0, size: 1 } }));
-      if (policyResult?.data?.assetList && policyResult.data.assetList.length > 0) {
-        results.push({ type: "policy", id: q });
-      }
       return { data: results, lastUpdated: Date.now(), total: results.length };
     }
 
@@ -597,139 +468,73 @@ export class YaciConnector extends ConnectorBase {
       return { data: results, lastUpdated: Date.now(), total: results.length };
     }
 
-    // pool1... stake pool
+    // pool1... stake pool — yaci-store has no /pools/{poolId} detail endpoint.
     if (/^pool1[a-z0-9]{50,}$/i.test(q)) {
-      const poolResult = await probe(() => this.client.get<any>(`${this.baseUrl}/pools/${q}`));
-      if (poolResult) {
-        const label: string | undefined = poolResult.data?.metadata?.ticker ?? poolResult.data?.metadata?.name ?? undefined;
-        results.push({ type: "pool", id: q, label });
-      }
       return { data: results, lastUpdated: Date.now(), total: results.length };
     }
 
-    // drep1... DRep
+    // drep1... DRep — yaci-store has no /governance/dreps/{id} detail endpoint.
     if (/^drep1[a-z0-9]+$/i.test(q)) {
-      const drepResult = await probe(() => this.client.get(`${this.baseUrl}/governance/dreps/${q}`));
-      if (drepResult) results.push({ type: "drep", id: q });
       return { data: results, lastUpdated: Date.now(), total: results.length };
     }
 
     // asset1... token fingerprint
     if (/^asset1[a-z0-9]+$/i.test(q)) {
-      const assetResult = await probe(() => this.client.get<YaciAsset>(`${this.baseUrl}/assets/${q}`));
-      if (assetResult) {
-        const label: string | undefined = assetResult.data?.metadata?.ticker ?? (assetResult.data?.onchainMetadata?.name as string | undefined) ?? undefined;
-        results.push({ type: "token", id: q, label });
-      }
+      results.push({ type: "token", id: q });
       return { data: results, lastUpdated: Date.now(), total: results.length };
     }
 
-    // Pure number: epoch or block
+    // Pure number: block only (yaci-store has no /epochs/{n} detail endpoint).
     if (/^\d+$/.test(q)) {
       const n = Number(q);
-      const [epochResult, blockResult] = await Promise.all([
-        probe(() => this.client.get<any>(`${this.baseUrl}/epochs/${n}`)),
-        probe(() => this.client.get<BlockDto>(`${this.baseUrl}/blocks/${n}`)),
-      ]);
-      if (epochResult) results.push({ type: "epoch", id: q });
+      const blockResult = await probe(() => this.client.get<BlockDto>(`${this.baseUrl}/blocks/${n}`));
       if (blockResult) results.push({ type: "block", id: q, label: String(n) });
       return { data: results, lastUpdated: Date.now(), total: results.length };
     }
 
-    // Free-text: use Yaci's native asset name search
-    if (/^[a-zA-Z0-9$.\-_ ]+$/.test(q)) {
-      const tokenResult = await probe(() =>
-        this.client.get<{ assetList?: YaciAsset[] }>(
-          `${this.baseUrl}/assets`,
-          { params: { search: q, size: 5, page: 0 } }
-        )
-      );
-      for (const asset of tokenResult?.data?.assetList ?? []) {
-        const overview = yaciAssetToTokenOverview(asset);
-        const id = overview.fingerprint || asset.unit || "";
-        if (!id) continue;
-        const label = overview.displayName || overview.metadata?.ticker || q;
-        results.push({ type: "token", id, label });
-        if (results.length >= 5) break;
-      }
-    }
-
+    // Free-text: yaci-store has no /assets listing/search endpoint.
     return { data: results, lastUpdated: Date.now(), total: results.length };
+  }
+
+  async getDashboardStats(): Promise<ApiReturnType<DashboardStats>> {
+    return this.request<DashboardStats>(async () => {
+      const [latestBlock, latestEpoch] = await Promise.all([
+        this.client.get<BlockDto>(`${this.baseUrl}/blocks/latest`).then((r) => r.data).catch(() => null),
+        this.client.get<Epoch>(`${this.baseUrl}/epochs/latest`).then((r) => r.data).catch(() => null)
+      ]);
+      return {
+        currentEpoch: {
+          no: latestEpoch?.number ?? latestBlock?.epoch ?? 0,
+          startTime: null,
+          endTime: null,
+          txCount: latestEpoch?.txCount ?? 0,
+          blkCount: latestEpoch?.blockCount ?? 0,
+          outSum: latestEpoch?.outputSum ? String(latestEpoch.outputSum) : null,
+          fees: latestEpoch?.fees ? String(latestEpoch.fees) : null,
+          activeStake: latestEpoch?.activeStake ? String(latestEpoch.activeStake) : null,
+          progressPercent: 0
+        },
+        latestBlock: {
+          height: latestBlock?.number ?? null,
+          hash: latestBlock?.hash ?? "",
+          slot: latestBlock?.slot ?? null,
+          epochNo: latestBlock?.epoch ?? null,
+          epochSlot: latestBlock?.epochSlot ?? null,
+          time: latestBlock?.time ?? 0,
+          txCount: latestBlock?.txCount ?? 0,
+          size: latestBlock?.size ?? 0
+        },
+        supply: { circulating: "", total: "", max: "", locked: "" },
+        stake: {
+          live: "",
+          active: latestEpoch?.activeStake ? String(latestEpoch.activeStake) : ""
+        }
+      };
+    });
   }
 }
 
-// ── Helper types ──────────────────────────────────────────────────────────────
-
-interface YaciAsset {
-  unit?: string;
-  policyId?: string;
-  assetName?: string;
-  fingerprint?: string;
-  quantity?: string;
-  mintTxCount?: number;
-  onchainMetadata?: Record<string, unknown>;
-  metadata?: { ticker?: string; description?: string; url?: string; logo?: string; decimals?: number };
-}
-
-interface YaciPool {
-  poolId?: string;
-  poolIdBech32?: string;
-  pledge?: number;
-  cost?: number;
-  margin?: number;
-  rewardAccount?: string;
-  owners?: string[];
-  metadata?: { name?: string; ticker?: string; description?: string; homepage?: string };
-}
-
-interface YaciDrep {
-  drepId?: string;
-  drepHash?: string;
-  anchorUrl?: string;
-  anchorHash?: string;
-  status?: string;
-  activeVoteStake?: number;
-  votingPower?: number;
-  delegators?: number;
-  givenName?: string;
-  createdAt?: string;
-}
-
 // ── Helper functions ──────────────────────────────────────────────────────────
-
-function yaciAssetToTokenOverview(a: YaciAsset): ITokenOverview {
-  return {
-    name: a.assetName ?? a.unit ?? "",
-    displayName: a.onchainMetadata?.name as string ?? a.assetName ?? a.unit ?? "",
-    policy: a.policyId ?? (a.unit ? a.unit.slice(0, 56) : ""),
-    fingerprint: a.fingerprint ?? "",
-    txCount: a.mintTxCount ?? 0,
-    supply: a.quantity ? Number(a.quantity) : 0,
-    metadata: a.metadata ? {
-      ticker: a.metadata.ticker,
-      description: a.metadata.description,
-      url: a.metadata.url,
-      logo: a.metadata.logo,
-      decimals: a.metadata.decimals
-    } : undefined
-  };
-}
-
-function yaciDrepToDrep(d: YaciDrep): Drep {
-  return {
-    drepId: d.drepId ?? "",
-    drepHash: d.drepHash ?? "",
-    anchorUrl: d.anchorUrl ?? "",
-    anchorHash: d.anchorHash ?? "",
-    status: (d.status?.toUpperCase() ?? "ACTIVE") as "ACTIVE" | "INACTIVE" | "RETIRED",
-    activeVoteStake: d.activeVoteStake ?? 0,
-    votingPower: d.votingPower ?? 0,
-    delegators: d.delegators ?? 0,
-    givenName: d.givenName ?? d.drepId ?? "",
-    createdAt: d.createdAt,
-    votes: { total: 0, abstain: 0, no: 0, yes: 0 }
-  };
-}
 
 function mapVoterType(voterType?: string): "constitutional_committee" | "drep" | "spo" {
   if (!voterType) return "drep";

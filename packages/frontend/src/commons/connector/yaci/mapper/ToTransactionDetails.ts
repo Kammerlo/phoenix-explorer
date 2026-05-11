@@ -1,43 +1,43 @@
-import { TransactionDetails, TxMetadataLabelDto } from "../types";
+import { TransactionDetails, TxInputsOutputs, TxMetadataLabelDto, Withdrawal } from "../types";
 import { txUtxoToUtxo } from "./TxUtxoToUtxo";
 import { txUtxoToCollateralResponse } from "./TxUtxoToCollateral";
 import { txDetailsToTxSummary } from "./TxDetailsToTxSummary";
-import {TransactionDetail} from "@shared/dtos/transaction.dto";
-import {Block} from "@shared/dtos/block.dto";
+import { TransactionDetail } from "@shared/dtos/transaction.dto";
+import { Block } from "@shared/dtos/block.dto";
 
-export function toTransactionDetail<T>(
+export function toTransactionDetail(
   txDetails: TransactionDetails,
   block: Block | null,
-  metadata: TxMetadataLabelDto[]
-) {
+  metadata: TxMetadataLabelDto[],
+  utxos: TxInputsOutputs,
+  withdrawals: Withdrawal[]
+): TransactionDetail {
+  const inputs = utxos.inputs ?? txDetails.inputs ?? [];
+  const outputs = utxos.outputs ?? txDetails.outputs ?? [];
+
   const tx: TransactionDetail = {
     tx: {
       hash: txDetails.hash!,
       time: block ? block.time : "",
       blockNo: block ? block.blockNo : 0,
+      blockHash: txDetails.blockHash ?? (block ? block.hash : ""),
       epochSlot: block ? block.epochSlotNo : 0,
       epochNo: block ? block.epochNo : 0,
-      status: txDetails.invalid ? 'FAILED' : 'SUCCESS',
+      status: txDetails.invalid ? "FAILED" : "SUCCESS",
       confirmation: 0, // TODO: need to implement
-      fee: txDetails.fees || 0,
-      totalOutput: txDetails.totalOutput || 0,
+      fee: Number(txDetails.fees ?? 0),
+      totalOutput: Number(txDetails.totalOutput ?? 0),
       maxEpochSlot: 0, // TODO: need to implement
       slotNo: block ? block.slotNo : 0
     },
     utxOs: {
-      inputs: txDetails.inputs!.map((input) => {
-        return txUtxoToUtxo(input);
-      }),
-      outputs: txDetails.outputs!.map((output) => {
-        return txUtxoToUtxo(output);
-      })
+      inputs: inputs.map((input) => txUtxoToUtxo(input)),
+      outputs: outputs.map((output) => txUtxoToUtxo(output))
     },
     // TODO will add later, when needed
     collaterals: {
       collateralInputResponses: txDetails.collateralInputs
-        ? txDetails.collateralInputs.map((input) => {
-            return txUtxoToCollateralResponse(input);
-          })
+        ? txDetails.collateralInputs.map((input) => txUtxoToCollateralResponse(input))
         : [],
       collateralOutputResponses: [] // TODO: need to implement
     },
@@ -45,6 +45,11 @@ export function toTransactionDetail<T>(
       stakeAddress: txDetailsToTxSummary(txDetails)
     },
     // signersInformation: mapToSignersInformation(txDetails), // TODO requiredSigners is not available in response
+    withdrawals: withdrawals.map((w) => ({
+      stakeAddressFrom: w.address ?? "",
+      addressTo: [],
+      amount: Number(w.amount ?? 0)
+    })),
     metadata: metadata.map((meta) => {
       const json = meta.jsonMetadata;
       let value = "";

@@ -6,7 +6,7 @@ import { TProtocolParam } from "src/types/protocol";
 
 import { StakeAddressAction } from "../ApiConnector";
 import { ConnectorBase } from "../ConnectorBase";
-import { FunctionEnum, POOL_TYPE } from "../types/FunctionEnum";
+import { Capability } from "../types/Capability";
 import { ApiReturnType } from "@shared/APIReturnType";
 import { DashboardStats } from "@shared/dtos/dashboard.dto";
 import { EpochOverview } from "@shared/dtos/epoch.dto";
@@ -41,20 +41,40 @@ export class BlockfrostConnector extends ConnectorBase {
     });
   }
 
-  getSupportedFunctions(): FunctionEnum[] {
-    return [
-      FunctionEnum.EPOCH,
-      FunctionEnum.BLOCK,
-      FunctionEnum.TRANSACTION,
-      FunctionEnum.ADDRESS,
-      FunctionEnum.TOKENS,
-      FunctionEnum.POOL,
-      FunctionEnum.GOVERNANCE,
-      FunctionEnum.DREP,
-      FunctionEnum.PROTOCOL_PARAMETER,
-      FunctionEnum.STAKE_ADDRESS_REGISTRATION,
-      FunctionEnum.POOL_REGISTRATION
-    ];
+  getCapabilities(): ReadonlySet<Capability> {
+    return new Set<Capability>([
+      "getEpochs",
+      "getEpoch",
+      "getBlocksPage",
+      "getBlocksByEpoch",
+      "getBlockDetail",
+      "getPoolBlocks",
+      "getTxDetail",
+      "getTransactions",
+      "getWalletAddressFromAddress",
+      "getAddressTxsFromAddress",
+      "getWalletStakeFromAddress",
+      "getStakeAddressRegistrations",
+      "getStakeDelegations",
+      "getPoolRegistrations",
+      "getPoolList",
+      "getPoolDetail",
+      "getCurrentProtocolParameters",
+      "getTokensPage",
+      "getTokenDetail",
+      "getTokenTransactions",
+      "getTokenHolders",
+      "getTokensByPolicy",
+      "getGovernanceOverviewList",
+      "getGovernanceDetail",
+      "getGovernanceActionVotes",
+      "getDreps",
+      "getDrep",
+      "getDrepVotes",
+      "getDrepDelegates",
+      "search",
+      "getDashboardStats"
+    ]);
   }
 
   // ── Epochs ────────────────────────────────────────────────────────────────

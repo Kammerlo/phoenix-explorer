@@ -8,6 +8,7 @@ import { alpha } from "@mui/material/styles";
 import { HeaderSearchIconComponent } from "src/commons/resources";
 import CustomIcon from "src/components/commons/CustomIcon";
 import { ApiConnector } from "src/commons/connector/ApiConnector";
+import { filterSearchResultsByCapabilities } from "src/commons/connector/capabilities/filterSearchResults";
 import { SearchResult } from "@shared/dtos/seach.dto";
 
 import { Form, StyledInput, SubmitButton } from "./style";
@@ -147,8 +148,10 @@ const HeaderSearch: React.FC<Props> = ({ home, callback }) => {
       abortRef.current = new AbortController();
 
       try {
-        const result = await ApiConnector.getApiConnector().search(v);
-        setSuggestions((result.data ?? []).map(resultToSuggestion));
+        const apiConnector = ApiConnector.getApiConnector();
+        const result = await apiConnector.search(v);
+        const filtered = filterSearchResultsByCapabilities(result.data ?? [], (c) => apiConnector.has(c));
+        setSuggestions(filtered.map(resultToSuggestion));
       } catch {
         setSuggestions([]);
       } finally {

@@ -15,7 +15,8 @@ import { PoolDetail, PoolOverview } from "@shared/dtos/pool.dto";
 import { Drep, DrepDelegates } from "@shared/dtos/drep.dto";
 import { SearchResult } from "@shared/dtos/seach.dto";
 import { DashboardStats } from "@shared/dtos/dashboard.dto";
-import { FunctionEnum, POOL_TYPE } from "./types/FunctionEnum";
+import { POOL_TYPE } from "./types/FunctionEnum";
+import { Capability } from "./types/Capability";
 // @ts-ignore — generated TProtocolParam lives outside strict shared DTOs
 import { TProtocolParam } from "../../types/protocol";
 import { ApiConnector, StakeAddressAction } from "./ApiConnector";
@@ -26,18 +27,18 @@ import { ApiConnector, StakeAddressAction } from "./ApiConnector";
  * methods to `null`) so subclasses only need to override the subset they
  * actually serve.
  *
- * Subclasses should also override `getSupportedFunctions()` to advertise which
- * features they serve — that remains the single source of truth for route and
- * menu gating. The unsupported envelope here is a defensive fallback for any
- * call site that bypasses the gate.
+ * Subclasses should also override `getCapabilities()` to advertise which
+ * `ApiConnector` methods they implement — that is the single source of truth
+ * for route, menu, and search gating. The unsupported envelope here is a
+ * defensive fallback for any call site that bypasses the gate.
  */
 export abstract class ConnectorBase extends ApiConnector {
   protected constructor(baseUrl: string) {
     super(baseUrl);
   }
 
-  getSupportedFunctions(): FunctionEnum[] {
-    return [];
+  getCapabilities(): ReadonlySet<Capability> {
+    return new Set();
   }
 
   // ── Helpers available to subclasses ──────────────────────────────────────

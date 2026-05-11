@@ -3,7 +3,7 @@ import { ConnectorBase } from "../ConnectorBase";
 import axios, { AxiosInstance, AxiosResponse } from "axios";
 // @ts-ignore
 import { ParsedUrlQuery } from "querystring";
-import { FunctionEnum } from "src/commons/connector/types/FunctionEnum";
+import { Capability } from "../types/Capability";
 import { ApiReturnType } from "@shared/APIReturnType";
 import applyCaseMiddleware from "axios-case-converter";
 import { DashboardStats } from "@shared/dtos/dashboard.dto";
@@ -73,16 +73,40 @@ export class GatewayConnector extends ConnectorBase {
     }).then(response => response.data);
   }
 
-  getSupportedFunctions(): FunctionEnum[] {
-    return [FunctionEnum.EPOCH,
-    FunctionEnum.BLOCK,
-    FunctionEnum.TRANSACTION,
-    FunctionEnum.TOKENS,
-    FunctionEnum.DREP,
-    FunctionEnum.GOVERNANCE,
-    FunctionEnum.POOL,
-    FunctionEnum.ADDRESS,
-    FunctionEnum.PROTOCOL_PARAMETER];
+  getCapabilities(): ReadonlySet<Capability> {
+    return new Set<Capability>([
+      "getEpochs",
+      "getEpoch",
+      "getBlocksPage",
+      "getBlocksByEpoch",
+      "getBlockDetail",
+      "getPoolBlocks",
+      "getTxDetail",
+      "getTransactions",
+      "getWalletAddressFromAddress",
+      "getAddressTxsFromAddress",
+      "getWalletStakeFromAddress",
+      "getStakeAddressRegistrations",
+      "getStakeDelegations",
+      "getPoolRegistrations",
+      "getPoolList",
+      "getPoolDetail",
+      "getCurrentProtocolParameters",
+      "getTokensPage",
+      "getTokenDetail",
+      "getTokenTransactions",
+      "getTokenHolders",
+      "getTokensByPolicy",
+      "getGovernanceOverviewList",
+      "getGovernanceDetail",
+      "getGovernanceActionVotes",
+      "getDreps",
+      "getDrep",
+      "getDrepVotes",
+      "getDrepDelegates",
+      "search",
+      "getDashboardStats"
+    ]);
   }
 
   async getEpoch(epochId: number): Promise<ApiReturnType<EpochOverview>> {

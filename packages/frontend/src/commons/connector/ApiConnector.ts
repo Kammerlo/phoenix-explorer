@@ -1,5 +1,5 @@
-import { FunctionEnum } from "./types/FunctionEnum";
 import { POOL_TYPE } from "src/commons/connector/types/FunctionEnum";
+import { Capability } from "./types/Capability";
 // @ts-ignore
 import { TProtocolParam } from "../../types/protocol";
 import { ParsedUrlQuery } from "querystring";
@@ -45,7 +45,18 @@ export abstract class ApiConnector {
     return _connectorFactory();
   }
 
-  abstract getSupportedFunctions(): FunctionEnum[];
+  /** Returns the set of `ApiConnector` methods this connector implements. */
+  abstract getCapabilities(): ReadonlySet<Capability>;
+
+  /** Synchronous capability check. */
+  has(c: Capability): boolean {
+    return this.getCapabilities().has(c);
+  }
+
+  /** True iff every capability in `cs` is supported. */
+  hasAll(cs: readonly Capability[]): boolean {
+    return cs.every((c) => this.has(c));
+  }
 
   abstract getEpochs(pageInfo: ParsedUrlQuery): Promise<ApiReturnType<EpochOverview[]>>;
 
