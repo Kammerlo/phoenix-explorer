@@ -24,6 +24,7 @@ import {
 } from "./types";
 import applyCaseMiddleware from "axios-case-converter";
 import { FunctionEnum, POOL_TYPE } from "../types/FunctionEnum";
+import { Capability } from "../types/Capability";
 import { epochToIEpochData } from "./mapper/EpochToIEpochData";
 import { poolRegistrationsToRegistrations } from "./mapper/PoolRegistrationsToRegistrations";
 import { poolRetirementsToRegistrations } from "./mapper/PoolRetirementsToRegistrations";
@@ -76,6 +77,42 @@ export class YaciConnector extends ConnectorBase {
       FunctionEnum.DREP,
       FunctionEnum.POOL
     ];
+  }
+
+  getCapabilities(): ReadonlySet<Capability> {
+    // Initial wide set — narrowed in Task 22 after endpoint rewrites.
+    return new Set<Capability>([
+      "getEpochs",
+      "getEpoch",
+      "getBlocksPage",
+      "getBlocksByEpoch",
+      "getBlockDetail",
+      "getTxDetail",
+      "getTransactions",
+      "getWalletAddressFromAddress",
+      "getAddressTxsFromAddress",
+      "getWalletStakeFromAddress",
+      "getStakeAddressRegistrations",
+      "getStakeDelegations",
+      "getPoolRegistrations",
+      "getCurrentProtocolParameters",
+      "getTokensPage",
+      "getTokenDetail",
+      "getTokenTransactions",
+      "getTokenHolders",
+      "getTokensByPolicy",
+      "getGovernanceOverviewList",
+      "getGovernanceDetail",
+      "getGovernanceActionVotes",
+      "getPoolList",
+      "getPoolDetail",
+      "getDreps",
+      "getDrep",
+      "getDrepVotes",
+      "getDrepDelegates",
+      "search",
+      "getDashboardStats"
+    ]);
   }
 
   /** Batch-fetch pool names for unique slot leaders and mutate blocks in-place. */
