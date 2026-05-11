@@ -7,8 +7,7 @@ import { routers } from "./commons/routers";
 import { APP_LANGUAGES, SUPPORTED_LANGUAGES } from "./commons/utils/constants";
 
 import i18n from "./i18n";
-import { ApiConnector } from "./commons/connector/ApiConnector";
-import { FunctionEnum } from "./commons/connector/types/FunctionEnum";
+import { requireCapability } from "./commons/connector/capabilities/requireCapability";
 import { PageTransition } from "./commons/animation";
 
 const AddressDetail = React.lazy(() => import("./pages/AddressDetail"));
@@ -41,7 +40,6 @@ const PageLoader = () => (
 const AppRoutes: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const supportedFunctions = ApiConnector.getApiConnector().getSupportedFunctions();
   useEffect(() => {
     const pattern = /^\/([a-z]{2})\//;
     const currentLanguage = window.location.pathname.match(pattern)?.[1];
@@ -52,14 +50,6 @@ const AppRoutes: React.FC = () => {
     }
   }, [navigate]);
 
-  function isSupportedElement(Component: React.LazyExoticComponent<React.FC>, type: FunctionEnum) {
-    if (supportedFunctions.includes(type)) {
-      return <Component />;
-    } else {
-      return <NotFound />;
-    }
-  }
-
   return (
     <Suspense fallback={<PageLoader />}>
       <PageTransition routeKey={location.pathname}>
@@ -67,27 +57,27 @@ const AppRoutes: React.FC = () => {
         <Route path={routers.HOME} element={<Home />} />
 
         <Route path={routers.GOVERNANCE_ACTION_LIST}
-          element={isSupportedElement(GovernanceOverview, FunctionEnum.GOVERNANCE)} />
+          element={requireCapability(GovernanceOverview, "getGovernanceOverviewList", NotFound)} />
 
-        <Route path={routers.BLOCK_LIST} element={isSupportedElement(BlockList, FunctionEnum.BLOCK)} />
-        <Route path={routers.BLOCK_DETAIL} element={isSupportedElement(BlockDetail, FunctionEnum.BLOCK)} />
-        <Route path={routers.EPOCH_LIST} element={isSupportedElement(Epoch, FunctionEnum.EPOCH)} />
-        <Route path={routers.EPOCH_DETAIL} element={isSupportedElement(EpochDetail, FunctionEnum.EPOCH)} />
-        <Route path={routers.TRANSACTION_LIST} element={isSupportedElement(TransactionList, FunctionEnum.TRANSACTION)} />
-        <Route path={routers.TRANSACTION_DETAIL} element={isSupportedElement(TransactionDetailView, FunctionEnum.TRANSACTION)} />
-        <Route path={routers.ADDRESS_DETAIL} element={isSupportedElement(AddressDetail, FunctionEnum.ADDRESS)} />
-        <Route path={routers.STAKE_DETAIL} element={isSupportedElement(AddressDetail, FunctionEnum.ADDRESS)} />
-        <Route path={routers.STAKE_DETAIL_ALIAS} element={isSupportedElement(AddressDetail, FunctionEnum.ADDRESS)} />
-        <Route path={routers.POOLS} element={isSupportedElement(DelegationPools, FunctionEnum.POOL)} />
-        <Route path={routers.POOL_DETAIL} element={isSupportedElement(PoolDetailView, FunctionEnum.POOL)} />
-        <Route path={routers.TOKEN_LIST} element={isSupportedElement(Tokens, FunctionEnum.TOKENS)} />
-        <Route path={routers.TOKEN_DETAIL} element={isSupportedElement(TokenDetail, FunctionEnum.TOKENS)} />
-        <Route path={routers.DREPS} element={isSupportedElement(Dreps, FunctionEnum.DREP)} />
-        <Route path={routers.GOVERNANCE_ACTION} element={isSupportedElement(GovernanceActionDetails, FunctionEnum.GOVERNANCE)} />
-        <Route path={routers.DREP_DETAILS} element={isSupportedElement(DrepDetail, FunctionEnum.DREP)} />
-        <Route path={routers.PLUGINS} element={<PluginManager />} />
-        <Route path={routers.PROTOCOL_PARAMETERS} element={isSupportedElement(ProtocolParameters, FunctionEnum.PROTOCOL_PARAMETER)} />
-        <Route path={routers.POLICY_DETAIL} element={isSupportedElement(PolicyDetail, FunctionEnum.TOKENS)} />
+        <Route path={routers.BLOCK_LIST}        element={requireCapability(BlockList, "getBlocksPage", NotFound)} />
+        <Route path={routers.BLOCK_DETAIL}      element={requireCapability(BlockDetail, "getBlockDetail", NotFound)} />
+        <Route path={routers.EPOCH_LIST}        element={requireCapability(Epoch, "getEpochs", NotFound)} />
+        <Route path={routers.EPOCH_DETAIL}      element={requireCapability(EpochDetail, "getEpoch", NotFound)} />
+        <Route path={routers.TRANSACTION_LIST}  element={requireCapability(TransactionList, "getTransactions", NotFound)} />
+        <Route path={routers.TRANSACTION_DETAIL} element={requireCapability(TransactionDetailView, "getTxDetail", NotFound)} />
+        <Route path={routers.ADDRESS_DETAIL}    element={requireCapability(AddressDetail, "getWalletAddressFromAddress", NotFound)} />
+        <Route path={routers.STAKE_DETAIL}      element={requireCapability(AddressDetail, "getWalletStakeFromAddress", NotFound)} />
+        <Route path={routers.STAKE_DETAIL_ALIAS} element={requireCapability(AddressDetail, "getWalletStakeFromAddress", NotFound)} />
+        <Route path={routers.POOLS}             element={requireCapability(DelegationPools, "getPoolList", NotFound)} />
+        <Route path={routers.POOL_DETAIL}       element={requireCapability(PoolDetailView, "getPoolDetail", NotFound)} />
+        <Route path={routers.TOKEN_LIST}        element={requireCapability(Tokens, "getTokensPage", NotFound)} />
+        <Route path={routers.TOKEN_DETAIL}      element={requireCapability(TokenDetail, "getTokenDetail", NotFound)} />
+        <Route path={routers.DREPS}             element={requireCapability(Dreps, "getDreps", NotFound)} />
+        <Route path={routers.GOVERNANCE_ACTION} element={requireCapability(GovernanceActionDetails, "getGovernanceDetail", NotFound)} />
+        <Route path={routers.DREP_DETAILS}      element={requireCapability(DrepDetail, "getDrep", NotFound)} />
+        <Route path={routers.PLUGINS}           element={<PluginManager />} />
+        <Route path={routers.PROTOCOL_PARAMETERS} element={requireCapability(ProtocolParameters, "getCurrentProtocolParameters", NotFound)} />
+        <Route path={routers.POLICY_DETAIL}     element={requireCapability(PolicyDetail, "getTokensByPolicy", NotFound)} />
         <Route path="*" element={<NotFound />} />
       </Routes>
       </PageTransition>
