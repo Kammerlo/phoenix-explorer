@@ -8,7 +8,6 @@ import { ApiConnector, _setConnectorFactory } from "../ApiConnector";
 
 class TestConnector extends ApiConnector {
   constructor(private readonly caps: string[]) { super(""); }
-  getSupportedFunctions() { return []; }
   getCapabilities() { return new Set(this.caps as any); }
   // dummy abstract impls
   getEpochs() { return Promise.resolve({} as any); }

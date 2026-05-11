@@ -3,7 +3,6 @@ import { ConnectorBase } from "../ConnectorBase";
 import axios, { AxiosInstance, AxiosResponse } from "axios";
 // @ts-ignore
 import { ParsedUrlQuery } from "querystring";
-import { FunctionEnum } from "src/commons/connector/types/FunctionEnum";
 import { Capability } from "../types/Capability";
 import { ApiReturnType } from "@shared/APIReturnType";
 import applyCaseMiddleware from "axios-case-converter";
@@ -72,18 +71,6 @@ export class GatewayConnector extends ConnectorBase {
     return this.client.get<ApiReturnType<GovernanceActionListItem[]>>(`${this.baseUrl}/governance/actions`, {
       params: pageInfo
     }).then(response => response.data);
-  }
-
-  getSupportedFunctions(): FunctionEnum[] {
-    return [FunctionEnum.EPOCH,
-    FunctionEnum.BLOCK,
-    FunctionEnum.TRANSACTION,
-    FunctionEnum.TOKENS,
-    FunctionEnum.DREP,
-    FunctionEnum.GOVERNANCE,
-    FunctionEnum.POOL,
-    FunctionEnum.ADDRESS,
-    FunctionEnum.PROTOCOL_PARAMETER];
   }
 
   getCapabilities(): ReadonlySet<Capability> {

@@ -1,4 +1,3 @@
-import { FunctionEnum } from "./types/FunctionEnum";
 import { POOL_TYPE } from "src/commons/connector/types/FunctionEnum";
 import { Capability } from "./types/Capability";
 // @ts-ignore
@@ -45,8 +44,6 @@ export abstract class ApiConnector {
     }
     return _connectorFactory();
   }
-
-  abstract getSupportedFunctions(): FunctionEnum[];
 
   /** Returns the set of `ApiConnector` methods this connector implements. */
   abstract getCapabilities(): ReadonlySet<Capability>;

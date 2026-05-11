@@ -10,7 +10,6 @@ import { ApiConnector, _setConnectorFactory } from "../ApiConnector";
 const makeConnector = (caps: string[]) => {
   class C extends (ApiConnector as any) {
     constructor() { super(""); }
-    getSupportedFunctions() { return []; }
     getCapabilities() { return new Set(caps); }
   }
   // fill in dummy abstract methods via a Proxy

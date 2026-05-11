@@ -6,7 +6,6 @@ import { TProtocolParam } from "src/types/protocol";
 
 import { StakeAddressAction } from "../ApiConnector";
 import { ConnectorBase } from "../ConnectorBase";
-import { FunctionEnum, POOL_TYPE } from "../types/FunctionEnum";
 import { Capability } from "../types/Capability";
 import { ApiReturnType } from "@shared/APIReturnType";
 import { DashboardStats } from "@shared/dtos/dashboard.dto";
@@ -40,22 +39,6 @@ export class BlockfrostConnector extends ConnectorBase {
       baseURL: baseUrl,
       headers: { project_id: apiKey }
     });
-  }
-
-  getSupportedFunctions(): FunctionEnum[] {
-    return [
-      FunctionEnum.EPOCH,
-      FunctionEnum.BLOCK,
-      FunctionEnum.TRANSACTION,
-      FunctionEnum.ADDRESS,
-      FunctionEnum.TOKENS,
-      FunctionEnum.POOL,
-      FunctionEnum.GOVERNANCE,
-      FunctionEnum.DREP,
-      FunctionEnum.PROTOCOL_PARAMETER,
-      FunctionEnum.STAKE_ADDRESS_REGISTRATION,
-      FunctionEnum.POOL_REGISTRATION
-    ];
   }
 
   getCapabilities(): ReadonlySet<Capability> {

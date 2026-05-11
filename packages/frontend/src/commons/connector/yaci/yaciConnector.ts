@@ -27,7 +27,7 @@ import {
   Withdrawal
 } from "./types";
 import applyCaseMiddleware from "axios-case-converter";
-import { FunctionEnum, POOL_TYPE } from "../types/FunctionEnum";
+import { POOL_TYPE } from "../types/FunctionEnum";
 import { Capability } from "../types/Capability";
 import { poolRegistrationsToRegistrations } from "./mapper/PoolRegistrationsToRegistrations";
 import { poolRetirementsToRegistrations } from "./mapper/PoolRetirementsToRegistrations";
@@ -98,22 +98,6 @@ export class YaciConnector extends ConnectorBase {
     super(baseUrl);
     this.client = applyCaseMiddleware(axios.create());
   }
-  getSupportedFunctions(): FunctionEnum[] {
-    return [
-      FunctionEnum.EPOCH,
-      FunctionEnum.BLOCK,
-      FunctionEnum.TRANSACTION,
-      FunctionEnum.ADDRESS,
-      FunctionEnum.STAKE_ADDRESS_REGISTRATION,
-      FunctionEnum.POOL_REGISTRATION,
-      FunctionEnum.PROTOCOL_PARAMETER,
-      FunctionEnum.TOKENS,
-      FunctionEnum.GOVERNANCE,
-      FunctionEnum.DREP,
-      FunctionEnum.POOL
-    ];
-  }
-
   getCapabilities(): ReadonlySet<Capability> {
     return new Set<Capability>([
       "getBlocksPage",
