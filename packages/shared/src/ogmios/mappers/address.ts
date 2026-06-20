@@ -57,8 +57,8 @@ export function mapRewardSummaryToStakeDetail(
 
 function hexToUtf8(hex: string): string {
   try {
-    const bytes = hex.match(/.{1,2}/g)?.map((b) => parseInt(b, 16)) ?? [];
-    const s = Buffer.from(bytes).toString("utf8");
+    const bytes = new Uint8Array((hex.match(/.{1,2}/g) ?? []).map((b) => parseInt(b, 16)));
+    const s = new TextDecoder("utf-8").decode(bytes);
     return /^[\x20-\x7e]*$/.test(s) ? s : hex;
   } catch {
     return hex;
