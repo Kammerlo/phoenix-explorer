@@ -1,6 +1,7 @@
 import { OgmiosEraSummary } from "../types";
 
 function eraForSlot(slot: number, eras: OgmiosEraSummary[]): OgmiosEraSummary {
+  if (eras.length === 0) throw new Error("eraSummaries is empty");
   for (const era of eras) {
     if (slot >= era.start.slot && (era.end === null || slot < era.end.slot)) return era;
   }
@@ -14,6 +15,7 @@ export function slotToUnixTime(slot: number, eras: OgmiosEraSummary[]): number {
 }
 
 function eraForEpoch(epoch: number, eras: OgmiosEraSummary[]): OgmiosEraSummary {
+  if (eras.length === 0) throw new Error("eraSummaries is empty");
   for (const era of eras) {
     if (epoch >= era.start.epoch && (era.end === null || epoch < era.end.epoch)) return era;
   }
@@ -38,6 +40,7 @@ export function epochProgressPercent(
   currentSlot: number,
   bounds: { firstSlot: number; epochLength: number }
 ): number {
+  if (bounds.epochLength <= 0) return 0;
   const into = currentSlot - bounds.firstSlot;
   if (into <= 0) return 0;
   if (into >= bounds.epochLength) return 100;

@@ -42,6 +42,16 @@ describe("era/time math", () => {
     expect(epochProgressPercent(4492800, { firstSlot: 4492800, epochLength: 432000 })).toBe(0);
     expect(epochProgressPercent(99999999, { firstSlot: 4492800, epochLength: 432000 })).toBe(100);
   });
+  it("converts a Byron-era slot to unix time", () => {
+    // Byron: slot 0 at t=0, 20s slots. Slot 21600 -> 21600 * 20 = 432000s.
+    expect(slotToUnixTime(21600, ERAS)).toBe(432000);
+  });
+  it("throws on empty eraSummaries", () => {
+    expect(() => slotToUnixTime(0, [])).toThrow(/empty/);
+  });
+  it("returns 0 progress when epochLength is 0", () => {
+    expect(epochProgressPercent(100, { firstSlot: 0, epochLength: 0 })).toBe(0);
+  });
 });
 
 describe("flattenValue", () => {
