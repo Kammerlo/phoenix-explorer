@@ -39,13 +39,13 @@ drepRouter.get("/:drepId", asyncHandler(async (req, res) => {
 }));
 
 export const governanceRouter = Router();
-governanceRouter.get("", asyncHandler(async (req, res) => {
+governanceRouter.get("/actions", asyncHandler(async (req, res) => {
   res.json(await ogmiosServices.getGovernanceOverviewList(ogmiosBackends(), q(req)));
 }));
-governanceRouter.get("/:txHash/:index", asyncHandler(async (req, res) => {
+governanceRouter.get("/actions/:txHash/:index", asyncHandler(async (req, res) => {
   res.json(await ogmiosServices.getGovernanceDetail(ogmiosBackends(), p(req.params.txHash), p(req.params.index)));
 }));
-governanceRouter.get("/:txHash/:index/votes", asyncHandler(async (req, res) => {
+governanceRouter.get("/actions/:txHash/:index/votes", asyncHandler(async (req, res) => {
   res.json(await ogmiosServices.getGovernanceActionVotes(ogmiosBackends(), p(req.params.txHash), p(req.params.index)));
 }));
 
@@ -58,6 +58,9 @@ addressRouter.get("/:address/stake", asyncHandler(async (req, res) => {
 }));
 
 export const tokenRouter = Router();
+tokenRouter.get("/policy/:policyId", asyncHandler(async (req, res) => {
+  res.json(await ogmiosServices.getTokensByPolicy(ogmiosBackends(), p(req.params.policyId), q(req)));
+}));
 tokenRouter.get("/:tokenId", asyncHandler(async (req, res) => {
   res.json(await ogmiosServices.getTokenDetail(ogmiosBackends(), p(req.params.tokenId)));
 }));
@@ -67,5 +70,5 @@ tokenRouter.get("/:tokenId/holders", asyncHandler(async (req, res) => {
 
 export const searchRouter = Router();
 searchRouter.get("", asyncHandler(async (req, res) => {
-  res.json(await ogmiosServices.search(ogmiosBackends(), String((req.query as ParsedUrlQuery).query ?? "")));
+  res.json(await ogmiosServices.search(ogmiosBackends(), String((req.query as ParsedUrlQuery).q ?? "")));
 }));

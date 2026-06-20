@@ -16,6 +16,7 @@ import { mapUtxosToAddressDetail, mapRewardSummaryToStakeDetail } from "../mappe
 import { mapKupoMatchesToHolders } from "../mappers/tokens";
 import { epochBounds } from "../helpers/era";
 import { EpochStatus } from "../../dtos/epoch.dto";
+import { SearchResult } from "../../dtos/seach.dto";
 
 export interface OgmiosBackends {
   ogmios: OgmiosClient;
@@ -57,11 +58,6 @@ async function runPaged<T>(
   }
 }
 
-async function poolContext(ogmios: OgmiosClient): Promise<{ totalActiveStake: number; nOpt: number }> {
-  const pp = await ogmios.query<OgmiosProtocolParameters>("queryLedgerState/protocolParameters");
-  return { totalActiveStake: 0, nOpt: pp.desiredNumberOfStakePools };
-}
-
 export const ogmiosServices = {
   getCurrentProtocolParameters: ({ ogmios }: OgmiosBackends) =>
     run(async () => mapProtocolParameters(await ogmios.query<OgmiosProtocolParameters>("queryLedgerState/protocolParameters"))),
@@ -96,21 +92,25 @@ export const ogmiosServices = {
 
   getPoolList: ({ ogmios }: OgmiosBackends, pageInfo: ParsedUrlQuery) =>
     runPaged(async () => {
-      const [pools, ctx] = await Promise.all([
+      const [pools, pp] = await Promise.all([
         ogmios.query<OgmiosStakePools>("queryLedgerState/stakePools", { includeStake: true }),
-        poolContext(ogmios)
+        ogmios.query<OgmiosProtocolParameters>("queryLedgerState/protocolParameters")
       ]);
+      const totalActiveStake = Object.values(pools).reduce((s, p) => s + (p.stake?.ada.lovelace ?? 0), 0);
+      const ctx = { totalActiveStake, nOpt: pp.desiredNumberOfStakePools };
       const all = mapStakePoolsToOverviews(pools, ctx);
       return paginate(all, pageInfo);
     }),
 
   getPoolDetail: ({ ogmios }: OgmiosBackends, poolId: string) =>
     run(async () => {
-      const [pools, ctx] = await Promise.all([
-        ogmios.query<OgmiosStakePools>("queryLedgerState/stakePools", { includeStake: true, stakePools: [{ id: poolId }] }),
-        poolContext(ogmios)
+      const [pools, pp] = await Promise.all([
+        ogmios.query<OgmiosStakePools>("queryLedgerState/stakePools", { includeStake: true }),
+        ogmios.query<OgmiosProtocolParameters>("queryLedgerState/protocolParameters")
       ]);
-      const raw: OgmiosStakePool | undefined = pools[poolId] ?? Object.values(pools)[0];
+      const totalActiveStake = Object.values(pools).reduce((s, p) => s + (p.stake?.ada.lovelace ?? 0), 0);
+      const ctx = { totalActiveStake, nOpt: pp.desiredNumberOfStakePools };
+      const raw: OgmiosStakePool | undefined = pools[poolId];
       if (!raw) throw new Error(`pool not found: ${poolId}`);
       return mapStakePoolToDetail(raw, ctx);
     }),
@@ -196,14 +196,14 @@ export const ogmiosServices = {
   search: ({ ogmios, kupo }: OgmiosBackends, query: string) =>
     run(async () => {
       const q = query.trim();
-      const results: Array<{ type: string; id: string; label?: string }> = [];
+      const results: SearchResult[] = [];
       if (q.startsWith("pool1")) results.push({ type: "pool", id: q });
       else if (q.startsWith("drep1")) results.push({ type: "drep", id: q });
       else if (q.startsWith("stake1")) results.push({ type: "stake", id: q });
       else if (q.startsWith("addr1")) results.push({ type: "address", id: q });
       else if (/^[0-9a-fA-F]{56}$/.test(q)) results.push({ type: "policy", id: q });
       void ogmios; void kupo;
-      return results as never[];
+      return results;
     }, [])
 };
 
