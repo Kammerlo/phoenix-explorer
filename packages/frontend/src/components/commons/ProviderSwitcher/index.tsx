@@ -24,6 +24,7 @@ interface ProviderOption {
   description: string;
   defaultUrl: string;
   requiresApiKey?: boolean;
+  defaultKupoUrl?: string;
 }
 
 const BLOCKFROST_URLS: Record<string, string> = {
@@ -51,6 +52,13 @@ const PROVIDERS: ProviderOption[] = [
     description: "Connects directly to Blockfrost API from the browser. Requires an API key.",
     defaultUrl: BLOCKFROST_URLS[process.env.REACT_APP_NETWORK || "mainnet"],
     requiresApiKey: true
+  },
+  {
+    type: "OGMIOS",
+    label: "Ogmios + Kupo (Direct)",
+    description: "Connects directly to an Ogmios endpoint (+ Kupo for token holders). Live node state only — no historical blocks/txs.",
+    defaultUrl: "https://your-ogmios-endpoint",
+    defaultKupoUrl: "https://your-kupo-endpoint"
   }
 ];
 
@@ -65,6 +73,7 @@ const ProviderSwitcher: React.FC<ProviderSwitcherProps> = ({ open, onClose }) =>
   const [selectedType, setSelectedType] = useState<ProviderType>(currentConfig?.type ?? "GATEWAY");
   const [customUrl, setCustomUrl] = useState<string>(currentConfig?.baseUrl ?? "");
   const [apiKey, setApiKey] = useState<string>(currentConfig?.apiKey ?? "");
+  const [kupoUrl, setKupoUrl] = useState<string>(currentConfig?.kupoUrl ?? "");
 
   const selectedProvider = PROVIDERS.find((p) => p.type === selectedType)!;
 
@@ -74,6 +83,7 @@ const ProviderSwitcher: React.FC<ProviderSwitcherProps> = ({ open, onClose }) =>
       setSelectedType(currentConfig.type);
       setCustomUrl(currentConfig.baseUrl);
       setApiKey(currentConfig.apiKey ?? "");
+      setKupoUrl(currentConfig.kupoUrl ?? "");
     }
   }, [open]);
 
@@ -85,6 +95,7 @@ const ProviderSwitcher: React.FC<ProviderSwitcherProps> = ({ open, onClose }) =>
     if (type !== currentConfig?.type) {
       setCustomUrl(provider.defaultUrl);
       setApiKey("");
+      setKupoUrl(provider.defaultKupoUrl ?? "");
     }
   };
 
@@ -95,6 +106,7 @@ const ProviderSwitcher: React.FC<ProviderSwitcherProps> = ({ open, onClose }) =>
       type: selectedType,
       baseUrl,
       apiKey: selectedType === "BLOCKFROST" ? apiKey : undefined,
+      kupoUrl: selectedType === "OGMIOS" ? (kupoUrl || undefined) : undefined,
       network
     };
     setProviderConfig(config);
@@ -156,6 +168,17 @@ const ProviderSwitcher: React.FC<ProviderSwitcherProps> = ({ open, onClose }) =>
               onChange={(e) => setApiKey(e.target.value)}
               type="password"
               helperText="Your Blockfrost project_id. Keep it private."
+            />
+          )}
+          {selectedType === "OGMIOS" && (
+            <TextField
+              fullWidth
+              size="small"
+              label="Kupo URL"
+              value={kupoUrl}
+              onChange={(e) => setKupoUrl(e.target.value)}
+              placeholder={selectedProvider.defaultKupoUrl}
+              helperText="Optional. Required for token holder queries."
             />
           )}
         </Box>
