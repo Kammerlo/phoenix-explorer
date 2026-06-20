@@ -8,9 +8,8 @@
     "skipLibCheck": true,
     "strict": true,
     "rootDir": "src",
-    "outDir": "dist",
-    "resolveJsonModule": true,
-    "esModuleInterop": true
-    },
-  "include": ["src"]
+    "outDir": "dist"
+  },
+  "include": ["src"],
+  "exclude": ["src/**/*.test.ts", "src/**/__smoke__/**", "src/**/__fixtures__/**", "src/ogmios/scripts/**"]
 }
