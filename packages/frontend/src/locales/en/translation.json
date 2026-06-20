@@ -1265,5 +1265,6 @@
   "flow.totalOutput": "Total Output",
   "flow.smartContract": "Smart Contract",
   "flow.consumed": "Consumed",
-  "flow.produced": "Produced"
+  "flow.produced": "Produced",
+  "flow.change": "Change"
 }
