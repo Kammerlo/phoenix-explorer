@@ -11,22 +11,28 @@ import { protocolParamsController } from "./controller/protocol-params-controlle
 import { dashboardController } from "./controller/dashboard-controller";
 import { searchController } from "./controller/search-controller";
 import { errorHandler } from "./middleware/errorHandler";
+import { IS_OGMIOS_ACTIVE } from "./config/ogmios";
+import { mountOgmiosControllers } from "./controller/ogmios";
 
 const app = express();
 
 app.use(cors()); // Adjust for your frontend origin if needed
 app.use(express.json());
 
-app.use("/api/epochs", epochController);
-app.use("/api/blocks", blockController);
-app.use("/api/transactions", transactionController);
-app.use("/api/tokens", tokenController);
-app.use("/api/governance", governanceController);
-app.use("/api/addresses", addressController);
-app.use("/api/pools", poolController);
-app.use("/api/protocol-params", protocolParamsController);
-app.use("/api/dashboard", dashboardController);
-app.use("/api/search", searchController);
+if (IS_OGMIOS_ACTIVE) {
+  mountOgmiosControllers(app);
+} else {
+  app.use("/api/epochs", epochController);
+  app.use("/api/blocks", blockController);
+  app.use("/api/transactions", transactionController);
+  app.use("/api/tokens", tokenController);
+  app.use("/api/governance", governanceController);
+  app.use("/api/addresses", addressController);
+  app.use("/api/pools", poolController);
+  app.use("/api/protocol-params", protocolParamsController);
+  app.use("/api/dashboard", dashboardController);
+  app.use("/api/search", searchController);
+}
 
 app.use(errorHandler);
 
