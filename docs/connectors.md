@@ -23,13 +23,13 @@ connector.
 │ (concrete defaults)  │     │ (abstract interface) │
 └──────────┬───────────┘     └──────────────────────┘
            │ extends
-   ┌───────┴──────┬──────────────┬──────────────┐
+   ┌───────┴──────┬──────────────┬──────────────┬──────────────┐
+   ▼              ▼              ▼              ▼              ▼
+GatewayConnector  BlockfrostConnector  YaciConnector  OgmiosConnector  (your new connector)
+   │              │              │              │
    ▼              ▼              ▼              ▼
-GatewayConnector  BlockfrostConnector  YaciConnector  (your new connector)
-   │              │              │
-   ▼              ▼              ▼
-Express gateway   Blockfrost     Yaci Store
-     │              REST API      REST API
+Express gateway   Blockfrost     Yaci Store     Ogmios WebSocket
+     │              REST API      REST API       + Kupo REST API
      ▼
 Blockfrost SDK
 ```
@@ -106,28 +106,110 @@ lastUpdated }` instead of a silent zero or an unhandled rejection.
 | `GatewayConnector` | `GATEWAY` (default) | local Express gateway → Blockfrost | API key hidden server-side, cheap response caching (NodeCache, 5 min), pool-metadata batching | needs the gateway running |
 | `BlockfrostConnector` | `BLOCKFROST` | Blockfrost REST API direct | no server component | API key is shipped in the JS bundle; local/demo use only |
 | `YaciConnector` | `YACI` | [Yaci Store](https://github.com/bloxbean/yaci-store) REST API | devnet-friendly, works offline / on private networks | no built-in CDN; some endpoints partial coverage — see feature matrix |
+| `OgmiosConnector` | `OGMIOS` | [Ogmios](https://ogmios.dev) WebSocket + [Kupo](https://cardanosolutions.github.io/kupo) REST API | lightweight node companion — no full indexer required; protocol params, current epoch, dashboard, pools, dreps, governance, address/stake balances, token holders; works in private/devnet environments | live-state only — all historical endpoints (blocks, transactions, epoch history, address tx history) return unsupported; Kupo must be running separately with `--match "*"` for token-by-policy/holder endpoints |
 
 ### Feature support matrix
 
-| `FunctionEnum` | Gateway | Blockfrost | Yaci |
-|----------------|:-------:|:----------:|:----:|
-| `EPOCH` | ✅ | ✅ | ✅ |
-| `BLOCK` | ✅ | ✅ | ✅ |
-| `TRANSACTION` | ✅ | ✅ | ✅ |
-| `ADDRESS` | ✅ | ✅ | ✅ |
-| `POOL` | ✅ | ✅ | ⚠️ (pool list/detail work; pool-blocks/saturation/ROS not populated) |
-| `POOL_REGISTRATION` | ❌ | ✅ | ✅ |
-| `TOKENS` | ✅ | ✅ | ✅ |
-| `GOVERNANCE` | ✅ | ✅ | ⚠️ (detail present; vote stats + anchor metadata not populated) |
-| `DREP` | ✅ | ✅ | ⚠️ (list/detail; vote totals not aggregated) |
-| `PROTOCOL_PARAMETER` | ✅ | ✅ | ✅ |
-| `STAKE_ADDRESS_REGISTRATION` | ❌ | ✅ | ✅ |
-| `SMART_CONTRACT` | ❌ | ❌ | ❌ |
-| `REWARDS` | ❌ | ❌ | ❌ |
-| `STAKING_LIFECYCLE` | ❌ | ❌ | ❌ |
-| `NETWORK_MONITORING` | ❌ | ❌ | ❌ |
-| `SUSTAINABILITY_INDICATORS` | ❌ | ❌ | ❌ |
-| Dashboard stats (no enum) | ✅ | ✅ | ⚠️ (Yaci lacks a network/supply endpoint; returns unsupported envelope) |
+| `FunctionEnum` | Gateway | Blockfrost | Yaci | Ogmios |
+|----------------|:-------:|:----------:|:----:|:------:|
+| `EPOCH` | ✅ | ✅ | ✅ | ⚠️ (current epoch only; history unsupported) |
+| `BLOCK` | ✅ | ✅ | ✅ | ❌ |
+| `TRANSACTION` | ✅ | ✅ | ✅ | ❌ |
+| `ADDRESS` | ✅ | ✅ | ✅ | ⚠️ (balance/UTxOs only; tx history unsupported) |
+| `POOL` | ✅ | ✅ | ⚠️ (pool list/detail work; pool-blocks/saturation/ROS not populated) | ⚠️ (list/detail only; blocks/history/ROS unsupported) |
+| `POOL_REGISTRATION` | ❌ | ✅ | ✅ | ❌ |
+| `TOKENS` | ✅ | ✅ | ✅ | ⚠️ (detail + holders/by-policy via Kupo; mint/burn history unsupported) |
+| `GOVERNANCE` | ✅ | ✅ | ⚠️ (detail present; vote stats + anchor metadata not populated) | ⚠️ (active proposals list; historical votes unsupported) |
+| `DREP` | ✅ | ✅ | ⚠️ (list/detail; vote totals not aggregated) | ⚠️ (list/detail; vote history unsupported) |
+| `PROTOCOL_PARAMETER` | ✅ | ✅ | ✅ | ✅ |
+| `STAKE_ADDRESS_REGISTRATION` | ❌ | ✅ | ✅ | ❌ |
+| `SMART_CONTRACT` | ❌ | ❌ | ❌ | ❌ |
+| `REWARDS` | ❌ | ❌ | ❌ | ❌ |
+| `STAKING_LIFECYCLE` | ❌ | ❌ | ❌ | ❌ |
+| `NETWORK_MONITORING` | ❌ | ❌ | ❌ | ❌ |
+| `SUSTAINABILITY_INDICATORS` | ❌ | ❌ | ❌ | ❌ |
+| Dashboard stats (no enum) | ✅ | ✅ | ⚠️ (Yaci lacks a network/supply endpoint; returns unsupported envelope) | ⚠️ (current epoch + tip only; supply/stake from Ogmios; historical unsupported) |
+
+### Ogmios + Kupo
+
+`OgmiosConnector` (`src/commons/connector/ogmios/ogmiosConnector.ts`) is a
+**live-state-only** connector. It talks to an
+[Ogmios](https://ogmios.dev) node-companion (WebSocket → JSON-RPC) for chain
+state, and optionally to a [Kupo](https://cardanosolutions.github.io/kupo/)
+UTxO-index REST API for address and token queries.
+
+**What it serves:**
+
+- Protocol parameters (current)
+- Current epoch (number, progress, slot counts)
+- Dashboard stats (tip block, current epoch, circulating supply, active stake)
+- Pool list and detail (live stake, saturation; no block history, no ROS)
+- DRep list and detail (live voting power; no vote history)
+- Active governance proposals
+- Address balance and UTxOs (via Kupo)
+- Stake address balance (via Kupo)
+- Token detail + holders / by-policy (via Kupo — requires `--match "*"`)
+- Search (address and stake address lookups only)
+
+**What it does NOT serve** (returns `unsupported` envelope / HTTP 501):
+
+- Historical data: epoch list, block list/detail, transaction list/detail,
+  address transaction history, token mint/burn history
+- Stake or pool registration/retirement certificates
+- Rewards, staking lifecycle, smart contracts
+
+#### Gateway mode
+
+Set `OGMIOS_URL` (and optionally `KUPO_URL`) in your root `.env`. The Express
+gateway will forward eligible queries to Ogmios/Kupo and respond with HTTP 501
+for any historical endpoint it cannot answer. `REACT_APP_API_TYPE` stays
+`GATEWAY`; no change to the frontend cookie is needed.
+
+```bash
+OGMIOS_URL=https://your-ogmios-endpoint
+KUPO_URL=https://your-kupo-endpoint
+```
+
+#### Direct browser mode
+
+Set `REACT_APP_API_TYPE=OGMIOS` to bypass the gateway and have the frontend
+connect directly to Ogmios and Kupo. Ogmios must have CORS enabled (or be
+proxied) for this to work from the browser.
+
+```bash
+REACT_APP_API_TYPE=OGMIOS
+REACT_APP_API_URL=https://your-ogmios-endpoint
+REACT_APP_KUPO_URL=https://your-kupo-endpoint
+```
+
+#### Kupo indexing requirement
+
+Token holder and by-policy endpoints require Kupo to be running with a
+wildcard match pattern so it indexes all UTxOs:
+
+```bash
+kupo --match "*" ...
+```
+
+Without the wildcard pattern Kupo only indexes the addresses you told it to
+watch, and token-holder / by-policy queries will return empty results.
+
+#### Running against a local Ogmios + Kupo
+
+```sh
+# ogmios (assuming a running cardano-node)
+ogmios --node-socket /path/to/node.socket --node-config /path/to/config.json
+
+# kupo (wildcard, in-memory, against the same node)
+kupo --node-socket /path/to/node.socket --node-config /path/to/config.json \
+     --match "*" --in-memory
+
+# then start the explorer against Ogmios directly
+REACT_APP_API_TYPE=OGMIOS \
+REACT_APP_API_URL=http://localhost:1337 \
+REACT_APP_KUPO_URL=http://localhost:1442 \
+npm run dev
+```
 
 ---
 
