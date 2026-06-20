@@ -37,6 +37,11 @@ describe("OgmiosClient", () => {
     const fetchImpl = mockFetch(() => ({ status: 500, body: "boom" }));
     await expect(new OgmiosClient("http://ogmios", { fetchImpl }).query("x")).rejects.toThrow(/500/);
   });
+
+  it("throws when a success response has neither result nor error", async () => {
+    const fetchImpl = mockFetch(() => ({ body: { jsonrpc: "2.0", id: null } }));
+    await expect(new OgmiosClient("http://ogmios", { fetchImpl }).query("x")).rejects.toThrow(/neither result nor error/);
+  });
 });
 
 describe("KupoClient", () => {

@@ -37,6 +37,9 @@ export class OgmiosClient {
     if (!res.ok) throw new Error(`Ogmios HTTP ${res.status} for ${method}`);
     const json = (await res.json()) as JsonRpcResponse<T>;
     if (json.error) throw new Error(`Ogmios error ${json.error.code}: ${json.error.message}`);
+    if (json.result === undefined) {
+      throw new Error(`Ogmios: response for ${method} has neither result nor error`);
+    }
     return json.result as T;
   }
 }
