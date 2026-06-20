@@ -302,14 +302,15 @@ export class BlockfrostConnector extends ConnectorBase {
       for (const u of allUtxos) {
         if ((u as any).reference) continue;
         const lovelace = parseInt(u.amount?.find((a: any) => a.unit === "lovelace")?.quantity ?? "0");
-        const signed = u._isOutput ? -lovelace : lovelace;
+        // Outputs received → positive, inputs sent → negative (Summary reads value > 0 as received).
+        const signed = u._isOutput ? lovelace : -lovelace;
         if (!summaryMap[u.address]) {
           summaryMap[u.address] = { address: u.address, value: 0, tokens: [] };
         }
         summaryMap[u.address].value += signed;
 
         for (const a of (u.amount ?? []).filter((a: any) => a.unit !== "lovelace")) {
-          const qty = parseInt(a.quantity) * (u._isOutput ? -1 : 1);
+          const qty = parseInt(a.quantity) * (u._isOutput ? 1 : -1);
           const existing = summaryMap[u.address].tokens.find(t => t.assetId === a.unit);
           if (existing) { existing.assetQuantity += qty; }
           else { summaryMap[u.address].tokens.push({ assetName: a.unit.slice(56), assetQuantity: qty, assetId: a.unit, policy: { policyId: a.unit.slice(0, 56) } }); }

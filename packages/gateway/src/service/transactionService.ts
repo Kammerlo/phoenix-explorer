@@ -66,7 +66,9 @@ async function getUtxosAndSummaryMap(utxos: any) {
       utxo.amount.find((a: { unit: string; }) => a.unit === "lovelace")?.quantity ?? "0"
     );
     const isOutput = utxos.outputs.includes(utxo);
-    const signedValue = isOutput ? -value : value;
+    // Outputs add to an address (received → positive); inputs subtract (sent → negative).
+    // The Summary component treats value > 0 as received, < 0 as sent.
+    const signedValue = isOutput ? value : -value;
 
     if (!summaryMap[utxo.address]) {
       summaryMap[utxo.address] = {address: utxo.address, value: 0, tokens: []};
@@ -78,13 +80,13 @@ async function getUtxosAndSummaryMap(utxos: any) {
       .filter((a: { unit: string; }) => a.unit !== "lovelace")
       .map(toToken));
     for(const token of tokens) {
-      if (!summaryMap[utxo.address].tokens.some(t => t.assetId === token.assetId)) {
-        summaryMap[utxo.address].tokens.push(token);
+      // Same sign convention as lovelace: outputs positive (received), inputs negative (sent).
+      const signedQuantity = token.assetQuantity * (isOutput ? 1 : -1);
+      const existingToken = summaryMap[utxo.address].tokens.find(t => t.assetId === token.assetId);
+      if (existingToken) {
+        existingToken.assetQuantity += signedQuantity;
       } else {
-        const existingToken = summaryMap[utxo.address].tokens.find(t => t.assetId === token.assetId);
-        if (existingToken) {
-          existingToken.assetQuantity += token.assetQuantity * (isOutput ? -1 : 1);
-        }
+        summaryMap[utxo.address].tokens.push({ ...token, assetQuantity: signedQuantity });
       }
     }
   }
