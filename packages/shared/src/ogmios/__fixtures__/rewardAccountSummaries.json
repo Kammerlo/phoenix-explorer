@@ -1,0 +1,24 @@
+[
+  {
+    "from": "verificationKey",
+    "credential": "876c8abaa636168c7d43623be103c6bfffcfb0337c05ffd1a7ea72e5",
+    "stakePool": {
+      "id": "pool1qqqqqdk4zhsjuxxd8jyvwncf5eucfskz0xjjj64fdmlgj735lr9"
+    },
+    "delegateRepresentative": {
+      "type": "registered",
+      "from": "verificationKey",
+      "id": "ddb7316d7f4ff1d69084f2352e4613284381f17474fd133dfb4bb6ed"
+    },
+    "rewards": {
+      "ada": {
+        "lovelace": 0
+      }
+    },
+    "deposit": {
+      "ada": {
+        "lovelace": 2000000
+      }
+    }
+  }
+]

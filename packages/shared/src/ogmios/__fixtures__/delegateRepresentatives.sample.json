@@ -1,0 +1,82 @@
+[
+  {
+    "type": "registered",
+    "from": "verificationKey",
+    "id": "002e87e32c1735bef2af2825943a9c06714857d1fc19385b86e429a3",
+    "mandate": {
+      "epoch": 585
+    },
+    "deposit": {
+      "ada": {
+        "lovelace": 500000000
+      }
+    },
+    "stake": {
+      "ada": {
+        "lovelace": 12178601610
+      }
+    },
+    "delegators": [
+      {
+        "from": "verificationKey",
+        "credential": "59c2421ccb0145b5aaa08931c5fccf822bb1dc2f175b8fa5b018bcf1"
+      }
+    ]
+  },
+  {
+    "type": "registered",
+    "from": "verificationKey",
+    "id": "00663f00c4c1ca6bb6405c68b5c30023a8d8c7f6acbeb06b7d0a4d2c",
+    "mandate": {
+      "epoch": 650
+    },
+    "deposit": {
+      "ada": {
+        "lovelace": 500000000
+      }
+    },
+    "stake": {
+      "ada": {
+        "lovelace": 331716016177
+      }
+    },
+    "delegators": [
+      {
+        "from": "verificationKey",
+        "credential": "0e3298a21cdcd6d0de7ef80405ce02d834d7279ca5c1b841f7f560e5"
+      },
+      {
+        "from": "verificationKey",
+        "credential": "1a4a4978ba8c3642be07b697e09eeac346059508bcf320019d9b0713"
+      },
+      {
+        "from": "verificationKey",
+        "credential": "1cb34f3a24c3e2c1b429a1c57d317c565d38c3ab8756aac1f0385dfb"
+      },
+      {
+        "from": "verificationKey",
+        "credential": "26c30d6eaae8d58d93e12f99f342a627956143388a8e9c60385bcfb2"
+      },
+      {
+        "from": "verificationKey",
+        "credential": "8f8b6f9b7201232b82b327bcdb574d52d170638c8f412a138fc7b3ac"
+      },
+      {
+        "from": "verificationKey",
+        "credential": "ad02295be34b584f868e29002203f960760201b315c1824a6642bd38"
+      },
+      {
+        "from": "verificationKey",
+        "credential": "b277217b6254b0be425f3b06c58b39c236a20ddc13d1c10c1c402bdf"
+      },
+      {
+        "from": "verificationKey",
+        "credential": "cc85bb0493965dd5cd371af5b5de39c3a0adcd67d9e67e8fa02283a9"
+      },
+      {
+        "from": "verificationKey",
+        "credential": "f9cc088b6533f8bf47ccbfad8c322bf75dae240ffd6de63128fa74f6"
+      }
+    ]
+  }
+]

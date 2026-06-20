@@ -1,0 +1,98 @@
+{
+  "pool1qqqqqdk4zhsjuxxd8jyvwncf5eucfskz0xjjj64fdmlgj735lr9": {
+    "id": "pool1qqqqqdk4zhsjuxxd8jyvwncf5eucfskz0xjjj64fdmlgj735lr9",
+    "vrfVerificationKeyHash": "6de7605b2afd7e205318fc8b4329d26439b5b179b4746fea12f1ce50395f5d9e",
+    "pledge": {
+      "ada": {
+        "lovelace": 1300000000000
+      }
+    },
+    "cost": {
+      "ada": {
+        "lovelace": 340000000
+      }
+    },
+    "margin": "1/100",
+    "rewardAccount": "stake1uxrkez465cmpdrragd3rhcgrc6lllnasxd7qtl735l489egx9yfxe",
+    "owners": [
+      "39eb3ba2624bec61801b69cd087c1642a265b3288fb1019faa9e3ea4",
+      "3d8c7608966b4bbdf513a14d5961f4d989d96cc8a98f6aed3d67aeea"
+    ],
+    "relays": [
+      {
+        "type": "hostname",
+        "hostname": "relays.stakepool.at",
+        "port": 3001
+      },
+      {
+        "type": "hostname",
+        "hostname": "relay-1.stakepool.at",
+        "port": 3001
+      },
+      {
+        "type": "hostname",
+        "hostname": "relay-2.stakepool.at",
+        "port": 3001
+      }
+    ],
+    "metadata": {
+      "url": "https://stakepool.at/atada.metadata3.json",
+      "hash": "4811109f4fa6e2c1e3077fde6d1aa3120cc7a9edbd11d2c07a7828e452b48803"
+    },
+    "stake": {
+      "ada": {
+        "lovelace": 71998546236568
+      }
+    }
+  },
+  "pool1qqqqpanw9zc0rzh0yp247nzf2s35uvnsm7aaesfl2nnejaev0uc": {
+    "id": "pool1qqqqpanw9zc0rzh0yp247nzf2s35uvnsm7aaesfl2nnejaev0uc",
+    "vrfVerificationKeyHash": "bb862fcc397de6c06dea9a9ad8442a3d17826e01799a79b861fc083341eaed3d",
+    "pledge": {
+      "ada": {
+        "lovelace": 250000000000
+      }
+    },
+    "cost": {
+      "ada": {
+        "lovelace": 170000000
+      }
+    },
+    "margin": "1/100",
+    "rewardAccount": "stake1uyql45vs4hrjuzyy4kmh4fewl8v46wkmwhmc9wkk8df6tdcv7pe2r",
+    "owners": [
+      "014419b05d9dc94deec3a0d619221c7d3056865a43bf4e7f53d0645f",
+      "334e51f1d54528f619813d419f8222e53bbc0b5a78cc0e866bab8e8e",
+      "773cae89f5736fa91d1ec63c0337aa5989bc2e80d6bdf486c3b4464e",
+      "dbcbf7e630a44706e305d81f6e34d941ffc14c984264a1c59ff2b6bd",
+      "e8adc0e5d770adde6988844d007421307904845a9a0ba469e14889b3",
+      "f77db7d7642e3a49862322c213b766c25a52d5b22b3fed021f5b9848"
+    ],
+    "relays": [
+      {
+        "type": "hostname",
+        "hostname": "r-eu-0.titanstaking.io",
+        "port": 4321
+      },
+      {
+        "type": "hostname",
+        "hostname": "r-eu-1.titanstaking.io",
+        "port": 4321
+      },
+      {
+        "type": "hostname",
+        "hostname": "r-eu-2.titanstaking.io",
+        "port": 4321
+      }
+    ],
+    "metadata": {
+      "url": "https://www.titanstaking.io/titan.metadata.211202.json",
+      "hash": "f9c306dfa99b0f93b65abb9462161f1398a4ef6ecd2303f11de0ee5a49740bda"
+    },
+    "stake": {
+      "ada": {
+        "lovelace": 58139250603853
+      }
+    }
+  }
+}
