@@ -1,11 +1,12 @@
 import { createSlice, PayloadAction, Store } from "@reduxjs/toolkit";
 
-export type ProviderType = "GATEWAY" | "YACI" | "BLOCKFROST";
+export type ProviderType = "GATEWAY" | "YACI" | "BLOCKFROST" | "OGMIOS";
 
 export interface ProviderConfig {
   type: ProviderType;
   baseUrl: string;
   apiKey?: string;
+  kupoUrl?: string;
   network: string;
 }
 
