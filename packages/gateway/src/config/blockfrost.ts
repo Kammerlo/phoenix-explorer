@@ -3,11 +3,12 @@ import {ENV} from "./env";
 
 const isBlockfrostConfigured = !!ENV.API_KEY;
 const isDemeterConfigured = !!(ENV.DEMETER_URL && ENV.DEMETER_API_KEY);
+const isOgmiosConfigured = !!ENV.OGMIOS_URL;
 
-if (!isBlockfrostConfigured && !isDemeterConfigured) {
+if (!isBlockfrostConfigured && !isDemeterConfigured && !isOgmiosConfigured) {
   throw new Error(
-    "No Blockfrost provider configured. Set API_KEY (blockfrost.io) and/or " +
-    "DEMETER_URL + DEMETER_API_KEY (demeter.run)."
+    "No data provider configured. Set API_KEY and/or DEMETER_URL+DEMETER_API_KEY (Blockfrost), " +
+    "or OGMIOS_URL (+ optional KUPO_URL) for Ogmios-only mode."
   );
 }
 
@@ -139,7 +140,7 @@ const demeterAPI: BlockFrostAPI | null = demeterRaw
 // Primary client used by every controller except the pool routes. Demeter is
 // preferred when configured because it tends to have higher rate limits; on
 // 429 from demeter we transparently retry the same call against blockfrost.
-export const API: BlockFrostAPI = (demeterAPI ?? blockfrostAPI)!;
+export const API: BlockFrostAPI = (demeterAPI ?? blockfrostAPI) as BlockFrostAPI;
 
 // Demeter does not implement `/pools/*`, so pool routes go straight to
 // blockfrost.io. `null` when only demeter is configured — the pool router

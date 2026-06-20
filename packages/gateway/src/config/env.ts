@@ -23,6 +23,9 @@ export const ENV = {
   // Example URL: https://cardano-mainnet.blockfrost.m1.demeter.run/api/v0
   DEMETER_URL: process.env.DEMETER_URL,
   DEMETER_API_KEY: process.env.DEMETER_API_KEY,
+  // Ogmios + Kupo backend. Both optional; OGMIOS_URL activates Ogmios-only mode.
+  OGMIOS_URL: process.env.OGMIOS_URL,
+  KUPO_URL: process.env.KUPO_URL,
   PORT: parseInt(process.env.PORT ?? "3000", 10),
   HOST: process.env.HOST ?? "0.0.0.0",
   NETWORK: (process.env.NETWORK ?? "mainnet") as CardanoNetwork,
