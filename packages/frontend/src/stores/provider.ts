@@ -17,6 +17,12 @@ export interface ProviderState {
 const COOKIE_NAME = "phoenix_provider";
 const COOKIE_MAX_AGE = 365 * 24 * 60 * 60; // 1 year
 
+// Default base URL for the local gateway in dev. There is no Vite dev proxy for
+// `/api`, so the frontend must reach the gateway via an absolute URL — an empty
+// baseUrl would send requests to the Vite origin and 404. In production,
+// REACT_APP_API_URL is supplied via the build args, so this default is dev-only.
+const DEFAULT_GATEWAY_URL = "http://localhost:3000/api";
+
 function getCookie(name: string): string | null {
   const match = document.cookie.match(new RegExp("(^|; )" + name + "=([^;]*)"));
   return match ? decodeURIComponent(match[2]) : null;
@@ -29,7 +35,7 @@ function setCookie(name: string, value: string): void {
 function getDefaultConfig(): ProviderConfig {
   const envDefaults: ProviderConfig = {
     type: (process.env.REACT_APP_API_TYPE as ProviderType) || "GATEWAY",
-    baseUrl: process.env.REACT_APP_API_URL || "",
+    baseUrl: process.env.REACT_APP_API_URL || DEFAULT_GATEWAY_URL,
     apiKey: process.env.REACT_APP_BLOCKFROST_API_KEY,
     network: process.env.REACT_APP_NETWORK || "mainnet"
   };
