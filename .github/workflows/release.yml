@@ -58,13 +58,13 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: ${{ matrix.image }}
-          # We control `latest` explicitly below, so disable the action's auto-latest.
+          # Always move `latest` to the most recently published release, including
+          # pre-release / rc tags (latest=true forces it on every build).
           flavor: |
-            latest=false
-          # Exact version (leading `v` stripped) + `latest` only for non-prereleases.
+            latest=true
+          # Exact version, leading `v` stripped (e.g. v0.0.1-pre -> 0.0.1-pre).
           tags: |
             type=semver,pattern={{version}}
-            type=raw,value=latest,enable=${{ !github.event.release.prerelease }}
 
       - name: Build and push ${{ matrix.image }}
         uses: docker/build-push-action@v6
