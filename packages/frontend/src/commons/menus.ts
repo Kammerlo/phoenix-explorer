@@ -6,7 +6,7 @@ import {
   BrowseIcon,
   DashboardIcon,
   ProtocolIcon,
-  Catalyst
+  TwitterX
 } from "./resources";
 import { details, routers } from "./routers";
 import { ApiConnector } from "./connector/ApiConnector";
@@ -70,6 +70,6 @@ export function buildFooterMenus(connector: ApiConnector): Menu[] {
 }
 
 export const socials: Social[] = [
-  { href: "https://github.com/Kammerlo/cardano-explorer", title: "GitHub", icon: FaGithub },
-  { href: "https://projectcatalyst.io/funds/14/cardano-open-developers/phoenix-explorer-reviving-an-open-source-explorer", title: "Project Catalyst", icon: Catalyst }
+  { href: "https://github.com/Kammerlo/phoenix-explorer", title: "GitHub", icon: FaGithub },
+  { href: "https://x.com/kammerlo91", title: "Twitter", icon: TwitterX }
 ];
