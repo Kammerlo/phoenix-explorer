@@ -1,7 +1,8 @@
 import {API} from "../config/blockfrost";
-import {getBlock, getTransactions, getTxDetail, getUtxos} from "../config/cache";
+import {getBlock, getDatumCbor, getScriptCbor, getTransactions, getTxDetail, getTxRedeemers, getUtxos} from "../config/cache";
 import {Token, TPoolCertificated, Transaction, TransactionDetail} from "@shared/dtos/transaction.dto";
 import {computeTxTags, computeTotalLovelaceOutput} from "@shared/helpers/txTags";
+import {buildContracts} from "@shared/helpers/contracts";
 
 export async function fetchLatestTransactions(minTransactionCount : number = 10): Promise<Transaction[]> {
   const latestBlockTransactions = await API.blocksLatestTxs();
@@ -212,6 +213,30 @@ export async function fetchTransactionDetail(txHash: string): Promise<Transactio
       }
     });
   }
+
+  // Smart-contract enrichment: when the tx ran any Plutus script there is at
+  // least one redeemer. Resolve the script CBOR, datum and redeemer data for
+  // each invocation via the shared (connector-agnostic) builder. Best-effort —
+  // a backend without /scripts/* support (e.g. demeter) leaves contracts empty
+  // and the rest of the detail still renders.
+  if ((tx.redeemer_count ?? 0) > 0) {
+    try {
+      const redeemers = await getTxRedeemers(txHash);
+      const contracts = await buildContracts({
+        redeemers,
+        inputs: utxos.inputs,
+        outputs: utxos.outputs,
+        resolvers: {
+          scriptCbor: (hash) => getScriptCbor(hash),
+          datumCbor: (hash) => getDatumCbor(hash)
+        }
+      });
+      if (contracts.length > 0) txDetail.contracts = contracts;
+    } catch (err) {
+      console.error("Failed to build contracts for tx", txHash, "-", (err as Error)?.message);
+    }
+  }
+
   return txDetail;
 }
 
@@ -279,6 +304,10 @@ async function toUtxo(txHash: string, utxo: any) {
     ),
     txHash: utxo.tx_hash,
     index: utxo.output_index.toString(),
+    // Smart-contract markers so the flow view can flag datum / reference-script UTxOs.
+    dataHash: utxo.data_hash ?? null,
+    inlineDatum: utxo.inline_datum ?? null,
+    referenceScriptHash: utxo.reference_script_hash ?? null,
     tokens: (
       await Promise.all(
         utxo.amount

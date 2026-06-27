@@ -15,6 +15,7 @@ import { PoolDetail, PoolOverview } from "@shared/dtos/pool.dto";
 import { Drep, DrepDelegates } from "@shared/dtos/drep.dto";
 import { SearchResult } from "@shared/dtos/seach.dto";
 import { DashboardStats } from "@shared/dtos/dashboard.dto";
+import { ScriptVerification } from "@shared/dtos/scriptVerification.dto";
 
 // Factory function set by ConnectorFactory.ts to avoid circular imports.
 // ConnectorFactory.ts must be imported before getApiConnector() is called.
@@ -122,4 +123,16 @@ export abstract class ApiConnector {
   abstract search(query: string): Promise<ApiReturnType<SearchResult[]>>;
 
   abstract getDashboardStats(): Promise<ApiReturnType<DashboardStats>>;
+
+  /**
+   * Source-provenance verification for a Plutus script via uplc.link.
+   *
+   * Concrete (non-abstract) with a "not verified" default so every connector
+   * satisfies the contract without change and the verification badge never
+   * dead-ends. The GatewayConnector overrides this to proxy uplc.link's API.
+   */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  getScriptVerification(_scriptHash: string): Promise<ApiReturnType<ScriptVerification>> {
+    return Promise.resolve({ data: { verified: false }, lastUpdated: Date.now() });
+  }
 }

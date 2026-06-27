@@ -11,76 +11,51 @@ export interface UPLCTreeProps {
   uplc: UPLCProgram;
 }
 
+// Render children recursively. Item ids are derived from the tree path so they
+// are always unique (a hard requirement of @mui/x-tree-view v8's `itemId`),
+// regardless of whether the decoder's node ids repeat.
+const renderItems = (nodes: UPLCData[] | undefined, parentId: string): React.ReactNode =>
+  (nodes || []).map((node, idx) => {
+    const id = `${parentId}.${idx}`;
+    return (
+      <StyledTreeItem key={id} itemId={id} label={node?.text ?? ""}>
+        {renderItems(node?.data, id)}
+      </StyledTreeItem>
+    );
+  });
+
 export const UPLCTree: React.FC<UPLCTreeProps> = ({ uplc }) => {
+  const theme = useTheme() as ReturnType<typeof useTheme> & { isDark: boolean };
+
   const label = useMemo(
     () => (uplc.version.major ? `program ${uplc.version.major}.${uplc.version.minor}.${uplc.version.patch}` : ""),
     [uplc]
   );
-  const theme = useTheme();
-  const getExpandedNodeIds = () => {
-    if (!uplc) return [];
-    const nodeIds = ["root"];
-    let currentLevel = 1;
-    const maxLevel = 2;
 
-    // Get nodeIds with bread first search
-    const queue: UPLCData[] = [];
-    uplc.program &&
-      (uplc.program.data || [])?.forEach((it) => {
-        queue.push(it);
-      });
-    while (queue.length > 0) {
-      currentLevel++;
-      if (currentLevel >= maxLevel) break;
-      const size = queue.length;
-      for (let i = 0; i < size; i++) {
-        const tmp = queue.shift();
-        if (tmp && tmp.data) {
-          nodeIds.push(String(tmp.id));
-          queue.push(...tmp.data);
-        }
-      }
-    }
-    return nodeIds;
-  };
+  // Expand the root and its immediate children by default.
+  const defaultExpandedItems = useMemo(() => {
+    const ids = ["root"];
+    (uplc.program?.data || []).forEach((_, idx) => ids.push(`root.${idx}`));
+    return ids;
+  }, [uplc]);
 
   if (!uplc.version.major) {
-    return (
-      <>
-        <NotAvailable />
-      </>
-    );
+    return <NotAvailable />;
   }
 
+  const iconFill = theme.isDark ? theme.palette.secondary.light : "none";
+  const slots = {
+    collapseIcon: () => <MinusSquareIcon fill={iconFill} />,
+    expandIcon: () => <PlusSquareIcon fill={iconFill} />,
+    endIcon: () => <CloseSquareIcon fill={iconFill} />
+  };
+
   return (
-    <TreeContainer
-      defaultCollapseIcon={<MinusSquareIcon fill={theme.isDark ? theme.palette.secondary.light : "none"} />}
-      defaultExpandIcon={<PlusSquareIcon fill={theme.isDark ? theme.palette.secondary.light : "none"} />}
-      defaultEndIcon={<CloseSquareIcon fill={theme.isDark ? theme.palette.secondary.light : "none"} />}
-      defaultExpanded={getExpandedNodeIds()}
-    >
-      <StyledTreeItem label={label} nodeId={"root"}>
-        {uplc.program?.data?.map((it, idx) => (
-          <UPLCTreeItem label={it.text} data={it.data} key={"tree-item-" + label + idx} id={String(it.id)} />
-        ))}
+    <TreeContainer slots={slots} defaultExpandedItems={defaultExpandedItems}>
+      <StyledTreeItem itemId="root" label={label}>
+        {renderItems(uplc.program?.data, "root")}
       </StyledTreeItem>
     </TreeContainer>
-  );
-};
-
-interface UPLCTreeItemProps {
-  label?: string;
-  data?: UPLCData[];
-  id: string;
-}
-
-const UPLCTreeItem: React.FC<UPLCTreeItemProps> = ({ label, data, id }) => {
-  return (
-    <StyledTreeItem label={label} nodeId={id}>
-      {data?.map((it, idx) => (
-        <UPLCTreeItem label={it?.text} data={it.data} key={"tree-item-" + label + idx} id={String(it.id)} />
-      ))}
-    </StyledTreeItem>
   );
 };
 

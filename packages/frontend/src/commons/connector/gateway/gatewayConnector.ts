@@ -16,6 +16,7 @@ import { AddressDetail, StakeAddressDetail } from "@shared/dtos/address.dto";
 import { PoolDetail, PoolOverview } from "@shared/dtos/pool.dto";
 import { Drep, DrepDelegates } from "@shared/dtos/drep.dto";
 import { SearchResult } from "@shared/dtos/seach.dto";
+import { ScriptVerification } from "@shared/dtos/scriptVerification.dto";
 
 export class GatewayConnector extends ConnectorBase {
   client: AxiosInstance;
@@ -23,6 +24,17 @@ export class GatewayConnector extends ConnectorBase {
   constructor(baseUrl: string) {
     super(baseUrl);
     this.client = applyCaseMiddleware(axios.create());
+  }
+
+  async getScriptVerification(scriptHash: string): Promise<ApiReturnType<ScriptVerification>> {
+    try {
+      const response = await this.client.get<ApiReturnType<ScriptVerification>>(
+        `${this.baseUrl}/scripts/${scriptHash}/verification`
+      );
+      return response.data;
+    } catch {
+      return { data: { verified: false, scriptHash }, lastUpdated: Date.now() };
+    }
   }
 
   async getTokenTransactions(tokenId: string, pageInfo: ParsedUrlQuery): Promise<ApiReturnType<Transaction[]>> {

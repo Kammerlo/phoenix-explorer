@@ -59,7 +59,7 @@ export interface TransactionDetail {
       tokens: Token[];
     }[];
   };
-  contracts?: IContractItemTx[]; // TODO currently not implemented for Blockfrost
+  contracts?: IContractItemTx[];
   collaterals?: {
     collateralInputResponses: CollateralResponses[];
 
@@ -73,6 +73,10 @@ export interface TransactionDetail {
       index: string;
       tokens: Token[];
       stakeAddress?: string;
+      // Smart-contract markers (optional — populated when the connector can surface them).
+      dataHash?: string | null;
+      inlineDatum?: string | null;
+      referenceScriptHash?: string | null;
     }[];
     outputs: {
       address: string;
@@ -81,6 +85,10 @@ export interface TransactionDetail {
       tokens: Token[];
       index: string;
       stakeAddress?: string;
+      // Smart-contract markers (optional — populated when the connector can surface them).
+      dataHash?: string | null;
+      inlineDatum?: string | null;
+      referenceScriptHash?: string | null;
     }[];
   };
   mints?: {
@@ -187,7 +195,7 @@ export interface Token {
   };
 }
 
-interface IContractItemTx {
+export interface IContractItemTx {
   contract: string;
   address: string;
   datumBytesIn: string;
@@ -229,7 +237,7 @@ interface IContractItemTx {
   redeemerCertType?: "DELEGATION" | "STAKE_DEREGISTRATION";
   referenceInputs?: ReferenceInput[];
 }
-interface ReferenceInput {
+export interface ReferenceInput {
   address: string;
   index: number;
   script: string;
