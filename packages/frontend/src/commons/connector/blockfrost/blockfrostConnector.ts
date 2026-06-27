@@ -23,6 +23,7 @@ import {
   GovernanceActionListItem
 } from "@shared/dtos/GovernanceOverview";
 import { computeTxTags, computeTotalLovelaceOutput } from "@shared/helpers/txTags";
+import { buildContracts } from "@shared/helpers/contracts";
 import { getEpochStatus, getEpochProgress, computeEpochSlotNo, MAINNET_EPOCH_MAX_SLOT } from "@shared/helpers/epochHelpers";
 import { mapBfProtocolParams, BfProtocolParamsRaw } from "./mapper/protocolParams";
 
@@ -415,6 +416,36 @@ export class BlockfrostConnector extends ConnectorBase {
           amount: m.amount,
           stakeAddress: m.address
         }));
+      }
+
+      // Smart-contract enrichment — identical assembly to the gateway via the
+      // shared builder, just with axios-backed resolvers. Best-effort.
+      if ((tx.redeemer_count ?? 0) > 0) {
+        try {
+          const redeemersResp = await this.client
+            .get<any[]>(`/txs/${txHash}/redeemers`)
+            .catch(() => ({ data: [] }));
+          const contracts = await buildContracts({
+            redeemers: redeemersResp.data ?? [],
+            inputs: utxosResp.data.inputs ?? [],
+            outputs: utxosResp.data.outputs ?? [],
+            resolvers: {
+              scriptCbor: (hash) =>
+                this.client
+                  .get<{ cbor: string | null }>(`/scripts/${hash}/cbor`)
+                  .then((r) => r.data?.cbor ?? null)
+                  .catch(() => null),
+              datumCbor: (hash) =>
+                this.client
+                  .get<{ cbor: string }>(`/scripts/datum/${hash}/cbor`)
+                  .then((r) => r.data?.cbor ?? null)
+                  .catch(() => null)
+            }
+          });
+          if (contracts.length > 0) detail.contracts = contracts;
+        } catch (err) {
+          // Leave contracts empty; the rest of the detail still renders.
+        }
       }
 
       return { data: detail, lastUpdated: Date.now() };
@@ -1086,6 +1117,9 @@ interface BfUtxo {
   output_index?: number;
   collateral?: boolean;
   reference?: boolean;
+  data_hash?: string | null;
+  inline_datum?: string | null;
+  reference_script_hash?: string | null;
 }
 
 interface BfAddress {
@@ -1166,6 +1200,9 @@ function bfUtxoToUtxo(u: BfUtxo): any {
     value: parseInt(u.amount?.find((a) => a.unit === "lovelace")?.quantity ?? "0"),
     txHash: u.tx_hash,
     index: String(u.output_index ?? 0),
+    dataHash: u.data_hash ?? null,
+    inlineDatum: u.inline_datum ?? null,
+    referenceScriptHash: u.reference_script_hash ?? null,
     tokens: (u.amount ?? []).filter((a) => a.unit !== "lovelace").map((a) => ({
       assetId: a.unit,
       assetName: a.unit.slice(56),

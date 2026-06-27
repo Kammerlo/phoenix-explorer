@@ -1,6 +1,6 @@
 import { Box, Tab, Tabs, useTheme } from "@mui/material";
 // @ts-ignore
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import {
@@ -17,7 +17,7 @@ import {
   UtxoIcon,
   WithdrawalIcon
 } from "src/commons/resources";
-import ContractsList from "src/components/Contracts";
+import SmartContractDetails from "src/components/TransactionDetail/SmartContractDetails";
 import { CustomNumberBadge } from "src/components/commons/CustomNumberBadge";
 
 import Collaterals from "./Collaterals";
@@ -37,6 +37,9 @@ import { TRANSACTION_STATUS, TransactionDetail } from "@shared/dtos/transaction.
 interface TransactionMetadataProps {
   data: TransactionDetail | null | undefined;
   loading: boolean;
+  // When the user deep-links from the flow view (e.g. "view contract details"),
+  // the page passes the desired tab key so we open straight to it.
+  requestedTabKey?: string;
 }
 
 interface TTab {
@@ -46,7 +49,7 @@ interface TTab {
   children: React.ReactNode;
 }
 
-const TransactionMetadata: React.FC<TransactionMetadataProps> = ({ data }) => {
+const TransactionMetadata: React.FC<TransactionMetadataProps> = ({ data, requestedTabKey }) => {
   const { t } = useTranslation();
   const theme = useTheme();
   const [activeTab, setActiveTab] = useState(0);
@@ -75,7 +78,7 @@ const TransactionMetadata: React.FC<TransactionMetadataProps> = ({ data }) => {
           <CustomNumberBadge value={data?.contracts?.length} />
         </Box>
       ),
-      children: <ContractsList data={data?.contracts} />
+      children: <SmartContractDetails data={data?.contracts} />
     },
     {
       key: "collaterals",
@@ -182,6 +185,15 @@ const TransactionMetadata: React.FC<TransactionMetadataProps> = ({ data }) => {
     return Array.isArray(value) ? value.length > 0 : !!value;
   });
   const safeTab = Math.min(activeTab, Math.max(0, items.length - 1));
+
+  // Deep-link: when the page requests a specific tab (e.g. from the flow view's
+  // "view contract details" action), jump to it once it becomes available.
+  useEffect(() => {
+    if (!requestedTabKey) return;
+    const idx = items.findIndex((it) => it.key === requestedTabKey);
+    if (idx >= 0) setActiveTab(idx);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [requestedTabKey, data]);
 
   if (items.length === 0) return null;
 

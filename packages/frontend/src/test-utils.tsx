@@ -1,11 +1,9 @@
 import React, { ReactElement } from "react";
 import { render, RenderOptions } from "@testing-library/react";
 import { ThemeProvider } from "@mui/material";
-import { Router } from "react-router-dom";
-import { createMemoryHistory } from "history";
+import { MemoryRouter } from "react-router-dom";
 import { Provider } from "react-redux";
 import { I18nextProvider } from "react-i18next";
-import "@testing-library/jest-dom/extend-expect";
 
 import themes from "./themes";
 import store from "./stores";
@@ -24,13 +22,12 @@ window.matchMedia =
   };
 
 const AllTheProviders = ({ children }: { children: React.ReactNode }) => {
-  const history = createMemoryHistory();
   return (
     <I18nextProvider i18n={i18n}>
       <Provider store={store}>
-        <Router history={history}>
+        <MemoryRouter>
           <ThemeProvider theme={themes.light}>{children}</ThemeProvider>
-        </Router>
+        </MemoryRouter>
       </Provider>
     </I18nextProvider>
   );

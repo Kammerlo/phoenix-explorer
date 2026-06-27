@@ -105,7 +105,7 @@ const ProviderSwitcher: React.FC<ProviderSwitcherProps> = ({ open, onClose }) =>
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
       <DialogTitle sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <Typography variant="h6" fontWeight="bold">Switch Data Provider</Typography>
+        <Typography variant="h6" component="span" fontWeight="bold">Switch Data Provider</Typography>
         <IconButton onClick={onClose} size="small"><MdClose /></IconButton>
       </DialogTitle>
       <DialogContent>

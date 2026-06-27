@@ -2,6 +2,7 @@ import { TransactionDetails, TxInputsOutputs, TxMetadataLabelDto, Withdrawal } f
 import { txUtxoToUtxo } from "./TxUtxoToUtxo";
 import { txUtxoToCollateralResponse } from "./TxUtxoToCollateral";
 import { txDetailsToTxSummary } from "./TxDetailsToTxSummary";
+import { toContracts } from "./ToContracts";
 import { TransactionDetail } from "@shared/dtos/transaction.dto";
 import { Block } from "@shared/dtos/block.dto";
 
@@ -63,5 +64,12 @@ export function toTransactionDetail(
     }),
     metadataHash: "" // TODO
   };
+
+  // Smart-contract enrichment (parity with the Blockfrost path). yaci-store
+  // carries datum / reference-script data on its UTxOs, so derive contracts from
+  // the script-locked inputs. Only attach when present so the tab/flow gate works.
+  const contracts = toContracts(inputs, outputs, txDetails.referenceInputs ?? []);
+  if (contracts.length > 0) tx.contracts = contracts;
+
   return tx;
 }

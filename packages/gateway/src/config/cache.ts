@@ -95,3 +95,57 @@ export async function getUtxos(txHash: string) {
 export async function getTxDetail(txHash: string) {
   return cache.get(`tx-detail-${txHash}`) as TransactionDetail;
 }
+
+// Scripts, datums and redeemers are immutable once on-chain (content-addressed by
+// hash, or fixed per transaction), so they can be cached far longer than the
+// default 5-minute TTL. Each helper degrades gracefully to a null/empty value on
+// error (e.g. a native/timelock script has no CBOR, or a backend such as demeter
+// doesn't implement the /scripts/* endpoints) so contract enrichment never throws.
+const IMMUTABLE_TTL = 86_400; // 24 hours
+
+export async function getTxRedeemers(txHash: string) {
+  const key = `tx-redeemers-${txHash}`;
+  const cached = cache.get(key);
+  if (cached !== undefined) return cached as components["schemas"]["tx_content_redeemers"][];
+  try {
+    const redeemers = await API.txsRedeemers(txHash);
+    cache.set(key, redeemers, IMMUTABLE_TTL);
+    return redeemers;
+  } catch (err) {
+    console.warn("getTxRedeemers failed for", txHash, "-", (err as Error)?.message);
+    cache.set(key, [], IMMUTABLE_TTL);
+    return [] as components["schemas"]["tx_content_redeemers"][];
+  }
+}
+
+export async function getScriptCbor(scriptHash: string): Promise<string | null> {
+  const key = `script-cbor-${scriptHash}`;
+  const cached = cache.get(key);
+  if (cached !== undefined) return cached as string | null;
+  try {
+    const res = await API.scriptsCbor(scriptHash);
+    const cbor = res?.cbor ?? null;
+    cache.set(key, cbor, IMMUTABLE_TTL);
+    return cbor;
+  } catch (err) {
+    console.warn("getScriptCbor failed for", scriptHash, "-", (err as Error)?.message);
+    cache.set(key, null, IMMUTABLE_TTL);
+    return null;
+  }
+}
+
+export async function getDatumCbor(datumHash: string): Promise<string | null> {
+  const key = `datum-cbor-${datumHash}`;
+  const cached = cache.get(key);
+  if (cached !== undefined) return cached as string | null;
+  try {
+    const res = await API.scriptsDatumCbor(datumHash);
+    const cbor = res?.cbor ?? null;
+    cache.set(key, cbor, IMMUTABLE_TTL);
+    return cbor;
+  } catch (err) {
+    console.warn("getDatumCbor failed for", datumHash, "-", (err as Error)?.message);
+    cache.set(key, null, IMMUTABLE_TTL);
+    return null;
+  }
+}

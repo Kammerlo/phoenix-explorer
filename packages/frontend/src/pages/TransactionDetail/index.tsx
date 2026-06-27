@@ -62,6 +62,12 @@ const TransactionDetailView: React.FC = () => {
   const [txData, setTxData] = useState<ApiReturnType<TransactionDetail>>();
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<ViewMode>("flow");
+  const [requestedTab, setRequestedTab] = useState<string | undefined>();
+
+  const openContractsTab = () => {
+    setViewMode("tabs");
+    setRequestedTab("contracts");
+  };
 
   const apiConnector = ApiConnector.getApiConnector();
   const network = process.env.REACT_APP_NETWORK || "mainnet";
@@ -121,8 +127,8 @@ const TransactionDetailView: React.FC = () => {
           </Box>
 
           {viewMode === "flow"
-            ? <TransactionFlowChart data={txData?.data} />
-            : <TransactionMetadata data={txData?.data} loading={loading} />
+            ? <TransactionFlowChart data={txData?.data} onViewContracts={openContractsTab} />
+            : <TransactionMetadata data={txData?.data} loading={loading} requestedTabKey={requestedTab} />
           }
           <PluginSlotRenderer slot="transaction-detail" context={{ data: txData?.data, network, apiConnector }} excludeMetadataPlugins />
         </>

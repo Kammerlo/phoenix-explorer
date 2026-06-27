@@ -5,8 +5,11 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { IoChevronDown, IoChevronUp } from "react-icons/io5";
 
+import { IoFlashOutline, IoDocumentTextOutline, IoCodeSlashOutline, IoArrowForward } from "react-icons/io5";
+
 import { details } from "src/commons/routers";
-import { formatADAFull } from "src/commons/utils/helper";
+import { formatADAFull, formatPrice, numberWithCommas } from "src/commons/utils/helper";
+import { decodePlutusData } from "src/commons/utils/plutusData";
 import ADAicon from "src/components/commons/ADAIcon";
 import CopyButton from "src/components/commons/CopyButton";
 import { useBreakpoint } from "src/hooks/useBreakpoint";
@@ -77,6 +80,188 @@ function getContractAddresses(data: TransactionDetail): Set<string> {
   });
   return set;
 }
+
+// ─── Smart-contract helpers ───────────────────────────────
+
+interface ContractCardInfo {
+  purpose: string;
+  redeemerMem: number;
+  redeemerSteps: number;
+}
+
+/** Map each script address (payment or stake) to its contract invocation. */
+function getContractsByAddress(data: TransactionDetail): Map<string, ContractCardInfo> {
+  const map = new Map<string, ContractCardInfo>();
+  data.contracts?.forEach((c) => {
+    const info: ContractCardInfo = { purpose: c.purpose, redeemerMem: c.redeemerMem, redeemerSteps: c.redeemerSteps };
+    if (c.address) map.set(c.address, info);
+    if (c.stakeAddress) map.set(c.stakeAddress, info);
+  });
+  return map;
+}
+
+interface ContractSummary {
+  count: number;
+  totalMem: number;
+  totalSteps: number;
+}
+function summarizeContracts(data: TransactionDetail): ContractSummary | null {
+  const cs = data.contracts ?? [];
+  if (cs.length === 0) return null;
+  return {
+    count: cs.length,
+    totalMem: cs.reduce((s, c) => s + (c.redeemerMem || 0), 0),
+    totalSteps: cs.reduce((s, c) => s + (c.redeemerSteps || 0), 0)
+  };
+}
+
+const PURPOSE_VERB: Record<string, string> = {
+  SPEND: "spent a script-locked UTxO",
+  MINT: "minted / burned tokens",
+  CERT: "ran a certificate validator",
+  REWARD: "withdrew rewards via a script",
+  VOTING: "cast a governance vote",
+  PROPOSING: "submitted a governance proposal"
+};
+
+const MarkerChip: React.FC<{ icon: React.ReactNode; label: string; tip: React.ReactNode; color: string; testId?: string }> = ({
+  icon,
+  label,
+  tip,
+  color,
+  testId
+}) => {
+  const theme = useTheme();
+  return (
+    <Tooltip
+      arrow
+      placement="top"
+      title={tip}
+      leaveDelay={200}
+      slotProps={{
+        tooltip: {
+          sx: {
+            maxWidth: 460,
+            textAlign: "left",
+            bgcolor: theme.isDark ? "#1e1e2e" : "#fff",
+            color: theme.palette.secondary.main,
+            border: `1px solid ${theme.palette.divider}`,
+            boxShadow: `0 4px 16px ${alpha(theme.palette.common.black, 0.12)}`,
+            p: 1.25
+          }
+        },
+        arrow: {
+          sx: {
+            color: theme.isDark ? "#1e1e2e" : "#fff",
+            "&::before": { border: `1px solid ${theme.palette.divider}` }
+          }
+        }
+      }}
+    >
+      <Box
+        data-testid={testId}
+        sx={{
+          display: "inline-flex",
+          alignItems: "center",
+          gap: 0.3,
+          px: 0.6,
+          py: "1px",
+          borderRadius: "6px",
+          fontSize: "0.55rem",
+          fontWeight: 700,
+          textTransform: "uppercase",
+          letterSpacing: "0.04em",
+          lineHeight: 1.5,
+          cursor: "help",
+          color,
+          bgcolor: alpha(color, 0.12),
+          border: `1px solid ${alpha(color, 0.3)}`
+        }}
+      >
+        {icon}
+        {label}
+      </Box>
+    </Tooltip>
+  );
+};
+
+/** Inline indicators: validator purpose + datum + reference-script on a UTxO card. */
+const ScriptMarkers: React.FC<{
+  contract?: ContractCardInfo;
+  dataHash?: string | null;
+  inlineDatum?: string | null;
+  referenceScriptHash?: string | null;
+}> = ({ contract, dataHash, inlineDatum, referenceScriptHash }) => {
+  const theme = useTheme();
+  const warn = theme.palette.warning?.main || "#F97316";
+  const info = theme.palette.info?.main || theme.palette.primary.main;
+  const ok = theme.palette.success?.main || "#16a34a";
+  const hasDatum = !!(inlineDatum || dataHash);
+  if (!contract && !hasDatum && !referenceScriptHash) return null;
+  return (
+    <Box display="flex" flexWrap="wrap" gap={0.4} mt={0.4}>
+      {contract && (
+        <MarkerChip
+          color={warn}
+          icon={<IoFlashOutline size={9} />}
+          label={contract.purpose}
+          tip={
+            <Box sx={{ fontSize: "0.7rem", lineHeight: 1.5 }}>
+              Validator {PURPOSE_VERB[contract.purpose] || "ran"} — redeemer cost{" "}
+              {numberWithCommas(contract.redeemerSteps)} steps / {numberWithCommas(contract.redeemerMem)} mem
+            </Box>
+          }
+        />
+      )}
+      {hasDatum && (
+        <MarkerChip
+          testId="datum-marker"
+          color={info}
+          icon={<IoDocumentTextOutline size={9} />}
+          label="Datum"
+          tip={
+            inlineDatum ? (
+              <Box>
+                <Box display="flex" alignItems="center" justifyContent="space-between" gap={1} mb={0.5}>
+                  <Box sx={{ fontSize: "0.55rem", textTransform: "uppercase", letterSpacing: "0.06em", opacity: 0.65 }}>
+                    Inline datum · decoded
+                  </Box>
+                  <CopyButton text={decodePlutusData(inlineDatum) || inlineDatum} />
+                </Box>
+                <Box
+                  component="pre"
+                  sx={{
+                    m: 0,
+                    textAlign: "left",
+                    fontFamily: "monospace",
+                    fontSize: "0.68rem",
+                    lineHeight: 1.5,
+                    whiteSpace: "pre-wrap",
+                    wordBreak: "break-word",
+                    maxHeight: 260,
+                    overflow: "auto"
+                  }}
+                >
+                  {decodePlutusData(inlineDatum) || inlineDatum}
+                </Box>
+              </Box>
+            ) : (
+              "Datum hash attached to this UTxO — the on-chain state the validator reads."
+            )
+          }
+        />
+      )}
+      {referenceScriptHash && (
+        <MarkerChip
+          color={ok}
+          icon={<IoCodeSlashOutline size={9} />}
+          label="Ref script"
+          tip="A reference script is attached to this UTxO (CIP-33) — other transactions can run it without inlining the code."
+        />
+      )}
+    </Box>
+  );
+};
 
 // ─── Hash Tooltip ─────────────────────────────────────────
 
@@ -238,6 +423,10 @@ interface UtxoCardProps {
   isContract?: boolean;
   cardNumber?: number;
   isChange?: boolean;
+  contract?: ContractCardInfo;
+  dataHash?: string | null;
+  inlineDatum?: string | null;
+  referenceScriptHash?: string | null;
 }
 
 const UtxoCardItem: React.FC<UtxoCardProps> = ({
@@ -249,7 +438,11 @@ const UtxoCardItem: React.FC<UtxoCardProps> = ({
   index: utxoIndex,
   isContract,
   cardNumber,
-  isChange
+  isChange,
+  contract,
+  dataHash,
+  inlineDatum,
+  referenceScriptHash
 }) => {
   const { t } = useTranslation();
   const [showTokens, setShowTokens] = useState(false);
@@ -289,6 +482,14 @@ const UtxoCardItem: React.FC<UtxoCardProps> = ({
           </Tooltip>
         )}
       </Box>
+
+      {/* Smart-contract markers: validator purpose, datum, reference script */}
+      <ScriptMarkers
+        contract={contract}
+        dataHash={dataHash}
+        inlineDatum={inlineDatum}
+        referenceScriptHash={referenceScriptHash}
+      />
 
       {/* UTXO ref for inputs */}
       {side === "input" && txHash && (
@@ -366,15 +567,19 @@ const UtxoCardItem: React.FC<UtxoCardProps> = ({
 
 // ─── Center Node ──────────────────────────────────────────
 
-const TransactionCenterNodeComponent = forwardRef<HTMLDivElement, { data: TransactionDetail }>(
-  ({ data }, ref) => {
+const TransactionCenterNodeComponent = forwardRef<
+  HTMLDivElement,
+  { data: TransactionDetail; onViewContracts?: () => void }
+>(
+  ({ data, onViewContracts }, ref) => {
     const { t } = useTranslation();
     const theme = useTheme();
 
+    const contractSummary = summarizeContracts(data);
+
     const badges: { icon: React.FC<React.SVGProps<SVGSVGElement>>; label: string; count: number }[] = [];
 
-    if ((data.contracts?.length ?? 0) > 0)
-      badges.push({ icon: ContractIcon, label: t("glossary.contracts"), count: data.contracts!.length });
+    // Contracts get a dedicated execution panel below, so they're omitted here.
     if ((data.delegations?.length ?? 0) > 0)
       badges.push({ icon: TransactionDelegationIcon, label: t("tab.delegations"), count: data.delegations!.length });
     if ((data.mints?.length ?? 0) > 0)
@@ -473,7 +678,93 @@ const TransactionCenterNodeComponent = forwardRef<HTMLDivElement, { data: Transa
           </FeeValue>
         </FeeCallout>
 
-        {/* Badge chips for contracts, delegations, etc. */}
+        {/* Smart-contract execution summary — the "simple" script visualization */}
+        {contractSummary && (
+          <Box
+            onClick={onViewContracts}
+            role={onViewContracts ? "button" : undefined}
+            tabIndex={onViewContracts ? 0 : undefined}
+            onKeyDown={(e) => {
+              if (onViewContracts && (e.key === "Enter" || e.key === " ")) {
+                e.preventDefault();
+                onViewContracts();
+              }
+            }}
+            sx={{
+              width: "100%",
+              mt: 0.5,
+              p: 1,
+              borderRadius: "10px",
+              bgcolor: alpha(theme.palette.warning?.main || "#F97316", theme.isDark ? 0.1 : 0.07),
+              border: `1px solid ${alpha(theme.palette.warning?.main || "#F97316", 0.35)}`,
+              cursor: onViewContracts ? "pointer" : "default",
+              transition: "border-color .2s, box-shadow .2s",
+              "&:hover": onViewContracts
+                ? {
+                    borderColor: alpha(theme.palette.warning?.main || "#F97316", 0.6),
+                    boxShadow: `0 4px 14px -6px ${alpha(theme.palette.warning?.main || "#F97316", 0.5)}`
+                  }
+                : undefined
+            }}
+          >
+            <Box display="flex" alignItems="center" gap={0.5} mb={0.4}>
+              <ContractIcon fill={theme.palette.warning?.main || "#F97316"} style={{ width: 13, height: 13 }} />
+              <Box
+                sx={{
+                  fontSize: "0.6rem",
+                  fontWeight: 700,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.06em",
+                  color: theme.palette.warning?.main || "#F97316"
+                }}
+              >
+                {t("contract.execution", "Smart Contract Execution")}
+              </Box>
+            </Box>
+            <Box sx={{ fontSize: "0.78rem", fontWeight: 700, color: theme.palette.secondary.main }}>
+              {contractSummary.count} validator{contractSummary.count > 1 ? "s" : ""} ran{" "}
+              <Box
+                component="span"
+                sx={{
+                  fontWeight: 700,
+                  color:
+                    data.tx.status === TRANSACTION_STATUS.FAILED
+                      ? theme.palette.error.main
+                      : theme.palette.success?.main || "#16a34a"
+                }}
+              >
+                {data.tx.status === TRANSACTION_STATUS.FAILED ? "· failed ✕" : "· passed ✓"}
+              </Box>
+            </Box>
+            <Box
+              sx={{
+                fontSize: "0.62rem",
+                color: "secondary.light",
+                fontVariantNumeric: "tabular-nums",
+                mt: 0.2
+              }}
+            >
+              {formatPrice(contractSummary.totalSteps)} steps · {formatPrice(contractSummary.totalMem)} mem
+            </Box>
+            {onViewContracts && (
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 0.3,
+                  mt: 0.5,
+                  fontSize: "0.62rem",
+                  fontWeight: 700,
+                  color: theme.palette.primary.main
+                }}
+              >
+                {t("contract.viewDetails", "View contract details")} <IoArrowForward size={11} />
+              </Box>
+            )}
+          </Box>
+        )}
+
+        {/* Badge chips for delegations, mints, etc. */}
         {(badges.length > 0 || hasMetadata) && (
           <Box display="flex" flexWrap="wrap" gap={0.5} justifyContent="center">
             {badges.map(({ icon: Icon, label, count }) => (
@@ -530,14 +821,32 @@ TransactionCenterNodeComponent.displayName = "TransactionCenterNode";
 // ─── UTXO Column ──────────────────────────────────────────
 
 interface ColumnProps {
-  items: { address: string; value: number; txHash: string; index: string; tokens: Token[]; stakeAddress?: string }[];
+  items: {
+    address: string;
+    value: number;
+    txHash: string;
+    index: string;
+    tokens: Token[];
+    stakeAddress?: string;
+    dataHash?: string | null;
+    inlineDatum?: string | null;
+    referenceScriptHash?: string | null;
+  }[];
   side: "input" | "output";
   contractAddrs: Set<string>;
+  contractsByAddress: Map<string, ContractCardInfo>;
   maxVisible: number;
   inputAddresses?: Set<string>;
 }
 
-const UtxoColumn: React.FC<ColumnProps> = ({ items, side, contractAddrs, maxVisible, inputAddresses }) => {
+const UtxoColumn: React.FC<ColumnProps> = ({
+  items,
+  side,
+  contractAddrs,
+  contractsByAddress,
+  maxVisible,
+  inputAddresses
+}) => {
   const { t } = useTranslation();
   const theme = useTheme();
   const [expanded, setExpanded] = useState(false);
@@ -586,6 +895,16 @@ const UtxoColumn: React.FC<ColumnProps> = ({ items, side, contractAddrs, maxVisi
               contractAddrs.has(item.address) ||
               (item.stakeAddress ? contractAddrs.has(item.stakeAddress) : false)
             }
+            // A redeemer/ExUnits chip only makes sense on the input being spent.
+            contract={
+              isInput
+                ? contractsByAddress.get(item.address) ||
+                  (item.stakeAddress ? contractsByAddress.get(item.stakeAddress) : undefined)
+                : undefined
+            }
+            dataHash={item.dataHash}
+            inlineDatum={item.inlineDatum}
+            referenceScriptHash={item.referenceScriptHash}
             isChange={isChangeOutput(item.address)}
           />
         ))}
@@ -755,14 +1074,19 @@ const CollateralsSection: React.FC<{ data: TransactionDetail }> = ({ data }) => 
 
 interface Props {
   data: TransactionDetail | null | undefined;
+  onViewContracts?: () => void;
 }
 
-const TransactionFlowChart: React.FC<Props> = ({ data }) => {
+const TransactionFlowChart: React.FC<Props> = ({ data, onViewContracts }) => {
   const { isTablet } = useBreakpoint();
   const containerRef = useRef<HTMLDivElement>(null);
   const centerRef = useRef<HTMLDivElement>(null);
 
   const contractAddrs = useMemo(() => (data ? getContractAddresses(data) : new Set<string>()), [data]);
+  const contractsByAddress = useMemo(
+    () => (data ? getContractsByAddress(data) : new Map<string, ContractCardInfo>()),
+    [data]
+  );
 
   // Build the set of input addresses to detect change outputs
   const inputAddresses = useMemo(
@@ -794,17 +1118,19 @@ const TransactionFlowChart: React.FC<Props> = ({ data }) => {
           items={inputs}
           side="input"
           contractAddrs={contractAddrs}
+          contractsByAddress={contractsByAddress}
           maxVisible={maxVisible}
         />
 
         <Box display="flex" alignItems="center" justifyContent="center" sx={{ zIndex: 1 }}>
-          <TransactionCenterNodeComponent ref={centerRef} data={data} />
+          <TransactionCenterNodeComponent ref={centerRef} data={data} onViewContracts={onViewContracts} />
         </Box>
 
         <UtxoColumn
           items={outputs}
           side="output"
           contractAddrs={contractAddrs}
+          contractsByAddress={contractsByAddress}
           maxVisible={maxVisible}
           inputAddresses={inputAddresses}
         />
