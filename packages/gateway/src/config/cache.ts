@@ -96,6 +96,34 @@ export async function getTxDetail(txHash: string) {
   return cache.get(`tx-detail-${txHash}`) as TransactionDetail;
 }
 
+// Persist the fully-assembled transaction detail so repeat views are instant.
+// Only `confirmation` drifts over time, so a short TTL keeps it acceptably fresh.
+export function setTxDetail(txHash: string, detail: TransactionDetail) {
+  cache.set(`tx-detail-${txHash}`, detail, 300);
+}
+
+// Asset metadata is heavy (one Blockfrost call per asset) but effectively stable,
+// and a single transaction references the same asset many times across its UTxOs.
+// Cache + dedupe it so each distinct asset is fetched at most once per hour.
+// Degrades to a minimal record on error so one odd asset can't fail the whole tx.
+const ASSET_TTL = 3600; // 1 hour
+
+export async function getAsset(unit: string): Promise<components["schemas"]["asset"]> {
+  const key = `asset-${unit}`;
+  const cached = cache.get(key);
+  if (cached !== undefined) return cached as components["schemas"]["asset"];
+  try {
+    const asset = await API.assetsById(unit);
+    cache.set(key, asset, ASSET_TTL);
+    return asset;
+  } catch (err) {
+    console.warn("getAsset failed for", unit, "-", (err as Error)?.message);
+    const fallback = { asset: unit, policy_id: unit.slice(0, 56) } as unknown as components["schemas"]["asset"];
+    cache.set(key, fallback, 300); // short TTL so a transient failure can recover
+    return fallback;
+  }
+}
+
 // Scripts, datums and redeemers are immutable once on-chain (content-addressed by
 // hash, or fixed per transaction), so they can be cached far longer than the
 // default 5-minute TTL. Each helper degrades gracefully to a null/empty value on

@@ -82,7 +82,7 @@ All handlers return `ApiReturnType<T>` where applicable, with `lastUpdated: Date
 
 - [`config/env.ts`](packages/gateway/src/config/env.ts): loads `.env` from the **monorepo root** (`path.resolve(__dirname, "../../../../.env")`). Exposes `API_KEY`, `PORT` (default 3000), `HOST` (default `0.0.0.0`), `NETWORK` (default `mainnet`).
 - [`config/blockfrost.ts`](packages/gateway/src/config/blockfrost.ts): exports two `BlockFrostAPI` clients. `API` is the primary client used by every controller — when `DEMETER_URL` + `DEMETER_API_KEY` are set it points at demeter.run (custom backend, `dmtr-api-key` header injected via `gotOptions.headers`); otherwise it falls back to blockfrost.io with `API_KEY`. `POOL_API` is **strictly** the blockfrost.io client and is `null` when only demeter is configured. Demeter does not implement `/pools/*`, so `pool-controller.ts` mounts a catch-all stub returning `unsupportedEnvelope("/api/pools/*")` (HTTP 501) when `POOL_API === null`. At least one of `API_KEY` or the `DEMETER_*` pair must be set or the gateway throws on startup.
-- [`config/cache.ts`](packages/gateway/src/config/cache.ts): `NodeCache` with 5-minute default TTL. Helpers: `getEpoch`, `getBlock`, `getTransactions`, `getTxMetadata`, `getUtxos`, `getTxDetail`, `fetchAddressTotal`.
+- [`config/cache.ts`](packages/gateway/src/config/cache.ts): `NodeCache` with 5-minute default TTL. Helpers: `getEpoch`, `getBlock`, `getTransactions`, `getTxMetadata`, `getUtxos`, `getTxDetail` / `setTxDetail`, `fetchAddressTotal`, `getAsset` (asset metadata, 1 h), and the 24 h immutable-by-hash helpers `getTxRedeemers` / `getScriptCbor` / `getDatumCbor`. **`fetchTransactionDetail` now populates `setTxDetail`** (repeat views become instant) and **prefetches every distinct token asset in parallel via `getAsset`** before assembly — see [Transaction Detail Performance](#transaction-detail-performance).
 
 ### Middleware
 
@@ -439,6 +439,17 @@ Renders scripts / datums / redeemers in the transaction view, plus uplc.link sou
 
 ---
 
+## Transaction Detail Performance
+
+`fetchTransactionDetail` ([`transactionService.ts`](packages/gateway/src/service/transactionService.ts)) was slow (cold ~45 s, and *every* view recomputed) for two reasons, both fixed:
+
+1. **Asset metadata was fetched per token occurrence, uncached.** `toToken` called `API.assetsById(unit)` once per token in the summary **and** again per input and per output (via `convertUtxosAndCollateral` → `toUtxo`). A token-heavy/DEX tx meant dozens–hundreds of sequential Blockfrost round-trips for the same handful of assets. Fix: `toToken` uses `getAsset` (cached 1 h + deduped), and `fetchTransactionDetail` **prefetches the distinct asset set in parallel** (`Promise.all`) before assembly. The asset cache persists across transactions, so popular tokens stay warm.
+2. **The `tx-detail-{hash}` cache was read but never written.** Fix: `fetchTransactionDetail` calls `setTxDetail(...)` before returning.
+
+Result (verified): cold **~45 s → ~6 s**, repeat views **~0–1 ms**. When adding new per-item Blockfrost lookups to a list/detail builder, **always go through a cached `cache.ts` helper and dedupe by key** — never call `API.*ById` directly in a loop.
+
+---
+
 ## Dashboard Block Chain Visualizer
 
 `BlockChainVisualizer` in [`src/pages/Home/index.tsx`](packages/frontend/src/pages/Home/index.tsx) + [`src/components/Home/BlockChainVisualizer/`](packages/frontend/src/components/Home/BlockChainVisualizer/).
@@ -765,3 +776,4 @@ npm run build --workspace=cardano-explorer-shared   # tsc → packages/shared/di
 | UPLC compiled-code tree rendered nothing (silently) | `CompiledCodeDataCard` called a `window.decodeUPLC` global whose WASM was commented out in `index.html` | Replaced with pure-JS `src/commons/utils/uplc.ts#decodeScript` using `@cardano-foundation/cf-flat-decoder-ts` (`decodeFlatUplcToObject`, with a one-layer CBOR-unwrap retry for double-wrapped scripts) |
 | Reviving the UPLC tree blanked the Contracts tab (whole React subtree unmounted) | `UPLCTree` still used the `@mui/x-tree-view` **v6** API (`TreeView`, `nodeId`, `defaultCollapseIcon`, `defaultExpanded`) while the project is on **v8**; the dead decoder had hidden it | Migrated `UPLCTree` to v8: `SimpleTreeView` + `slots={{collapseIcon,expandIcon,endIcon}}` + `defaultExpandedItems`, and `TreeItem itemId` (path-derived, guaranteed unique) instead of `nodeId` |
 | Component test suites failed to even load (`Cannot find module 'history'`, `*.svg?react`) | `src/test-utils.tsx` imported the uninstalled `history` pkg + the removed `@testing-library/jest-dom/extend-expect` subpath; jest had no mapping for vite-svgr `?react` imports | `test-utils` now uses `MemoryRouter` (react-router v7) and drops the dead imports; `jest.config.js` maps `\\.svg\\?react$` and query-suffixed assets to `jest-transform-stub` |
+| Transaction detail page took ~45 s to load and recomputed on every view | `toToken` fetched `assetsById` per token occurrence (summary + every input + every output), uncached; and the `tx-detail-{hash}` cache was read but never written | `getAsset` caches/dedupes asset metadata (1 h) + a parallel prefetch of the distinct asset set; `setTxDetail` populates the tx-detail cache. Cold ~45 s → ~6 s, repeat views ~0–1 ms. See [Transaction Detail Performance](#transaction-detail-performance) |

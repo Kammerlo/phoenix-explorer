@@ -1,5 +1,5 @@
 import {API} from "../config/blockfrost";
-import {getBlock, getDatumCbor, getScriptCbor, getTransactions, getTxDetail, getTxRedeemers, getUtxos} from "../config/cache";
+import {getAsset, getBlock, getDatumCbor, getScriptCbor, getTransactions, getTxDetail, getTxRedeemers, getUtxos, setTxDetail} from "../config/cache";
 import {Token, TPoolCertificated, Transaction, TransactionDetail} from "@shared/dtos/transaction.dto";
 import {computeTxTags, computeTotalLovelaceOutput} from "@shared/helpers/txTags";
 import {buildContracts} from "@shared/helpers/contracts";
@@ -125,6 +125,19 @@ export async function fetchTransactionDetail(txHash: string): Promise<Transactio
   const tx = await getTransactions(txHash);
   const block = await getBlock(tx.block);
   const utxos = await getUtxos(txHash);
+
+  // Warm the asset cache in parallel for every distinct token in the tx. Without
+  // this, asset metadata is fetched once per occurrence (summary + each input +
+  // each output) — the dominant cost on token-heavy transactions. Pre-resolving
+  // the distinct set once collapses that to one parallel call per asset.
+  const distinctUnits = new Set<string>();
+  for (const utxo of [...(utxos.inputs ?? []), ...(utxos.outputs ?? [])]) {
+    for (const amount of utxo.amount ?? []) {
+      if (amount.unit && amount.unit !== "lovelace") distinctUnits.add(amount.unit);
+    }
+  }
+  await Promise.all([...distinctUnits].map((unit) => getAsset(unit)));
+
   const summaryMap = await getUtxosAndSummaryMap(utxos);
 
   const metadata = await API.txsMetadata(txHash);
@@ -237,6 +250,7 @@ export async function fetchTransactionDetail(txHash: string): Promise<Transactio
     }
   }
 
+  setTxDetail(txHash, txDetail);
   return txDetail;
 }
 
@@ -267,7 +281,7 @@ function toTPoolCertified(cert: any): TPoolCertificated {
 
 async function toToken(utxo: any): Promise<Token> {
   const quantity = parseInt(utxo.quantity);
-  const asset = await API.assetsById(utxo.unit);
+  const asset = await getAsset(utxo.unit);
   let name: string;
   if (asset.onchain_metadata) {
     name = (asset.onchain_metadata["name"] as string);
