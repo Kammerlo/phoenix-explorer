@@ -3,19 +3,30 @@ import axios, { AxiosInstance } from "axios";
 import { StakeAddressAction } from "../ApiConnector";
 import { ConnectorBase } from "../ConnectorBase";
 import {
+  AccountActiveStake,
+  AddressAssetBalanceDto,
   AddressTransaction,
+  Amount,
   AssetTransaction,
+  BfAssetListItem,
   BlockDto,
   BlocksPage,
   Delegation,
   DelegationVote,
+  DRepDetailsDto,
   Epoch,
+  EpochDetailDto,
+  EpochLatestDto,
+  EpochsPage,
   FingerprintSupply,
   GovActionProposal,
   PoolBlock,
+  PoolDetailsDto,
   PoolRegistration,
   PoolRetirement,
+  PoolStakeDto,
   ProtocolParamsDto,
+  StakeAccountInfo,
   StakeRegistrationDetail,
   TransactionDetails,
   TransactionPage,
@@ -36,6 +47,8 @@ import { toTransactionDetail } from "./mapper/ToTransactionDetails";
 import { transactionSummaryAndBlockToTransaction } from "./mapper/TransactionSummaryAndBlockToTransaction";
 import { delegationToIStakeKey } from "./mapper/DelegationToIStakeKey";
 import { stakeRegistrationDetailToIStakeKey } from "./mapper/StakeRegistrationDetailToIStakeKey";
+import { epochDtoToEpochOverview } from "./mapper/EpochDtoToEpochOverview";
+import { getPoolMetadataFromURL } from "./util/PoolMetadataUtil";
 // @ts-ignore
 import { TProtocolParam } from "../../../types/protocol";
 import { protocolParamsToTProtocolParam } from "./mapper/ProtocolParamsToTProtocolParam";
@@ -44,9 +57,12 @@ import { ParsedUrlQuery } from "querystring";
 import { Block } from "@shared/dtos/block.dto";
 import { ApiReturnType } from "@shared/APIReturnType";
 import { Transaction, TransactionDetail } from "@shared/dtos/transaction.dto";
-import { ITokenOverview } from "@shared/dtos/token.dto";
+import { ITokenOverview, TokenHolder } from "@shared/dtos/token.dto";
+import { EpochOverview } from "@shared/dtos/epoch.dto";
+import { AddressDetail, StakeAddressDetail, Token } from "@shared/dtos/address.dto";
+import { PoolDetail, PoolOverview, POOL_STATUS } from "@shared/dtos/pool.dto";
 import { GovActionVote, GovernanceActionDetail, GovernanceActionListItem } from "@shared/dtos/GovernanceOverview";
-import { DrepDelegates } from "@shared/dtos/drep.dto";
+import { Drep, DrepDelegates } from "@shared/dtos/drep.dto";
 import { SearchResult } from "@shared/dtos/seach.dto";
 import { DashboardStats } from "@shared/dtos/dashboard.dto";
 
@@ -100,31 +116,338 @@ export class YaciConnector extends ConnectorBase {
   }
   getCapabilities(): ReadonlySet<Capability> {
     return new Set<Capability>([
+      "getEpochs",
+      "getEpoch",
       "getBlocksPage",
       "getBlocksByEpoch",
       "getBlockDetail",
       "getPoolBlocks",
       "getTxDetail",
       "getTransactions",
+      "getWalletAddressFromAddress",
       "getAddressTxsFromAddress",
+      "getWalletStakeFromAddress",
       "getStakeAddressRegistrations",
       "getStakeDelegations",
       "getPoolRegistrations",
+      "getPoolList",
+      "getPoolDetail",
       "getCurrentProtocolParameters",
+      "getTokensPage",
       "getTokenDetail",
       "getTokenTransactions",
+      "getTokenHolders",
+      "getTokensByPolicy",
       "getGovernanceOverviewList",
       "getGovernanceDetail",
       "getGovernanceActionVotes",
+      "getDreps",
+      "getDrep",
       "getDrepDelegates",
       "search",
       "getDashboardStats"
     ]);
+    // Not advertised (no yaci-store endpoint): getDrepVotes — there is no
+    // drepId-filtered "cast votes" endpoint; /governance/delegation-votes/drep/{id}
+    // returns delegators TO the drep, not votes cast BY it.
   }
 
   private async _enrichBlocksWithPoolNames(blocks: Block[]): Promise<void> {
     // Yaci-store has no /pools/{poolId} endpoint — leave pool names unresolved.
     void blocks;
+  }
+
+  /** Current epoch number, used to derive epoch status. Best-effort. */
+  private async _latestEpochNo(): Promise<number> {
+    try {
+      const r = await this.client.get<EpochLatestDto>(`${this.baseUrl}/epochs/latest`);
+      if (r.data?.epoch != null) return r.data.epoch;
+    } catch { /* fall through to block-derived epoch */ }
+    try {
+      const b = await this.client.get<BlockDto>(`${this.baseUrl}/blocks/latest`);
+      return b.data?.epoch ?? 0;
+    } catch { return 0; }
+  }
+
+  /**
+   * Yaci-store's asset endpoints key on the asset `unit` (policyId+assetName hex),
+   * not the bech32 fingerprint. Resolve a fingerprint to its unit via the history
+   * endpoint; pass non-fingerprint ids through unchanged.
+   */
+  private async _resolveUnit(tokenId: string): Promise<string> {
+    if (!tokenId.startsWith("asset1")) return tokenId;
+    const r = await this.client
+      .get<TxAsset[]>(`${this.baseUrl}/assets/fingerprint/${tokenId}/history`, { params: { page: 0, count: 1 } })
+      .catch(() => ({ data: [] as TxAsset[] }));
+    return r.data?.[0]?.unit ?? tokenId;
+  }
+
+  // ── Epochs ──────────────────────────────────────────────────────────────────
+
+  async getEpochs(pageInfo: ParsedUrlQuery): Promise<ApiReturnType<EpochOverview[]>> {
+    return this.requestList<EpochOverview>(async () => {
+      // The /epochs list applies an off-by-one (page>0 -> page-1); page=1 is the
+      // first page. Match the BlockfrostConnector's 1-based idiom.
+      const page = Math.max(1, Number(pageInfo.page ?? 1));
+      const count = Number(pageInfo.size ?? 20);
+      const [pageResp, latestNo] = await Promise.all([
+        this.client.get<EpochsPage>(`${this.baseUrl}/epochs`, { params: { page, count } }),
+        this._latestEpochNo()
+      ]);
+      const epochs = (pageResp.data.epochs ?? []).map((e) => epochDtoToEpochOverview(e, latestNo));
+      return {
+        data: epochs,
+        extras: { total: pageResp.data.total, totalPage: pageResp.data.totalPages }
+      };
+    });
+  }
+
+  async getEpoch(epochId: number): Promise<ApiReturnType<EpochOverview>> {
+    return this.request<EpochOverview>(async () => {
+      const [epochResp, latestNo] = await Promise.all([
+        this.client.get<EpochDetailDto>(`${this.baseUrl}/epochs/${epochId}`).then((r) => r.data),
+        this._latestEpochNo()
+      ]);
+      // Best-effort active stake for the epoch (adapot EpochStakeController).
+      let activeStake: number | undefined;
+      try {
+        const ts: any = (await this.client.get(`${this.baseUrl}/epochs/${epochId}/total-stake`)).data;
+        const raw = typeof ts === "object" && ts != null ? (ts.activeStake ?? ts.totalStake ?? ts.amount ?? ts.stake) : ts;
+        if (raw != null) activeStake = Number(raw);
+      } catch { /* optional */ }
+      return epochDtoToEpochOverview(epochResp, latestNo, activeStake);
+    });
+  }
+
+  // ── Address / Stake ──────────────────────────────────────────────────────────
+
+  async getWalletAddressFromAddress(address: string): Promise<ApiReturnType<AddressDetail>> {
+    return this.request<AddressDetail>(async () => {
+      if (address.startsWith("stake")) {
+        // Stake address: the account endpoint gives the controlled lovelace.
+        // Native tokens under a stake key require per-UTxO aggregation (skipped
+        // here for performance) — they show on the underlying payment addresses.
+        const acct = await this.client
+          .get<StakeAccountInfo>(`${this.baseUrl}/accounts/${address}`)
+          .then((r) => r.data)
+          .catch(() => ({} as StakeAccountInfo));
+        return {
+          address,
+          balance: Number(acct.controlledAmount ?? 0),
+          txCount: 0,
+          tokens: [],
+          stakeAddress: acct.stakeAddress ?? address,
+          isContract: false
+        };
+      }
+      // Payment address: live UTxO-summed amounts. This endpoint does not depend
+      // on the balance-aggregation feature flags, so it works on any deployment.
+      const amounts = await this.client
+        .get<Amount[]>(`${this.baseUrl}/addresses/${address}/amounts`)
+        .then((r) => r.data ?? []);
+      const balance = Number(amounts.find((a) => a.unit === "lovelace")?.quantity ?? 0);
+      const tokens: Token[] = amounts
+        .filter((a) => a.unit && a.unit !== "lovelace")
+        .map((a) => {
+          const unit = a.unit ?? "";
+          const nameHex = unit.slice(56);
+          return {
+            address,
+            name: nameHex,
+            displayName: hexToUtf8(nameHex) || nameHex,
+            fingerprint: unit,
+            quantity: Number(a.quantity ?? 0)
+          };
+        });
+      // Yaci-store exposes no cheap tx-count nor payment->stake mapping; leave
+      // txCount 0 and stakeAddress empty (the tx list is fetched separately).
+      return { address, balance, txCount: 0, tokens, stakeAddress: "", isContract: false };
+    });
+  }
+
+  async getWalletStakeFromAddress(address: string): Promise<ApiReturnType<StakeAddressDetail>> {
+    return this.request<StakeAddressDetail>(async () => {
+      const acct = await this.client
+        .get<StakeAccountInfo>(`${this.baseUrl}/accounts/${address}`)
+        .then((r) => r.data);
+      return {
+        status: acct.poolId ? "ACTIVE" : "INACTIVE",
+        stakeAddress: acct.stakeAddress ?? address,
+        totalStake: Number(acct.controlledAmount ?? 0),
+        rewardAvailable: Number(acct.withdrawableAmount ?? 0),
+        rewardWithdrawn: 0,
+        pool: { tickerName: "", poolName: "", poolId: acct.poolId ?? "" }
+      };
+    });
+  }
+
+  // ── Pools ────────────────────────────────────────────────────────────────────
+
+  async getPoolList(pageInfo: ParsedUrlQuery): Promise<ApiReturnType<PoolOverview[]>> {
+    return this.requestList<PoolOverview>(async () => {
+      // Yaci-store has no current-pool roster — only the raw registration-cert
+      // feed. Collapse to the latest cert per pool and resolve off-chain metadata
+      // for name/ticker. Live size/saturation/blocks are not served (left 0).
+      const page = Math.max(0, Number(pageInfo.page ?? 0));
+      const count = Number(pageInfo.size ?? 20);
+      const r = await this.client.get<PoolRegistration[]>(
+        `${this.baseUrl}/pools/registrations`, { params: { page, count } }
+      );
+      const latestByPool = new Map<string, PoolRegistration>();
+      for (const reg of r.data ?? []) {
+        const id = reg.poolIdBech32 ?? reg.poolId ?? "";
+        if (!id) continue;
+        const prev = latestByPool.get(id);
+        if (!prev || (reg.slot ?? 0) >= (prev.slot ?? 0)) latestByPool.set(id, reg);
+      }
+      const pools = await Promise.all([...latestByPool.values()].map(async (reg, i) => {
+        const id = reg.poolIdBech32 ?? reg.poolId ?? "";
+        let poolName = id;
+        let tickerName = "";
+        if (reg.metadataUrl) {
+          const meta = await getPoolMetadataFromURL(reg.metadataUrl);
+          poolName = meta?.name || id;
+          tickerName = meta?.ticker || "";
+        }
+        return {
+          id: i,
+          poolId: id,
+          poolName,
+          tickerName,
+          poolSize: 0,
+          declaredPledge: Number(reg.pledge ?? 0),
+          saturation: 0,
+          lifetimeBlock: 0
+        } as PoolOverview;
+      }));
+      return { data: pools };
+    });
+  }
+
+  async getPoolDetail(poolId: string): Promise<ApiReturnType<PoolDetail>> {
+    return this.request<PoolDetail>(async () => {
+      const epoch = await this._latestEpochNo();
+      // Note the doubled `pools/pools` segment — verbatim in yaci-store's
+      // PoolController (base /pools + method /pools/{id}/epochs/{epoch}).
+      const detail = await this.client
+        .get<PoolDetailsDto>(`${this.baseUrl}/pools/pools/${poolId}/epochs/${epoch}`)
+        .then((r) => r.data);
+      const poolHash = detail.poolHash ?? poolId;
+      const [stake, delegators, meta] = await Promise.all([
+        this.client.get<PoolStakeDto>(`${this.baseUrl}/epochs/${epoch}/pools/${poolHash}/stake`)
+          .then((r) => r.data).catch(() => ({} as PoolStakeDto)),
+        this.client.get<AccountActiveStake[]>(`${this.baseUrl}/epochs/${epoch}/pools/${poolHash}/delegators`, { params: { page: 1, count: 100 } })
+          .then((r) => r.data ?? []).catch(() => [] as AccountActiveStake[]),
+        detail.metadataUrl ? getPoolMetadataFromURL(detail.metadataUrl) : Promise.resolve(undefined)
+      ]);
+      const status: POOL_STATUS = detail.status === "RETIRED"
+        ? POOL_STATUS.RETIRED
+        : detail.status === "RETIRING"
+          ? POOL_STATUS.RETIRING
+          : POOL_STATUS.ACTIVE;
+      return {
+        poolName: meta?.name || (detail.poolId ?? poolId),
+        tickerName: meta?.ticker || "",
+        poolView: detail.poolId ?? poolId,
+        poolStatus: status,
+        createDate: "",
+        rewardAccounts: detail.rewardAccount ? [detail.rewardAccount] : [],
+        ownerAccounts: detail.poolOwners ?? [],
+        poolSize: Number(stake.activeStake ?? 0),
+        stakeLimit: 0,
+        delegators: delegators.length,
+        saturation: 0,
+        totalBalanceOfPoolOwners: 0,
+        reward: 0,
+        ros: 0,
+        pledge: Number(detail.pledge ?? 0),
+        cost: Number(detail.cost ?? 0),
+        margin: Number(detail.margin ?? 0),
+        epochBlock: 0,
+        lifetimeBlock: 0,
+        description: meta?.description || "",
+        homepage: meta?.homepage || "",
+        vrfKey: detail.vrfKeyHash ?? "",
+        relays: (detail.relays ?? []).map((rl) => ({
+          ipv4: rl.ipv4, ipv6: rl.ipv6, dns: rl.dnsName, dnsSrv: rl.dnsSrvName, port: rl.port
+        }))
+      };
+    });
+  }
+
+  // ── Tokens (list / holders / by-policy) ──────────────────────────────────────
+
+  async getTokensPage(pageInfo: ParsedUrlQuery): Promise<ApiReturnType<ITokenOverview[]>> {
+    return this.requestList<ITokenOverview>(async () => {
+      // Requires the blockfrost-compat extension (store.extensions.blockfrost.*).
+      // The list payload is {asset, quantity} only — no metadata.
+      const page = Math.max(1, Number(pageInfo.page ?? 1));
+      const count = Number(pageInfo.size ?? 20);
+      const r = await this.client.get<BfAssetListItem[]>(
+        `${this.baseUrl}/assets`, { params: { page, count, order: "asc" } }
+      );
+      return { data: (r.data ?? []).map(bfAssetListItemToTokenOverview) };
+    });
+  }
+
+  async getTokensByPolicy(policyId: string, pageInfo: ParsedUrlQuery): Promise<ApiReturnType<ITokenOverview[]>> {
+    return this.requestList<ITokenOverview>(async () => {
+      // Blockfrost-compat extension endpoint (core API has no policy asset list).
+      const page = Math.max(1, Number(pageInfo.page ?? 1));
+      const count = Number(pageInfo.size ?? 50);
+      const r = await this.client.get<BfAssetListItem[]>(
+        `${this.baseUrl}/assets/policy/${policyId}`, { params: { page, count, order: "asc" } }
+      );
+      const tokens: ITokenOverview[] = (r.data ?? []).map((a) => {
+        const asset = a.asset ?? "";
+        const nameHex = asset.slice(56);
+        return {
+          policy: policyId,
+          name: nameHex,
+          displayName: hexToUtf8(nameHex) || nameHex,
+          supply: Number(a.quantity ?? 0),
+          fingerprint: asset
+        };
+      });
+      return { data: tokens };
+    });
+  }
+
+  async getTokenHolders(tokenId: string, pageInfo: ParsedUrlQuery): Promise<ApiReturnType<TokenHolder[]>> {
+    return this.requestList<TokenHolder>(async () => {
+      const unit = await this._resolveUnit(tokenId);
+      const page = Math.max(1, Number(pageInfo.page ?? 1));
+      const count = Number(pageInfo.size ?? 20);
+      const r = await this.client.get<AddressAssetBalanceDto[]>(
+        `${this.baseUrl}/assets/${unit}/addresses`, { params: { page, count, sort: "desc" } }
+      );
+      const holders: TokenHolder[] = (r.data ?? []).map((h) => ({
+        address: h.address ?? "",
+        amount: Number(h.quantity ?? 0),
+        ratio: 0
+      }));
+      return { data: holders };
+    });
+  }
+
+  // ── DReps ─────────────────────────────────────────────────────────────────────
+
+  async getDreps(pageInfo: ParsedUrlQuery): Promise<ApiReturnType<Drep[]>> {
+    return this.requestList<Drep>(async () => {
+      const page = Math.max(0, Number(pageInfo.page ?? 0));
+      const count = Number(pageInfo.size ?? 20);
+      const r = await this.client.get<DRepDetailsDto[]>(
+        `${this.baseUrl}/governance-state/dreps`, { params: { page, count, order: "desc" } }
+      );
+      return { data: (r.data ?? []).map(drepDetailsToDrep) };
+    });
+  }
+
+  async getDrep(drepId: string): Promise<ApiReturnType<Drep>> {
+    return this.request<Drep>(async () => {
+      const r = await this.client.get<DRepDetailsDto>(`${this.baseUrl}/governance-state/dreps/${drepId}`);
+      return drepDetailsToDrep(r.data);
+    });
   }
 
   async getBlocksPage(pageInfo: ParsedUrlQuery): Promise<ApiReturnType<Block[]>> {
@@ -541,4 +864,45 @@ function mapVoterType(voterType?: string): "constitutional_committee" | "drep" |
   if (voterType.includes("CONSTITUTIONAL")) return "constitutional_committee";
   if (voterType.includes("STAKING_POOL")) return "spo";
   return "drep";
+}
+
+function drepDetailsToDrep(d: DRepDetailsDto): Drep {
+  const power = Number(d.votingPower ?? 0);
+  const status = (d.status === "INACTIVE" || d.status === "RETIRED" ? d.status : "ACTIVE") as
+    "ACTIVE" | "INACTIVE" | "RETIRED";
+  return {
+    drepId: d.drepId ?? "",
+    drepHash: d.drepHash ?? "",
+    // Anchor + delegator count are not on this DTO; left empty/0 (would require
+    // cross-referencing /governance/dreps/registrations + delegation-votes).
+    anchorUrl: "",
+    anchorHash: "",
+    activeVoteStake: power,
+    votingPower: power,
+    status,
+    delegators: 0,
+    givenName: d.drepId ?? "",
+    votes: { total: 0, abstain: 0, no: 0, yes: 0 }
+  };
+}
+
+function bfAssetListItemToTokenOverview(a: BfAssetListItem): ITokenOverview {
+  const asset = a.asset ?? "";
+  const nameHex = asset.slice(56);
+  return {
+    name: nameHex || asset,
+    displayName: hexToUtf8(nameHex) || nameHex || asset,
+    policy: asset.slice(0, 56),
+    fingerprint: asset,
+    txCount: 0,
+    supply: Number(a.quantity ?? 0)
+  };
+}
+
+function hexToUtf8(hex: string): string {
+  if (!hex) return "";
+  try {
+    const bytes = hex.match(/.{1,2}/g)!.map((b) => parseInt(b, 16));
+    return new TextDecoder("utf-8").decode(new Uint8Array(bytes));
+  } catch { return ""; }
 }

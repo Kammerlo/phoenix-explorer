@@ -440,3 +440,95 @@ export interface AddressBalanceDto {
   amount?: Amt[];
   txCount?: number;
 }
+
+// ── Epoch aggregate (epoch-aggr module) ──────────────────────────────────────
+// GET /epochs (EpochsPage) and GET /epochs/{n} (Epoch domain). Distinct from the
+// legacy `Epoch` interface above (which models the dashboard's /epochs/latest).
+export interface EpochDetailDto {
+  number?: number;
+  blockCount?: number;
+  transactionCount?: number;
+  totalOutput?: string | number;
+  totalFees?: string | number;
+  startTime?: number;        // unix seconds
+  endTime?: number;          // unix seconds
+  maxSlot?: number;
+}
+
+export interface EpochsPage {
+  total?: number;
+  totalPages?: number;
+  epochs?: EpochDetailDto[];
+}
+
+// GET /epochs/latest (epoch-api EpochDto) — carries the current epoch number and
+// active stake, used only to resolve "which epoch is current" for status.
+export interface EpochLatestDto {
+  epoch?: number;
+  activeStake?: string | number;
+}
+
+// ── Asset holders (account AddressAssetController) ───────────────────────────
+// GET /assets/{unit}/addresses
+export interface AddressAssetBalanceDto {
+  address?: string;
+  quantity?: string | number;
+}
+
+// ── Pool detail (staking-api PoolController + adapot EpochStakeController) ────
+// GET /pools/pools/{poolId}/epochs/{epoch}  (note the doubled `pools/pools`)
+export interface PoolDetailsDto {
+  epoch?: number;
+  poolId?: string;          // bech32 pool1...
+  poolHash?: string;
+  vrfKeyHash?: string;
+  pledge?: string | number;
+  cost?: string | number;
+  margin?: string | number;
+  rewardAccount?: string;
+  poolOwners?: string[];
+  relays?: Array<{ ipv4?: string; ipv6?: string; dnsName?: string; dnsSrvName?: string; port?: number }>;
+  metadataUrl?: string;
+  metadataHash?: string;
+  txHash?: string;
+  certIndex?: number;
+  status?: string;          // PoolStatusType enum
+  retireEpoch?: number;
+}
+
+// GET /epochs/{epoch}/pools/{poolHash}/stake
+export interface PoolStakeDto {
+  epoch?: number;
+  poolHash?: string;
+  poolId?: string;
+  activeStake?: string | number;
+}
+
+// GET /epochs/{epoch}/pools/{poolHash}/delegators (one row per delegator)
+export interface AccountActiveStake {
+  address?: string;
+  epoch?: number;
+  amount?: string | number;
+  poolHash?: string;
+  poolId?: string;
+  delegationEpoch?: number;
+}
+
+// ── DReps (governance-aggr governance-state DRepInfoController) ───────────────
+// GET /governance-state/dreps and GET /governance-state/dreps/{drepId}
+export interface DRepDetailsDto {
+  drepId?: string;
+  drepHash?: string;
+  dRepType?: string;
+  deposit?: string | number;
+  status?: "ACTIVE" | "INACTIVE" | "RETIRED" | string;
+  votingPower?: string | number;   // = active vote stake
+  registrationSlot?: number;
+}
+
+// ── Blockfrost-compat asset list ({asset, quantity}) ─────────────────────────
+// GET /assets and GET /assets/policy/{policyId} (require the blockfrost extension)
+export interface BfAssetListItem {
+  asset?: string;            // policyId hex + assetName hex
+  quantity?: string | number;
+}
