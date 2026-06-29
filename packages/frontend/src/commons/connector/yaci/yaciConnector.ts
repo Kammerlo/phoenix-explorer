@@ -197,7 +197,12 @@ export class YaciConnector extends ConnectorBase {
       const epochs = (pageResp.data.epochs ?? []).map((e) => epochDtoToEpochOverview(e, latestNo));
       return {
         data: epochs,
-        extras: { total: pageResp.data.total, totalPage: pageResp.data.totalPages }
+        extras: {
+          total: pageResp.data.total,
+          totalPage: pageResp.data.totalPages,
+          currentPage: page - 1,
+          pageSize: count
+        }
       };
     });
   }
@@ -320,7 +325,7 @@ export class YaciConnector extends ConnectorBase {
           lifetimeBlock: 0
         } as PoolOverview;
       }));
-      return { data: pools };
+      return { data: pools, extras: { currentPage: page, pageSize: count } };
     });
   }
 
@@ -386,7 +391,10 @@ export class YaciConnector extends ConnectorBase {
       const r = await this.client.get<BfAssetListItem[]>(
         `${this.baseUrl}/assets`, { params: { page, count, order: "asc" } }
       );
-      return { data: (r.data ?? []).map(bfAssetListItemToTokenOverview) };
+      return {
+        data: (r.data ?? []).map(bfAssetListItemToTokenOverview),
+        extras: { currentPage: page - 1, pageSize: count }
+      };
     });
   }
 
@@ -409,7 +417,7 @@ export class YaciConnector extends ConnectorBase {
           fingerprint: asset
         };
       });
-      return { data: tokens };
+      return { data: tokens, extras: { currentPage: page - 1, pageSize: count } };
     });
   }
 
@@ -426,7 +434,7 @@ export class YaciConnector extends ConnectorBase {
         amount: Number(h.quantity ?? 0),
         ratio: 0
       }));
-      return { data: holders };
+      return { data: holders, extras: { currentPage: page - 1, pageSize: count } };
     });
   }
 
@@ -439,7 +447,7 @@ export class YaciConnector extends ConnectorBase {
       const r = await this.client.get<DRepDetailsDto[]>(
         `${this.baseUrl}/governance-state/dreps`, { params: { page, count, order: "desc" } }
       );
-      return { data: (r.data ?? []).map(drepDetailsToDrep) };
+      return { data: (r.data ?? []).map(drepDetailsToDrep), extras: { currentPage: page, pageSize: count } };
     });
   }
 
