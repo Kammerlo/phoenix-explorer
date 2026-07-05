@@ -135,16 +135,18 @@ function toToken(unit: string, quantity: string, assets: Map<string, RawAssetInf
  * inputs subtract (sent → negative) — the Summary UI treats value > 0 as
  * received. Reference inputs are not part of the transaction balance.
  */
+type SummaryEntry = { address: string; value: number; tokens: Token[] };
+
 function buildSummary(
   inputs: any[],
   outputs: any[],
   assets: Map<string, RawAssetInfo | null>
 ): TransactionDetail["summary"]["stakeAddress"] {
-  const byAddress = new Map<string, { address: string; value: number; tokens: Token[] }>();
+  const byAddress = new Map<string, SummaryEntry>();
 
   const add = (utxo: any, sign: 1 | -1) => {
     if (isReference(utxo)) return;
-    const entry = byAddress.get(utxo.address) ?? { address: utxo.address, value: 0, tokens: [] };
+    const entry: SummaryEntry = byAddress.get(utxo.address) ?? { address: utxo.address, value: 0, tokens: [] };
     entry.value += sign * lovelaceOf(utxo);
     for (const { unit, quantity } of nonLovelace(utxo)) {
       const signedQuantity = sign * parseInt(quantity);
@@ -169,9 +171,11 @@ function buildSummary(
 
 function toUtxoView(utxo: any, assets: Map<string, RawAssetInfo | null>) {
   return {
-    address: utxo.address,
+    address: utxo.address as string,
+    // Required by the CollateralResponses DTO; raw Blockfrost UTxOs don't carry it.
+    assetId: (utxo.assetId as string) ?? "",
     value: lovelaceOf(utxo),
-    txHash: pick(utxo, "tx_hash", "txHash"),
+    txHash: String(pick(utxo, "tx_hash", "txHash") ?? ""),
     index: String(pick(utxo, "output_index", "outputIndex") ?? 0),
     // Smart-contract markers so the flow view can flag datum / reference-script UTxOs.
     dataHash: pick(utxo, "data_hash", "dataHash") ?? null,
