@@ -188,6 +188,16 @@ export class MyConnector extends ConnectorBase {
 3. Return domain DTOs from `@shared/dtos/*.dto.ts`. Never let a backend-native
    type leak into consumer code.
 4. **Do not** call `Date.now()` yourself — the envelope helpers do it for you.
+5. **Connectors fetch, shared helpers assemble.** If your mapping duplicates
+   what another connector already produces, extract it into
+   `packages/shared/src/helpers/` as a pure casing-agnostic function with
+   injected resolvers and consume it from both. Existing examples:
+   `txDetail.buildTransactionDetail` (full `TransactionDetail`, used by the
+   gateway and the Blockfrost connector), `contracts.buildContracts`
+   (script/datum/redeemer enrichment), `txTags.computeTxTags`.
+6. Heavy detail endpoints should also serve `getTxSummary` cheaply if the
+   backend allows it. The base class default simply delegates to
+   `getTxDetail`, so this is an optimization hook, not a capability.
 
 ### 4. Register in `ConnectorFactory.ts`
 

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { Container } from "@mui/material";
+import { Alert, Container } from "@mui/material";
 
 import EpochOverviewView from "src/components/EpochDetail/EpochOverview";
 import BlockListComponent from "../../components/BlockListComponent";
@@ -34,6 +34,14 @@ const EpochDetail: React.FC = () => {
       setFetchData(res);
       setBlocksLoading(false);
     });
+  }
+
+  if (data?.error) {
+    return (
+      <Container sx={{ pt: 4 }}>
+        <Alert severity="error" sx={{ mb: 2, textAlign: "left" }}>{data.error}</Alert>
+      </Container>
+    );
   }
 
   return (

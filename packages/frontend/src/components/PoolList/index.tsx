@@ -261,6 +261,7 @@ const PoolList: React.FC = () => {
           data-testid="delegationList.table"
           data={fetchData?.data || []}
           columns={columns}
+          error={fetchData?.error}
           total={{ count: fetchData?.total ?? 0, title: "Total" }}
           onClickRow={(_, r: PoolOverview) => navigate(details.delegation(r.poolId))}
           pagination={{

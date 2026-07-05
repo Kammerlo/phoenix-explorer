@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Container, Grid, styled } from "@mui/material";
+import { Alert, Container, Grid, styled } from "@mui/material";
 import { useTranslation } from "react-i18next";
 
 import { ApiConnector } from "src/commons/connector/ApiConnector";
@@ -38,6 +38,7 @@ const Home: React.FC = () => {
   const [txsLoading, setTxsLoading]   = useState(true);
   const [pools, setPools]             = useState<PoolOverview[]>([]);
   const [poolsLoading, setPoolsLoading] = useState(true);
+  const [hasError, setHasError]       = useState(false);
 
   const canShowPools = useCapability("getPoolList");
   const canShowBlocks = useCapability("getBlocksPage");
@@ -53,8 +54,11 @@ const Home: React.FC = () => {
 
     if (canShowDashboardStats) {
       api.getDashboardStats()
-        .then((result) => setStatsData(result.data))
-        .catch(() => {})
+        .then((result) => {
+          if (result.error) setHasError(true);
+          setStatsData(result.data);
+        })
+        .catch(() => setHasError(true))
         .finally(() => setStatsLoading(false));
     } else {
       setStatsLoading(false);
@@ -62,8 +66,11 @@ const Home: React.FC = () => {
 
     if (canShowBlocks) {
       api.getBlocksPage({ page: "1", size: String(TABLE_ROWS) })
-        .then((r) => setBlocks((r.data ?? []).slice(0, TABLE_ROWS)))
-        .catch(() => {})
+        .then((r) => {
+          if (r.error) setHasError(true);
+          setBlocks((r.data ?? []).slice(0, TABLE_ROWS));
+        })
+        .catch(() => setHasError(true))
         .finally(() => setBlocksLoading(false));
     } else {
       setBlocksLoading(false);
@@ -71,8 +78,11 @@ const Home: React.FC = () => {
 
     if (canShowTxs) {
       api.getTransactions(undefined, { page: "1", size: String(TABLE_ROWS) })
-        .then((r) => setTxs((r.data ?? []).slice(0, TABLE_ROWS)))
-        .catch(() => {})
+        .then((r) => {
+          if (r.error) setHasError(true);
+          setTxs((r.data ?? []).slice(0, TABLE_ROWS));
+        })
+        .catch(() => setHasError(true))
         .finally(() => setTxsLoading(false));
     } else {
       setTxsLoading(false);
@@ -80,8 +90,11 @@ const Home: React.FC = () => {
 
     if (canShowPools) {
       api.getPoolList({ page: "1", size: "5" })
-        .then((r) => setPools(r.data ?? []))
-        .catch(() => {})
+        .then((r) => {
+          if (r.error) setHasError(true);
+          setPools(r.data ?? []);
+        })
+        .catch(() => setHasError(true))
         .finally(() => setPoolsLoading(false));
     } else {
       setPoolsLoading(false);
@@ -90,6 +103,12 @@ const Home: React.FC = () => {
 
   return (
     <HomeContainer data-testid="home-container">
+      {hasError && (
+        <Alert severity="warning" onClose={() => setHasError(false)} sx={{ mb: 2, textAlign: "left" }}>
+          {t("home.partialLoadError", "Some dashboard data could not be loaded from the current provider.")}
+        </Alert>
+      )}
+
       {canShowDashboardStats && (
         <Fade duration={0.32}>
           <DashboardStatsGrid statsData={statsData} loading={statsLoading} />

@@ -190,6 +190,7 @@ const Tokens: React.FC = () => {
         <Table
           data={fetchData?.data || []}
           columns={columns}
+          error={fetchData?.error}
           total={{ title: "Total", count: fetchData?.total || 0 }}
           onClickRow={toTokenDetail}
           rowKey="fingerprint"

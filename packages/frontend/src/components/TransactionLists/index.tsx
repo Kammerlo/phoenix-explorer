@@ -1,6 +1,6 @@
 import React, { MouseEvent } from "react";
 import { useNavigate } from "react-router-dom";
-import { Box, Chip, Skeleton, useTheme } from "@mui/material";
+import { Alert, Box, Chip, Skeleton, useTheme } from "@mui/material";
 import { alpha } from "@mui/material/styles";
 import { useTranslation } from "react-i18next";
 
@@ -297,7 +297,14 @@ const TransactionList: React.FC<TransactionListProps> = ({
     }
   ];
 
-  if (transactions?.error) return <NotAvailable />;
+  if (transactions?.error) {
+    return (
+      <Box>
+        <Alert severity="error" sx={{ mb: 2, textAlign: "left" }}>{transactions.error}</Alert>
+        <NotAvailable />
+      </Box>
+    );
+  }
 
   return (
     <>

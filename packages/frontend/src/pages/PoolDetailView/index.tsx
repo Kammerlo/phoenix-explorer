@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import {
+  Alert,
   Box,
   Chip,
   Container,
@@ -28,6 +29,8 @@ import { PoolDetail, POOL_STATUS } from "@shared/dtos/pool.dto";
 import { Block } from "@shared/dtos/block.dto";
 import BlockListComponent from "src/components/BlockListComponent";
 import PluginSlotRenderer from "src/plugins/PluginSlotRenderer";
+import NoRecord from "src/components/commons/NoRecord";
+import FetchDataErr from "src/components/commons/FetchDataErr";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -274,8 +277,17 @@ const DelegationDetail: React.FC = () => {
 
   if (loading) return <PoolDetailSkeleton />;
 
+  if (poolData?.error) {
+    return (
+      <Container sx={{ pt: 4 }}>
+        <Alert severity="error" sx={{ mb: 2, textAlign: "left" }}>{poolData.error}</Alert>
+        <FetchDataErr />
+      </Container>
+    );
+  }
+
   const data = poolData?.data;
-  if (!data) return null;
+  if (!data) return <NoRecord />;
 
   const pledgeMet = (data.pledge ?? 0) <= (data.totalBalanceOfPoolOwners ?? 0);
 

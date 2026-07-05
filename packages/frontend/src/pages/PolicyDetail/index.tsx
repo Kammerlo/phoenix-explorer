@@ -204,6 +204,7 @@ const PolicyDetail: React.FC = () => {
           <Table
             columns={columns}
             data={fetchData?.data ?? []}
+            error={fetchData?.error}
             total={{ count: tokenCount, title: "Tokens" }}
             rowKey="fingerprint"
             tableWrapperProps={{

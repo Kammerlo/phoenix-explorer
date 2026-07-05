@@ -1,4 +1,4 @@
-import { Box, Chip, Skeleton, Typography, useTheme } from "@mui/material";
+import { Alert, Box, Chip, Skeleton, Typography, useTheme } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 
@@ -121,6 +121,16 @@ export default function TabOverview() {
       <ContainerTab>
         <Box sx={{ width: "100%", p: 2 }}>
           <LoadingRows />
+        </Box>
+      </ContainerTab>
+    );
+  }
+
+  if (fetchData.error) {
+    return (
+      <ContainerTab>
+        <Box sx={{ width: "100%", p: 2 }}>
+          <Alert severity="error" sx={{ mb: 2, textAlign: "left" }}>{fetchData.error}</Alert>
         </Box>
       </ContainerTab>
     );
