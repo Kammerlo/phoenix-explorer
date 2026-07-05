@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { Box, Container, Skeleton, ToggleButton, ToggleButtonGroup, useTheme } from "@mui/material";
+import { Alert, Box, Container, Skeleton, ToggleButton, ToggleButtonGroup, useTheme } from "@mui/material";
 import { alpha } from "@mui/material/styles";
 import { MdAccountTree, MdViewList } from "react-icons/md";
 
@@ -60,6 +60,7 @@ const TransactionDetailView: React.FC = () => {
   const { t } = useTranslation();
   const theme = useTheme();
   const [txData, setTxData] = useState<ApiReturnType<TransactionDetail>>();
+  const [summaryData, setSummaryData] = useState<ApiReturnType<TransactionDetail>>();
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<ViewMode>("flow");
   const [requestedTab, setRequestedTab] = useState<string | undefined>();
@@ -75,23 +76,51 @@ const TransactionDetailView: React.FC = () => {
   useEffect(() => {
     document.title = `Transaction ${trxHash} | Phoenix Explorer`;
     setLoading(true);
+    setTxData(undefined);
+    setSummaryData(undefined);
+    let cancelled = false;
+    // Progressive load: the lightweight header usually lands well before the
+    // full detail, so the overview renders while UTxOs/contracts still resolve.
+    apiConnector.getTxSummary(trxHash).then((data) => {
+      if (!cancelled && data.data) setSummaryData(data);
+    });
     apiConnector.getTxDetail(trxHash).then((data) => {
+      if (cancelled) return;
       setTxData(data);
       setLoading(false);
     });
+    return () => {
+      cancelled = true;
+    };
   }, [trxHash]);
 
-  if (txData?.error) return <FetchDataErr />;
+  // The full detail wins as soon as it arrives; the summary bridges the gap.
+  const overviewData = txData?.data ?? summaryData?.data;
+
+  if (txData?.error) {
+    return (
+      <Container sx={{ pt: 3, pb: 6 }}>
+        <Alert severity="error" sx={{ mb: 2, textAlign: "left" }}>
+          {t("transaction.fetchError", "This transaction could not be loaded: ") + txData.error}
+        </Alert>
+        <FetchDataErr />
+      </Container>
+    );
+  }
   if (!loading && !txData?.data) return <NoRecord />;
 
   return (
     <Container sx={{ pt: 3, pb: 6 }}>
-      {loading ? (
+      {!overviewData ? (
         <TxDetailSkeleton />
       ) : (
         <>
-          <TransactionOverview data={txData?.data} loading={loading} />
+          <TransactionOverview data={overviewData} loading={false} />
 
+          {loading ? (
+            <Skeleton variant="rounded" height={300} sx={{ borderRadius: 3, mt: 3 }} />
+          ) : (
+            <>
           <Box display="flex" justifyContent="flex-end" mt={2} mb={-1}>
             <ToggleButtonGroup
               value={viewMode}
@@ -131,6 +160,8 @@ const TransactionDetailView: React.FC = () => {
             : <TransactionMetadata data={txData?.data} loading={loading} requestedTabKey={requestedTab} />
           }
           <PluginSlotRenderer slot="transaction-detail" context={{ data: txData?.data, network, apiConnector }} excludeMetadataPlugins />
+            </>
+          )}
         </>
       )}
     </Container>

@@ -135,4 +135,18 @@ export abstract class ApiConnector {
   getScriptVerification(_scriptHash: string): Promise<ApiReturnType<ScriptVerification>> {
     return Promise.resolve({ data: { verified: false }, lastUpdated: Date.now() });
   }
+
+  /**
+   * Lightweight transaction header (the `tx` block of `TransactionDetail`,
+   * without UTxOs / certificates / contracts) so the detail page can render its
+   * overview while the full detail is still loading.
+   *
+   * Concrete default simply resolves the full detail — connectors with a
+   * cheaper path (gateway `/transactions/:hash/summary`, Blockfrost two-call
+   * header fetch) override it. Never gate routes on this method; it degrades
+   * to `getTxDetail` by construction.
+   */
+  getTxSummary(txHash: string): Promise<ApiReturnType<TransactionDetail>> {
+    return this.getTxDetail(txHash);
+  }
 }

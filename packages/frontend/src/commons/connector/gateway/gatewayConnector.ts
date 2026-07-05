@@ -177,6 +177,13 @@ export class GatewayConnector extends ConnectorBase {
     return response.data;
   }
 
+  async getTxSummary(txHash: string): Promise<ApiReturnType<TransactionDetail>> {
+    const response = await this.client.get<ApiReturnType<TransactionDetail>>(
+      `${this.baseUrl}/transactions/${txHash}/summary`
+    );
+    return response.data;
+  }
+
   async getWalletAddressFromAddress(address: string): Promise<ApiReturnType<AddressDetail>> {
     const response = await this.client.get<ApiReturnType<AddressDetail>>(`${this.baseUrl}/addresses/${address}`);
     return response.data;

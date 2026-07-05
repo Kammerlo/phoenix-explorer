@@ -2,8 +2,9 @@ import { Router } from "express";
 import { fetchTransactionDetail } from "../service/transactionService";
 import { ApiReturnType } from "@shared/APIReturnType";
 import { Transaction, TransactionDetail } from "@shared/dtos/transaction.dto";
-import { getBlockTxs, getLatestBlock, getTransactions } from "../config/cache";
+import { getBlock, getBlockTxs, getLatestBlock, getTransactions, getTxDetail } from "../config/cache";
 import { computeTxTags, computeTotalLovelaceOutput } from "@shared/helpers/txTags";
+import { buildTransactionDetail } from "@shared/helpers/txDetail";
 import { asyncHandler } from "../middleware/asyncHandler";
 
 export const transactionController = Router();
@@ -74,6 +75,25 @@ transactionController.get("", asyncHandler(async (req, res) => {
     pageSize: size,
     totalUnknown: true,
   } as ApiReturnType<Transaction[]>);
+}));
+
+// Lightweight header-only detail (tx + block, two cached lookups) so the
+// frontend can render the overview while the full detail loads. Serves the
+// fully-assembled detail straight from cache when available.
+transactionController.get("/:txHash/summary", asyncHandler(async (req, res) => {
+  const txHash = String(req.params.txHash);
+  const cached = getTxDetail(txHash);
+  if (cached) {
+    res.json({ data: cached, lastUpdated: Date.now() } as ApiReturnType<TransactionDetail>);
+    return;
+  }
+  const tx = await getTransactions(txHash);
+  const block = await getBlock(tx.block);
+  const summary = await buildTransactionDetail({ tx, block, utxos: { inputs: [], outputs: [] } });
+  // Header only — leave the heavy sections undefined so the UI keeps their skeletons.
+  summary.utxOs = undefined;
+  summary.collaterals = undefined;
+  res.json({ data: summary, lastUpdated: Date.now() } as ApiReturnType<TransactionDetail>);
 }));
 
 transactionController.get("/:txHash", asyncHandler(async (req, res) => {
