@@ -97,6 +97,22 @@ export class YaciConnector extends ConnectorBase {
   constructor(baseUrl: string) {
     super(baseUrl);
     this.client = applyCaseMiddleware(axios.create());
+    // A failed Yaci request with no HTTP response is almost always the browser
+    // blocking a cross-origin/local call (CORS, or Chrome's "Allow local network"
+    // prompt for a public site → localhost). Those are opaque to JS, so surface a
+    // useful hint instead of a bare "Network Error".
+    this.client.interceptors.response.use(
+      (response) => response,
+      (error) => {
+        if (error && !error.response) {
+          error.message =
+            `Could not reach the Yaci Store at ${this.baseUrl}. ` +
+            `If this is a local devnet, your browser may be blocking it (CORS, or Chrome's ` +
+            `"Allow local network" prompt). See docs/local-development.md → "Yaci DevKit".`;
+        }
+        return Promise.reject(error);
+      }
+    );
   }
   getCapabilities(): ReadonlySet<Capability> {
     return new Set<Capability>([

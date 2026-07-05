@@ -221,30 +221,52 @@ The gateway reads these values in `packages/gateway/src/config/env.ts` via `dote
 
 ## Pointing at a Yaci Devnet
 
-[Yaci DevKit](https://github.com/bloxbean/yaci-devkit) provides a self-contained private Cardano network with a built-in Yaci Store REST API. It is the recommended way to develop against a local chain.
+[Yaci DevKit](https://github.com/bloxbean/yaci-devkit) provides a self-contained private Cardano network with a built-in Yaci Store REST API (default `http://localhost:8080`). The frontend's `YaciConnector` calls Yaci Store **directly from the browser** — there is no gateway/Yaci proxy — so the only thing to get right is the browser's cross-origin rules.
 
-1. Follow the Yaci DevKit quick-start to bring up a devnet. By default the Yaci Store API is available at `http://localhost:8080`.
+### Local explorer (CORS-free) — recommended for devnet work
 
-2. Configure the frontend to use the YACI provider:
+Run the explorer in dev mode and let Vite proxy Yaci **same-origin**, so the browser never makes a cross-origin request (no CORS to configure):
 
-   ```env
-   # packages/frontend/.env
-   REACT_APP_API_TYPE=YACI
-   REACT_APP_API_URL=http://localhost:8080/api/v1
-   REACT_APP_NETWORK=preview
-   ```
-
-3. Start only the frontend:
-
+1. Bring up your devnet (Yaci Store at `http://localhost:8080`). Non-default port/host? set `REACT_APP_YACI_PROXY_TARGET` in the root `.env` (e.g. `REACT_APP_YACI_PROXY_TARGET=http://localhost:9000`).
+2. Start the frontend (the gateway is not needed for YACI):
    ```bash
    npm run dev --workspace=frontend
    ```
+3. Open the provider switcher → **Yaci Store (Direct)** → **Use local devnet URL** (fills `/local-yaci/api/v1`) → **Save & Reload**. Vite proxies `/local-yaci/*` → your Yaci Store. No CORS, no mixed content, no Chrome prompt.
+   - Or seed it via the root `.env`: `REACT_APP_API_TYPE=YACI`, `REACT_APP_API_URL=/local-yaci/api/v1`.
 
-   The gateway Express server is not needed when using the YACI provider directly.
+> Pointing the browser straight at `http://localhost:8080/api/v1` works only if Yaci Store sends CORS headers for your origin; the `/local-yaci` proxy avoids that entirely.
 
-4. If your devnet runs on a non-default port or a remote host, update `REACT_APP_API_URL` accordingly.
+### Hosted explorer (phoenix-explorer.org) + your local Yaci
 
-5. The provider configuration can also be changed at runtime without restarting the dev server: open the provider settings panel in the UI, select YACI, and enter the base URL. The selection is saved to `localStorage` and takes effect immediately.
+The hosted server **cannot reach your localhost** — only your browser can, and browsers gate a public HTTPS page calling a local service. Reality (Chrome, late 2025+):
+- **Mixed content is fine** for `http://localhost` / `http://127.0.0.1` (loopback is "potentially trustworthy"). Don't use `0.0.0.0`.
+- **CORS is required** — the local target must return `Access-Control-Allow-Origin: https://phoenix-explorer.org`.
+- **Local Network Access (LNA):** Chrome shows a one-time **"Allow local network"** prompt for a public site → localhost (it replaced the old `Access-Control-Allow-Private-Network` header). Firefox has no such prompt.
+
+Pick one transport, then set the URL via the provider switcher (**Use local devnet URL** pre-fills `http://localhost:8090/api/v1`):
+
+1. **CORS bridge (no tunnel, lowest friction).** Run a tiny CORS reverse-proxy in front of Yaci. Example `Caddyfile` (`caddy run`):
+   ```caddyfile
+   :8090 {
+     @opts method OPTIONS
+     handle @opts {
+       header Access-Control-Allow-Origin "https://phoenix-explorer.org"
+       header Access-Control-Allow-Methods "GET, POST, OPTIONS"
+       header Access-Control-Allow-Headers "*"
+       header Access-Control-Allow-Private-Network "true"
+       respond "" 204
+     }
+     header Access-Control-Allow-Origin "https://phoenix-explorer.org"
+     header Access-Control-Allow-Private-Network "true"
+     reverse_proxy 127.0.0.1:8080
+   }
+   ```
+   Set Yaci Base URL to `http://localhost:8090/api/v1`; accept Chrome's "Allow local network" prompt. (Alternative: enable CORS in yaci-store itself.)
+2. **HTTPS tunnel (most robust, no prompt).** `cloudflared tunnel --url http://localhost:8080` (or `ngrok http 8080`) → set Yaci Base URL to the public `https://…/api/v1`. A public origin sidesteps LNA + mixed content; only ordinary CORS applies.
+3. **Browser extension (advanced, prompt-free).** A proxy extension relays requests to localhost, bypassing page CORS/LNA. Heaviest to set up; out of scope here.
+
+The provider selection is saved to the `phoenix_provider` cookie and applied on reload.
 
 ---
 

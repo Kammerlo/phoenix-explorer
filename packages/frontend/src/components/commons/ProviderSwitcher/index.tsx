@@ -68,6 +68,11 @@ const ProviderSwitcher: React.FC<ProviderSwitcherProps> = ({ open, onClose }) =>
 
   const selectedProvider = PROVIDERS.find((p) => p.type === selectedType)!;
 
+  // In `npm run dev`, Vite proxies "/local-yaci" to a local Yaci Store same-origin
+  // (zero CORS). On the hosted/built site, point at a local CORS bridge instead.
+  const isDevBuild = import.meta.env.DEV;
+  const localDevnetUrl = isDevBuild ? "/local-yaci/api/v1" : "http://localhost:8090/api/v1";
+
   // Reset local state when the dialog opens so it reflects the current config
   React.useEffect(() => {
     if (open && currentConfig) {
@@ -137,6 +142,28 @@ const ProviderSwitcher: React.FC<ProviderSwitcherProps> = ({ open, onClose }) =>
         </RadioGroup>
 
         <Box mt={2}>
+          {selectedType === "YACI" && (
+            <Box
+              sx={{
+                mb: 1.5,
+                p: 1.5,
+                borderRadius: 2,
+                border: `1px dashed ${theme.palette.divider}`
+              }}
+            >
+              <Typography variant="subtitle2" fontWeight={700}>
+                Connect a local Yaci DevKit
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, mb: 1 }}>
+                {isDevBuild
+                  ? "Running in dev — requests are proxied same-origin via /local-yaci, so there's no CORS to configure. Just point at your devnet and reload."
+                  : "This hosted site can't reach your localhost directly. Run a small CORS bridge in front of Yaci (see the setup guide); Chrome will then ask to “Allow local network” — click Allow. An HTTPS tunnel (cloudflared/ngrok) avoids the prompt entirely."}
+              </Typography>
+              <Button size="small" variant="outlined" onClick={() => setCustomUrl(localDevnetUrl)}>
+                Use local devnet URL
+              </Button>
+            </Box>
+          )}
           <TextField
             fullWidth
             size="small"
