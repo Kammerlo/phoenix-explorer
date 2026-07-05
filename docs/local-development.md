@@ -27,10 +27,9 @@ cd phoenix-explorer
 # 2. Install all workspace dependencies (frontend + gateway + shared)
 npm install
 
-# 3. Copy and fill in environment files
-cp .env.template packages/gateway/.env
-cp packages/frontend/.env.example packages/frontend/.env
-# Edit both files — at minimum set API_KEY in packages/gateway/.env
+# 3. Copy and fill in the environment file (ONE file, at the monorepo root)
+cp .env.example .env
+# Edit .env — at minimum set API_KEY
 
 # 4. Start both services concurrently
 npm run dev
@@ -39,7 +38,7 @@ npm run dev
 `npm run dev` runs the following workspaces in parallel using `concurrently`:
 
 - **Gateway** — `ts-node-dev` with hot-reload on `packages/gateway/src/server.ts`, default port **3000**
-- **Frontend** — Vite dev server on `packages/frontend`, default port **5173** (or the `PORT` value in `packages/frontend/.env`)
+- **Frontend** — Vite dev server on `packages/frontend`, default port **5173** (Vite default)
 
 Open `http://localhost:5173` in your browser once both processes are ready.
 
@@ -47,7 +46,13 @@ Open `http://localhost:5173` in your browser once both processes are ready.
 
 ## Environment Variables
 
-### Gateway (`packages/gateway/.env`)
+> **Both services read the single `.env` at the monorepo root.** The gateway
+> loads it via `packages/gateway/src/config/env.ts` (dotenv pointed at the repo
+> root) and Vite reads the same file (`envDir: rootDir`). `.env` files inside
+> `packages/gateway/` or `packages/frontend/` are **ignored** — delete them if
+> present to avoid confusion.
+
+### Gateway variables (root `.env`)
 
 | Variable | Required | Default | Description |
 |---|---|---|---|
@@ -58,7 +63,7 @@ Open `http://localhost:5173` in your browser once both processes are ready.
 
 *`API_KEY` is only required when the frontend is configured with `REACT_APP_API_TYPE=GATEWAY`.
 
-### Frontend (`packages/frontend/.env`)
+### Frontend variables (root `.env`)
 
 | Variable | Required | Default | Description |
 |---|---|---|---|
@@ -67,26 +72,25 @@ Open `http://localhost:5173` in your browser once both processes are ready.
 | `REACT_APP_NETWORK` | No | `mainnet` | Display network name (`mainnet`, `preprod`, `preview`). |
 | `REACT_APP_BLOCKFROST_API_KEY` | No | — | Blockfrost API key used when `REACT_APP_API_TYPE=BLOCKFROST` (browser-side direct calls). |
 | `REACT_APP_API_URL_COIN_GECKO` | No | `https://api.coingecko.com/...` | CoinGecko endpoint for ADA price data. |
-| `PORT` | No | `3000` | Port used by the Vite dev server. |
 
-A template covering both gateway and frontend variables is provided at `.env.template` in the repository root.
+A template covering both gateway and frontend variables is provided at `.env.example` in the repository root.
 
 ---
 
 ## Provider Switching
 
-Phoenix Explorer supports three data providers. The active provider is determined by `REACT_APP_API_TYPE` in the frontend `.env` file. The selection can also be overridden at runtime via the provider settings UI, which persists the configuration in `localStorage` under the key `phoenix_provider_config`.
+Phoenix Explorer supports three data providers. The active provider is determined by `REACT_APP_API_TYPE` in the root `.env` file (used to seed the first visit). The selection can also be changed at runtime via the provider settings UI, which persists the configuration in the `phoenix_provider` cookie (1-year `max-age`).
 
 ### GATEWAY (default)
 
 The frontend talks to the local Express gateway, which proxies requests to Blockfrost.
 
 ```env
-# packages/frontend/.env
+# root .env
 REACT_APP_API_TYPE=GATEWAY
 REACT_APP_API_URL=http://localhost:3000/api
 
-# packages/gateway/.env
+# root .env
 API_KEY=mainnetXXXXXXXXXXXXXXXXXXXXXXXX
 NETWORK=mainnet
 ```
@@ -96,7 +100,7 @@ NETWORK=mainnet
 The frontend talks directly to a [Yaci Store](https://github.com/bloxbean/yaci-store) REST API. No gateway process is needed.
 
 ```env
-# packages/frontend/.env
+# root .env
 REACT_APP_API_TYPE=YACI
 REACT_APP_API_URL=http://localhost:8080/api/v1
 REACT_APP_NETWORK=preview
@@ -109,7 +113,7 @@ Set `REACT_APP_API_URL` to the base URL of your Yaci Store instance. See [Pointi
 The frontend calls Blockfrost directly from the browser. Suitable for quick read-only use; your API key will be visible in the browser.
 
 ```env
-# packages/frontend/.env
+# root .env
 REACT_APP_API_TYPE=BLOCKFROST
 REACT_APP_API_URL=https://cardano-mainnet.blockfrost.io/api/v0
 REACT_APP_BLOCKFROST_API_KEY=mainnetXXXXXXXXXXXXXXXXXXXXXXXX
@@ -182,7 +186,7 @@ services:
 1. Copy and fill in the root template:
 
    ```bash
-   cp .env.template .env
+   cp .env.example .env
    # Edit .env and set at least API_KEY
    ```
 
@@ -201,7 +205,7 @@ services:
 4. Point your frontend at the containerised gateway:
 
    ```env
-   # packages/frontend/.env
+   # root .env
    REACT_APP_API_TYPE=GATEWAY
    REACT_APP_API_URL=http://localhost:3000/api
    ```
@@ -212,7 +216,7 @@ services:
 
 1. Create a free project at [blockfrost.io](https://blockfrost.io) for the network you need (`mainnet`, `preprod`, or `preview`).
 2. Copy the project ID — it looks like `mainnetXXXXXXXXXXXXXXXXXXXXXXXX`.
-3. Set `API_KEY` in `packages/gateway/.env` (or in your Docker `.env`).
+3. Set `API_KEY` in the root `.env`.
 4. Ensure `NETWORK` in the same file matches the network of the API key.
 
 The gateway reads these values in `packages/gateway/src/config/env.ts` via `dotenv`.
