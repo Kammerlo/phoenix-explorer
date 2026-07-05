@@ -143,7 +143,9 @@ export const ArrowColumn = styled(Box)(({ theme }) => ({
 }));
 
 /* ---------- UTXO card ---------- */
-export const UtxoCard = styled(Box)<{
+export const UtxoCard = styled(Box, {
+  shouldForwardProp: (prop) => prop !== "side" && prop !== "isContract"
+})<{
   side: "input" | "output" | "collateral";
   isContract?: number;
 }>(({ theme, side, isContract }) => {
@@ -236,7 +238,9 @@ export const FeeCallout = styled(Box)(({ theme }) => ({
   justifyContent: "space-between"
 }));
 
-export const StatusChip = styled(Box)<{ txStatus: string }>(({ theme, txStatus }) => {
+export const StatusChip = styled(Box, {
+  shouldForwardProp: (prop) => prop !== "txStatus"
+})<{ txStatus: string }>(({ theme, txStatus }) => {
   const success = txStatus === "SUCCESS";
   const failed = txStatus === "FAILED";
   return {

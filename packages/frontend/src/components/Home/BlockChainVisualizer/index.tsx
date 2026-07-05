@@ -378,7 +378,7 @@ const BlockChainVisualizer: React.FC = () => {
           <AnimatePresence initial={false}>
             {blocks.map((block, i) => (
               <motion.div
-                key={block.hash}
+                key={block.blockNo || block.hash}
                 layout
                 initial={
                   reduce

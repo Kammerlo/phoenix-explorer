@@ -22,7 +22,6 @@ import {
   GovernanceActionDetail,
   GovernanceActionListItem
 } from "@shared/dtos/GovernanceOverview";
-import { errorEnvelope } from "@shared/helpers/envelope";
 import { computeTxTags, computeTotalLovelaceOutput } from "@shared/helpers/txTags";
 import { buildContracts } from "@shared/helpers/contracts";
 import { buildTransactionDetail } from "@shared/helpers/txDetail";
@@ -57,9 +56,6 @@ export class BlockfrostConnector extends ConnectorBase {
       "getWalletAddressFromAddress",
       "getAddressTxsFromAddress",
       "getWalletStakeFromAddress",
-      "getStakeAddressRegistrations",
-      "getStakeDelegations",
-      "getPoolRegistrations",
       "getPoolList",
       "getPoolDetail",
       "getCurrentProtocolParameters",
@@ -732,18 +728,6 @@ export class BlockfrostConnector extends ConnectorBase {
       const resp = await this.client.get<BfProtocolParamsRaw>("/epochs/latest/parameters");
       return mapBfProtocolParams(resp.data);
     });
-  }
-
-  async getStakeAddressRegistrations(): Promise<ApiReturnType<IStakeKey[]>> {
-    return errorEnvelope<IStakeKey[]>("Not supported", []);
-  }
-
-  async getStakeDelegations(): Promise<ApiReturnType<IStakeKey[]>> {
-    return errorEnvelope<IStakeKey[]>("Not supported", []);
-  }
-
-  async getPoolRegistrations(): Promise<ApiReturnType<Registration[]>> {
-    return errorEnvelope<Registration[]>("Not supported", []);
   }
 
   // ── Dashboard stats ────────────────────────────────────────────────────────

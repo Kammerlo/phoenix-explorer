@@ -65,7 +65,7 @@ const LatestBlocks: React.FC<Props> = ({ blocks, loading, rows = 8 }) => {
               <SkeletonRows rows={rows} cols={4} />
             ) : (
               blocks.map((block) => (
-                <TableRow key={block.hash} hover sx={{ cursor: "pointer" }} onClick={() => navigate(details.block(block.blockNo))}>
+                <TableRow key={block.blockNo || block.hash} hover sx={{ cursor: "pointer" }} onClick={() => navigate(details.block(block.blockNo))}>
                   <TableCell sx={cellSx}>
                     <Link to={details.block(block.blockNo)} style={{ color: theme.palette.primary.main, textDecoration: "none", fontWeight: 600 }} onClick={(e) => e.stopPropagation()}>
                       {numberWithCommas(block.blockNo, 0)}

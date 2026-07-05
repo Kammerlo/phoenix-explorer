@@ -1,7 +1,9 @@
 import { Box, MenuItem, Select, styled } from "@mui/material";
 import { Link } from "react-router-dom";
 
-export const CustomSelect = styled(Select)<{ isSummary?: boolean }>`
+export const CustomSelect = styled(Select, {
+  shouldForwardProp: (prop) => prop !== "isSummary"
+})<{ isSummary?: boolean }>`
   font-family: var(--font-family-text);
   background: ${(props) =>
     props.isSummary && props.theme.isDark ? props.theme.palette.secondary[100] : props.theme.palette.secondary[0]};
@@ -72,7 +74,9 @@ export const CustomLink = styled(Link)(() => ({
   height: "40px",
   cursor: "pointer"
 }));
-export const TokenButton = styled(Box)<{ isSummary?: boolean }>(({ theme, isSummary }) => ({
+export const TokenButton = styled(Box, {
+  shouldForwardProp: (prop) => prop !== "isSummary"
+})<{ isSummary?: boolean }>(({ theme, isSummary }) => ({
   display: "flex",
   alignItems: "center",
   minWidth: 250,
