@@ -122,3 +122,7 @@ build/
 # Claude Code
 .claude/worktrees/
 .claude/settings.local.json
+
+# local session artifacts
+/logs/
+yaci-cli.history
