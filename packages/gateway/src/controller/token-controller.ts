@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { API } from "../config/blockfrost";
+import { getBlock, getTransactions } from "../config/cache";
 import { Block } from "@shared/dtos/block.dto";
 import { ApiReturnType } from "@shared/APIReturnType";
 import { ITokenOverview, TokenHolder } from "@shared/dtos/token.dto";
@@ -118,18 +119,26 @@ tokenController.get('/policy/:policyId', async (req, res) => {
 
 tokenController.get('/:tokenId', async (req, res) => {
   const assetById = await API.assetsById(req.params.tokenId);
-  const mintTx = await API.txs(assetById.initial_mint_tx_hash);
-  const history = await API.assetsHistoryAll(assetById.asset);
-  const lastActivity = await API.txs(history[history.length - 1].tx_hash);
+  const [mintTx, history] = await Promise.all([
+    getTransactions(assetById.initial_mint_tx_hash),
+    API.assetsHistoryAll(assetById.asset)
+  ]);
+
+  // One lookup per *distinct* mint/burn tx, in parallel through the cache — the
+  // previous serial per-event loop dominated load time for long histories.
+  const distinctTxHashes = [...new Set(history.map((item) => item.tx_hash))];
+  const txByHash = new Map(
+    await Promise.all(distinctTxHashes.map(async (hash) => [hash, await getTransactions(hash)] as const))
+  );
+  const lastActivity = txByHash.get(history[history.length - 1].tx_hash)!;
 
   const activityData: { date: number; value: number; mintAmount: number; burnAmount: number }[] = [];
   let amount = 0;
   for (const item of history) {
-    const tx = await API.txs(item.tx_hash);
     const delta = Number.parseInt(item.amount);
     amount += delta;
     activityData.push({
-      date: tx.block_time,
+      date: txByHash.get(item.tx_hash)!.block_time,
       value: amount,
       mintAmount: item.action === "minted" ? delta : 0,
       burnAmount: item.action === "burned" ? Math.abs(delta) : 0,
@@ -223,8 +232,8 @@ tokenController.get('/:tokenId/transactions', async (req, res) => {
   });
 
   const transactions : Transaction[] = await Promise.all(assetTransactions.map(async (entry) => {
-    const tx = await API.txs(entry.tx_hash);
-    const block = tx.block_height ? await API.blocks(tx.block_height) : null;
+    const tx = await getTransactions(entry.tx_hash);
+    const block = tx.block ? await getBlock(tx.block) : null;
     return {
       blockNo: tx.block_height ?? 0,
       hash: entry.tx_hash,

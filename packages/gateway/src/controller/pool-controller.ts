@@ -108,17 +108,22 @@ if (!POOL_API) {
     const { poolId } = req.params;
     try {
         const pool = await blockfrost.poolsById(poolId);
-        const poolMetadata = await blockfrost.poolMetadata(poolId);
-        const relays = await blockfrost.poolsByIdRelays(poolId);
-        const createTx = await getTransactions(pool.registration[0]);
-        let totalBalanceOfPoolOwners = 0;
-        for (const owner of pool.owners) {
-            const addressInfo = await API.accountsAddresses(owner);
-            for (const address of addressInfo) {
-                const addressI = await API.addresses(address.address);
-                totalBalanceOfPoolOwners += Number.parseInt(addressI.amount.find(a => a.unit === 'lovelace')?.quantity || '0');
-            }
-        }
+        // Metadata, relays, registration tx and owner balances are independent —
+        // fetch them in parallel (owner balances fan out per owner address).
+        const [poolMetadata, relays, createTx, ownerBalances] = await Promise.all([
+            blockfrost.poolMetadata(poolId),
+            blockfrost.poolsByIdRelays(poolId),
+            getTransactions(pool.registration[0]),
+            Promise.all(pool.owners.map(async (owner) => {
+                const addressInfo = await API.accountsAddresses(owner);
+                const addresses = await Promise.all(addressInfo.map((a) => API.addresses(a.address)));
+                return addresses.reduce(
+                    (sum, addr) => sum + Number.parseInt(addr.amount.find((x) => x.unit === 'lovelace')?.quantity || '0'),
+                    0
+                );
+            }))
+        ]);
+        const totalBalanceOfPoolOwners = ownerBalances.reduce((a, b) => a + b, 0);
         res.json({
             data: {
                 poolName: poolMetadata.name || 'Unknown Pool',
