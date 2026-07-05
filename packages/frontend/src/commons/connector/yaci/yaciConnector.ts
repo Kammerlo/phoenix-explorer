@@ -432,84 +432,86 @@ export class YaciConnector extends ConnectorBase {
   }
 
   async search(query: string): Promise<ApiReturnType<SearchResult[]>> {
-    const q = query.trim();
-    if (!q || q.length < 2) return { data: [], lastUpdated: Date.now(), total: 0 };
+    return this.requestList<SearchResult>(async () => {
+      const q = query.trim();
+      if (!q || q.length < 2) return { data: [], extras: { total: 0 } };
 
-    const probe = async <T>(fn: () => Promise<T>): Promise<T | null> => {
-      try { return await fn(); } catch { return null; }
-    };
+      const probe = async <T>(fn: () => Promise<T>): Promise<T | null> => {
+        try { return await fn(); } catch { return null; }
+      };
 
-    const results: SearchResult[] = [];
+      const results: SearchResult[] = [];
 
-    // Governance action: {64hex}#{index}
-    const govMatch = /^([0-9a-f]{64})#(\d+)$/i.exec(q);
-    if (govMatch) {
-      const [, txHash, indexStr] = govMatch;
-      const idx = Number(indexStr);
-      const [govResult, txResult] = await Promise.all([
-        probe(() => this.client.get<GovActionProposal[]>(`${this.baseUrl}/governance/proposals/${txHash}`)),
-        probe(() => this.client.get(`${this.baseUrl}/txs/${txHash}`)),
-      ]);
-      const matched = govResult?.data?.some((p) => p.index === idx) ?? false;
-      if (matched) results.push({ type: "gov_action", id: txHash, extraId: indexStr });
-      else if (txResult) results.push({ type: "transaction", id: txHash });
-      return { data: results, lastUpdated: Date.now(), total: results.length };
-    }
+      // Governance action: {64hex}#{index}
+      const govMatch = /^([0-9a-f]{64})#(\d+)$/i.exec(q);
+      if (govMatch) {
+        const [, txHash, indexStr] = govMatch;
+        const idx = Number(indexStr);
+        const [govResult, txResult] = await Promise.all([
+          probe(() => this.client.get<GovActionProposal[]>(`${this.baseUrl}/governance/proposals/${txHash}`)),
+          probe(() => this.client.get(`${this.baseUrl}/txs/${txHash}`)),
+        ]);
+        const matched = govResult?.data?.some((p) => p.index === idx) ?? false;
+        if (matched) results.push({ type: "gov_action", id: txHash, extraId: indexStr });
+        else if (txResult) results.push({ type: "transaction", id: txHash });
+        return { data: results, extras: { total: results.length } };
+      }
 
-    // 64-char hex: transaction hash OR block hash
-    if (/^[0-9a-f]{64}$/i.test(q)) {
-      const [txResult, blockResult] = await Promise.all([
-        probe(() => this.client.get<any>(`${this.baseUrl}/txs/${q}`)),
-        probe(() => this.client.get<BlockDto>(`${this.baseUrl}/blocks/${q}`)),
-      ]);
-      if (txResult) results.push({ type: "transaction", id: q });
-      if (blockResult) results.push({ type: "block", id: q, label: blockResult.data?.number != null ? String(blockResult.data.number) : undefined });
-      return { data: results, lastUpdated: Date.now(), total: results.length };
-    }
+      // 64-char hex: transaction hash OR block hash
+      if (/^[0-9a-f]{64}$/i.test(q)) {
+        const [txResult, blockResult] = await Promise.all([
+          probe(() => this.client.get<any>(`${this.baseUrl}/txs/${q}`)),
+          probe(() => this.client.get<BlockDto>(`${this.baseUrl}/blocks/${q}`)),
+        ]);
+        if (txResult) results.push({ type: "transaction", id: q });
+        if (blockResult) results.push({ type: "block", id: q, label: blockResult.data?.number != null ? String(blockResult.data.number) : undefined });
+        return { data: results, extras: { total: results.length } };
+      }
 
-    // 56-char hex: policy ID — yaci-store has no policy-existence endpoint; emit no result.
-    if (/^[0-9a-f]{56}$/i.test(q)) {
-      return { data: results, lastUpdated: Date.now(), total: results.length };
-    }
+      // 56-char hex: policy ID — yaci-store has no policy-existence endpoint; emit no result.
+      if (/^[0-9a-f]{56}$/i.test(q)) {
+        return { data: results, extras: { total: results.length } };
+      }
 
-    // addr1... payment address — format-valid bech32
-    if (/^addr1[a-z0-9]+$/i.test(q)) {
-      results.push({ type: "address", id: q });
-      return { data: results, lastUpdated: Date.now(), total: results.length };
-    }
+      // addr1... payment address — format-valid bech32
+      if (/^addr1[a-z0-9]+$/i.test(q)) {
+        results.push({ type: "address", id: q });
+        return { data: results, extras: { total: results.length } };
+      }
 
-    // stake1... stake address — format-valid bech32
-    if (/^stake1[a-z0-9]+$/i.test(q)) {
-      results.push({ type: "stake", id: q });
-      return { data: results, lastUpdated: Date.now(), total: results.length };
-    }
+      // stake1... stake address — format-valid bech32
+      if (/^stake1[a-z0-9]+$/i.test(q)) {
+        results.push({ type: "stake", id: q });
+        return { data: results, extras: { total: results.length } };
+      }
 
-    // pool1... stake pool — yaci-store has no /pools/{poolId} detail endpoint.
-    if (/^pool1[a-z0-9]{50,}$/i.test(q)) {
-      return { data: results, lastUpdated: Date.now(), total: results.length };
-    }
+      // pool1... stake pool — yaci-store has no /pools/{poolId} detail endpoint.
+      if (/^pool1[a-z0-9]{50,}$/i.test(q)) {
+        return { data: results, extras: { total: results.length } };
+      }
 
-    // drep1... DRep — yaci-store has no /governance/dreps/{id} detail endpoint.
-    if (/^drep1[a-z0-9]+$/i.test(q)) {
-      return { data: results, lastUpdated: Date.now(), total: results.length };
-    }
+      // drep1... DRep — yaci-store has no /governance/dreps/{id} detail endpoint.
+      if (/^drep1[a-z0-9]+$/i.test(q)) {
+        return { data: results, extras: { total: results.length } };
+      }
 
-    // asset1... token fingerprint
-    if (/^asset1[a-z0-9]+$/i.test(q)) {
-      results.push({ type: "token", id: q });
-      return { data: results, lastUpdated: Date.now(), total: results.length };
-    }
+      // asset1... token fingerprint
+      if (/^asset1[a-z0-9]+$/i.test(q)) {
+        results.push({ type: "token", id: q });
+        return { data: results, extras: { total: results.length } };
+      }
 
-    // Pure number: block only (yaci-store has no /epochs/{n} detail endpoint).
-    if (/^\d+$/.test(q)) {
-      const n = Number(q);
-      const blockResult = await probe(() => this.client.get<BlockDto>(`${this.baseUrl}/blocks/${n}`));
-      if (blockResult) results.push({ type: "block", id: q, label: String(n) });
-      return { data: results, lastUpdated: Date.now(), total: results.length };
-    }
+      // Pure number: block only (yaci-store has no /epochs/{n} detail endpoint).
+      if (/^\d+$/.test(q)) {
+        const n = Number(q);
+        const blockResult = await probe(() => this.client.get<BlockDto>(`${this.baseUrl}/blocks/${n}`));
+        if (blockResult) results.push({ type: "block", id: q, label: String(n) });
+        return { data: results, extras: { total: results.length } };
+      }
 
-    // Free-text: yaci-store has no /assets listing/search endpoint.
-    return { data: results, lastUpdated: Date.now(), total: results.length };
+      // Free-text: yaci-store has no /assets listing/search endpoint.
+      return { data: results, extras: { total: results.length } };
+    });
   }
 
   async getDashboardStats(): Promise<ApiReturnType<DashboardStats>> {
