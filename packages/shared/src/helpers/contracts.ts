@@ -187,7 +187,8 @@ export async function buildContracts(args: BuildContractsArgs): Promise<IContrac
     let datumBytesOut = "";
 
     if (purpose === "SPEND") {
-      const input = spendInputs[num(pick(r, "tx_index", "txIndex"))];
+      // Blockfrost calls the spend-input pointer `tx_index`; yaci-store calls it `index`.
+      const input = spendInputs[num(pick(r, "tx_index", "txIndex", "index"))];
       if (input) {
         address = input.address;
         datumHashIn = input.dataHash ?? "";
