@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
+  Alert,
   Box,
   Typography,
   useTheme,
@@ -109,6 +110,16 @@ const DrepDetail = () => {
     );
   }
 
+  if (data?.error || !data?.data) {
+    return (
+      <StyledContainer>
+        <Alert severity="error" sx={{ mb: 2, textAlign: "left" }}>
+          {data?.error ?? "DRep could not be loaded"}
+        </Alert>
+      </StyledContainer>
+    );
+  }
+
   return (
     <StyledContainer>
       <DetailHeader
@@ -116,7 +127,7 @@ const DrepDetail = () => {
         title={
           <TruncateSubTitleContainer mr={isMobile ? 2 : 0}>
             <DynamicEllipsisText
-              value={data?.data.givenName || data?.data.drepId || ""}
+              value={data?.data?.givenName || data?.data?.drepId || ""}
               sxFirstPart={{ maxWidth: !isMobile ? "calc(100% - 130px)" : "calc(100% - 70px)" }}
               postfix={5}
               isNoLimitPixel={true}
@@ -126,7 +137,7 @@ const DrepDetail = () => {
         }
         loading={false}
         listItem={listOverview}
-        stakeKeyStatus={data?.data.status}
+        stakeKeyStatus={data?.data?.status}
       />
 
       {/* Vote Distribution Section */}
@@ -138,7 +149,7 @@ const DrepDetail = () => {
               {t("drep.lifetimeVotes")}
             </TitleCard>
           </Box>
-          {data?.data.votes?.total > 0 && (
+          {data?.data?.votes?.total > 0 && (
             <Box display="flex" alignItems="center" gap={1}>
               <Typography variant="body2" color="secondary.light">
                 Total Votes:
@@ -149,7 +160,7 @@ const DrepDetail = () => {
             </Box>
           )}
         </Box>
-        <DrepVoteChart votes={data?.data.votes} />
+        <DrepVoteChart votes={data?.data?.votes} />
       </Box>
 
       {/* Drep Details Tabs */}
@@ -177,7 +188,7 @@ const getDrepOverviewCards = (
     value: (
       <ValueCard>
         <DynamicEllipsisText
-          value={data?.data.drepId || ""}
+          value={data?.data?.drepId || ""}
           sxFirstPart={{ maxWidth: "160px" }}
           postfix={8}
           isNoLimitPixel={true}
@@ -195,15 +206,15 @@ const getDrepOverviewCards = (
       <ValueCard>
         <Box sx={{ maxWidth: 200, wordBreak: "break-all", whiteSpace: "normal" }}>
           <DynamicEllipsisText
-            value={`Hash: ${data?.data.anchorHash || ""}`}
+            value={`Hash: ${data?.data?.anchorHash || ""}`}
             sxFirstPart={{ maxWidth: "100%" }}
             postfix={10}
             isNoLimitPixel={true}
             isCopy={true}
-            isTooltip={!!data?.data.anchorHash?.length}
+            isTooltip={!!data?.data?.anchorHash?.length}
           />
         </Box>
-        {data?.data.anchorUrl && (
+        {data?.data?.anchorUrl && (
           <Box
             position="relative"
             component="span"
@@ -211,7 +222,7 @@ const getDrepOverviewCards = (
             color={`${theme.palette.primary.main} !important`}
           >
             <DynamicEllipsisText
-              value={data?.data.anchorUrl || ""}
+              value={data?.data?.anchorUrl || ""}
               sxFirstPart={{ maxWidth: "calc(100% - 60px)", minWidth: 16 }}
               customTruncateFold={[4, 4]}
               postfix={5}
@@ -226,9 +237,9 @@ const getDrepOverviewCards = (
           open={openModal}
           onClose={() => setOpenModal(false)}
           anchorUrl={
-            data?.data.anchorUrl
-              ? data?.data.anchorUrl.includes("http")
-                ? data?.data.anchorUrl
+            data?.data?.anchorUrl
+              ? data?.data?.anchorUrl.includes("http")
+                ? data?.data?.anchorUrl
                 : `//${data.data.anchorUrl}`
               : ""
           }
@@ -242,7 +253,7 @@ const getDrepOverviewCards = (
     title: <TitleCard display="flex" alignItems="center">{t("createdAt")}</TitleCard>,
     value: (
       <DatetimeTypeTooltip>
-        <ValueCard>{formatDateTimeLocal(data?.data.createdAt || "")}</ValueCard>
+        <ValueCard>{formatDateTimeLocal(data?.data?.createdAt || "")}</ValueCard>
       </DatetimeTypeTooltip>
     )
   },
@@ -252,8 +263,8 @@ const getDrepOverviewCards = (
     title: <TitleCard display="flex" alignItems="center">{t("drep.activeVoteStake")}</TitleCard>,
     value: (
       <ValueCard>
-        {data?.data.activeVoteStake != null
-          ? `${formatADA(data?.data.activeVoteStake || 0)} ADA`
+        {data?.data?.activeVoteStake != null
+          ? `${formatADA(data?.data?.activeVoteStake || 0)} ADA`
           : t("common.N/A")}
       </ValueCard>
     )
@@ -264,11 +275,11 @@ const getDrepOverviewCards = (
     title: <TitleCard display="flex" alignItems="center">{t("glossary.delegators")}</TitleCard>,
     value: (
       <ValueCard>
-        {data?.data.delegators != null ? numberWithCommas(data.data.delegators.toString(), 0) : "—"}
+        {data?.data?.delegators != null ? numberWithCommas(data.data.delegators.toString(), 0) : "—"}
       </ValueCard>
     )
   },
-  ...(data?.data.govParticipationRate !== undefined && data.data.govParticipationRate > 0
+  ...(data?.data?.govParticipationRate !== undefined && data.data.govParticipationRate > 0
     ? [
         {
           icon: GovernanceIcon,
@@ -278,7 +289,7 @@ const getDrepOverviewCards = (
         }
       ]
     : []),
-  ...(data?.data.votingPower !== undefined
+  ...(data?.data?.votingPower !== undefined
     ? [
         {
           icon: VotingPowerIcon,
@@ -288,7 +299,7 @@ const getDrepOverviewCards = (
         }
       ]
     : []),
-  ...(data?.data.updatedAt && data.data.updatedAt !== data.data.createdAt
+  ...(data?.data?.updatedAt && data.data.updatedAt !== data.data.createdAt
     ? [
         {
           icon: CreateDrepIcon,

@@ -2,7 +2,7 @@ import {Router} from "express";
 import {API, POOL_API} from "../config/blockfrost";
 import {Block} from "@shared/dtos/block.dto";
 import {ApiReturnType} from "@shared/APIReturnType";
-import {getBlock, getTransactions} from "../config/cache";
+import {getBlock, getBlockTxs, getTransactions} from "../config/cache";
 import {Transaction} from "@shared/dtos/transaction.dto";
 import {computeTxTags, computeTotalLovelaceOutput} from "@shared/helpers/txTags";
 
@@ -170,12 +170,17 @@ blockController.get('/:blockId', async (req, res) => {
 
 blockController.get('/:blockId/transactions', async (req, res) => {
   const block = await getBlock(req.params.blockId);
-  const blockTransactions = await API.blocksTxs(block.hash);
-  const txs : Transaction[] = [];
-  for(const txHash of blockTransactions) {
-    const tx = await getTransactions(txHash);
+  const txHashes = await getBlockTxs(block.hash);
 
-    txs.push({
+  // Server-side pagination: only the requested page of tx details is fetched
+  // (in parallel, through the cache). The full hash list gives a real total.
+  const page = Math.max(1, Number.parseInt(String(req.query.page ?? 1)));
+  const size = Math.min(100, Number.parseInt(String(req.query.size ?? 20)));
+  const pageHashes = txHashes.slice((page - 1) * size, page * size);
+
+  const txs: Transaction[] = await Promise.all(pageHashes.map(async (txHash) => {
+    const tx = await getTransactions(txHash);
+    return {
       blockNo: tx.block_height ?? 0,
       hash: txHash,
       time: tx.block_time.toString(),
@@ -186,14 +191,15 @@ blockController.get('/:blockId/transactions', async (req, res) => {
       totalOutput: computeTotalLovelaceOutput(tx.output_amount),
       blockHash: block.hash,
       tags: computeTxTags(tx),
-    } as Transaction);
-  }
+    } as Transaction;
+  }));
+
   res.json({
-    total: txs.length,
+    total: txHashes.length,
     data: txs,
     lastUpdated: Date.now(),
-    currentPage: Number.parseInt(String(req.query.page ?? 0)),
-    pageSize: Number.parseInt(String(req.query.size ?? 10)),
-    totalPages: Math.ceil(txs.length / (req.query.size ? Number.parseInt(String(req.query.size)) : 100)),
+    currentPage: page - 1,
+    pageSize: size,
+    totalPages: Math.ceil(txHashes.length / size),
   } as ApiReturnType<Transaction[]>);
 })

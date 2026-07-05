@@ -359,6 +359,7 @@ const Epoch: React.FC = () => {
         <Table
           data={epochData?.data || []}
           columns={columns}
+          error={epochData?.error}
           total={{ title: t("common.totalEpochs"), count: epochData?.total || 0 }}
           onClickRow={handleClickRow}
           rowKey="no"

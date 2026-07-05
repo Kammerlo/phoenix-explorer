@@ -11,7 +11,7 @@ import { ApiReturnType } from "@shared/APIReturnType";
 import { DashboardStats } from "@shared/dtos/dashboard.dto";
 import { EpochOverview } from "@shared/dtos/epoch.dto";
 import { Block } from "@shared/dtos/block.dto";
-import { Transaction, TransactionDetail, TRANSACTION_STATUS, Token, TPoolCertificated } from "@shared/dtos/transaction.dto";
+import { IContractItemTx, Transaction, TransactionDetail } from "@shared/dtos/transaction.dto";
 import { ITokenOverview, TokenHolder } from "@shared/dtos/token.dto";
 import { AddressDetail, StakeAddressDetail } from "@shared/dtos/address.dto";
 import { PoolDetail, PoolOverview } from "@shared/dtos/pool.dto";
@@ -24,6 +24,7 @@ import {
 } from "@shared/dtos/GovernanceOverview";
 import { computeTxTags, computeTotalLovelaceOutput } from "@shared/helpers/txTags";
 import { buildContracts } from "@shared/helpers/contracts";
+import { buildTransactionDetail } from "@shared/helpers/txDetail";
 import { getEpochStatus, getEpochProgress, computeEpochSlotNo, MAINNET_EPOCH_MAX_SLOT } from "@shared/helpers/epochHelpers";
 import { mapBfProtocolParams, BfProtocolParamsRaw } from "./mapper/protocolParams";
 
@@ -55,9 +56,6 @@ export class BlockfrostConnector extends ConnectorBase {
       "getWalletAddressFromAddress",
       "getAddressTxsFromAddress",
       "getWalletStakeFromAddress",
-      "getStakeAddressRegistrations",
-      "getStakeDelegations",
-      "getPoolRegistrations",
       "getPoolList",
       "getPoolDetail",
       "getCurrentProtocolParameters",
@@ -81,7 +79,7 @@ export class BlockfrostConnector extends ConnectorBase {
   // ── Epochs ────────────────────────────────────────────────────────────────
 
   async getEpochs(pageInfo: ParsedUrlQuery): Promise<ApiReturnType<EpochOverview[]>> {
-    try {
+    return this.requestList<EpochOverview>(async () => {
       const latest = await this.client.get<BfEpoch>("/epochs/latest");
       // Frontend pagination is 1-based; accept legacy 0 as "first page".
       const page = Math.max(1, Number(pageInfo.page ?? 1));
@@ -93,32 +91,29 @@ export class BlockfrostConnector extends ConnectorBase {
       if (page === 1) epochs.unshift(bfEpochToOverview(latest.data, latest.data.epoch));
       return {
         data: epochs.reverse(),
-        total: (latest.data.epoch ?? 0) + 1,
-        lastUpdated: Date.now(),
-        currentPage: page - 1, // FooterTable expects 0-based
-        pageSize: count,
+        extras: {
+          total: (latest.data.epoch ?? 0) + 1,
+          currentPage: page - 1, // FooterTable expects 0-based
+          pageSize: count
+        }
       };
-    } catch (e: any) {
-      return { data: [], error: e.message, lastUpdated: Date.now() };
-    }
+    });
   }
 
   async getEpoch(epochId: number): Promise<ApiReturnType<EpochOverview>> {
-    try {
+    return this.request<EpochOverview>(async () => {
       const [epoch, latest] = await Promise.all([
         this.client.get<BfEpoch>(`/epochs/${epochId}`),
         this.client.get<BfEpoch>("/epochs/latest")
       ]);
-      return { data: bfEpochToOverview(epoch.data, latest.data.epoch), lastUpdated: Date.now() };
-    } catch (e: any) {
-      return { data: null, error: e.message, lastUpdated: Date.now() };
-    }
+      return bfEpochToOverview(epoch.data, latest.data.epoch);
+    });
   }
 
   // ── Blocks ────────────────────────────────────────────────────────────────
 
   async getBlocksPage(pageInfo: ParsedUrlQuery): Promise<ApiReturnType<Block[]>> {
-    try {
+    return this.requestList<Block>(async () => {
       const latest = await this.client.get<BfBlock>("/blocks/latest");
       const requestedPage = Math.max(1, Number(pageInfo.page ?? 1));
       const count = Number(pageInfo.size ?? 20);
@@ -145,18 +140,17 @@ export class BlockfrostConnector extends ConnectorBase {
 
       return {
         data: allBlocks.map(b => bfBlockToBlock(b, poolMeta)).reverse(),
-        total: latest.data.height ?? 0,
-        lastUpdated: Date.now(),
-        currentPage: requestedPage - 1,
-        pageSize: count,
+        extras: {
+          total: latest.data.height ?? 0,
+          currentPage: requestedPage - 1,
+          pageSize: count
+        }
       };
-    } catch (e: any) {
-      return { data: [], error: e.message, lastUpdated: Date.now() };
-    }
+    });
   }
 
   async getBlocksByEpoch(epoch: number, pageInfo: ParsedUrlQuery): Promise<ApiReturnType<Block[]>> {
-    try {
+    return this.requestList<Block>(async () => {
       // Frontend pagination is 1-based; accept legacy 0 as "first page".
       const page = Math.max(1, Number(pageInfo.page ?? 1));
       const count = Number(pageInfo.size ?? 20);
@@ -169,24 +163,21 @@ export class BlockfrostConnector extends ConnectorBase {
       const blocks = rawBlocks.map(b => bfBlockToBlock(b, poolMeta));
       return {
         data: blocks,
-        total: epochResp.data.block_count,
-        lastUpdated: Date.now(),
-        currentPage: page - 1, // FooterTable expects 0-based
-        pageSize: count,
+        extras: {
+          total: epochResp.data.block_count,
+          currentPage: page - 1, // FooterTable expects 0-based
+          pageSize: count
+        }
       };
-    } catch (e: any) {
-      return { data: [], error: e.message, lastUpdated: Date.now() };
-    }
+    });
   }
 
   async getBlockDetail(blockId: string): Promise<ApiReturnType<Block>> {
-    try {
+    return this.request<Block>(async () => {
       const raw = await this._fetchBlockRaw(blockId);
       const poolMeta = await this._fetchPoolMetaBatch([raw.slot_leader]);
-      return { data: bfBlockToBlock(raw, poolMeta), lastUpdated: Date.now() };
-    } catch (e: any) {
-      return { data: null, error: e.message, lastUpdated: Date.now() };
-    }
+      return bfBlockToBlock(raw, poolMeta);
+    });
   }
 
   private async _fetchBlockRaw(blockId: string | number): Promise<BfBlock> {
@@ -209,7 +200,7 @@ export class BlockfrostConnector extends ConnectorBase {
   // ── Transactions ──────────────────────────────────────────────────────────
 
   async getTransactions(blockId: number | string | undefined, pageInfo: ParsedUrlQuery): Promise<ApiReturnType<Transaction[]>> {
-    try {
+    return this.requestList<Transaction>(async () => {
       const page = Math.max(1, Number(pageInfo.page ?? 1));
       const size = Math.min(100, Number(pageInfo.size ?? 20));
 
@@ -222,10 +213,11 @@ export class BlockfrostConnector extends ConnectorBase {
         );
         return {
           data: txs,
-          total: txs.length,
-          lastUpdated: Date.now(),
-          currentPage: page - 1,
-          pageSize: size,
+          extras: {
+            total: txs.length,
+            currentPage: page - 1,
+            pageSize: size
+          }
         };
       }
 
@@ -270,187 +262,88 @@ export class BlockfrostConnector extends ConnectorBase {
 
       return {
         data: txs,
-        total: latestBlock.height ?? 10000,
-        lastUpdated: Date.now(),
-        currentPage: page - 1,
-        pageSize: size,
+        extras: {
+          total: latestBlock.height ?? 10000,
+          currentPage: page - 1,
+          pageSize: size
+        }
       };
-    } catch (e: any) {
-      return { data: [], error: e.message, lastUpdated: Date.now() };
-    }
+    });
   }
 
   async getTxDetail(txHash: string): Promise<ApiReturnType<TransactionDetail>> {
-    try {
+    return this.request(async () => {
       const [txResp, utxosResp, metaResp] = await Promise.all([
         this.client.get<BfTx>(`/txs/${txHash}`),
         this.client.get<BfTxUtxos>(`/txs/${txHash}/utxos`),
-        this.client.get<any[]>(`/txs/${txHash}/metadata`).catch(() => ({ data: [] }))
+        this.client.get<any[]>(`/txs/${txHash}/metadata`).catch(() => ({ data: [] as any[] }))
       ]);
       const tx = txResp.data;
-      const block = await this._fetchBlockRaw(tx.block);
+      const utxos = utxosResp.data;
 
-      const metadata = (metaResp as any).data?.length
-        ? (metaResp as any).data.map((m: any) => ({ label: parseInt(m.label, 10), value: m.json_metadata != null ? JSON.stringify(m.json_metadata) : (m.cbor_metadata ?? "null") }))
-        : undefined;
+      // Certificate lists whose counts are zero resolve to [] without a request.
+      const optional = (count: number | undefined, path: string): Promise<any[]> =>
+        (count ?? 0) > 0
+          ? this.client.get<any[]>(path).then((r) => r.data ?? []).catch(() => [])
+          : Promise.resolve([]);
 
-      // Build summary map from UTXOs — matches gateway transactionService
-      const summaryMap: Record<string, { address: string; value: number; tokens: Token[] }> = {};
-      const allUtxos = [
-        ...(utxosResp.data.inputs ?? []).map(u => ({ ...u, _isOutput: false })),
-        ...(utxosResp.data.outputs ?? []).map(u => ({ ...u, _isOutput: true })),
-      ];
-      for (const u of allUtxos) {
-        if ((u as any).reference) continue;
-        const lovelace = parseInt(u.amount?.find((a: any) => a.unit === "lovelace")?.quantity ?? "0");
-        // Outputs received → positive, inputs sent → negative (Summary reads value > 0 as received).
-        const signed = u._isOutput ? lovelace : -lovelace;
-        if (!summaryMap[u.address]) {
-          summaryMap[u.address] = { address: u.address, value: 0, tokens: [] };
+      const [block, delegations, withdrawals, stakes, poolUpdates, poolRetires, mirs, contracts] =
+        await Promise.all([
+          this._fetchBlockRaw(tx.block),
+          optional(tx.delegation_count, `/txs/${txHash}/delegations`),
+          optional(tx.withdrawal_count, `/txs/${txHash}/withdrawals`),
+          optional(tx.stake_cert_count, `/txs/${txHash}/stakes`),
+          optional(tx.pool_update_count, `/txs/${txHash}/pool_updates`),
+          optional(tx.pool_retire_count, `/txs/${txHash}/pool_retires`),
+          optional(tx.mir_cert_count, `/txs/${txHash}/mirs`),
+          (tx.redeemer_count ?? 0) > 0 ? this._buildTxContracts(txHash, utxos) : Promise.resolve([])
+        ]);
+
+      // Same shared assembly as the gateway (see @shared/helpers/txDetail). The
+      // browser build skips asset-metadata enrichment (no resolveAsset) so it
+      // doesn't pay one request per token from the client.
+      return buildTransactionDetail({
+        tx,
+        block,
+        utxos,
+        metadata: (metaResp as { data: any[] }).data ?? [],
+        delegations,
+        withdrawals,
+        stakes,
+        poolUpdates,
+        poolRetires,
+        mirs,
+        contracts
+      });
+    });
+  }
+
+  // Smart-contract enrichment — identical assembly to the gateway via the
+  // shared builder, just with axios-backed resolvers. Best-effort.
+  private async _buildTxContracts(txHash: string, utxos: BfTxUtxos): Promise<IContractItemTx[]> {
+    try {
+      const redeemersResp = await this.client
+        .get<any[]>(`/txs/${txHash}/redeemers`)
+        .catch(() => ({ data: [] as any[] }));
+      return await buildContracts({
+        redeemers: (redeemersResp as { data: any[] }).data ?? [],
+        inputs: utxos.inputs ?? [],
+        outputs: utxos.outputs ?? [],
+        resolvers: {
+          scriptCbor: (hash) =>
+            this.client
+              .get<{ cbor: string | null }>(`/scripts/${hash}/cbor`)
+              .then((r) => r.data?.cbor ?? null)
+              .catch(() => null),
+          datumCbor: (hash) =>
+            this.client
+              .get<{ cbor: string | null }>(`/scripts/datum/${hash}/cbor`)
+              .then((r) => r.data?.cbor ?? null)
+              .catch(() => null)
         }
-        summaryMap[u.address].value += signed;
-
-        for (const a of (u.amount ?? []).filter((a: any) => a.unit !== "lovelace")) {
-          const qty = parseInt(a.quantity) * (u._isOutput ? 1 : -1);
-          const existing = summaryMap[u.address].tokens.find(t => t.assetId === a.unit);
-          if (existing) { existing.assetQuantity += qty; }
-          else { summaryMap[u.address].tokens.push({ assetName: a.unit.slice(56), assetQuantity: qty, assetId: a.unit, policy: { policyId: a.unit.slice(0, 56) } }); }
-        }
-      }
-      // Filter zero-quantity tokens
-      for (const addr of Object.keys(summaryMap)) {
-        summaryMap[addr].tokens = summaryMap[addr].tokens.filter(t => t.assetQuantity !== 0);
-      }
-
-      // Separate UTXOs and collaterals — matches gateway
-      const inputUtxos = (utxosResp.data.inputs ?? []).filter((u: any) => !u.collateral && !u.reference).map(bfUtxoToUtxo);
-      const outputUtxos = (utxosResp.data.outputs ?? []).filter((u: any) => !u.collateral).map(bfUtxoToUtxo);
-      const inputCollaterals = (utxosResp.data.inputs ?? []).filter((u: any) => u.collateral).map(bfUtxoToUtxo);
-      const outputCollaterals = (utxosResp.data.outputs ?? []).filter((u: any) => u.collateral).map(bfUtxoToUtxo);
-
-      const detail: TransactionDetail = {
-        tx: {
-          hash: tx.hash,
-          time: tx.block_time.toString(),
-          blockNo: tx.block_height ?? 0,
-          blockHash: tx.block,
-          epochSlot: block.epoch_slot ?? 0,
-          epochNo: block.epoch ?? 0,
-          status: TRANSACTION_STATUS.SUCCESS,
-          confirmation: block.confirmations ?? 0,
-          fee: parseInt(tx.fees ?? "0"),
-          totalOutput: computeTotalLovelaceOutput(tx.output_amount ?? []),
-          maxEpochSlot: block.epoch_slot ?? 0,
-          slotNo: tx.slot ?? 0,
-          tags: computeTxTags(tx)
-        },
-        summary: { stakeAddress: Object.values(summaryMap) },
-        utxOs: { inputs: inputUtxos, outputs: outputUtxos },
-        collaterals: { collateralInputResponses: inputCollaterals, collateralOutputResponses: outputCollaterals },
-        metadata,
-        metadataHash: ""
-      };
-
-      // Fetch delegations — matches gateway
-      if ((tx.delegation_count ?? 0) > 0) {
-        const delegResp = await this.client.get<any[]>(`/txs/${txHash}/delegations`).catch(() => ({ data: [] }));
-        detail.delegations = (delegResp.data ?? []).map((d: any) => ({ address: d.address, poolId: d.pool_id }));
-      }
-
-      // Fetch withdrawals
-      if ((tx.withdrawal_count ?? 0) > 0) {
-        const wdResp = await this.client.get<any[]>(`/txs/${txHash}/withdrawals`).catch(() => ({ data: [] }));
-        detail.withdrawals = (wdResp.data ?? []).map((w: any) => ({
-          stakeAddressFrom: w.address,
-          addressTo: [""],
-          amount: parseInt(w.amount)
-        }));
-      }
-
-      // Fetch stake certificates
-      if ((tx.stake_cert_count ?? 0) > 0) {
-        const stakeResp = await this.client.get<any[]>(`/txs/${txHash}/stakes`).catch(() => ({ data: [] }));
-        detail.stakeCertificates = (stakeResp.data ?? []).map((s: any) => ({
-          stakeAddress: s.address,
-          type: s.registration ? "STAKE_REGISTRATION" : "STAKE_DEREGISTRATION"
-        }));
-      }
-
-      // Fetch pool certificates
-      if ((tx.pool_update_count ?? 0) > 0 || (tx.pool_retire_count ?? 0) > 0) {
-        const certs: TPoolCertificated[] = [];
-        if ((tx.pool_update_count ?? 0) > 0) {
-          const updResp = await this.client.get<any[]>(`/txs/${txHash}/pool_updates`).catch(() => ({ data: [] }));
-          certs.push(...(updResp.data ?? []).map((cert: any) => ({
-            cost: parseInt(cert.fixed_cost ?? "0"),
-            margin: cert.margin_cost ?? 0,
-            metadataHash: cert.metadata?.hash ?? "",
-            metadataUrl: cert.metadata?.url ?? "",
-            pledge: parseInt(cert.pledge ?? "0"),
-            poolId: cert.pool_id,
-            poolOwners: cert.owners ?? [],
-            relays: (cert.relays ?? []).map((r: any) => ({
-              dnsName: r.dns ?? "", dnsSrvName: r.dns_srv ?? "", ipv4: r.ipv4 ?? "", ipv6: r.ipv6 ?? "", port: r.port
-            })),
-            rewardAccount: cert.reward_account ?? "",
-            type: "POOL_REGISTRATION" as const,
-            vrfKey: cert.vrf_key ?? "",
-            epoch: cert.active_epoch ?? 0,
-          })));
-        }
-        if ((tx.pool_retire_count ?? 0) > 0) {
-          const retResp = await this.client.get<any[]>(`/txs/${txHash}/pool_retires`).catch(() => ({ data: [] }));
-          certs.push(...(retResp.data ?? []).map((cert: any) => ({
-            poolId: cert.pool_id,
-            epoch: cert.retiring_epoch ?? 0,
-            type: "POOL_DEREGISTRATION" as const,
-          } as TPoolCertificated)));
-        }
-        detail.poolCertificates = certs;
-      }
-
-      // Fetch MIR certificates
-      if ((tx.mir_cert_count ?? 0) > 0) {
-        const mirResp = await this.client.get<any[]>(`/txs/${txHash}/mirs`).catch(() => ({ data: [] }));
-        detail.instantaneousRewards = (mirResp.data ?? []).map((m: any) => ({
-          amount: m.amount,
-          stakeAddress: m.address
-        }));
-      }
-
-      // Smart-contract enrichment — identical assembly to the gateway via the
-      // shared builder, just with axios-backed resolvers. Best-effort.
-      if ((tx.redeemer_count ?? 0) > 0) {
-        try {
-          const redeemersResp = await this.client
-            .get<any[]>(`/txs/${txHash}/redeemers`)
-            .catch(() => ({ data: [] }));
-          const contracts = await buildContracts({
-            redeemers: redeemersResp.data ?? [],
-            inputs: utxosResp.data.inputs ?? [],
-            outputs: utxosResp.data.outputs ?? [],
-            resolvers: {
-              scriptCbor: (hash) =>
-                this.client
-                  .get<{ cbor: string | null }>(`/scripts/${hash}/cbor`)
-                  .then((r) => r.data?.cbor ?? null)
-                  .catch(() => null),
-              datumCbor: (hash) =>
-                this.client
-                  .get<{ cbor: string }>(`/scripts/datum/${hash}/cbor`)
-                  .then((r) => r.data?.cbor ?? null)
-                  .catch(() => null)
-            }
-          });
-          if (contracts.length > 0) detail.contracts = contracts;
-        } catch (err) {
-          // Leave contracts empty; the rest of the detail still renders.
-        }
-      }
-
-      return { data: detail, lastUpdated: Date.now() };
-    } catch (e: any) {
-      return { data: null, error: e.message, lastUpdated: Date.now() };
+      });
+    } catch {
+      return [];
     }
   }
 
@@ -478,7 +371,7 @@ export class BlockfrostConnector extends ConnectorBase {
   // ── Address ───────────────────────────────────────────────────────────────
 
   async getWalletAddressFromAddress(address: string): Promise<ApiReturnType<AddressDetail>> {
-    try {
+    return this.request<AddressDetail>(async () => {
       // Stake addresses: aggregate across the stake key's payment addresses.
       // /addresses/{stake1...} returns 404 from Blockfrost — we have to use the
       // /accounts/* family.
@@ -498,10 +391,7 @@ export class BlockfrostConnector extends ConnectorBase {
           fingerprint: x.unit,
           quantity: parseInt(x.quantity)
         }));
-        return {
-          data: { address, balance, txCount: totals.tx_count ?? 0, tokens, stakeAddress: address, isContract: false },
-          lastUpdated: Date.now()
-        };
+        return { address, balance, txCount: totals.tx_count ?? 0, tokens, stakeAddress: address, isContract: false };
       }
 
       // Payment address: /addresses/{addr} returns balance + tokens but NOT tx_count;
@@ -519,17 +409,12 @@ export class BlockfrostConnector extends ConnectorBase {
         fingerprint: x.unit,
         quantity: parseInt(x.quantity)
       }));
-      return {
-        data: { address, balance, txCount: totalResp.data?.tx_count ?? 0, tokens, stakeAddress: a.stake_address ?? "", isContract: a.script ?? false },
-        lastUpdated: Date.now()
-      };
-    } catch (e: any) {
-      return { data: null, error: e.message, lastUpdated: Date.now() };
-    }
+      return { address, balance, txCount: totalResp.data?.tx_count ?? 0, tokens, stakeAddress: a.stake_address ?? "", isContract: a.script ?? false };
+    });
   }
 
   async getAddressTxsFromAddress(address: string, pageInfo: ParsedUrlQuery): Promise<ApiReturnType<Transaction[]>> {
-    try {
+    return this.requestList<Transaction>(async () => {
       const page = Math.max(1, Number(pageInfo.page ?? 1));
       const count = Number(pageInfo.size ?? 20);
       // Stake addresses use /accounts/{stake}/addresses/transactions (aggregates across
@@ -547,81 +432,65 @@ export class BlockfrostConnector extends ConnectorBase {
           return this._fetchTxSummary(t.tx_hash, block);
         })
       );
-      return { data: txs, lastUpdated: Date.now(), currentPage: page - 1, pageSize: count };
-    } catch (e: any) {
-      return { data: [], error: e.message, lastUpdated: Date.now() };
-    }
+      return { data: txs, extras: { currentPage: page - 1, pageSize: count } };
+    });
   }
 
   async getWalletStakeFromAddress(address: string): Promise<ApiReturnType<StakeAddressDetail>> {
-    try {
+    return this.request<StakeAddressDetail>(async () => {
       const resp = await this.client.get<{ stake_address?: string }>(`/addresses/${address}`);
       const stakeAddr = resp.data.stake_address;
-      if (!stakeAddr) return { data: null, error: "No stake address", lastUpdated: Date.now() };
+      if (!stakeAddr) throw new Error("No stake address");
       const accResp = await this.client.get<any>(`/accounts/${stakeAddr}`);
       const acc = accResp.data;
       return {
-        data: {
-          status: acc.active ? "ACTIVE" : "INACTIVE",
-          stakeAddress: stakeAddr,
-          totalStake: parseInt(acc.controlled_amount ?? "0"),
-          rewardAvailable: parseInt(acc.withdrawable_amount ?? "0"),
-          rewardWithdrawn: parseInt(acc.withdrawals_sum ?? "0"),
-          pool: { tickerName: "", poolName: "", poolId: acc.pool_id ?? "" }
-        },
-        lastUpdated: Date.now()
+        status: acc.active ? "ACTIVE" : "INACTIVE",
+        stakeAddress: stakeAddr,
+        totalStake: parseInt(acc.controlled_amount ?? "0"),
+        rewardAvailable: parseInt(acc.withdrawable_amount ?? "0"),
+        rewardWithdrawn: parseInt(acc.withdrawals_sum ?? "0"),
+        pool: { tickerName: "", poolName: "", poolId: acc.pool_id ?? "" }
       };
-    } catch (e: any) {
-      return { data: null, error: e.message, lastUpdated: Date.now() };
-    }
+    });
   }
 
   // ── Tokens ────────────────────────────────────────────────────────────────
 
   async getTokensPage(pageInfo: ParsedUrlQuery): Promise<ApiReturnType<ITokenOverview[]>> {
-    try {
+    return this.requestList<ITokenOverview>(async () => {
       const page = Math.max(1, Number(pageInfo.page ?? 1));
       const count = Number(pageInfo.size ?? 20);
       const resp = await this.client.get<BfAsset[]>("/assets", { params: { page, count, order: "desc" } });
       return {
         data: (resp.data ?? []).map(bfAssetToTokenOverview),
-        lastUpdated: Date.now(),
-        currentPage: page - 1,
-        pageSize: count,
+        extras: { currentPage: page - 1, pageSize: count }
       };
-    } catch (e: any) {
-      return { data: [], error: e.message, lastUpdated: Date.now() };
-    }
+    });
   }
 
   async getTokenDetail(tokenId: string): Promise<ApiReturnType<ITokenOverview>> {
-    try {
+    return this.request<ITokenOverview>(async () => {
       const resp = await this.client.get<BfAssetDetail>(`/assets/${tokenId}`);
       return {
-        data: {
-          name: resp.data.asset_name ?? tokenId,
-          displayName: (resp.data.onchain_metadata as any)?.name ?? resp.data.asset_name ?? tokenId,
-          policy: resp.data.policy_id ?? tokenId.slice(0, 56),
-          fingerprint: resp.data.fingerprint ?? "",
-          txCount: resp.data.mint_or_burn_count ?? 0,
-          supply: parseInt(resp.data.quantity ?? "0"),
-          metadata: resp.data.metadata ? {
-            ticker: resp.data.metadata.ticker,
-            description: resp.data.metadata.description,
-            url: resp.data.metadata.url,
-            logo: resp.data.metadata.logo,
-            decimals: resp.data.metadata.decimals
-          } : undefined
-        },
-        lastUpdated: Date.now()
+        name: resp.data.asset_name ?? tokenId,
+        displayName: (resp.data.onchain_metadata as any)?.name ?? resp.data.asset_name ?? tokenId,
+        policy: resp.data.policy_id ?? tokenId.slice(0, 56),
+        fingerprint: resp.data.fingerprint ?? "",
+        txCount: resp.data.mint_or_burn_count ?? 0,
+        supply: parseInt(resp.data.quantity ?? "0"),
+        metadata: resp.data.metadata ? {
+          ticker: resp.data.metadata.ticker,
+          description: resp.data.metadata.description,
+          url: resp.data.metadata.url,
+          logo: resp.data.metadata.logo,
+          decimals: resp.data.metadata.decimals
+        } : undefined
       };
-    } catch (e: any) {
-      return { data: null, error: e.message, lastUpdated: Date.now() };
-    }
+    });
   }
 
   async getTokenTransactions(tokenId: string, pageInfo: ParsedUrlQuery): Promise<ApiReturnType<Transaction[]>> {
-    try {
+    return this.requestList<Transaction>(async () => {
       const page = Math.max(1, Number(pageInfo.page ?? 1));
       const count = Number(pageInfo.size ?? 20);
       const resp = await this.client.get<{ tx_hash: string; tx_index: number; block_height: number }[]>(
@@ -633,14 +502,12 @@ export class BlockfrostConnector extends ConnectorBase {
           return this._fetchTxSummary(t.tx_hash, block);
         })
       );
-      return { data: txs, lastUpdated: Date.now(), currentPage: page - 1, pageSize: count };
-    } catch (e: any) {
-      return { data: [], error: e.message, lastUpdated: Date.now() };
-    }
+      return { data: txs, extras: { currentPage: page - 1, pageSize: count } };
+    });
   }
 
   async getTokenHolders(tokenId: string, pageInfo: ParsedUrlQuery): Promise<ApiReturnType<TokenHolder[]>> {
-    try {
+    return this.requestList<TokenHolder>(async () => {
       const page = Math.max(1, Number(pageInfo.page ?? 1));
       const count = Number(pageInfo.size ?? 20);
       const resp = await this.client.get<{ address: string; quantity: string }[]>(
@@ -648,17 +515,13 @@ export class BlockfrostConnector extends ConnectorBase {
       );
       return {
         data: (resp.data ?? []).map((h) => ({ address: h.address, amount: parseInt(h.quantity), ratio: 0 })),
-        lastUpdated: Date.now(),
-        currentPage: page - 1,
-        pageSize: count,
+        extras: { currentPage: page - 1, pageSize: count }
       };
-    } catch (e: any) {
-      return { data: [], error: e.message, lastUpdated: Date.now() };
-    }
+    });
   }
 
   async getTokensByPolicy(policyId: string, pageInfo: ParsedUrlQuery): Promise<ApiReturnType<ITokenOverview[]>> {
-    try {
+    return this.requestList<ITokenOverview>(async () => {
       const page = Math.max(1, Number(pageInfo.page ?? 1));
       const count = Number(pageInfo.size ?? 50);
       const resp = await this.client.get<{ asset: string; quantity: string }[]>(
@@ -670,16 +533,14 @@ export class BlockfrostConnector extends ConnectorBase {
         supply: parseInt(a.quantity),
         fingerprint: a.asset
       }));
-      return { data: tokens, lastUpdated: Date.now(), currentPage: page - 1, pageSize: count };
-    } catch (e: any) {
-      return { data: [], error: e.message, lastUpdated: Date.now() };
-    }
+      return { data: tokens, extras: { currentPage: page - 1, pageSize: count } };
+    });
   }
 
   // ── Governance ────────────────────────────────────────────────────────────
 
   async getGovernanceOverviewList(pageInfo: ParsedUrlQuery): Promise<ApiReturnType<GovernanceActionListItem[]>> {
-    try {
+    return this.requestList<GovernanceActionListItem>(async () => {
       const page = Math.max(1, Number(pageInfo.page ?? 1));
       const count = Number(pageInfo.size ?? 20);
       const resp = await this.client.get<any[]>(
@@ -693,45 +554,38 @@ export class BlockfrostConnector extends ConnectorBase {
         expiredEpoch: p.expired_epoch ?? p.expiration ?? null,
         enactedEpoch: p.enacted_epoch ?? null,
       }));
-      return { data: items, lastUpdated: Date.now(), currentPage: page - 1, pageSize: count };
-    } catch (e: any) {
-      return { data: [], error: e.message, lastUpdated: Date.now() };
-    }
+      return { data: items, extras: { currentPage: page - 1, pageSize: count } };
+    });
   }
 
   async getGovernanceDetail(txHash: string, index: string): Promise<ApiReturnType<GovernanceActionDetail>> {
-    try {
+    return this.request<GovernanceActionDetail>(async () => {
       const resp = await this.client.get<any>(`/governance/proposals/${txHash}/${index}`);
       const p = resp.data;
       return {
-        data: {
-          txHash: p.tx_hash ?? txHash,
-          index: String(p.cert_index ?? index),
-          dateCreated: "",
-          actionType: p.governance_type ?? "",
-          status: (p.expired_epoch ?? p.expired_in) ? "EXPIRED" : (p.ratified_epoch ?? p.enacted_in ?? p.ratified_in) ? "ENACTED" : "ACTIVE",
-          expiredEpoch: p.expired_epoch ?? p.expired_in ?? null,
-          enactedEpoch: p.ratified_epoch ?? p.enacted_in ?? p.ratified_in ?? null,
-          motivation: p.motivation ?? null,
-          rationale: p.rationale ?? null,
-          title: p.title ?? null,
-          authors: null,
-          abstract: p.abstract ?? null,
-          votesStats: {
-            drep: { yes: p.yes_votes?.drep ?? 0, no: p.no_votes?.drep ?? 0, abstain: p.abstain_votes?.drep ?? 0 },
-            spo: { yes: p.yes_votes?.spo ?? 0, no: p.no_votes?.spo ?? 0, abstain: p.abstain_votes?.spo ?? 0 },
-            committee: { yes: p.yes_votes?.committee ?? 0, no: p.no_votes?.committee ?? 0, abstain: p.abstain_votes?.committee ?? 0 }
-          }
-        },
-        lastUpdated: Date.now()
+        txHash: p.tx_hash ?? txHash,
+        index: String(p.cert_index ?? index),
+        dateCreated: "",
+        actionType: p.governance_type ?? "",
+        status: (p.expired_epoch ?? p.expired_in) ? "EXPIRED" : (p.ratified_epoch ?? p.enacted_in ?? p.ratified_in) ? "ENACTED" : "ACTIVE",
+        expiredEpoch: p.expired_epoch ?? p.expired_in ?? null,
+        enactedEpoch: p.ratified_epoch ?? p.enacted_in ?? p.ratified_in ?? null,
+        motivation: p.motivation ?? null,
+        rationale: p.rationale ?? null,
+        title: p.title ?? null,
+        authors: null,
+        abstract: p.abstract ?? null,
+        votesStats: {
+          drep: { yes: p.yes_votes?.drep ?? 0, no: p.no_votes?.drep ?? 0, abstain: p.abstain_votes?.drep ?? 0 },
+          spo: { yes: p.yes_votes?.spo ?? 0, no: p.no_votes?.spo ?? 0, abstain: p.abstain_votes?.spo ?? 0 },
+          committee: { yes: p.yes_votes?.committee ?? 0, no: p.no_votes?.committee ?? 0, abstain: p.abstain_votes?.committee ?? 0 }
+        }
       };
-    } catch (e: any) {
-      return { data: null, error: e.message, lastUpdated: Date.now() };
-    }
+    });
   }
 
   async getGovernanceActionVotes(txHash: string, index: string): Promise<ApiReturnType<GovActionVote[]>> {
-    try {
+    return this.requestList<GovActionVote>(async () => {
       const resp = await this.client.get<any[]>(`/governance/proposals/${txHash}/${index}/votes`);
       const votes: GovActionVote[] = (resp.data ?? []).map((v) => ({
         voter: v.voter_hash ?? "",
@@ -741,16 +595,14 @@ export class BlockfrostConnector extends ConnectorBase {
         certIndex: v.cert_index ?? 0,
         voteTime: ""
       }));
-      return { data: votes, lastUpdated: Date.now() };
-    } catch (e: any) {
-      return { data: [], error: e.message, lastUpdated: Date.now() };
-    }
+      return { data: votes };
+    });
   }
 
   // ── Pools ─────────────────────────────────────────────────────────────────
 
   async getPoolList(pageInfo: ParsedUrlQuery): Promise<ApiReturnType<PoolOverview[]>> {
-    try {
+    return this.requestList<PoolOverview>(async () => {
       const page = Math.max(1, Number(pageInfo.page ?? 1));
       const count = Number(pageInfo.size ?? 20);
       const resp = await this.client.get<any[]>("/pools/extended", { params: { page, count } });
@@ -764,14 +616,12 @@ export class BlockfrostConnector extends ConnectorBase {
         saturation: p.live_saturation ?? 0,
         lifetimeBlock: p.blocks_minted ?? 0
       }));
-      return { data: pools, lastUpdated: Date.now(), currentPage: page - 1, pageSize: count };
-    } catch (e: any) {
-      return { data: [], error: e.message, lastUpdated: Date.now() };
-    }
+      return { data: pools, extras: { currentPage: page - 1, pageSize: count } };
+    });
   }
 
   async getPoolDetail(poolId: string): Promise<ApiReturnType<PoolDetail>> {
-    try {
+    return this.request<PoolDetail>(async () => {
       const [poolResp, metaResp] = await Promise.all([
         this.client.get<any>(`/pools/${poolId}`),
         this.client.get<any>(`/pools/${poolId}/metadata`).catch(() => ({ data: {} }))
@@ -779,34 +629,29 @@ export class BlockfrostConnector extends ConnectorBase {
       const p = poolResp.data;
       const meta = (metaResp as any).data ?? {};
       return {
-        data: {
-          poolName: meta.name ?? poolId,
-          tickerName: meta.ticker ?? "",
-          poolView: poolId,
-          poolStatus: p.registration?.length > (p.retirement?.length ?? 0) ? "ACTIVE" : "RETIRED" as any,
-          createDate: "",
-          rewardAccounts: p.reward_account ? [p.reward_account] : [],
-          ownerAccounts: p.owners ?? [],
-          poolSize: parseInt(p.active_stake ?? "0"),
-          stakeLimit: parseInt(p.live_stake ?? "0"),
-          delegators: p.live_delegators ?? 0,
-          saturation: p.live_saturation ?? 0,
-          totalBalanceOfPoolOwners: 0,
-          reward: 0,
-          ros: 0,
-          pledge: parseInt(p.declared_pledge ?? "0"),
-          cost: parseInt(p.fixed_cost ?? "0"),
-          margin: p.margin_cost ?? 0,
-          epochBlock: p.blocks_epoch ?? 0,
-          lifetimeBlock: p.blocks_minted ?? 0,
-          description: meta.description ?? "",
-          homepage: meta.homepage ?? ""
-        },
-        lastUpdated: Date.now()
+        poolName: meta.name ?? poolId,
+        tickerName: meta.ticker ?? "",
+        poolView: poolId,
+        poolStatus: p.registration?.length > (p.retirement?.length ?? 0) ? "ACTIVE" : "RETIRED" as any,
+        createDate: "",
+        rewardAccounts: p.reward_account ? [p.reward_account] : [],
+        ownerAccounts: p.owners ?? [],
+        poolSize: parseInt(p.active_stake ?? "0"),
+        stakeLimit: parseInt(p.live_stake ?? "0"),
+        delegators: p.live_delegators ?? 0,
+        saturation: p.live_saturation ?? 0,
+        totalBalanceOfPoolOwners: 0,
+        reward: 0,
+        ros: 0,
+        pledge: parseInt(p.declared_pledge ?? "0"),
+        cost: parseInt(p.fixed_cost ?? "0"),
+        margin: p.margin_cost ?? 0,
+        epochBlock: p.blocks_epoch ?? 0,
+        lifetimeBlock: p.blocks_minted ?? 0,
+        description: meta.description ?? "",
+        homepage: meta.homepage ?? ""
       };
-    } catch (e: any) {
-      return { data: null, error: e.message, lastUpdated: Date.now() };
-    }
+    });
   }
 
   async getPoolBlocks(poolId: string, pageInfo: ParsedUrlQuery): Promise<ApiReturnType<Block[]>> {
@@ -835,27 +680,23 @@ export class BlockfrostConnector extends ConnectorBase {
   // ── DReps ─────────────────────────────────────────────────────────────────
 
   async getDreps(pageInfo: ParsedUrlQuery): Promise<ApiReturnType<Drep[]>> {
-    try {
+    return this.requestList<Drep>(async () => {
       const page = Math.max(1, Number(pageInfo.page ?? 1));
       const count = Number(pageInfo.size ?? 20);
       const resp = await this.client.get<any[]>("/governance/dreps", { params: { page, count } });
-      return { data: (resp.data ?? []).map(bfDrepToDrep), lastUpdated: Date.now(), currentPage: page - 1, pageSize: count };
-    } catch (e: any) {
-      return { data: [], error: e.message, lastUpdated: Date.now() };
-    }
+      return { data: (resp.data ?? []).map(bfDrepToDrep), extras: { currentPage: page - 1, pageSize: count } };
+    });
   }
 
   async getDrep(drepId: string): Promise<ApiReturnType<Drep>> {
-    try {
+    return this.request<Drep>(async () => {
       const resp = await this.client.get<any>(`/governance/dreps/${drepId}`);
-      return { data: bfDrepToDrep(resp.data), lastUpdated: Date.now() };
-    } catch (e: any) {
-      return { data: null, error: e.message, lastUpdated: Date.now() };
-    }
+      return bfDrepToDrep(resp.data);
+    });
   }
 
   async getDrepVotes(drepId: string, pageInfo: ParsedUrlQuery): Promise<ApiReturnType<GovernanceActionListItem[]>> {
-    try {
+    return this.requestList<GovernanceActionListItem>(async () => {
       const page = Math.max(1, Number(pageInfo.page ?? 1));
       const count = Number(pageInfo.size ?? 20);
       const resp = await this.client.get<any[]>(`/governance/dreps/${drepId}/votes`, { params: { page, count } });
@@ -864,24 +705,20 @@ export class BlockfrostConnector extends ConnectorBase {
         index: v.proposal_cert_index ?? 0,
         vote: (v.vote ?? "abstain").toLowerCase() as "yes" | "no" | "abstain"
       }));
-      return { data: items, lastUpdated: Date.now(), currentPage: page - 1, pageSize: count };
-    } catch (e: any) {
-      return { data: [], error: e.message, lastUpdated: Date.now() };
-    }
+      return { data: items, extras: { currentPage: page - 1, pageSize: count } };
+    });
   }
 
   async getDrepDelegates(drepId: string, pageInfo: ParsedUrlQuery): Promise<ApiReturnType<DrepDelegates[]>> {
-    try {
+    return this.requestList<DrepDelegates>(async () => {
       const page = Math.max(1, Number(pageInfo.page ?? 1));
       const count = Number(pageInfo.size ?? 20);
       const resp = await this.client.get<any[]>(`/governance/dreps/${drepId}/delegators`, { params: { page, count } });
       return {
         data: (resp.data ?? []).map((d) => ({ address: d.address ?? "", amount: parseInt(d.amount ?? "0") })),
-        lastUpdated: Date.now(), currentPage: page - 1, pageSize: count,
+        extras: { currentPage: page - 1, pageSize: count }
       };
-    } catch (e: any) {
-      return { data: [], error: e.message, lastUpdated: Date.now() };
-    }
+    });
   }
 
   // ── Protocol params & Staking stubs ───────────────────────────────────────
@@ -891,18 +728,6 @@ export class BlockfrostConnector extends ConnectorBase {
       const resp = await this.client.get<BfProtocolParamsRaw>("/epochs/latest/parameters");
       return mapBfProtocolParams(resp.data);
     });
-  }
-
-  async getStakeAddressRegistrations(): Promise<ApiReturnType<IStakeKey[]>> {
-    return { data: [], error: "Not supported", lastUpdated: Date.now() };
-  }
-
-  async getStakeDelegations(): Promise<ApiReturnType<IStakeKey[]>> {
-    return { data: [], error: "Not supported", lastUpdated: Date.now() };
-  }
-
-  async getPoolRegistrations(): Promise<ApiReturnType<Registration[]>> {
-    return { data: [], error: "Not supported", lastUpdated: Date.now() };
   }
 
   // ── Dashboard stats ────────────────────────────────────────────────────────
@@ -951,107 +776,109 @@ export class BlockfrostConnector extends ConnectorBase {
   // ── Search ────────────────────────────────────────────────────────────────
 
   async search(query: string): Promise<ApiReturnType<SearchResult[]>> {
-    const q = query.trim();
-    if (!q || q.length < 2) return { data: [], lastUpdated: Date.now(), total: 0 };
+    return this.requestList<SearchResult>(async () => {
+      const q = query.trim();
+      if (!q || q.length < 2) return { data: [], extras: { total: 0 } };
 
-    const probe = async <T>(fn: () => Promise<T>): Promise<T | null> => {
-      try { return await fn(); } catch { return null; }
-    };
+      const probe = async <T>(fn: () => Promise<T>): Promise<T | null> => {
+        try { return await fn(); } catch { return null; }
+      };
 
-    const results: SearchResult[] = [];
+      const results: SearchResult[] = [];
 
-    // Governance action: {64hex}#{index}
-    const govMatch = /^([0-9a-f]{64})#(\d+)$/i.exec(q);
-    if (govMatch) {
-      const [, txHash, indexStr] = govMatch;
-      const [govResult, txResult] = await Promise.all([
-        probe(() => this.client.get(`/governance/proposals/${txHash}/${indexStr}`)),
-        probe(() => this.client.get(`/txs/${txHash}`)),
-      ]);
-      if (govResult) results.push({ type: "gov_action", id: txHash, extraId: indexStr });
-      else if (txResult) results.push({ type: "transaction", id: txHash });
-      return { data: results, lastUpdated: Date.now(), total: results.length };
-    }
-
-    // 64-char hex: transaction hash OR block hash
-    if (/^[0-9a-f]{64}$/i.test(q)) {
-      const [txResult, blockResult] = await Promise.all([
-        probe(() => this.client.get<any>(`/txs/${q}`)),
-        probe(() => this.client.get<any>(`/blocks/${q}`)),
-      ]);
-      if (txResult) results.push({ type: "transaction", id: q });
-      if (blockResult) results.push({ type: "block", id: q, label: blockResult.data?.height != null ? String(blockResult.data.height) : undefined });
-      return { data: results, lastUpdated: Date.now(), total: results.length };
-    }
-
-    // 56-char hex: policy ID
-    if (/^[0-9a-f]{56}$/i.test(q)) {
-      const assets = await probe(() => this.client.get<any[]>(`/assets/policy/${q}`, { params: { count: 1, page: 1 } }));
-      if (assets?.data?.length) results.push({ type: "policy", id: q });
-      return { data: results, lastUpdated: Date.now(), total: results.length };
-    }
-
-    if (/^addr1[a-z0-9]+$/i.test(q)) {
-      results.push({ type: "address", id: q });
-      return { data: results, lastUpdated: Date.now(), total: results.length };
-    }
-
-    if (/^stake1[a-z0-9]+$/i.test(q)) {
-      results.push({ type: "stake", id: q });
-      return { data: results, lastUpdated: Date.now(), total: results.length };
-    }
-
-    if (/^pool1[a-z0-9]{50,}$/i.test(q)) {
-      const poolResult = await probe(() => this.client.get<any>(`/pools/${q}`));
-      if (poolResult) {
-        const meta = await probe(() => this.client.get<any>(`/pools/${q}/metadata`));
-        results.push({ type: "pool", id: q, label: meta?.data?.ticker ?? meta?.data?.name ?? undefined });
+      // Governance action: {64hex}#{index}
+      const govMatch = /^([0-9a-f]{64})#(\d+)$/i.exec(q);
+      if (govMatch) {
+        const [, txHash, indexStr] = govMatch;
+        const [govResult, txResult] = await Promise.all([
+          probe(() => this.client.get(`/governance/proposals/${txHash}/${indexStr}`)),
+          probe(() => this.client.get(`/txs/${txHash}`)),
+        ]);
+        if (govResult) results.push({ type: "gov_action", id: txHash, extraId: indexStr });
+        else if (txResult) results.push({ type: "transaction", id: txHash });
+        return { data: results, extras: { total: results.length } };
       }
-      return { data: results, lastUpdated: Date.now(), total: results.length };
-    }
 
-    if (/^drep1[a-z0-9]+$/i.test(q)) {
-      const drepResult = await probe(() => this.client.get(`/governance/dreps/${q}`));
-      if (drepResult) results.push({ type: "drep", id: q });
-      return { data: results, lastUpdated: Date.now(), total: results.length };
-    }
-
-    if (/^asset1[a-z0-9]+$/i.test(q)) {
-      const assetResult = await probe(() => this.client.get<any>(`/assets/${q}`));
-      if (assetResult) {
-        results.push({ type: "token", id: q, label: assetResult.data?.metadata?.name ?? undefined });
+      // 64-char hex: transaction hash OR block hash
+      if (/^[0-9a-f]{64}$/i.test(q)) {
+        const [txResult, blockResult] = await Promise.all([
+          probe(() => this.client.get<any>(`/txs/${q}`)),
+          probe(() => this.client.get<any>(`/blocks/${q}`)),
+        ]);
+        if (txResult) results.push({ type: "transaction", id: q });
+        if (blockResult) results.push({ type: "block", id: q, label: blockResult.data?.height != null ? String(blockResult.data.height) : undefined });
+        return { data: results, extras: { total: results.length } };
       }
-      return { data: results, lastUpdated: Date.now(), total: results.length };
-    }
 
-    // Pure number: epoch or block
-    if (/^\d+$/.test(q)) {
-      const n = Number(q);
-      const [epochResult, blockResult] = await Promise.all([
-        probe(() => this.client.get<any>(`/epochs/${n}`)),
-        probe(() => this.client.get<any>(`/blocks/${n}`)),
-      ]);
-      if (epochResult) results.push({ type: "epoch", id: q });
-      if (blockResult) results.push({ type: "block", id: q, label: String(n) });
-      return { data: results, lastUpdated: Date.now(), total: results.length };
-    }
+      // 56-char hex: policy ID
+      if (/^[0-9a-f]{56}$/i.test(q)) {
+        const assets = await probe(() => this.client.get<any[]>(`/assets/policy/${q}`, { params: { count: 1, page: 1 } }));
+        if (assets?.data?.length) results.push({ type: "policy", id: q });
+        return { data: results, extras: { total: results.length } };
+      }
 
-    // Free-text: scan recently-minted assets for name match
-    if (/^[a-zA-Z0-9$.\-_ ]+$/.test(q)) {
-      for (let page = 1; page <= 3 && results.length < 5; page++) {
-        const assets = await probe(() => this.client.get<any[]>(`/assets`, { params: { count: 100, page } }));
-        if (!assets?.data?.length) break;
-        for (const asset of assets.data) {
-          if (!asset.asset || asset.asset.length <= 56) continue;
-          const decoded = hexToUtf8(asset.asset.slice(56));
-          if (!decoded || !decoded.toLowerCase().includes(q.toLowerCase())) continue;
-          results.push({ type: "token", id: asset.asset, label: decoded });
-          if (results.length >= 5) break;
+      if (/^addr1[a-z0-9]+$/i.test(q)) {
+        results.push({ type: "address", id: q });
+        return { data: results, extras: { total: results.length } };
+      }
+
+      if (/^stake1[a-z0-9]+$/i.test(q)) {
+        results.push({ type: "stake", id: q });
+        return { data: results, extras: { total: results.length } };
+      }
+
+      if (/^pool1[a-z0-9]{50,}$/i.test(q)) {
+        const poolResult = await probe(() => this.client.get<any>(`/pools/${q}`));
+        if (poolResult) {
+          const meta = await probe(() => this.client.get<any>(`/pools/${q}/metadata`));
+          results.push({ type: "pool", id: q, label: meta?.data?.ticker ?? meta?.data?.name ?? undefined });
+        }
+        return { data: results, extras: { total: results.length } };
+      }
+
+      if (/^drep1[a-z0-9]+$/i.test(q)) {
+        const drepResult = await probe(() => this.client.get(`/governance/dreps/${q}`));
+        if (drepResult) results.push({ type: "drep", id: q });
+        return { data: results, extras: { total: results.length } };
+      }
+
+      if (/^asset1[a-z0-9]+$/i.test(q)) {
+        const assetResult = await probe(() => this.client.get<any>(`/assets/${q}`));
+        if (assetResult) {
+          results.push({ type: "token", id: q, label: assetResult.data?.metadata?.name ?? undefined });
+        }
+        return { data: results, extras: { total: results.length } };
+      }
+
+      // Pure number: epoch or block
+      if (/^\d+$/.test(q)) {
+        const n = Number(q);
+        const [epochResult, blockResult] = await Promise.all([
+          probe(() => this.client.get<any>(`/epochs/${n}`)),
+          probe(() => this.client.get<any>(`/blocks/${n}`)),
+        ]);
+        if (epochResult) results.push({ type: "epoch", id: q });
+        if (blockResult) results.push({ type: "block", id: q, label: String(n) });
+        return { data: results, extras: { total: results.length } };
+      }
+
+      // Free-text: scan recently-minted assets for name match
+      if (/^[a-zA-Z0-9$.\-_ ]+$/.test(q)) {
+        for (let page = 1; page <= 3 && results.length < 5; page++) {
+          const assets = await probe(() => this.client.get<any[]>(`/assets`, { params: { count: 100, page } }));
+          if (!assets?.data?.length) break;
+          for (const asset of assets.data) {
+            if (!asset.asset || asset.asset.length <= 56) continue;
+            const decoded = hexToUtf8(asset.asset.slice(56));
+            if (!decoded || !decoded.toLowerCase().includes(q.toLowerCase())) continue;
+            results.push({ type: "token", id: asset.asset, label: decoded });
+            if (results.length >= 5) break;
+          }
         }
       }
-    }
 
-    return { data: results, lastUpdated: Date.now(), total: results.length };
+      return { data: results, extras: { total: results.length } };
+    });
   }
 }
 
@@ -1192,24 +1019,6 @@ function bfBlockToBlock(b: BfBlock, poolMeta?: Map<string, { name: string; ticke
     confirmation: b.confirmations,
     blockVrf: b.block_vrf,
   } as Block;
-}
-
-function bfUtxoToUtxo(u: BfUtxo): any {
-  return {
-    address: u.address,
-    value: parseInt(u.amount?.find((a) => a.unit === "lovelace")?.quantity ?? "0"),
-    txHash: u.tx_hash,
-    index: String(u.output_index ?? 0),
-    dataHash: u.data_hash ?? null,
-    inlineDatum: u.inline_datum ?? null,
-    referenceScriptHash: u.reference_script_hash ?? null,
-    tokens: (u.amount ?? []).filter((a) => a.unit !== "lovelace").map((a) => ({
-      assetId: a.unit,
-      assetName: a.unit.slice(56),
-      assetQuantity: parseInt(a.quantity),
-      policy: { policyId: a.unit.slice(0, 56), totalToken: 0 }
-    }))
-  };
 }
 
 function bfAssetToTokenOverview(a: BfAsset): ITokenOverview {

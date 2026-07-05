@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { Container } from "@mui/material";
+import { Alert, Container } from "@mui/material";
 
 import BlockOverview from "src/components/BlockDetail/BlockOverview";
 import NoRecord from "src/components/commons/NoRecord";
@@ -51,7 +51,14 @@ const BlockDetail: React.FC = () => {
     updateTransactions(0);
   }, [blockId]);
 
-  if (blockData?.error) return <FetchDataErr />;
+  if (blockData?.error) {
+    return (
+      <Container sx={{ pt: 4 }}>
+        <Alert severity="error" sx={{ mb: 2, textAlign: "left" }}>{blockData.error}</Alert>
+        <FetchDataErr />
+      </Container>
+    );
+  }
   if (!loading && !blockData?.data) return <NoRecord />;
 
   return (

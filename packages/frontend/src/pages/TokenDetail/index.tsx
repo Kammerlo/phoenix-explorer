@@ -1,7 +1,7 @@
 // @ts-ignore
 import React, { createContext, useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
-import { Box, Container, Tab } from "@mui/material";
+import { Alert, Box, Container, Tab } from "@mui/material";
 import { TabContext, TabList, TabPanel } from "@mui/lab";
 import { useTranslation } from "react-i18next";
 
@@ -88,7 +88,14 @@ const TokenDetail: React.FC = () => {
     mainRef.current?.scrollTo({ top: 0, behavior: "smooth" });
   }, [tokenId]);
 
-  if (fetchData?.error) return <FetchDataErr />;
+  if (fetchData?.error) {
+    return (
+      <Container sx={{ pt: 4 }}>
+        <Alert severity="error" sx={{ mb: 2, textAlign: "left" }}>{fetchData.error}</Alert>
+        <FetchDataErr />
+      </Container>
+    );
+  }
   if (!loading && !fetchData?.data) return <NoRecord />;
 
   const hasAnalytics = (fetchData?.data?.analytics?.length ?? 0) > 0;

@@ -47,7 +47,18 @@ export default defineConfig(({ mode }) => {
       })
     ],
     server: {
-      open: true
+      open: true,
+      // Same-origin proxy to a local Yaci Store so the browser never makes a
+      // cross-origin request → zero CORS when developing against a Yaci DevKit.
+      // Point the YACI provider at "/local-yaci/api/v1" (relative). Override the
+      // upstream with REACT_APP_YACI_PROXY_TARGET for non-default ports/hosts.
+      proxy: {
+        "/local-yaci": {
+          target: env.REACT_APP_YACI_PROXY_TARGET || "http://localhost:8080",
+          changeOrigin: true,
+          rewrite: (p) => p.replace(/^\/local-yaci/, "")
+        }
+      }
     },
     build: {
       outDir: "build",

@@ -151,6 +151,27 @@ export interface TxInputsOutputs {
   outputs?: TxUtxo[];
 }
 
+/**
+ * Row of GET /txs/{txHash}/redeemers (camelCased `TxRedeemerDto`). The spend
+ * pointer arrives as `txIndex` per the OpenAPI schema, but some builds emit it
+ * as `index` — `@shared/helpers/contracts.buildContracts` picks either.
+ */
+export interface TxRedeemerDto {
+  txIndex?: number;
+  index?: number;
+  purpose?: string;
+  scriptHash?: string;
+  datumHash?: string;
+  redeemerDataHash?: string;
+  unitMem?: string | number;
+  unitSteps?: string | number;
+}
+
+/** GET /scripts/{scriptHash}/cbor and /scripts/datum/{datumHash}/cbor payload. */
+export interface ScriptCborDto {
+  cbor?: string;
+}
+
 export interface TxMetadataLabelDto {
   blockNumber?: number;
   blockTime?: number;
@@ -435,8 +456,19 @@ export interface DelegationVote {
 }
 
 // ── AddressBalance helper used by the address mapper ─────────────────────────
+// Shape verified against a live yaci-store 0.10.6: GET /addresses/{address}/balance
+// returns { blockNumber, blockTime, address, amounts: Amt[], slot, lastBalanceCalculationBlock }.
 export interface AddressBalanceDto {
   address?: string;
-  amount?: Amt[];
-  txCount?: number;
+  amounts?: Amt[];
+  blockNumber?: number;
+  blockTime?: number;
+  slot?: number;
+  lastBalanceCalculationBlock?: number;
+}
+
+/** Row of GET /assets/{unit}/addresses (camelCased `AddressAssetBalanceDto`). */
+export interface AddressAssetBalanceDto {
+  address?: string;
+  quantity?: string;
 }

@@ -98,9 +98,6 @@ export class GatewayConnector extends ConnectorBase {
       "getWalletAddressFromAddress",
       "getAddressTxsFromAddress",
       "getWalletStakeFromAddress",
-      "getStakeAddressRegistrations",
-      "getStakeDelegations",
-      "getPoolRegistrations",
       "getPoolList",
       "getPoolDetail",
       "getCurrentProtocolParameters",
@@ -174,6 +171,13 @@ export class GatewayConnector extends ConnectorBase {
 
   async getTxDetail(txHash: string): Promise<ApiReturnType<TransactionDetail>> {
     const response = await this.client.get<ApiReturnType<TransactionDetail>>(`${this.baseUrl}/transactions/${txHash}`);
+    return response.data;
+  }
+
+  async getTxSummary(txHash: string): Promise<ApiReturnType<TransactionDetail>> {
+    const response = await this.client.get<ApiReturnType<TransactionDetail>>(
+      `${this.baseUrl}/transactions/${txHash}/summary`
+    );
     return response.data;
   }
 

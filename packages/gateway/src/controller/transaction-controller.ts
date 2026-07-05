@@ -2,45 +2,57 @@ import { Router } from "express";
 import { fetchTransactionDetail } from "../service/transactionService";
 import { ApiReturnType } from "@shared/APIReturnType";
 import { Transaction, TransactionDetail } from "@shared/dtos/transaction.dto";
-import { API } from "../config/blockfrost";
+import { getBlock, getBlockTxs, getLatestBlock, getTransactions, getTxDetail } from "../config/cache";
 import { computeTxTags, computeTotalLovelaceOutput } from "@shared/helpers/txTags";
+import { buildTransactionDetail } from "@shared/helpers/txDetail";
+import { asyncHandler } from "../middleware/asyncHandler";
 
 export const transactionController = Router();
 
-transactionController.get("", async (req, res) => {
+// Blockfrost has no global tx-list endpoint, so the list is assembled by walking
+// blocks backwards from the tip. Block tx-lists are fetched in parallel batches
+// and cached (block→hashes never changes), so paging deeper or refreshing reuses
+// the already-scanned prefix instead of re-walking it serially.
+const MAX_BLOCKS_TO_SCAN = 50;
+const BLOCK_BATCH_SIZE = 10;
+
+transactionController.get("", asyncHandler(async (req, res) => {
   const page = Math.max(1, parseInt(String(req.query.page ?? 1)));
   const size = Math.min(100, parseInt(String(req.query.size ?? 20)));
+  const wanted = page * size;
 
-  // Walk backwards through blocks to collect enough transaction hashes first,
-  // then fetch details in parallel to avoid sequential API bottleneck.
-  const latestBlock = await API.blocksLatest();
-  const txEntries: { txHash: string; blockHeight: number }[] = [];
-  let blockHeight = latestBlock.height!;
-  let toSkip = (page - 1) * size;
-
-  // Compute epoch start slot so we can derive epochSlotNo for each tx
+  const latestBlock = await getLatestBlock();
+  // Epoch start slot lets us derive epochSlotNo for each tx without a block lookup.
   const epochStartSlot = (latestBlock.slot ?? 0) - (latestBlock.epoch_slot ?? 0);
 
-  // Collect tx hashes from recent blocks (fast — no detail fetches)
-  const MAX_BLOCKS_TO_SCAN = 50;
+  const txEntries: { txHash: string; blockHeight: number }[] = [];
+  let height = latestBlock.height!;
   let blocksScanned = 0;
-  while (txEntries.length < size && blockHeight > 0 && blocksScanned < MAX_BLOCKS_TO_SCAN) {
-    const blockTxHashes = await API.blocksTxs(blockHeight);
-    blocksScanned++;
-    for (const txHash of blockTxHashes) {
-      if (toSkip > 0) { toSkip--; continue; }
-      if (txEntries.length >= size) break;
-      txEntries.push({ txHash, blockHeight });
+  while (txEntries.length < wanted && height > 0 && blocksScanned < MAX_BLOCKS_TO_SCAN) {
+    const batchHeights: number[] = [];
+    while (
+      batchHeights.length < BLOCK_BATCH_SIZE &&
+      height - batchHeights.length > 0 &&
+      blocksScanned + batchHeights.length < MAX_BLOCKS_TO_SCAN
+    ) {
+      batchHeights.push(height - batchHeights.length);
     }
-    blockHeight--;
+    const hashLists = await Promise.all(batchHeights.map((h) => getBlockTxs(h)));
+    hashLists.forEach((hashes, i) => {
+      for (const txHash of hashes) {
+        txEntries.push({ txHash, blockHeight: batchHeights[i] });
+      }
+    });
+    blocksScanned += batchHeights.length;
+    height -= batchHeights.length;
   }
 
-  // Fetch all transaction details in parallel
+  const pageEntries = txEntries.slice((page - 1) * size, wanted);
   const txs: Transaction[] = await Promise.all(
-    txEntries.map(async ({ txHash, blockHeight: bh }) => {
-      const tx = await API.txs(txHash);
+    pageEntries.map(async ({ txHash, blockHeight }) => {
+      const tx = await getTransactions(txHash);
       return {
-        blockNo: tx.block_height ?? bh,
+        blockNo: tx.block_height ?? blockHeight,
         hash: txHash,
         time: tx.block_time.toString(),
         slot: tx.slot ?? 0,
@@ -63,14 +75,33 @@ transactionController.get("", async (req, res) => {
     pageSize: size,
     totalUnknown: true,
   } as ApiReturnType<Transaction[]>);
-});
+}));
 
-transactionController.get("/:txHash", async (req, res) => {
-  const detail = await fetchTransactionDetail(req.params.txHash);
+// Lightweight header-only detail (tx + block, two cached lookups) so the
+// frontend can render the overview while the full detail loads. Serves the
+// fully-assembled detail straight from cache when available.
+transactionController.get("/:txHash/summary", asyncHandler(async (req, res) => {
+  const txHash = String(req.params.txHash);
+  const cached = getTxDetail(txHash);
+  if (cached) {
+    res.json({ data: cached, lastUpdated: Date.now() } as ApiReturnType<TransactionDetail>);
+    return;
+  }
+  const tx = await getTransactions(txHash);
+  const block = await getBlock(tx.block);
+  const summary = await buildTransactionDetail({ tx, block, utxos: { inputs: [], outputs: [] } });
+  // Header only — leave the heavy sections undefined so the UI keeps their skeletons.
+  summary.utxOs = undefined;
+  summary.collaterals = undefined;
+  res.json({ data: summary, lastUpdated: Date.now() } as ApiReturnType<TransactionDetail>);
+}));
+
+transactionController.get("/:txHash", asyncHandler(async (req, res) => {
+  const detail = await fetchTransactionDetail(String(req.params.txHash));
   const response: ApiReturnType<TransactionDetail> = {
     data: detail,
     lastUpdated: Date.now(),
     currentPage: 0,
   };
   res.json(response);
-});
+}));

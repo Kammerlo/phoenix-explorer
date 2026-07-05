@@ -209,6 +209,7 @@ const BlockListComponent: React.FC<BlockListComponentProps> = ({ fetchData, upda
       <Table
         data={fetchData?.data || []}
         columns={columns}
+        error={fetchData?.error}
         total={{ title: t("common.totalBlocks"), count: fetchData?.total || 0 }}
         onClickRow={handleOpenDetail}
         rowKey={(r: Block) => r.blockNo || r.hash}
