@@ -11,7 +11,7 @@ import { ApiReturnType } from "@shared/APIReturnType";
 import { DashboardStats } from "@shared/dtos/dashboard.dto";
 import { EpochOverview } from "@shared/dtos/epoch.dto";
 import { Block } from "@shared/dtos/block.dto";
-import { Transaction, TransactionDetail, TRANSACTION_STATUS, Token, TPoolCertificated } from "@shared/dtos/transaction.dto";
+import { IContractItemTx, Transaction, TransactionDetail } from "@shared/dtos/transaction.dto";
 import { ITokenOverview, TokenHolder } from "@shared/dtos/token.dto";
 import { AddressDetail, StakeAddressDetail } from "@shared/dtos/address.dto";
 import { PoolDetail, PoolOverview } from "@shared/dtos/pool.dto";
@@ -24,6 +24,7 @@ import {
 } from "@shared/dtos/GovernanceOverview";
 import { computeTxTags, computeTotalLovelaceOutput } from "@shared/helpers/txTags";
 import { buildContracts } from "@shared/helpers/contracts";
+import { buildTransactionDetail } from "@shared/helpers/txDetail";
 import { getEpochStatus, getEpochProgress, computeEpochSlotNo, MAINNET_EPOCH_MAX_SLOT } from "@shared/helpers/epochHelpers";
 import { mapBfProtocolParams, BfProtocolParamsRaw } from "./mapper/protocolParams";
 
@@ -281,176 +282,78 @@ export class BlockfrostConnector extends ConnectorBase {
   }
 
   async getTxDetail(txHash: string): Promise<ApiReturnType<TransactionDetail>> {
-    try {
+    return this.request(async () => {
       const [txResp, utxosResp, metaResp] = await Promise.all([
         this.client.get<BfTx>(`/txs/${txHash}`),
         this.client.get<BfTxUtxos>(`/txs/${txHash}/utxos`),
-        this.client.get<any[]>(`/txs/${txHash}/metadata`).catch(() => ({ data: [] }))
+        this.client.get<any[]>(`/txs/${txHash}/metadata`).catch(() => ({ data: [] as any[] }))
       ]);
       const tx = txResp.data;
-      const block = await this._fetchBlockRaw(tx.block);
+      const utxos = utxosResp.data;
 
-      const metadata = (metaResp as any).data?.length
-        ? (metaResp as any).data.map((m: any) => ({ label: parseInt(m.label, 10), value: m.json_metadata != null ? JSON.stringify(m.json_metadata) : (m.cbor_metadata ?? "null") }))
-        : undefined;
+      // Certificate lists whose counts are zero resolve to [] without a request.
+      const optional = (count: number | undefined, path: string): Promise<any[]> =>
+        (count ?? 0) > 0
+          ? this.client.get<any[]>(path).then((r) => r.data ?? []).catch(() => [])
+          : Promise.resolve([]);
 
-      // Build summary map from UTXOs — matches gateway transactionService
-      const summaryMap: Record<string, { address: string; value: number; tokens: Token[] }> = {};
-      const allUtxos = [
-        ...(utxosResp.data.inputs ?? []).map(u => ({ ...u, _isOutput: false })),
-        ...(utxosResp.data.outputs ?? []).map(u => ({ ...u, _isOutput: true })),
-      ];
-      for (const u of allUtxos) {
-        if ((u as any).reference) continue;
-        const lovelace = parseInt(u.amount?.find((a: any) => a.unit === "lovelace")?.quantity ?? "0");
-        // Outputs received → positive, inputs sent → negative (Summary reads value > 0 as received).
-        const signed = u._isOutput ? lovelace : -lovelace;
-        if (!summaryMap[u.address]) {
-          summaryMap[u.address] = { address: u.address, value: 0, tokens: [] };
+      const [block, delegations, withdrawals, stakes, poolUpdates, poolRetires, mirs, contracts] =
+        await Promise.all([
+          this._fetchBlockRaw(tx.block),
+          optional(tx.delegation_count, `/txs/${txHash}/delegations`),
+          optional(tx.withdrawal_count, `/txs/${txHash}/withdrawals`),
+          optional(tx.stake_cert_count, `/txs/${txHash}/stakes`),
+          optional(tx.pool_update_count, `/txs/${txHash}/pool_updates`),
+          optional(tx.pool_retire_count, `/txs/${txHash}/pool_retires`),
+          optional(tx.mir_cert_count, `/txs/${txHash}/mirs`),
+          (tx.redeemer_count ?? 0) > 0 ? this._buildTxContracts(txHash, utxos) : Promise.resolve([])
+        ]);
+
+      // Same shared assembly as the gateway (see @shared/helpers/txDetail). The
+      // browser build skips asset-metadata enrichment (no resolveAsset) so it
+      // doesn't pay one request per token from the client.
+      return buildTransactionDetail({
+        tx,
+        block,
+        utxos,
+        metadata: (metaResp as { data: any[] }).data ?? [],
+        delegations,
+        withdrawals,
+        stakes,
+        poolUpdates,
+        poolRetires,
+        mirs,
+        contracts
+      });
+    });
+  }
+
+  // Smart-contract enrichment — identical assembly to the gateway via the
+  // shared builder, just with axios-backed resolvers. Best-effort.
+  private async _buildTxContracts(txHash: string, utxos: BfTxUtxos): Promise<IContractItemTx[]> {
+    try {
+      const redeemersResp = await this.client
+        .get<any[]>(`/txs/${txHash}/redeemers`)
+        .catch(() => ({ data: [] as any[] }));
+      return await buildContracts({
+        redeemers: (redeemersResp as { data: any[] }).data ?? [],
+        inputs: utxos.inputs ?? [],
+        outputs: utxos.outputs ?? [],
+        resolvers: {
+          scriptCbor: (hash) =>
+            this.client
+              .get<{ cbor: string | null }>(`/scripts/${hash}/cbor`)
+              .then((r) => r.data?.cbor ?? null)
+              .catch(() => null),
+          datumCbor: (hash) =>
+            this.client
+              .get<{ cbor: string | null }>(`/scripts/datum/${hash}/cbor`)
+              .then((r) => r.data?.cbor ?? null)
+              .catch(() => null)
         }
-        summaryMap[u.address].value += signed;
-
-        for (const a of (u.amount ?? []).filter((a: any) => a.unit !== "lovelace")) {
-          const qty = parseInt(a.quantity) * (u._isOutput ? 1 : -1);
-          const existing = summaryMap[u.address].tokens.find(t => t.assetId === a.unit);
-          if (existing) { existing.assetQuantity += qty; }
-          else { summaryMap[u.address].tokens.push({ assetName: a.unit.slice(56), assetQuantity: qty, assetId: a.unit, policy: { policyId: a.unit.slice(0, 56) } }); }
-        }
-      }
-      // Filter zero-quantity tokens
-      for (const addr of Object.keys(summaryMap)) {
-        summaryMap[addr].tokens = summaryMap[addr].tokens.filter(t => t.assetQuantity !== 0);
-      }
-
-      // Separate UTXOs and collaterals — matches gateway
-      const inputUtxos = (utxosResp.data.inputs ?? []).filter((u: any) => !u.collateral && !u.reference).map(bfUtxoToUtxo);
-      const outputUtxos = (utxosResp.data.outputs ?? []).filter((u: any) => !u.collateral).map(bfUtxoToUtxo);
-      const inputCollaterals = (utxosResp.data.inputs ?? []).filter((u: any) => u.collateral).map(bfUtxoToUtxo);
-      const outputCollaterals = (utxosResp.data.outputs ?? []).filter((u: any) => u.collateral).map(bfUtxoToUtxo);
-
-      const detail: TransactionDetail = {
-        tx: {
-          hash: tx.hash,
-          time: tx.block_time.toString(),
-          blockNo: tx.block_height ?? 0,
-          blockHash: tx.block,
-          epochSlot: block.epoch_slot ?? 0,
-          epochNo: block.epoch ?? 0,
-          status: TRANSACTION_STATUS.SUCCESS,
-          confirmation: block.confirmations ?? 0,
-          fee: parseInt(tx.fees ?? "0"),
-          totalOutput: computeTotalLovelaceOutput(tx.output_amount ?? []),
-          maxEpochSlot: block.epoch_slot ?? 0,
-          slotNo: tx.slot ?? 0,
-          tags: computeTxTags(tx)
-        },
-        summary: { stakeAddress: Object.values(summaryMap) },
-        utxOs: { inputs: inputUtxos, outputs: outputUtxos },
-        collaterals: { collateralInputResponses: inputCollaterals, collateralOutputResponses: outputCollaterals },
-        metadata,
-        metadataHash: ""
-      };
-
-      // Fetch delegations — matches gateway
-      if ((tx.delegation_count ?? 0) > 0) {
-        const delegResp = await this.client.get<any[]>(`/txs/${txHash}/delegations`).catch(() => ({ data: [] }));
-        detail.delegations = (delegResp.data ?? []).map((d: any) => ({ address: d.address, poolId: d.pool_id }));
-      }
-
-      // Fetch withdrawals
-      if ((tx.withdrawal_count ?? 0) > 0) {
-        const wdResp = await this.client.get<any[]>(`/txs/${txHash}/withdrawals`).catch(() => ({ data: [] }));
-        detail.withdrawals = (wdResp.data ?? []).map((w: any) => ({
-          stakeAddressFrom: w.address,
-          addressTo: [""],
-          amount: parseInt(w.amount)
-        }));
-      }
-
-      // Fetch stake certificates
-      if ((tx.stake_cert_count ?? 0) > 0) {
-        const stakeResp = await this.client.get<any[]>(`/txs/${txHash}/stakes`).catch(() => ({ data: [] }));
-        detail.stakeCertificates = (stakeResp.data ?? []).map((s: any) => ({
-          stakeAddress: s.address,
-          type: s.registration ? "STAKE_REGISTRATION" : "STAKE_DEREGISTRATION"
-        }));
-      }
-
-      // Fetch pool certificates
-      if ((tx.pool_update_count ?? 0) > 0 || (tx.pool_retire_count ?? 0) > 0) {
-        const certs: TPoolCertificated[] = [];
-        if ((tx.pool_update_count ?? 0) > 0) {
-          const updResp = await this.client.get<any[]>(`/txs/${txHash}/pool_updates`).catch(() => ({ data: [] }));
-          certs.push(...(updResp.data ?? []).map((cert: any) => ({
-            cost: parseInt(cert.fixed_cost ?? "0"),
-            margin: cert.margin_cost ?? 0,
-            metadataHash: cert.metadata?.hash ?? "",
-            metadataUrl: cert.metadata?.url ?? "",
-            pledge: parseInt(cert.pledge ?? "0"),
-            poolId: cert.pool_id,
-            poolOwners: cert.owners ?? [],
-            relays: (cert.relays ?? []).map((r: any) => ({
-              dnsName: r.dns ?? "", dnsSrvName: r.dns_srv ?? "", ipv4: r.ipv4 ?? "", ipv6: r.ipv6 ?? "", port: r.port
-            })),
-            rewardAccount: cert.reward_account ?? "",
-            type: "POOL_REGISTRATION" as const,
-            vrfKey: cert.vrf_key ?? "",
-            epoch: cert.active_epoch ?? 0,
-          })));
-        }
-        if ((tx.pool_retire_count ?? 0) > 0) {
-          const retResp = await this.client.get<any[]>(`/txs/${txHash}/pool_retires`).catch(() => ({ data: [] }));
-          certs.push(...(retResp.data ?? []).map((cert: any) => ({
-            poolId: cert.pool_id,
-            epoch: cert.retiring_epoch ?? 0,
-            type: "POOL_DEREGISTRATION" as const,
-          } as TPoolCertificated)));
-        }
-        detail.poolCertificates = certs;
-      }
-
-      // Fetch MIR certificates
-      if ((tx.mir_cert_count ?? 0) > 0) {
-        const mirResp = await this.client.get<any[]>(`/txs/${txHash}/mirs`).catch(() => ({ data: [] }));
-        detail.instantaneousRewards = (mirResp.data ?? []).map((m: any) => ({
-          amount: m.amount,
-          stakeAddress: m.address
-        }));
-      }
-
-      // Smart-contract enrichment — identical assembly to the gateway via the
-      // shared builder, just with axios-backed resolvers. Best-effort.
-      if ((tx.redeemer_count ?? 0) > 0) {
-        try {
-          const redeemersResp = await this.client
-            .get<any[]>(`/txs/${txHash}/redeemers`)
-            .catch(() => ({ data: [] }));
-          const contracts = await buildContracts({
-            redeemers: redeemersResp.data ?? [],
-            inputs: utxosResp.data.inputs ?? [],
-            outputs: utxosResp.data.outputs ?? [],
-            resolvers: {
-              scriptCbor: (hash) =>
-                this.client
-                  .get<{ cbor: string | null }>(`/scripts/${hash}/cbor`)
-                  .then((r) => r.data?.cbor ?? null)
-                  .catch(() => null),
-              datumCbor: (hash) =>
-                this.client
-                  .get<{ cbor: string }>(`/scripts/datum/${hash}/cbor`)
-                  .then((r) => r.data?.cbor ?? null)
-                  .catch(() => null)
-            }
-          });
-          if (contracts.length > 0) detail.contracts = contracts;
-        } catch (err) {
-          // Leave contracts empty; the rest of the detail still renders.
-        }
-      }
-
-      return { data: detail, lastUpdated: Date.now() };
-    } catch (e: any) {
-      return { data: null, error: e.message, lastUpdated: Date.now() };
+      });
+    } catch {
+      return [];
     }
   }
 
@@ -1192,24 +1095,6 @@ function bfBlockToBlock(b: BfBlock, poolMeta?: Map<string, { name: string; ticke
     confirmation: b.confirmations,
     blockVrf: b.block_vrf,
   } as Block;
-}
-
-function bfUtxoToUtxo(u: BfUtxo): any {
-  return {
-    address: u.address,
-    value: parseInt(u.amount?.find((a) => a.unit === "lovelace")?.quantity ?? "0"),
-    txHash: u.tx_hash,
-    index: String(u.output_index ?? 0),
-    dataHash: u.data_hash ?? null,
-    inlineDatum: u.inline_datum ?? null,
-    referenceScriptHash: u.reference_script_hash ?? null,
-    tokens: (u.amount ?? []).filter((a) => a.unit !== "lovelace").map((a) => ({
-      assetId: a.unit,
-      assetName: a.unit.slice(56),
-      assetQuantity: parseInt(a.quantity),
-      policy: { policyId: a.unit.slice(0, 56), totalToken: 0 }
-    }))
-  };
 }
 
 function bfAssetToTokenOverview(a: BfAsset): ITokenOverview {
