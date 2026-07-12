@@ -1,6 +1,6 @@
 import NodeCache from "node-cache";
 import {components} from "@blockfrost/openapi";
-import {API} from "./blockfrost";
+import {API, POOL_API} from "./blockfrost";
 import {TransactionDetail} from "@shared/dtos/transaction.dto";
 
 export const cache = new NodeCache({
@@ -69,6 +69,47 @@ export function getLatestBlock(): Promise<components["schemas"]["block_content"]
   return cachedFetch("block-latest", TIP_TTL, () => API.blocksLatest());
 }
 
+export function getLatestEpoch(): Promise<components["schemas"]["epoch_content"]> {
+  return cachedFetch("epoch-latest", TIP_TTL, () => API.epochsLatest());
+}
+
+// Network-wide supply/stake figures move slowly; a minute of staleness is
+// invisible on the dashboard but removes an upstream call per page load.
+export function getNetwork(): Promise<components["schemas"]["network"]> {
+  return cachedFetch("network", 60, () => API.network());
+}
+
+export function getLatestParameters(): Promise<components["schemas"]["epoch_param_content"]> {
+  return cachedFetch("epoch-latest-params", DEFAULT_TTL, () => API.epochsLatestParameters());
+}
+
+// A blocksPrevious page is anchored at a specific block hash, so the cached
+// window stays internally consistent; the anchor (latest hash) rotates with
+// the tip, naturally expiring the whole set.
+export function getBlocksPrevious(
+  anchorHash: string,
+  page: number,
+  count: number
+): Promise<components["schemas"]["block_content_array"]> {
+  return cachedFetch(`blocks-prev-${anchorHash}-${page}-${count}`, DEFAULT_TTL, () =>
+    API.blocksPrevious(anchorHash, { page, count })
+  );
+}
+
+// Pool display metadata (name/ticker) is effectively static. blockfrost.io
+// only (demeter has no /pools/*); resolves to null when unavailable so block
+// lists degrade to blank pool names instead of failing.
+export function getPoolMetadata(
+  poolId: string
+): Promise<components["schemas"]["pool_metadata"] | null> {
+  return cachedFetch(
+    `pool-meta-${poolId}`,
+    ASSET_TTL,
+    async () => (POOL_API ? await POOL_API.poolMetadata(poolId) : null),
+    () => ({ value: null, ttl: DEFAULT_TTL })
+  );
+}
+
 // The tx-hash list of a block never changes once the block is on-chain.
 export function getBlockTxs(heightOrHash: number | string): Promise<string[]> {
   return cachedFetch(`block-txs-${heightOrHash}`, DEFAULT_TTL, () => API.blocksTxs(heightOrHash));
@@ -109,6 +150,73 @@ export function getAsset(unit: string): Promise<components["schemas"]["asset"]> 
       value: { asset: unit, policy_id: unit.slice(0, 56) } as unknown as components["schemas"]["asset"],
       ttl: DEFAULT_TTL
     })
+  );
+}
+
+// Token list pages and per-asset mint/burn history (powers the supply chart).
+export function getAssetsPage(
+  page: number,
+  count: number
+): Promise<components["schemas"]["assets"]> {
+  return cachedFetch(`assets-page-${page}-${count}`, DEFAULT_TTL, () => API.assets({ page, count }));
+}
+
+export function getAssetHistory(unit: string): Promise<components["schemas"]["asset_history"]> {
+  return cachedFetch(`asset-history-${unit}`, DEFAULT_TTL, () => API.assetsHistoryAll(unit));
+}
+
+// Governance lookups. Proposals/votes/DRep records change slowly relative to
+// page views; metadata endpoints 404 for anchors without off-chain documents,
+// hence the null fallbacks.
+export function getProposal(txHash: string, index: number) {
+  return cachedFetch(`gov-proposal-${txHash}-${index}`, DEFAULT_TTL, () =>
+    API.governance.proposal(txHash, index)
+  );
+}
+
+export function getProposalMetadata(txHash: string, index: number) {
+  return cachedFetch(
+    `gov-proposal-meta-${txHash}-${index}`,
+    DEFAULT_TTL,
+    () => API.governance.proposalMetadata(txHash, index),
+    () => ({ value: null, ttl: DEFAULT_TTL })
+  );
+}
+
+export function getProposalVotes(txHash: string, index: number) {
+  return cachedFetch(`gov-proposal-votes-${txHash}-${index}`, DEFAULT_TTL, () =>
+    API.governance.proposalVotesAll(txHash, index)
+  );
+}
+
+export function getDrepById(drepId: string) {
+  return cachedFetch(`drep-${drepId}`, DEFAULT_TTL, () => API.governance.drepsById(drepId));
+}
+
+export function getDrepMetadata(drepId: string) {
+  return cachedFetch(
+    `drep-meta-${drepId}`,
+    DEFAULT_TTL,
+    () => API.governance.drepsByIdMetadata(drepId),
+    () => ({ value: null, ttl: DEFAULT_TTL })
+  );
+}
+
+export function getDrepDelegators(drepId: string) {
+  return cachedFetch(`drep-delegators-${drepId}`, DEFAULT_TTL, () =>
+    API.governance.drepsByIdDelegatorsAll(drepId)
+  );
+}
+
+export function getDrepUpdates(drepId: string) {
+  return cachedFetch(`drep-updates-${drepId}`, DEFAULT_TTL, () =>
+    API.governance.drepsByIdUpdatesAll(drepId)
+  );
+}
+
+export function getDrepVotes(drepId: string) {
+  return cachedFetch(`drep-votes-${drepId}`, DEFAULT_TTL, () =>
+    API.governance.drepsByIdVotesAll(drepId)
   );
 }
 

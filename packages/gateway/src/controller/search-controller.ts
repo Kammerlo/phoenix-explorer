@@ -2,6 +2,7 @@ import { Router } from "express";
 import { API, POOL_API } from "../config/blockfrost";
 import { SearchResult } from "@shared/dtos/seach.dto";
 import { ApiReturnType } from "@shared/APIReturnType";
+import { getBlock, getEpoch, getTransactions } from "../config/cache";
 
 export const searchController = Router();
 
@@ -29,7 +30,7 @@ searchController.get("", async (req, res) => {
     const [, txHash, indexStr] = govMatch;
     const [govResult, txResult] = await Promise.all([
       probe(() => API.governance.proposal(txHash, Number(indexStr))),
-      probe(() => API.txs(txHash)),
+      probe(() => getTransactions(txHash)),
     ]);
     if (govResult) results.push({ type: "gov_action", id: txHash, extraId: indexStr });
     else if (txResult) results.push({ type: "transaction", id: txHash });
@@ -39,8 +40,8 @@ searchController.get("", async (req, res) => {
   // ── 64-char hex: transaction hash OR block hash ──────────────────────────────
   if (/^[0-9a-f]{64}$/i.test(q)) {
     const [txResult, blockResult] = await Promise.all([
-      probe(() => API.txs(q)),
-      probe(() => API.blocks(q)),
+      probe(() => getTransactions(q)),
+      probe(() => getBlock(q)),
     ]);
     if (txResult) results.push({ type: "transaction", id: q });
     if (blockResult) results.push({ type: "block", id: q, label: blockResult.height != null ? String(blockResult.height) : undefined });
@@ -107,8 +108,8 @@ searchController.get("", async (req, res) => {
   if (/^\d+$/.test(q)) {
     const n = Number(q);
     const [epochResult, blockResult] = await Promise.all([
-      probe(() => API.epochs(n)),
-      probe(() => API.blocks(n as unknown as string)),
+      probe(() => getEpoch(q)),
+      probe(() => getBlock(q)),
     ]);
     if (epochResult) results.push({ type: "epoch", id: q });
     if (blockResult) results.push({ type: "block", id: q, label: String(n) });

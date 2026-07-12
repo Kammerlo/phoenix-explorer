@@ -1,8 +1,7 @@
 import {Router} from "express";
-import {API, POOL_API} from "../config/blockfrost";
 import {Block} from "@shared/dtos/block.dto";
 import {ApiReturnType} from "@shared/APIReturnType";
-import {getBlock, getBlockTxs, getTransactions} from "../config/cache";
+import {getBlock, getBlocksPrevious, getBlockTxs, getLatestBlock, getPoolMetadata, getTransactions} from "../config/cache";
 import {Transaction} from "@shared/dtos/transaction.dto";
 import {computeTxTags, computeTotalLovelaceOutput} from "@shared/helpers/txTags";
 
@@ -25,7 +24,7 @@ blockController.get('', async (req, res) => {
     BF_FETCH_CAP
   );
 
-  const latestBlock = await API.blocksLatest();
+  const latestBlock = await getLatestBlock();
 
   // Translate the requested (page, size) into 1-indexed positions counting
   // backwards from the latest block: position 1 = block immediately preceding
@@ -41,18 +40,16 @@ blockController.get('', async (req, res) => {
   const bfFirstPage = Math.ceil(startPos / BF_MAX_PER_PAGE);
   const bfLastPage  = Math.ceil(endPos   / BF_MAX_PER_PAGE);
 
-  // Fetch BF pages from highest (oldest) to lowest (newest) and concatenate;
-  // the resulting array is therefore in globally ascending order across the
-  // whole [bfFirstPage, bfLastPage] window, which makes the slice math simple.
-  const allBfBlocks: any[] = [];
-  for (let bfPage = bfLastPage; bfPage >= bfFirstPage; bfPage--) {
-    const page = await API.blocksPrevious(latestBlock.hash, {
-      page: bfPage,
-      count: BF_MAX_PER_PAGE,
-    });
-    allBfBlocks.push(...page);
-    if (page.length === 0) break; // past the start of the chain
-  }
+  // Fetch BF pages from highest (oldest) to lowest (newest) — in parallel,
+  // through the anchor-keyed cache — and concatenate; the resulting array is
+  // in globally ascending order across the whole [bfFirstPage, bfLastPage]
+  // window, which makes the slice math simple.
+  const bfPageNumbers: number[] = [];
+  for (let bfPage = bfLastPage; bfPage >= bfFirstPage; bfPage--) bfPageNumbers.push(bfPage);
+  const bfPages = await Promise.all(
+    bfPageNumbers.map((bfPage) => getBlocksPrevious(latestBlock.hash, bfPage, BF_MAX_PER_PAGE))
+  );
+  const allBfBlocks: any[] = bfPages.flat();
 
   // After concat, position N (1-indexed from latest) of the highest BF page we
   // fetched corresponds to a known index in allBfBlocks. The newest block in
@@ -71,21 +68,18 @@ blockController.get('', async (req, res) => {
   allBfBlocks.length = 0;
   allBfBlocks.push(...pageBlocks);
 
-  // Batch-fetch pool metadata for unique slot leaders (skipped for bulk/chart
-  // requests, and entirely when only demeter is configured — `/pools/*` is a
-  // blockfrost.io-only endpoint).
+  // Batch-fetch pool metadata for unique slot leaders through the 1h cache
+  // (skipped for bulk/chart requests; resolves to nulls when only demeter is
+  // configured — `/pools/*` is a blockfrost.io-only endpoint).
   const poolMeta = new Map<string, { name: string; ticker: string }>();
-  if (!skipMeta && POOL_API) {
-    const blockfrost = POOL_API;
+  if (!skipMeta) {
     const uniqueLeaders = [...new Set(allBfBlocks.map(b => b.slot_leader).filter(Boolean))] as string[];
     await Promise.all(
       uniqueLeaders
         .filter(l => l.startsWith("pool"))
         .map(async (leader) => {
-          try {
-            const meta = await blockfrost.poolMetadata(leader);
-            poolMeta.set(leader, { name: meta.name ?? "", ticker: meta.ticker ?? "" });
-          } catch { /* no metadata */ }
+          const meta = await getPoolMetadata(leader);
+          if (meta) poolMeta.set(leader, { name: meta.name ?? "", ticker: meta.ticker ?? "" });
         })
     );
   }
@@ -128,16 +122,14 @@ blockController.get('', async (req, res) => {
 blockController.get('/:blockId', async (req, res) => {
   const block = await getBlock(req.params.blockId);
 
-  // Fetch pool metadata if the slot leader is a pool. Skipped when only demeter
-  // is configured (POOL_API is null) — demeter does not implement /pools/*.
+  // Fetch pool metadata if the slot leader is a pool (1h cache; resolves to
+  // null when only demeter is configured — /pools/* is blockfrost.io-only).
   let poolName = "";
   let poolTicker = "";
-  if (POOL_API && block.slot_leader?.startsWith("pool")) {
-    try {
-      const meta = await POOL_API.poolMetadata(block.slot_leader);
-      poolName = meta.name ?? "";
-      poolTicker = meta.ticker ?? "";
-    } catch { /* no metadata */ }
+  if (block.slot_leader?.startsWith("pool")) {
+    const meta = await getPoolMetadata(block.slot_leader);
+    poolName = meta?.name ?? "";
+    poolTicker = meta?.ticker ?? "";
   }
 
   res.json({

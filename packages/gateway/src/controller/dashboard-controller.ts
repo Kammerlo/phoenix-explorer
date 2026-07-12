@@ -1,16 +1,16 @@
 import { Router } from 'express';
-import { API } from '../config/blockfrost';
 import { envelope, errorEnvelope } from '@shared/helpers/envelope';
 import { DashboardStats } from '@shared/dtos/dashboard.dto';
+import { getLatestBlock, getLatestEpoch, getNetwork } from '../config/cache';
 
 export const dashboardController = Router();
 
 dashboardController.get('/stats', async (_req, res) => {
   try {
     const [latestBlock, network, latestEpoch] = await Promise.all([
-      API.blocksLatest(),
-      API.network(),
-      API.epochsLatest()
+      getLatestBlock(),
+      getNetwork(),
+      getLatestEpoch()
     ]);
 
     const now = Math.floor(Date.now() / 1000);
