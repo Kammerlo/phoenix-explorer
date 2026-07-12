@@ -1,0 +1,423 @@
+{
+ "label": "after-cold-r1",
+ "base": "http://localhost:3000",
+ "at": "2026-07-12T12:59:04.448Z",
+ "results": [
+  {
+   "name": "dashboard/stats",
+   "url": "/api/dashboard/stats",
+   "runs": [
+    {
+     "ms": 1026.7,
+     "ttfb": 1024.9,
+     "bytes": 637,
+     "status": 200,
+     "upstream": 6
+    }
+   ]
+  },
+  {
+   "name": "blocks:list",
+   "url": "/api/blocks?page=1&size=20",
+   "runs": [
+    {
+     "ms": 1351.3,
+     "ttfb": 1350.6,
+     "bytes": 13381,
+     "status": 200,
+     "upstream": 22
+    }
+   ]
+  },
+  {
+   "name": "blocks:detail",
+   "url": "/api/blocks/13667926",
+   "runs": [
+    {
+     "ms": 977.8,
+     "ttfb": 977.3,
+     "bytes": 733,
+     "status": 200,
+     "upstream": 3
+    }
+   ]
+  },
+  {
+   "name": "blocks:txs",
+   "url": "/api/blocks/13667926/transactions?page=1&size=20",
+   "runs": [
+    {
+     "ms": 1909.9,
+     "ttfb": 1909.7,
+     "bytes": 1936,
+     "status": 200,
+     "upstream": 14
+    }
+   ]
+  },
+  {
+   "name": "epochs:list",
+   "url": "/api/epochs?page=1&size=20",
+   "runs": [
+    {
+     "ms": 950.5,
+     "ttfb": 949.9,
+     "bytes": 6083,
+     "status": 200,
+     "upstream": 2
+    }
+   ]
+  },
+  {
+   "name": "epochs:detail",
+   "url": "/api/epochs/641",
+   "runs": [
+    {
+     "ms": 1040.9,
+     "ttfb": 1040.5,
+     "bytes": 323,
+     "status": 200,
+     "upstream": 2
+    }
+   ]
+  },
+  {
+   "name": "epochs:blocks",
+   "url": "/api/epochs/641/blocks?page=1&size=20",
+   "runs": [
+    {
+     "ms": 2507.9,
+     "ttfb": 2506,
+     "bytes": 7279,
+     "status": 200,
+     "upstream": 59
+    }
+   ]
+  },
+  {
+   "name": "txs:list",
+   "url": "/api/transactions?page=1&size=20",
+   "runs": [
+    {
+     "ms": 1149,
+     "ttfb": 1148.8,
+     "bytes": 6283,
+     "status": 200,
+     "upstream": 50
+    }
+   ]
+  },
+  {
+   "name": "txs:summary",
+   "url": "/api/transactions/76dce176bd880cbf9c06560de6856b853d896961e47cced1a3c14a605be2c06d/summary",
+   "runs": [
+    {
+     "ms": 106.1,
+     "ttfb": 105.5,
+     "bytes": 473,
+     "status": 200,
+     "upstream": 2
+    }
+   ]
+  },
+  {
+   "name": "txs:detail-script",
+   "url": "/api/transactions/76dce176bd880cbf9c06560de6856b853d896961e47cced1a3c14a605be2c06d",
+   "runs": [
+    {
+     "ms": 5547.9,
+     "ttfb": 5546.4,
+     "bytes": 292493,
+     "status": 200,
+     "upstream": 25
+    }
+   ]
+  },
+  {
+   "name": "txs:detail-plain",
+   "url": "/api/transactions/1f83f0fba9ad30626a7b7dbd197d8114c98d3204f2638cf23409bc9348c629a1",
+   "runs": [
+    {
+     "ms": 741.8,
+     "ttfb": 741.6,
+     "bytes": 1566,
+     "status": 200,
+     "upstream": 6
+    }
+   ]
+  },
+  {
+   "name": "tokens:list",
+   "url": "/api/tokens?page=1&size=20",
+   "runs": [
+    {
+     "ms": 1000.4,
+     "ttfb": 1000.1,
+     "bytes": 4056,
+     "status": 200,
+     "upstream": 2
+    }
+   ]
+  },
+  {
+   "name": "tokens:by-policy",
+   "url": "/api/tokens/policy/ac3f4224723e2ed9d166478662f6e48bae9ddf0fc5ee58f54f6c3229?page=1&size=20",
+   "runs": [
+    {
+     "ms": 722,
+     "ttfb": 721.8,
+     "bytes": 283,
+     "status": 200,
+     "upstream": 2
+    }
+   ]
+  },
+  {
+   "name": "tokens:detail",
+   "url": "/api/tokens/ac3f4224723e2ed9d166478662f6e48bae9ddf0fc5ee58f54f6c322943454e54",
+   "runs": [
+    {
+     "ms": 723.4,
+     "ttfb": 723.2,
+     "bytes": 519,
+     "status": 200,
+     "upstream": 4
+    }
+   ]
+  },
+  {
+   "name": "tokens:holders",
+   "url": "/api/tokens/ac3f4224723e2ed9d166478662f6e48bae9ddf0fc5ee58f54f6c322943454e54/holders?page=1&size=20",
+   "runs": [
+    {
+     "ms": 1537.1,
+     "ttfb": 1536.8,
+     "bytes": 226,
+     "status": 200,
+     "upstream": 2
+    }
+   ]
+  },
+  {
+   "name": "tokens:txs",
+   "url": "/api/tokens/ac3f4224723e2ed9d166478662f6e48bae9ddf0fc5ee58f54f6c322943454e54/transactions?page=1&size=20",
+   "runs": [
+    {
+     "ms": 404.1,
+     "ttfb": 404,
+     "bytes": 635,
+     "status": 200,
+     "upstream": 4
+    }
+   ]
+  },
+  {
+   "name": "addresses:detail",
+   "url": "/api/addresses/addr1z8p79rpkcdz8x9d6tft0x0dx5mwuzac2sa4gm8cvkw5hcnq9qxvlp6p6qxzqmh2kgezgupmrgnk8m942tgzpu70r5j8sdwc009",
+   "runs": [
+    {
+     "ms": 3502.2,
+     "ttfb": 3502.1,
+     "bytes": 288,
+     "status": 200,
+     "upstream": 2
+    }
+   ]
+  },
+  {
+   "name": "addresses:txs",
+   "url": "/api/addresses/addr1z8p79rpkcdz8x9d6tft0x0dx5mwuzac2sa4gm8cvkw5hcnq9qxvlp6p6qxzqmh2kgezgupmrgnk8m942tgzpu70r5j8sdwc009/transactions?page=1&size=20",
+   "runs": [
+    {
+     "ms": 2530.6,
+     "ttfb": 2530.4,
+     "bytes": 7953,
+     "status": 200,
+     "upstream": 42
+    }
+   ]
+  },
+  {
+   "name": "addresses:stake",
+   "url": "/api/addresses/addr1z8p79rpkcdz8x9d6tft0x0dx5mwuzac2sa4gm8cvkw5hcnq9qxvlp6p6qxzqmh2kgezgupmrgnk8m942tgzpu70r5j8sdwc009/stake",
+   "runs": [
+    {
+     "ms": 321.5,
+     "ttfb": 321.1,
+     "bytes": 94,
+     "status": 200,
+     "upstream": 2
+    }
+   ]
+  },
+  {
+   "name": "pools:list",
+   "url": "/api/pools?page=1&size=20",
+   "runs": [
+    {
+     "ms": 1042.1,
+     "ttfb": 1041.9,
+     "bytes": 4775,
+     "status": 200,
+     "upstream": 1
+    }
+   ]
+  },
+  {
+   "name": "pools:detail",
+   "url": "/api/pools/pool1z5uqdk7dzdxaae5633fqfcu2eqzy3a3rgtuvy087fdld7yws0xt",
+   "runs": [
+    {
+     "ms": 2206,
+     "ttfb": 2205.9,
+     "bytes": 985,
+     "status": 200,
+     "upstream": 6
+    }
+   ]
+  },
+  {
+   "name": "pools:blocks",
+   "url": "/api/pools/pool1z5uqdk7dzdxaae5633fqfcu2eqzy3a3rgtuvy087fdld7yws0xt/blocks?page=1&size=20",
+   "runs": [
+    {
+     "ms": 245.5,
+     "ttfb": 245.3,
+     "bytes": 12613,
+     "status": 200,
+     "upstream": 22
+    }
+   ]
+  },
+  {
+   "name": "gov:actions",
+   "url": "/api/governance/actions?page=1&size=20",
+   "runs": [
+    {
+     "ms": 259.8,
+     "ttfb": 259.6,
+     "bytes": 3472,
+     "status": 200,
+     "upstream": 1
+    }
+   ]
+  },
+  {
+   "name": "gov:action-detail",
+   "url": "/api/governance/actions/15f82a365bdee483a4b03873a40d3829cc88c048ff3703e11bd01dd9e035c916/0",
+   "runs": [
+    {
+     "ms": 1230.6,
+     "ttfb": 1230.3,
+     "bytes": 603,
+     "status": 200,
+     "upstream": 6
+    }
+   ]
+  },
+  {
+   "name": "gov:action-votes",
+   "url": "/api/governance/actions/15f82a365bdee483a4b03873a40d3829cc88c048ff3703e11bd01dd9e035c916/0/votes",
+   "runs": [
+    {
+     "ms": 600.9,
+     "ttfb": 600.8,
+     "bytes": 45632,
+     "status": 200,
+     "upstream": 211
+    }
+   ]
+  },
+  {
+   "name": "gov:dreps",
+   "url": "/api/governance/dreps?page=1&size=20",
+   "runs": [
+    {
+     "ms": 1114.8,
+     "ttfb": 1114.7,
+     "bytes": 6488,
+     "status": 200,
+     "upstream": 80
+    }
+   ]
+  },
+  {
+   "name": "gov:drep-detail",
+   "url": "/api/governance/dreps/drep1yfaaaaa270yjt6tu5skndugekprf5ykv5jshanl0c6gqx5qpstskf",
+   "runs": [
+    {
+     "ms": 879.1,
+     "ttfb": 878.9,
+     "bytes": 551,
+     "status": 200,
+     "upstream": 10
+    }
+   ]
+  },
+  {
+   "name": "gov:drep-votes",
+   "url": "/api/governance/dreps/drep1yfaaaaa270yjt6tu5skndugekprf5ykv5jshanl0c6gqx5qpstskf/votes?page=1&size=20",
+   "runs": [
+    {
+     "ms": 1485.7,
+     "ttfb": 1485.2,
+     "bytes": 2110,
+     "status": 200,
+     "upstream": 2
+    }
+   ]
+  },
+  {
+   "name": "gov:drep-delegates",
+   "url": "/api/governance/dreps/drep1yfaaaaa270yjt6tu5skndugekprf5ykv5jshanl0c6gqx5qpstskf/delegates?page=1&size=20",
+   "runs": [
+    {
+     "ms": 3.5,
+     "ttfb": 3.3,
+     "bytes": 1981,
+     "status": 200,
+     "upstream": 0
+    }
+   ]
+  },
+  {
+   "name": "protocol-params",
+   "url": "/api/protocol-params",
+   "runs": [
+    {
+     "ms": 6.1,
+     "ttfb": 5.7,
+     "bytes": 45417,
+     "status": 200,
+     "upstream": 0
+    }
+   ]
+  },
+  {
+   "name": "search",
+   "url": "/api/search?q=13667926",
+   "runs": [
+    {
+     "ms": 1074.1,
+     "ttfb": 1074,
+     "bytes": 100,
+     "status": 200,
+     "upstream": 2
+    }
+   ]
+  },
+  {
+   "name": "scripts:verification",
+   "url": "/api/scripts/c5a1debec3a1a931e19b6bfeeb4c608071e6c5b2b1f5abbfb92a41ae/verification",
+   "runs": [
+    {
+     "ms": 590.2,
+     "ttfb": 590.1,
+     "bytes": 127,
+     "status": 200,
+     "upstream": 0
+    }
+   ]
+  }
+ ]
+}

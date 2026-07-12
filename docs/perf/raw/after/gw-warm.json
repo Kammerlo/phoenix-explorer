@@ -1,0 +1,2439 @@
+{
+ "label": "after-warm",
+ "base": "http://localhost:3000",
+ "at": "2026-07-12T13:02:15.709Z",
+ "results": [
+  {
+   "name": "dashboard/stats",
+   "url": "/api/dashboard/stats",
+   "runs": [
+    {
+     "ms": 1.9,
+     "ttfb": 1.8,
+     "bytes": 638,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 1.6,
+     "ttfb": 1.4,
+     "bytes": 638,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 2.1,
+     "ttfb": 1.9,
+     "bytes": 638,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 3.4,
+     "ttfb": 2.7,
+     "bytes": 638,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 2.7,
+     "ttfb": 2.4,
+     "bytes": 638,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 3.1,
+     "ttfb": 2.6,
+     "bytes": 638,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 2.4,
+     "ttfb": 2.2,
+     "bytes": 638,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 6.9,
+     "ttfb": 5.9,
+     "bytes": 638,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 1.6,
+     "ttfb": 1.4,
+     "bytes": 638,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 1.1,
+     "ttfb": 1.1,
+     "bytes": 638,
+     "status": 200,
+     "upstream": 0
+    }
+   ]
+  },
+  {
+   "name": "blocks:list",
+   "url": "/api/blocks?page=1&size=20",
+   "runs": [
+    {
+     "ms": 4.6,
+     "ttfb": 4.2,
+     "bytes": 13534,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 3.8,
+     "ttfb": 3.6,
+     "bytes": 13534,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 4,
+     "ttfb": 3.7,
+     "bytes": 13534,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 6.2,
+     "ttfb": 5.8,
+     "bytes": 13534,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 5.5,
+     "ttfb": 5.1,
+     "bytes": 13534,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 2.2,
+     "ttfb": 2,
+     "bytes": 13534,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 1.4,
+     "ttfb": 1.3,
+     "bytes": 13534,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 1.2,
+     "ttfb": 1.1,
+     "bytes": 13534,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 1.7,
+     "ttfb": 1.6,
+     "bytes": 13534,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 2,
+     "ttfb": 1.9,
+     "bytes": 13534,
+     "status": 200,
+     "upstream": 0
+    }
+   ]
+  },
+  {
+   "name": "blocks:detail",
+   "url": "/api/blocks/13667926",
+   "runs": [
+    {
+     "ms": 4.1,
+     "ttfb": 3.8,
+     "bytes": 733,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 3.5,
+     "ttfb": 3.3,
+     "bytes": 733,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 4,
+     "ttfb": 3.6,
+     "bytes": 733,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 5,
+     "ttfb": 4.5,
+     "bytes": 733,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 3.5,
+     "ttfb": 3.3,
+     "bytes": 733,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 3.3,
+     "ttfb": 3,
+     "bytes": 733,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 4.1,
+     "ttfb": 3.8,
+     "bytes": 733,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 1.5,
+     "ttfb": 1.4,
+     "bytes": 733,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 1.7,
+     "ttfb": 1.6,
+     "bytes": 733,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 2.5,
+     "ttfb": 2.2,
+     "bytes": 733,
+     "status": 200,
+     "upstream": 0
+    }
+   ]
+  },
+  {
+   "name": "blocks:txs",
+   "url": "/api/blocks/13667926/transactions?page=1&size=20",
+   "runs": [
+    {
+     "ms": 4.1,
+     "ttfb": 3.7,
+     "bytes": 1936,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 1.4,
+     "ttfb": 1.3,
+     "bytes": 1936,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 1.8,
+     "ttfb": 1.7,
+     "bytes": 1936,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 2.1,
+     "ttfb": 1.9,
+     "bytes": 1936,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 2.3,
+     "ttfb": 2.1,
+     "bytes": 1936,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 5.6,
+     "ttfb": 4.7,
+     "bytes": 1936,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 4.2,
+     "ttfb": 3.9,
+     "bytes": 1936,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 2.9,
+     "ttfb": 2.7,
+     "bytes": 1936,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 3.3,
+     "ttfb": 3,
+     "bytes": 1936,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 3.5,
+     "ttfb": 3.2,
+     "bytes": 1936,
+     "status": 200,
+     "upstream": 0
+    }
+   ]
+  },
+  {
+   "name": "epochs:list",
+   "url": "/api/epochs?page=1&size=20",
+   "runs": [
+    {
+     "ms": 61.5,
+     "ttfb": 61.3,
+     "bytes": 6083,
+     "status": 200,
+     "upstream": 1
+    },
+    {
+     "ms": 60.4,
+     "ttfb": 60.3,
+     "bytes": 6083,
+     "status": 200,
+     "upstream": 1
+    },
+    {
+     "ms": 110.5,
+     "ttfb": 110.2,
+     "bytes": 6083,
+     "status": 200,
+     "upstream": 1
+    },
+    {
+     "ms": 53.4,
+     "ttfb": 53.2,
+     "bytes": 6083,
+     "status": 200,
+     "upstream": 1
+    },
+    {
+     "ms": 57.1,
+     "ttfb": 56.9,
+     "bytes": 6083,
+     "status": 200,
+     "upstream": 1
+    },
+    {
+     "ms": 58.5,
+     "ttfb": 58.1,
+     "bytes": 6083,
+     "status": 200,
+     "upstream": 1
+    },
+    {
+     "ms": 107.7,
+     "ttfb": 107.6,
+     "bytes": 6083,
+     "status": 200,
+     "upstream": 1
+    },
+    {
+     "ms": 54.1,
+     "ttfb": 53.8,
+     "bytes": 6083,
+     "status": 200,
+     "upstream": 1
+    },
+    {
+     "ms": 57.5,
+     "ttfb": 57.3,
+     "bytes": 6083,
+     "status": 200,
+     "upstream": 1
+    },
+    {
+     "ms": 53.5,
+     "ttfb": 53.3,
+     "bytes": 6083,
+     "status": 200,
+     "upstream": 1
+    }
+   ]
+  },
+  {
+   "name": "epochs:detail",
+   "url": "/api/epochs/641",
+   "runs": [
+    {
+     "ms": 1.8,
+     "ttfb": 1.7,
+     "bytes": 323,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 1.3,
+     "ttfb": 1.3,
+     "bytes": 323,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 1.4,
+     "ttfb": 1.2,
+     "bytes": 323,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 1.7,
+     "ttfb": 1.6,
+     "bytes": 323,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 2.7,
+     "ttfb": 2.5,
+     "bytes": 323,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 2,
+     "ttfb": 1.9,
+     "bytes": 323,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 4.5,
+     "ttfb": 4.2,
+     "bytes": 323,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 4.6,
+     "ttfb": 4.4,
+     "bytes": 323,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 3.5,
+     "ttfb": 3.2,
+     "bytes": 323,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 3.7,
+     "ttfb": 3.4,
+     "bytes": 323,
+     "status": 200,
+     "upstream": 0
+    }
+   ]
+  },
+  {
+   "name": "epochs:blocks",
+   "url": "/api/epochs/641/blocks?page=1&size=20",
+   "runs": [
+    {
+     "ms": 60.7,
+     "ttfb": 60.4,
+     "bytes": 7279,
+     "status": 200,
+     "upstream": 1
+    },
+    {
+     "ms": 104.1,
+     "ttfb": 103.9,
+     "bytes": 7279,
+     "status": 200,
+     "upstream": 1
+    },
+    {
+     "ms": 61.3,
+     "ttfb": 61.2,
+     "bytes": 7279,
+     "status": 200,
+     "upstream": 1
+    },
+    {
+     "ms": 57.9,
+     "ttfb": 57.8,
+     "bytes": 7279,
+     "status": 200,
+     "upstream": 1
+    },
+    {
+     "ms": 57.2,
+     "ttfb": 57,
+     "bytes": 7279,
+     "status": 200,
+     "upstream": 1
+    },
+    {
+     "ms": 101.5,
+     "ttfb": 101.4,
+     "bytes": 7279,
+     "status": 200,
+     "upstream": 1
+    },
+    {
+     "ms": 55.3,
+     "ttfb": 55.1,
+     "bytes": 7279,
+     "status": 200,
+     "upstream": 1
+    },
+    {
+     "ms": 56.9,
+     "ttfb": 56.7,
+     "bytes": 7279,
+     "status": 200,
+     "upstream": 1
+    },
+    {
+     "ms": 57.7,
+     "ttfb": 57.3,
+     "bytes": 7279,
+     "status": 200,
+     "upstream": 1
+    },
+    {
+     "ms": 113.6,
+     "ttfb": 113.3,
+     "bytes": 7279,
+     "status": 200,
+     "upstream": 1
+    }
+   ]
+  },
+  {
+   "name": "txs:list",
+   "url": "/api/transactions?page=1&size=20",
+   "runs": [
+    {
+     "ms": 2.5,
+     "ttfb": 2.3,
+     "bytes": 6210,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 1.5,
+     "ttfb": 1.4,
+     "bytes": 6210,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 2.1,
+     "ttfb": 2,
+     "bytes": 6210,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 4.8,
+     "ttfb": 4.5,
+     "bytes": 6210,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 3.9,
+     "ttfb": 3.6,
+     "bytes": 6210,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 3,
+     "ttfb": 2.7,
+     "bytes": 6210,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 2.9,
+     "ttfb": 2.7,
+     "bytes": 6210,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 2.2,
+     "ttfb": 2.1,
+     "bytes": 6210,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 4.8,
+     "ttfb": 4.5,
+     "bytes": 6210,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 2.5,
+     "ttfb": 2.2,
+     "bytes": 6210,
+     "status": 200,
+     "upstream": 0
+    }
+   ]
+  },
+  {
+   "name": "txs:summary",
+   "url": "/api/transactions/76dce176bd880cbf9c06560de6856b853d896961e47cced1a3c14a605be2c06d/summary",
+   "runs": [
+    {
+     "ms": 6.2,
+     "ttfb": 5.2,
+     "bytes": 292477,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 6.6,
+     "ttfb": 5.8,
+     "bytes": 292477,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 6.4,
+     "ttfb": 5.6,
+     "bytes": 292477,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 7.8,
+     "ttfb": 5.7,
+     "bytes": 292477,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 6.1,
+     "ttfb": 5.1,
+     "bytes": 292477,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 3.8,
+     "ttfb": 3.3,
+     "bytes": 292477,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 4.1,
+     "ttfb": 3.7,
+     "bytes": 292477,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 5.8,
+     "ttfb": 5.2,
+     "bytes": 292477,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 8.9,
+     "ttfb": 7.2,
+     "bytes": 292477,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 7.1,
+     "ttfb": 5.8,
+     "bytes": 292477,
+     "status": 200,
+     "upstream": 0
+    }
+   ]
+  },
+  {
+   "name": "txs:detail-script",
+   "url": "/api/transactions/76dce176bd880cbf9c06560de6856b853d896961e47cced1a3c14a605be2c06d",
+   "runs": [
+    {
+     "ms": 3.7,
+     "ttfb": 3.2,
+     "bytes": 292493,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 3.6,
+     "ttfb": 3.2,
+     "bytes": 292493,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 4.4,
+     "ttfb": 4,
+     "bytes": 292493,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 4.7,
+     "ttfb": 3.9,
+     "bytes": 292493,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 5.9,
+     "ttfb": 5,
+     "bytes": 292493,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 7.5,
+     "ttfb": 6,
+     "bytes": 292493,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 12.2,
+     "ttfb": 11.4,
+     "bytes": 292493,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 4.3,
+     "ttfb": 3.8,
+     "bytes": 292493,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 5,
+     "ttfb": 4.5,
+     "bytes": 292493,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 3.3,
+     "ttfb": 2.9,
+     "bytes": 292493,
+     "status": 200,
+     "upstream": 0
+    }
+   ]
+  },
+  {
+   "name": "txs:detail-plain",
+   "url": "/api/transactions/1f83f0fba9ad30626a7b7dbd197d8114c98d3204f2638cf23409bc9348c629a1",
+   "runs": [
+    {
+     "ms": 3.6,
+     "ttfb": 3.5,
+     "bytes": 1566,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 3,
+     "ttfb": 2.9,
+     "bytes": 1566,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 3.8,
+     "ttfb": 3.5,
+     "bytes": 1566,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 2.8,
+     "ttfb": 2.5,
+     "bytes": 1566,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 4,
+     "ttfb": 3.8,
+     "bytes": 1566,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 3.4,
+     "ttfb": 3.1,
+     "bytes": 1566,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 3.2,
+     "ttfb": 3,
+     "bytes": 1566,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 3,
+     "ttfb": 2.8,
+     "bytes": 1566,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 3.8,
+     "ttfb": 3.6,
+     "bytes": 1566,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 3.9,
+     "ttfb": 3.6,
+     "bytes": 1566,
+     "status": 200,
+     "upstream": 0
+    }
+   ]
+  },
+  {
+   "name": "tokens:list",
+   "url": "/api/tokens?page=1&size=20",
+   "runs": [
+    {
+     "ms": 1.6,
+     "ttfb": 1.5,
+     "bytes": 4056,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 1,
+     "ttfb": 0.9,
+     "bytes": 4056,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 0.9,
+     "ttfb": 0.8,
+     "bytes": 4056,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 1,
+     "ttfb": 0.9,
+     "bytes": 4056,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 1.3,
+     "ttfb": 1.1,
+     "bytes": 4056,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 2.9,
+     "ttfb": 2.7,
+     "bytes": 4056,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 4.5,
+     "ttfb": 4.2,
+     "bytes": 4056,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 3.6,
+     "ttfb": 3.3,
+     "bytes": 4056,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 3.2,
+     "ttfb": 2.7,
+     "bytes": 4056,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 3.1,
+     "ttfb": 2.9,
+     "bytes": 4056,
+     "status": 200,
+     "upstream": 0
+    }
+   ]
+  },
+  {
+   "name": "tokens:by-policy",
+   "url": "/api/tokens/policy/ac3f4224723e2ed9d166478662f6e48bae9ddf0fc5ee58f54f6c3229?page=1&size=20",
+   "runs": [
+    {
+     "ms": 51.6,
+     "ttfb": 51.4,
+     "bytes": 283,
+     "status": 200,
+     "upstream": 1
+    },
+    {
+     "ms": 48.2,
+     "ttfb": 47.7,
+     "bytes": 283,
+     "status": 200,
+     "upstream": 1
+    },
+    {
+     "ms": 47.7,
+     "ttfb": 47.6,
+     "bytes": 283,
+     "status": 200,
+     "upstream": 1
+    },
+    {
+     "ms": 140.3,
+     "ttfb": 140.1,
+     "bytes": 283,
+     "status": 200,
+     "upstream": 1
+    },
+    {
+     "ms": 50.2,
+     "ttfb": 50,
+     "bytes": 283,
+     "status": 200,
+     "upstream": 1
+    },
+    {
+     "ms": 46.5,
+     "ttfb": 46.4,
+     "bytes": 283,
+     "status": 200,
+     "upstream": 1
+    },
+    {
+     "ms": 50.3,
+     "ttfb": 50.1,
+     "bytes": 283,
+     "status": 200,
+     "upstream": 1
+    },
+    {
+     "ms": 254.9,
+     "ttfb": 254.6,
+     "bytes": 283,
+     "status": 200,
+     "upstream": 1
+    },
+    {
+     "ms": 334.1,
+     "ttfb": 334,
+     "bytes": 283,
+     "status": 200,
+     "upstream": 1
+    },
+    {
+     "ms": 139.1,
+     "ttfb": 139,
+     "bytes": 283,
+     "status": 200,
+     "upstream": 1
+    }
+   ]
+  },
+  {
+   "name": "tokens:detail",
+   "url": "/api/tokens/ac3f4224723e2ed9d166478662f6e48bae9ddf0fc5ee58f54f6c322943454e54",
+   "runs": [
+    {
+     "ms": 921.5,
+     "ttfb": 921.4,
+     "bytes": 519,
+     "status": 200,
+     "upstream": 2
+    },
+    {
+     "ms": 273.5,
+     "ttfb": 273.2,
+     "bytes": 519,
+     "status": 200,
+     "upstream": 1
+    },
+    {
+     "ms": 54.7,
+     "ttfb": 54.5,
+     "bytes": 519,
+     "status": 200,
+     "upstream": 1
+    },
+    {
+     "ms": 173.2,
+     "ttfb": 172.9,
+     "bytes": 519,
+     "status": 200,
+     "upstream": 1
+    },
+    {
+     "ms": 265.7,
+     "ttfb": 265.6,
+     "bytes": 519,
+     "status": 200,
+     "upstream": 1
+    },
+    {
+     "ms": 131.8,
+     "ttfb": 131.7,
+     "bytes": 519,
+     "status": 200,
+     "upstream": 1
+    },
+    {
+     "ms": 139.8,
+     "ttfb": 139.7,
+     "bytes": 519,
+     "status": 200,
+     "upstream": 1
+    },
+    {
+     "ms": 51,
+     "ttfb": 50.8,
+     "bytes": 519,
+     "status": 200,
+     "upstream": 1
+    },
+    {
+     "ms": 319.6,
+     "ttfb": 318.8,
+     "bytes": 519,
+     "status": 200,
+     "upstream": 1
+    },
+    {
+     "ms": 139.5,
+     "ttfb": 139.3,
+     "bytes": 519,
+     "status": 200,
+     "upstream": 1
+    }
+   ]
+  },
+  {
+   "name": "tokens:holders",
+   "url": "/api/tokens/ac3f4224723e2ed9d166478662f6e48bae9ddf0fc5ee58f54f6c322943454e54/holders?page=1&size=20",
+   "runs": [
+    {
+     "ms": 97.8,
+     "ttfb": 97.4,
+     "bytes": 226,
+     "status": 200,
+     "upstream": 2
+    },
+    {
+     "ms": 101.7,
+     "ttfb": 101.4,
+     "bytes": 226,
+     "status": 200,
+     "upstream": 2
+    },
+    {
+     "ms": 130.2,
+     "ttfb": 130,
+     "bytes": 226,
+     "status": 200,
+     "upstream": 2
+    },
+    {
+     "ms": 123.5,
+     "ttfb": 123.2,
+     "bytes": 226,
+     "status": 200,
+     "upstream": 2
+    },
+    {
+     "ms": 180.6,
+     "ttfb": 180.3,
+     "bytes": 226,
+     "status": 200,
+     "upstream": 2
+    },
+    {
+     "ms": 106.2,
+     "ttfb": 105.8,
+     "bytes": 226,
+     "status": 200,
+     "upstream": 2
+    },
+    {
+     "ms": 103.2,
+     "ttfb": 102.9,
+     "bytes": 226,
+     "status": 200,
+     "upstream": 2
+    },
+    {
+     "ms": 179.9,
+     "ttfb": 179.8,
+     "bytes": 226,
+     "status": 200,
+     "upstream": 2
+    },
+    {
+     "ms": 90.9,
+     "ttfb": 90.9,
+     "bytes": 226,
+     "status": 200,
+     "upstream": 2
+    },
+    {
+     "ms": 93.2,
+     "ttfb": 93.1,
+     "bytes": 226,
+     "status": 200,
+     "upstream": 2
+    }
+   ]
+  },
+  {
+   "name": "tokens:txs",
+   "url": "/api/tokens/ac3f4224723e2ed9d166478662f6e48bae9ddf0fc5ee58f54f6c322943454e54/transactions?page=1&size=20",
+   "runs": [
+    {
+     "ms": 656.3,
+     "ttfb": 656.1,
+     "bytes": 635,
+     "status": 200,
+     "upstream": 2
+    },
+    {
+     "ms": 49.5,
+     "ttfb": 49.1,
+     "bytes": 635,
+     "status": 200,
+     "upstream": 1
+    },
+    {
+     "ms": 112.9,
+     "ttfb": 112.7,
+     "bytes": 635,
+     "status": 200,
+     "upstream": 1
+    },
+    {
+     "ms": 52.1,
+     "ttfb": 51.9,
+     "bytes": 635,
+     "status": 200,
+     "upstream": 1
+    },
+    {
+     "ms": 50.6,
+     "ttfb": 50.1,
+     "bytes": 635,
+     "status": 200,
+     "upstream": 1
+    },
+    {
+     "ms": 50.2,
+     "ttfb": 50.1,
+     "bytes": 635,
+     "status": 200,
+     "upstream": 1
+    },
+    {
+     "ms": 126.6,
+     "ttfb": 126.5,
+     "bytes": 635,
+     "status": 200,
+     "upstream": 1
+    },
+    {
+     "ms": 49.5,
+     "ttfb": 49.3,
+     "bytes": 635,
+     "status": 200,
+     "upstream": 1
+    },
+    {
+     "ms": 48,
+     "ttfb": 47.8,
+     "bytes": 635,
+     "status": 200,
+     "upstream": 1
+    },
+    {
+     "ms": 50.3,
+     "ttfb": 50.2,
+     "bytes": 635,
+     "status": 200,
+     "upstream": 1
+    }
+   ]
+  },
+  {
+   "name": "addresses:detail",
+   "url": "/api/addresses/addr1z8p79rpkcdz8x9d6tft0x0dx5mwuzac2sa4gm8cvkw5hcnq9qxvlp6p6qxzqmh2kgezgupmrgnk8m942tgzpu70r5j8sdwc009",
+   "runs": [
+    {
+     "ms": 642.4,
+     "ttfb": 642.3,
+     "bytes": 288,
+     "status": 200,
+     "upstream": 3
+    },
+    {
+     "ms": 56.3,
+     "ttfb": 56.1,
+     "bytes": 288,
+     "status": 200,
+     "upstream": 2
+    },
+    {
+     "ms": 111.8,
+     "ttfb": 111.6,
+     "bytes": 288,
+     "status": 200,
+     "upstream": 2
+    },
+    {
+     "ms": 62.6,
+     "ttfb": 62.5,
+     "bytes": 288,
+     "status": 200,
+     "upstream": 2
+    },
+    {
+     "ms": 54.9,
+     "ttfb": 54.7,
+     "bytes": 288,
+     "status": 200,
+     "upstream": 2
+    },
+    {
+     "ms": 53.3,
+     "ttfb": 53,
+     "bytes": 288,
+     "status": 200,
+     "upstream": 2
+    },
+    {
+     "ms": 107,
+     "ttfb": 106.9,
+     "bytes": 288,
+     "status": 200,
+     "upstream": 2
+    },
+    {
+     "ms": 48.7,
+     "ttfb": 48.7,
+     "bytes": 288,
+     "status": 200,
+     "upstream": 2
+    },
+    {
+     "ms": 49.3,
+     "ttfb": 49.2,
+     "bytes": 288,
+     "status": 200,
+     "upstream": 2
+    },
+    {
+     "ms": 48.6,
+     "ttfb": 48.5,
+     "bytes": 288,
+     "status": 200,
+     "upstream": 2
+    }
+   ]
+  },
+  {
+   "name": "addresses:txs",
+   "url": "/api/addresses/addr1z8p79rpkcdz8x9d6tft0x0dx5mwuzac2sa4gm8cvkw5hcnq9qxvlp6p6qxzqmh2kgezgupmrgnk8m942tgzpu70r5j8sdwc009/transactions?page=1&size=20",
+   "runs": [
+    {
+     "ms": 657.5,
+     "ttfb": 657.3,
+     "bytes": 7953,
+     "status": 200,
+     "upstream": 2
+    },
+    {
+     "ms": 52.6,
+     "ttfb": 52.2,
+     "bytes": 7953,
+     "status": 200,
+     "upstream": 1
+    },
+    {
+     "ms": 133.6,
+     "ttfb": 133.5,
+     "bytes": 7953,
+     "status": 200,
+     "upstream": 1
+    },
+    {
+     "ms": 47.5,
+     "ttfb": 47.4,
+     "bytes": 7953,
+     "status": 200,
+     "upstream": 1
+    },
+    {
+     "ms": 51.6,
+     "ttfb": 51.4,
+     "bytes": 7953,
+     "status": 200,
+     "upstream": 1
+    },
+    {
+     "ms": 56,
+     "ttfb": 55.8,
+     "bytes": 7953,
+     "status": 200,
+     "upstream": 1
+    },
+    {
+     "ms": 129.1,
+     "ttfb": 128.8,
+     "bytes": 7953,
+     "status": 200,
+     "upstream": 1
+    },
+    {
+     "ms": 56,
+     "ttfb": 55.7,
+     "bytes": 7953,
+     "status": 200,
+     "upstream": 1
+    },
+    {
+     "ms": 51.3,
+     "ttfb": 51.1,
+     "bytes": 7953,
+     "status": 200,
+     "upstream": 1
+    },
+    {
+     "ms": 53.7,
+     "ttfb": 53.3,
+     "bytes": 7953,
+     "status": 200,
+     "upstream": 1
+    }
+   ]
+  },
+  {
+   "name": "addresses:stake",
+   "url": "/api/addresses/addr1z8p79rpkcdz8x9d6tft0x0dx5mwuzac2sa4gm8cvkw5hcnq9qxvlp6p6qxzqmh2kgezgupmrgnk8m942tgzpu70r5j8sdwc009/stake",
+   "runs": [
+    {
+     "ms": 84.3,
+     "ttfb": 84.2,
+     "bytes": 94,
+     "status": 200,
+     "upstream": 1
+    },
+    {
+     "ms": 45.6,
+     "ttfb": 45.5,
+     "bytes": 94,
+     "status": 200,
+     "upstream": 1
+    },
+    {
+     "ms": 262.5,
+     "ttfb": 262.4,
+     "bytes": 94,
+     "status": 200,
+     "upstream": 1
+    },
+    {
+     "ms": 316.6,
+     "ttfb": 316.4,
+     "bytes": 94,
+     "status": 200,
+     "upstream": 1
+    },
+    {
+     "ms": 136,
+     "ttfb": 135.9,
+     "bytes": 94,
+     "status": 200,
+     "upstream": 1
+    },
+    {
+     "ms": 44.8,
+     "ttfb": 44.7,
+     "bytes": 94,
+     "status": 200,
+     "upstream": 1
+    },
+    {
+     "ms": 324.5,
+     "ttfb": 324.3,
+     "bytes": 94,
+     "status": 200,
+     "upstream": 1
+    },
+    {
+     "ms": 134.9,
+     "ttfb": 134.7,
+     "bytes": 94,
+     "status": 200,
+     "upstream": 1
+    },
+    {
+     "ms": 266.3,
+     "ttfb": 266.2,
+     "bytes": 94,
+     "status": 200,
+     "upstream": 1
+    },
+    {
+     "ms": 48.2,
+     "ttfb": 48.1,
+     "bytes": 94,
+     "status": 200,
+     "upstream": 1
+    }
+   ]
+  },
+  {
+   "name": "pools:list",
+   "url": "/api/pools?page=1&size=20",
+   "runs": [
+    {
+     "ms": 329.1,
+     "ttfb": 328.9,
+     "bytes": 4775,
+     "status": 200,
+     "upstream": 1
+    },
+    {
+     "ms": 136.9,
+     "ttfb": 136.7,
+     "bytes": 4775,
+     "status": 200,
+     "upstream": 1
+    },
+    {
+     "ms": 265,
+     "ttfb": 264.8,
+     "bytes": 4775,
+     "status": 200,
+     "upstream": 1
+    },
+    {
+     "ms": 57,
+     "ttfb": 56.9,
+     "bytes": 4775,
+     "status": 200,
+     "upstream": 1
+    },
+    {
+     "ms": 175.8,
+     "ttfb": 175.7,
+     "bytes": 4775,
+     "status": 200,
+     "upstream": 1
+    },
+    {
+     "ms": 269.8,
+     "ttfb": 269.4,
+     "bytes": 4775,
+     "status": 200,
+     "upstream": 1
+    },
+    {
+     "ms": 132.4,
+     "ttfb": 132.2,
+     "bytes": 4775,
+     "status": 200,
+     "upstream": 1
+    },
+    {
+     "ms": 140.6,
+     "ttfb": 140.5,
+     "bytes": 4775,
+     "status": 200,
+     "upstream": 1
+    },
+    {
+     "ms": 48.6,
+     "ttfb": 48.5,
+     "bytes": 4775,
+     "status": 200,
+     "upstream": 1
+    },
+    {
+     "ms": 320.4,
+     "ttfb": 320.1,
+     "bytes": 4775,
+     "status": 200,
+     "upstream": 1
+    }
+   ]
+  },
+  {
+   "name": "pools:detail",
+   "url": "/api/pools/pool1z5uqdk7dzdxaae5633fqfcu2eqzy3a3rgtuvy087fdld7yws0xt",
+   "runs": [
+    {
+     "ms": 988.3,
+     "ttfb": 988.1,
+     "bytes": 985,
+     "status": 200,
+     "upstream": 6
+    },
+    {
+     "ms": 239.4,
+     "ttfb": 239.3,
+     "bytes": 985,
+     "status": 200,
+     "upstream": 5
+    },
+    {
+     "ms": 144.1,
+     "ttfb": 144,
+     "bytes": 985,
+     "status": 200,
+     "upstream": 5
+    },
+    {
+     "ms": 226.1,
+     "ttfb": 225.9,
+     "bytes": 985,
+     "status": 200,
+     "upstream": 5
+    },
+    {
+     "ms": 153.5,
+     "ttfb": 153.3,
+     "bytes": 985,
+     "status": 200,
+     "upstream": 5
+    },
+    {
+     "ms": 234.1,
+     "ttfb": 234,
+     "bytes": 985,
+     "status": 200,
+     "upstream": 5
+    },
+    {
+     "ms": 148.3,
+     "ttfb": 147.5,
+     "bytes": 985,
+     "status": 200,
+     "upstream": 5
+    },
+    {
+     "ms": 248.4,
+     "ttfb": 248.4,
+     "bytes": 985,
+     "status": 200,
+     "upstream": 5
+    },
+    {
+     "ms": 147.9,
+     "ttfb": 147.8,
+     "bytes": 985,
+     "status": 200,
+     "upstream": 5
+    },
+    {
+     "ms": 216.2,
+     "ttfb": 215.9,
+     "bytes": 985,
+     "status": 200,
+     "upstream": 5
+    }
+   ]
+  },
+  {
+   "name": "pools:blocks",
+   "url": "/api/pools/pool1z5uqdk7dzdxaae5633fqfcu2eqzy3a3rgtuvy087fdld7yws0xt/blocks?page=1&size=20",
+   "runs": [
+    {
+     "ms": 56.1,
+     "ttfb": 55.9,
+     "bytes": 12613,
+     "status": 200,
+     "upstream": 2
+    },
+    {
+     "ms": 53.6,
+     "ttfb": 53.4,
+     "bytes": 12613,
+     "status": 200,
+     "upstream": 2
+    },
+    {
+     "ms": 134.8,
+     "ttfb": 134.7,
+     "bytes": 12613,
+     "status": 200,
+     "upstream": 2
+    },
+    {
+     "ms": 52.1,
+     "ttfb": 52,
+     "bytes": 12613,
+     "status": 200,
+     "upstream": 2
+    },
+    {
+     "ms": 57.2,
+     "ttfb": 57,
+     "bytes": 12613,
+     "status": 200,
+     "upstream": 2
+    },
+    {
+     "ms": 53.1,
+     "ttfb": 52.6,
+     "bytes": 12613,
+     "status": 200,
+     "upstream": 2
+    },
+    {
+     "ms": 120.1,
+     "ttfb": 120,
+     "bytes": 12613,
+     "status": 200,
+     "upstream": 2
+    },
+    {
+     "ms": 48.6,
+     "ttfb": 48.5,
+     "bytes": 12613,
+     "status": 200,
+     "upstream": 2
+    },
+    {
+     "ms": 51,
+     "ttfb": 50.9,
+     "bytes": 12613,
+     "status": 200,
+     "upstream": 2
+    },
+    {
+     "ms": 51.2,
+     "ttfb": 51.1,
+     "bytes": 12613,
+     "status": 200,
+     "upstream": 2
+    }
+   ]
+  },
+  {
+   "name": "gov:actions",
+   "url": "/api/governance/actions?page=1&size=20",
+   "runs": [
+    {
+     "ms": 3.3,
+     "ttfb": 3.1,
+     "bytes": 3472,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 25.2,
+     "ttfb": 25.1,
+     "bytes": 3472,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 2,
+     "ttfb": 1.9,
+     "bytes": 3472,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 2.6,
+     "ttfb": 2.4,
+     "bytes": 3472,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 4.8,
+     "ttfb": 4.5,
+     "bytes": 3472,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 18.2,
+     "ttfb": 17.9,
+     "bytes": 3472,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 1.1,
+     "ttfb": 1.1,
+     "bytes": 3472,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 2.4,
+     "ttfb": 2.2,
+     "bytes": 3472,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 2.6,
+     "ttfb": 2.4,
+     "bytes": 3472,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 3.1,
+     "ttfb": 2.9,
+     "bytes": 3472,
+     "status": 200,
+     "upstream": 0
+    }
+   ]
+  },
+  {
+   "name": "gov:action-detail",
+   "url": "/api/governance/actions/15f82a365bdee483a4b03873a40d3829cc88c048ff3703e11bd01dd9e035c916/0",
+   "runs": [
+    {
+     "ms": 2.6,
+     "ttfb": 2.5,
+     "bytes": 603,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 2.7,
+     "ttfb": 2.6,
+     "bytes": 603,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 2.4,
+     "ttfb": 2.3,
+     "bytes": 603,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 1.4,
+     "ttfb": 1.3,
+     "bytes": 603,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 3.1,
+     "ttfb": 2.9,
+     "bytes": 603,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 3.6,
+     "ttfb": 3.4,
+     "bytes": 603,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 2.6,
+     "ttfb": 2.4,
+     "bytes": 603,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 3,
+     "ttfb": 2.8,
+     "bytes": 603,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 6.4,
+     "ttfb": 6.2,
+     "bytes": 603,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 6.5,
+     "ttfb": 6.2,
+     "bytes": 603,
+     "status": 200,
+     "upstream": 0
+    }
+   ]
+  },
+  {
+   "name": "gov:action-votes",
+   "url": "/api/governance/actions/15f82a365bdee483a4b03873a40d3829cc88c048ff3703e11bd01dd9e035c916/0/votes",
+   "runs": [
+    {
+     "ms": 4,
+     "ttfb": 3.9,
+     "bytes": 45632,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 5.7,
+     "ttfb": 5.6,
+     "bytes": 45632,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 7.2,
+     "ttfb": 7.1,
+     "bytes": 45632,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 5.8,
+     "ttfb": 5.7,
+     "bytes": 45632,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 4.5,
+     "ttfb": 4.4,
+     "bytes": 45632,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 6.5,
+     "ttfb": 6.4,
+     "bytes": 45632,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 8.4,
+     "ttfb": 8.1,
+     "bytes": 45632,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 8,
+     "ttfb": 7.7,
+     "bytes": 45632,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 11.2,
+     "ttfb": 10.9,
+     "bytes": 45632,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 6,
+     "ttfb": 5.8,
+     "bytes": 45632,
+     "status": 200,
+     "upstream": 0
+    }
+   ]
+  },
+  {
+   "name": "gov:dreps",
+   "url": "/api/governance/dreps?page=1&size=20",
+   "runs": [
+    {
+     "ms": 148.9,
+     "ttfb": 148.7,
+     "bytes": 6488,
+     "status": 200,
+     "upstream": 1
+    },
+    {
+     "ms": 261.1,
+     "ttfb": 261,
+     "bytes": 6488,
+     "status": 200,
+     "upstream": 1
+    },
+    {
+     "ms": 61.9,
+     "ttfb": 61.7,
+     "bytes": 6488,
+     "status": 200,
+     "upstream": 1
+    },
+    {
+     "ms": 330.4,
+     "ttfb": 330.2,
+     "bytes": 6488,
+     "status": 200,
+     "upstream": 1
+    },
+    {
+     "ms": 144.6,
+     "ttfb": 144.3,
+     "bytes": 6488,
+     "status": 200,
+     "upstream": 1
+    },
+    {
+     "ms": 256.6,
+     "ttfb": 256.4,
+     "bytes": 6488,
+     "status": 200,
+     "upstream": 1
+    },
+    {
+     "ms": 84,
+     "ttfb": 83.9,
+     "bytes": 6488,
+     "status": 200,
+     "upstream": 1
+    },
+    {
+     "ms": 314.4,
+     "ttfb": 314.2,
+     "bytes": 6488,
+     "status": 200,
+     "upstream": 1
+    },
+    {
+     "ms": 160,
+     "ttfb": 159.8,
+     "bytes": 6488,
+     "status": 200,
+     "upstream": 1
+    },
+    {
+     "ms": 248.4,
+     "ttfb": 248.1,
+     "bytes": 6488,
+     "status": 200,
+     "upstream": 1
+    }
+   ]
+  },
+  {
+   "name": "gov:drep-detail",
+   "url": "/api/governance/dreps/drep1yfaaaaa270yjt6tu5skndugekprf5ykv5jshanl0c6gqx5qpstskf",
+   "runs": [
+    {
+     "ms": 3.1,
+     "ttfb": 2.9,
+     "bytes": 551,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 3.7,
+     "ttfb": 3.5,
+     "bytes": 551,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 5.5,
+     "ttfb": 5.2,
+     "bytes": 551,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 2.8,
+     "ttfb": 2.6,
+     "bytes": 551,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 3,
+     "ttfb": 2.9,
+     "bytes": 551,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 1.7,
+     "ttfb": 1.6,
+     "bytes": 551,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 5.2,
+     "ttfb": 5,
+     "bytes": 551,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 4.3,
+     "ttfb": 4,
+     "bytes": 551,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 5.8,
+     "ttfb": 5.7,
+     "bytes": 551,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 4.5,
+     "ttfb": 4.4,
+     "bytes": 551,
+     "status": 200,
+     "upstream": 0
+    }
+   ]
+  },
+  {
+   "name": "gov:drep-votes",
+   "url": "/api/governance/dreps/drep1yfaaaaa270yjt6tu5skndugekprf5ykv5jshanl0c6gqx5qpstskf/votes?page=1&size=20",
+   "runs": [
+    {
+     "ms": 2.4,
+     "ttfb": 2.2,
+     "bytes": 2110,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 3.3,
+     "ttfb": 3.1,
+     "bytes": 2110,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 3.5,
+     "ttfb": 3.3,
+     "bytes": 2110,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 2.7,
+     "ttfb": 2.6,
+     "bytes": 2110,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 2.4,
+     "ttfb": 2.1,
+     "bytes": 2110,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 3.3,
+     "ttfb": 3,
+     "bytes": 2110,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 2.6,
+     "ttfb": 2.5,
+     "bytes": 2110,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 3.8,
+     "ttfb": 3.6,
+     "bytes": 2110,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 1.6,
+     "ttfb": 1.5,
+     "bytes": 2110,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 1.5,
+     "ttfb": 1.4,
+     "bytes": 2110,
+     "status": 200,
+     "upstream": 0
+    }
+   ]
+  },
+  {
+   "name": "gov:drep-delegates",
+   "url": "/api/governance/dreps/drep1yfaaaaa270yjt6tu5skndugekprf5ykv5jshanl0c6gqx5qpstskf/delegates?page=1&size=20",
+   "runs": [
+    {
+     "ms": 6.4,
+     "ttfb": 6.1,
+     "bytes": 1981,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 5.3,
+     "ttfb": 5.2,
+     "bytes": 1981,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 4.6,
+     "ttfb": 4.5,
+     "bytes": 1981,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 6.1,
+     "ttfb": 5.8,
+     "bytes": 1981,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 3.8,
+     "ttfb": 3.7,
+     "bytes": 1981,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 5.7,
+     "ttfb": 5.6,
+     "bytes": 1981,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 3.4,
+     "ttfb": 3.3,
+     "bytes": 1981,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 4.4,
+     "ttfb": 4.3,
+     "bytes": 1981,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 3.8,
+     "ttfb": 3.6,
+     "bytes": 1981,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 4.6,
+     "ttfb": 4.4,
+     "bytes": 1981,
+     "status": 200,
+     "upstream": 0
+    }
+   ]
+  },
+  {
+   "name": "protocol-params",
+   "url": "/api/protocol-params",
+   "runs": [
+    {
+     "ms": 5.5,
+     "ttfb": 5.2,
+     "bytes": 45417,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 2.3,
+     "ttfb": 2.2,
+     "bytes": 45417,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 2.7,
+     "ttfb": 2.6,
+     "bytes": 45417,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 3.4,
+     "ttfb": 3.2,
+     "bytes": 45417,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 4,
+     "ttfb": 3.7,
+     "bytes": 45417,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 4.3,
+     "ttfb": 4,
+     "bytes": 45417,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 6.1,
+     "ttfb": 5.8,
+     "bytes": 45417,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 9.2,
+     "ttfb": 9,
+     "bytes": 45417,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 1.7,
+     "ttfb": 1.6,
+     "bytes": 45417,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 4.2,
+     "ttfb": 4,
+     "bytes": 45417,
+     "status": 200,
+     "upstream": 0
+    }
+   ]
+  },
+  {
+   "name": "search",
+   "url": "/api/search?q=13667926",
+   "runs": [
+    {
+     "ms": 48.7,
+     "ttfb": 48.5,
+     "bytes": 100,
+     "status": 200,
+     "upstream": 1
+    },
+    {
+     "ms": 55.8,
+     "ttfb": 55.6,
+     "bytes": 100,
+     "status": 200,
+     "upstream": 1
+    },
+    {
+     "ms": 47.3,
+     "ttfb": 47.2,
+     "bytes": 100,
+     "status": 200,
+     "upstream": 1
+    },
+    {
+     "ms": 131.8,
+     "ttfb": 131.5,
+     "bytes": 100,
+     "status": 200,
+     "upstream": 1
+    },
+    {
+     "ms": 50,
+     "ttfb": 49.8,
+     "bytes": 100,
+     "status": 200,
+     "upstream": 1
+    },
+    {
+     "ms": 55.6,
+     "ttfb": 55.4,
+     "bytes": 100,
+     "status": 200,
+     "upstream": 1
+    },
+    {
+     "ms": 54.9,
+     "ttfb": 54.7,
+     "bytes": 100,
+     "status": 200,
+     "upstream": 1
+    },
+    {
+     "ms": 112.7,
+     "ttfb": 112.5,
+     "bytes": 100,
+     "status": 200,
+     "upstream": 1
+    },
+    {
+     "ms": 46.9,
+     "ttfb": 46.8,
+     "bytes": 100,
+     "status": 200,
+     "upstream": 1
+    },
+    {
+     "ms": 47.2,
+     "ttfb": 47.1,
+     "bytes": 100,
+     "status": 200,
+     "upstream": 1
+    }
+   ]
+  },
+  {
+   "name": "scripts:verification",
+   "url": "/api/scripts/c5a1debec3a1a931e19b6bfeeb4c608071e6c5b2b1f5abbfb92a41ae/verification",
+   "runs": [
+    {
+     "ms": 1.1,
+     "ttfb": 1.1,
+     "bytes": 127,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 2.1,
+     "ttfb": 2,
+     "bytes": 127,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 1.3,
+     "ttfb": 1.2,
+     "bytes": 127,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 1.2,
+     "ttfb": 1.1,
+     "bytes": 127,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 1.9,
+     "ttfb": 1.5,
+     "bytes": 127,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 2.1,
+     "ttfb": 2,
+     "bytes": 127,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 2.3,
+     "ttfb": 2.1,
+     "bytes": 127,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 1,
+     "ttfb": 1,
+     "bytes": 127,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 1.5,
+     "ttfb": 1.4,
+     "bytes": 127,
+     "status": 200,
+     "upstream": 0
+    },
+    {
+     "ms": 1.5,
+     "ttfb": 1.3,
+     "bytes": 127,
+     "status": 200,
+     "upstream": 0
+    }
+   ]
+  }
+ ]
+}

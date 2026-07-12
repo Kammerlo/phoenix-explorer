@@ -1,0 +1,423 @@
+{
+ "label": "baseline-cold-r2",
+ "base": "http://localhost:3000",
+ "at": "2026-07-12T09:29:18.783Z",
+ "results": [
+  {
+   "name": "dashboard/stats",
+   "url": "/api/dashboard/stats",
+   "runs": [
+    {
+     "ms": 83300.2,
+     "ttfb": 83298.3,
+     "bytes": 638,
+     "status": 200,
+     "upstream": 5
+    }
+   ]
+  },
+  {
+   "name": "blocks:list",
+   "url": "/api/blocks?page=1&size=20",
+   "runs": [
+    {
+     "ms": 84093.5,
+     "ttfb": 84093.1,
+     "bytes": 13395,
+     "status": 200,
+     "upstream": 23
+    }
+   ]
+  },
+  {
+   "name": "blocks:detail",
+   "url": "/api/blocks/13667926",
+   "runs": [
+    {
+     "ms": 815.7,
+     "ttfb": 815.3,
+     "bytes": 732,
+     "status": 200,
+     "upstream": 2
+    }
+   ]
+  },
+  {
+   "name": "blocks:txs",
+   "url": "/api/blocks/13667926/transactions?page=1&size=20",
+   "runs": [
+    {
+     "ms": 884.6,
+     "ttfb": 884.4,
+     "bytes": 1936,
+     "status": 200,
+     "upstream": 7
+    }
+   ]
+  },
+  {
+   "name": "epochs:list",
+   "url": "/api/epochs?page=1&size=20",
+   "runs": [
+    {
+     "ms": 166390.9,
+     "ttfb": 166390.3,
+     "bytes": 6083,
+     "status": 200,
+     "upstream": 4
+    }
+   ]
+  },
+  {
+   "name": "epochs:detail",
+   "url": "/api/epochs/641",
+   "runs": [
+    {
+     "ms": 166415.6,
+     "ttfb": 166414.3,
+     "bytes": 323,
+     "status": 200,
+     "upstream": 4
+    }
+   ]
+  },
+  {
+   "name": "epochs:blocks",
+   "url": "/api/epochs/641/blocks?page=1&size=20",
+   "runs": [
+    {
+     "ms": 84459.1,
+     "ttfb": 84458.3,
+     "bytes": 7279,
+     "status": 200,
+     "upstream": 41
+    }
+   ]
+  },
+  {
+   "name": "txs:list",
+   "url": "/api/transactions?page=1&size=20",
+   "runs": [
+    {
+     "ms": 5322.6,
+     "ttfb": 5322.3,
+     "bytes": 6172,
+     "status": 200,
+     "upstream": 36
+    }
+   ]
+  },
+  {
+   "name": "txs:summary",
+   "url": "/api/transactions/76dce176bd880cbf9c06560de6856b853d896961e47cced1a3c14a605be2c06d/summary",
+   "runs": [
+    {
+     "ms": 6527.8,
+     "ttfb": 6525.1,
+     "bytes": 473,
+     "status": 200,
+     "upstream": 3
+    }
+   ]
+  },
+  {
+   "name": "txs:detail-script",
+   "url": "/api/transactions/76dce176bd880cbf9c06560de6856b853d896961e47cced1a3c14a605be2c06d",
+   "runs": [
+    {
+     "ms": 67545.2,
+     "ttfb": 67543.1,
+     "bytes": 292493,
+     "status": 200,
+     "upstream": 15
+    }
+   ]
+  },
+  {
+   "name": "txs:detail-plain",
+   "url": "/api/transactions/1f83f0fba9ad30626a7b7dbd197d8114c98d3204f2638cf23409bc9348c629a1",
+   "runs": [
+    {
+     "ms": 450.4,
+     "ttfb": 450.3,
+     "bytes": 1566,
+     "status": 200,
+     "upstream": 4
+    }
+   ]
+  },
+  {
+   "name": "tokens:list",
+   "url": "/api/tokens?page=1&size=20",
+   "runs": [
+    {
+     "ms": 83175.8,
+     "ttfb": 83175.2,
+     "bytes": 4056,
+     "status": 200,
+     "upstream": 2
+    }
+   ]
+  },
+  {
+   "name": "tokens:by-policy",
+   "url": "/api/tokens/policy/ac3f4224723e2ed9d166478662f6e48bae9ddf0fc5ee58f54f6c3229?page=1&size=20",
+   "runs": [
+    {
+     "ms": 83159.4,
+     "ttfb": 83158.9,
+     "bytes": 283,
+     "status": 200,
+     "upstream": 2
+    }
+   ]
+  },
+  {
+   "name": "tokens:detail",
+   "url": "/api/tokens/ac3f4224723e2ed9d166478662f6e48bae9ddf0fc5ee58f54f6c322943454e54",
+   "runs": [
+    {
+     "ms": 44027,
+     "ttfb": 44026.5,
+     "bytes": 519,
+     "status": 200,
+     "upstream": 3
+    }
+   ]
+  },
+  {
+   "name": "tokens:holders",
+   "url": "/api/tokens/ac3f4224723e2ed9d166478662f6e48bae9ddf0fc5ee58f54f6c322943454e54/holders?page=1&size=20",
+   "runs": [
+    {
+     "ms": 1053.5,
+     "ttfb": 1053.1,
+     "bytes": 226,
+     "status": 200,
+     "upstream": 2
+    }
+   ]
+  },
+  {
+   "name": "tokens:txs",
+   "url": "/api/tokens/ac3f4224723e2ed9d166478662f6e48bae9ddf0fc5ee58f54f6c322943454e54/transactions?page=1&size=20",
+   "runs": [
+    {
+     "ms": 1139.7,
+     "ttfb": 1139.5,
+     "bytes": 635,
+     "status": 200,
+     "upstream": 4
+    }
+   ]
+  },
+  {
+   "name": "addresses:detail",
+   "url": "/api/addresses/addr1z8p79rpkcdz8x9d6tft0x0dx5mwuzac2sa4gm8cvkw5hcnq9qxvlp6p6qxzqmh2kgezgupmrgnk8m942tgzpu70r5j8sdwc009",
+   "runs": [
+    {
+     "ms": 606.5,
+     "ttfb": 606.1,
+     "bytes": 288,
+     "status": 200,
+     "upstream": 2
+    }
+   ]
+  },
+  {
+   "name": "addresses:txs",
+   "url": "/api/addresses/addr1z8p79rpkcdz8x9d6tft0x0dx5mwuzac2sa4gm8cvkw5hcnq9qxvlp6p6qxzqmh2kgezgupmrgnk8m942tgzpu70r5j8sdwc009/transactions?page=1&size=20",
+   "runs": [
+    {
+     "ms": 18862.6,
+     "ttfb": 18862.3,
+     "bytes": 7953,
+     "status": 200,
+     "upstream": 182
+    }
+   ]
+  },
+  {
+   "name": "addresses:stake",
+   "url": "/api/addresses/addr1z8p79rpkcdz8x9d6tft0x0dx5mwuzac2sa4gm8cvkw5hcnq9qxvlp6p6qxzqmh2kgezgupmrgnk8m942tgzpu70r5j8sdwc009/stake",
+   "runs": [
+    {
+     "ms": 4459.6,
+     "ttfb": 4459.4,
+     "bytes": 94,
+     "status": 200,
+     "upstream": 2
+    }
+   ]
+  },
+  {
+   "name": "pools:list",
+   "url": "/api/pools?page=1&size=20",
+   "runs": [
+    {
+     "ms": 1023.8,
+     "ttfb": 1023.6,
+     "bytes": 4775,
+     "status": 200,
+     "upstream": 1
+    }
+   ]
+  },
+  {
+   "name": "pools:detail",
+   "url": "/api/pools/pool1z5uqdk7dzdxaae5633fqfcu2eqzy3a3rgtuvy087fdld7yws0xt",
+   "runs": [
+    {
+     "ms": 12612.9,
+     "ttfb": 12612.2,
+     "bytes": 985,
+     "status": 200,
+     "upstream": 9
+    }
+   ]
+  },
+  {
+   "name": "pools:blocks",
+   "url": "/api/pools/pool1z5uqdk7dzdxaae5633fqfcu2eqzy3a3rgtuvy087fdld7yws0xt/blocks?page=1&size=20",
+   "runs": [
+    {
+     "ms": 6227.2,
+     "ttfb": 6226.9,
+     "bytes": 12590,
+     "status": 200,
+     "upstream": 34
+    }
+   ]
+  },
+  {
+   "name": "gov:actions",
+   "url": "/api/governance/actions?page=1&size=20",
+   "runs": [
+    {
+     "ms": 5752.6,
+     "ttfb": 5752.3,
+     "bytes": 3472,
+     "status": 200,
+     "upstream": 2
+    }
+   ]
+  },
+  {
+   "name": "gov:action-detail",
+   "url": "/api/governance/actions/15f82a365bdee483a4b03873a40d3829cc88c048ff3703e11bd01dd9e035c916/0",
+   "runs": [
+    {
+     "ms": 11487.2,
+     "ttfb": 11487,
+     "bytes": 603,
+     "status": 200,
+     "upstream": 8
+    }
+   ]
+  },
+  {
+   "name": "gov:action-votes",
+   "url": "/api/governance/actions/15f82a365bdee483a4b03873a40d3829cc88c048ff3703e11bd01dd9e035c916/0/votes",
+   "runs": [
+    {
+     "ms": 35004.9,
+     "ttfb": 35004.6,
+     "bytes": 45632,
+     "status": 200,
+     "upstream": 389
+    }
+   ]
+  },
+  {
+   "name": "gov:dreps",
+   "url": "/api/governance/dreps?page=1&size=20",
+   "runs": [
+    {
+     "ms": 66237.5,
+     "ttfb": 66236.9,
+     "bytes": 6487,
+     "status": 200,
+     "upstream": 55
+    }
+   ]
+  },
+  {
+   "name": "gov:drep-detail",
+   "url": "/api/governance/dreps/drep1yfaaaaa270yjt6tu5skndugekprf5ykv5jshanl0c6gqx5qpstskf",
+   "runs": [
+    {
+     "ms": 75846.5,
+     "ttfb": 75846.2,
+     "bytes": 551,
+     "status": 200,
+     "upstream": 14
+    }
+   ]
+  },
+  {
+   "name": "gov:drep-votes",
+   "url": "/api/governance/dreps/drep1yfaaaaa270yjt6tu5skndugekprf5ykv5jshanl0c6gqx5qpstskf/votes?page=1&size=20",
+   "runs": [
+    {
+     "ms": 44423.4,
+     "ttfb": 44423,
+     "bytes": 2110,
+     "status": 200,
+     "upstream": 2
+    }
+   ]
+  },
+  {
+   "name": "gov:drep-delegates",
+   "url": "/api/governance/dreps/drep1yfaaaaa270yjt6tu5skndugekprf5ykv5jshanl0c6gqx5qpstskf/delegates?page=1&size=20",
+   "runs": [
+    {
+     "ms": 25156,
+     "ttfb": 25155.6,
+     "bytes": 1981,
+     "status": 200,
+     "upstream": 2
+    }
+   ]
+  },
+  {
+   "name": "protocol-params",
+   "url": "/api/protocol-params",
+   "runs": [
+    {
+     "ms": 5595.5,
+     "ttfb": 5595.3,
+     "bytes": 45417,
+     "status": 200,
+     "upstream": 2
+    }
+   ]
+  },
+  {
+   "name": "search",
+   "url": "/api/search?q=13667926",
+   "runs": [
+    {
+     "ms": 5162.2,
+     "ttfb": 5161.7,
+     "bytes": 100,
+     "status": 200,
+     "upstream": 3
+    }
+   ]
+  },
+  {
+   "name": "scripts:verification",
+   "url": "/api/scripts/c5a1debec3a1a931e19b6bfeeb4c608071e6c5b2b1f5abbfb92a41ae/verification",
+   "runs": [
+    {
+     "ms": 379.8,
+     "ttfb": 379.6,
+     "bytes": 127,
+     "status": 200,
+     "upstream": 0
+    }
+   ]
+  }
+ ]
+}
