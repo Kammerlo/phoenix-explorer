@@ -1,4 +1,6 @@
 import {BlockFrostAPI} from "@blockfrost/blockfrost-js";
+import http from "node:http";
+import https from "node:https";
 import {ENV} from "./env";
 
 const isBlockfrostConfigured = !!ENV.API_KEY;
@@ -54,11 +56,39 @@ function navigate(root: object | null, path: readonly string[]): object | null {
   return cur ?? null;
 }
 
+// Per-method circuit breaker for the primary (demeter) client. Once a method
+// fails BREAKER_THRESHOLD times in a row, calls to it go straight to the
+// fallback for BREAKER_OPEN_MS instead of paying the primary's timeout again
+// on every request. Half-opens automatically (the next call after the window
+// tries the primary once). Purely a latency device — the data always comes
+// from one of the two identical providers.
+const BREAKER_THRESHOLD = 2;
+const BREAKER_OPEN_MS = 5 * 60 * 1000;
+const breaker = new Map<string, { fails: number; openUntil: number }>();
+
+function breakerIsOpen(method: string): boolean {
+  const state = breaker.get(method);
+  return !!state && state.fails >= BREAKER_THRESHOLD && Date.now() < state.openUntil;
+}
+
+function breakerRecord(method: string, ok: boolean) {
+  if (ok) {
+    breaker.delete(method);
+    return;
+  }
+  const state = breaker.get(method) ?? { fails: 0, openUntil: 0 };
+  state.fails += 1;
+  if (state.fails >= BREAKER_THRESHOLD) state.openUntil = Date.now() + BREAKER_OPEN_MS;
+  breaker.set(method, state);
+}
+
 // Wrap a BlockFrostAPI client with a Proxy that:
 //   - Logs every method invocation, including nested namespaces
 //     (e.g. `api.governance.drepsById(...)`).
-//   - Optionally falls back to a second client on HTTP 429. When demeter rate
-//     limits us, we re-dispatch the identical call against blockfrost.io.
+//   - Optionally falls back to a second client on any error. When demeter rate
+//     limits or times out, we re-dispatch the identical call against
+//     blockfrost.io — and open the per-method breaker so repeat offenders skip
+//     the doomed primary attempt entirely.
 // Internal SDK calls made via `this.xxx()` aren't double-logged because we
 // invoke the original method with `this === target`, not the proxy.
 function wrapClient<T extends object>(
@@ -76,19 +106,37 @@ function wrapClient<T extends object>(
         const propName = String(prop);
         return async (...args: unknown[]) => {
           const fullName = [...path, propName].join(".");
+          const fallbackFn = (): ((...a: unknown[]) => unknown) | null => {
+            if (!fallback) return null;
+            const fbParent = navigate(fallback, path);
+            const fbFn = fbParent ? (fbParent as Record<string, unknown>)[propName] : undefined;
+            return typeof fbFn === "function"
+              ? (...a: unknown[]) => (fbFn as (...x: unknown[]) => unknown).apply(fbParent, a)
+              : null;
+          };
+
+          // Breaker open → skip the doomed primary attempt entirely.
+          if (fallback && breakerIsOpen(fullName)) {
+            const fb = fallbackFn();
+            if (fb) {
+              console.log(`[${new Date().toISOString()}] [breaker] ${label} open for ${fullName} → ${fallbackLabel}`);
+              return await fb(...args);
+            }
+          }
+
           logCall(label, fullName, args);
           try {
-            return await (value as (...a: unknown[]) => unknown).apply(obj, args);
+            const result = await (value as (...a: unknown[]) => unknown).apply(obj, args);
+            if (fallback) breakerRecord(fullName, true);
+            return result;
           } catch (err) {
-            if (fallback) {
-              const fbParent = navigate(fallback, path);
-              const fbFn = fbParent ? (fbParent as Record<string, unknown>)[propName] : undefined;
-              if (typeof fbFn === "function") {
-                console.log(`[${new Date().toISOString()}] [fallback] ${label} → ${fallbackLabel} on ${describeError(err)}: ${fullName}`);
-                // The fallback target is itself a logged Proxy, so the
-                // `[blockfrost] ${fullName}` line is emitted by its own wrapper.
-                return await (fbFn as (...a: unknown[]) => unknown).apply(fbParent, args);
-              }
+            if (fallback) breakerRecord(fullName, false);
+            const fb = fallbackFn();
+            if (fb) {
+              console.log(`[${new Date().toISOString()}] [fallback] ${label} → ${fallbackLabel} on ${describeError(err)}: ${fullName}`);
+              // The fallback target is itself a logged Proxy, so the
+              // `[blockfrost] ${fullName}` line is emitted by its own wrapper.
+              return await fb(...args);
             }
             throw err;
           }
@@ -102,21 +150,41 @@ function wrapClient<T extends object>(
   });
 }
 
+// Keep-alive agents shared by both clients: without them every upstream call
+// pays a fresh TCP+TLS handshake, which dominates latency on endpoints that
+// fan out into dozens of calls.
+const keepAliveHttp = new http.Agent({ keepAlive: true, maxSockets: 64 });
+const keepAliveHttps = new https.Agent({ keepAlive: true, maxSockets: 64 });
+const keepAliveAgents = { http: keepAliveHttp, https: keepAliveHttps };
+
 const blockfrostRaw: BlockFrostAPI | null = isBlockfrostConfigured
   ? new BlockFrostAPI({
       projectId: ENV.API_KEY!,
       network: ENV.NETWORK,
+      gotOptions: {
+        agent: keepAliveAgents,
+      },
     })
   : null;
 
 // demeter.run exposes a Blockfrost-compatible endpoint but authenticates with a
 // `dmtr-api-key` header instead of `project_id`. The SDK lets us override the
 // outgoing headers via `gotOptions` (which spreads after the SDK's defaults).
+//
+// Fast-fail settings: demeter has a healthy blockfrost.io fallback standing by,
+// so there is no reason to retry it or to wait the SDK's default 20s timeout —
+// measured, a degraded demeter endpoint cost 60–85s per call (20s timeout × got
+// retries + backoff) before the fallback answered in milliseconds. 4s with no
+// retries caps the worst case per call at 4s, and the circuit breaker removes
+// even that for repeat offenders.
 const demeterRaw: BlockFrostAPI | null = isDemeterConfigured
   ? new BlockFrostAPI({
       customBackend: ENV.DEMETER_URL!,
       network: ENV.NETWORK,
+      requestTimeout: 4000,
       gotOptions: {
+        retry: 0,
+        agent: keepAliveAgents,
         headers: {
           "dmtr-api-key": ENV.DEMETER_API_KEY!,
           "User-Agent": "phoenix-explorer-gateway",
