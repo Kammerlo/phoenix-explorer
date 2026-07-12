@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { API } from "../config/blockfrost";
-import { getBlock, getTransactions } from "../config/cache";
+import { getAssetHistory, getAssetsPage, getBlock, getTransactions } from "../config/cache";
 import { Block } from "@shared/dtos/block.dto";
 import { ApiReturnType } from "@shared/APIReturnType";
 import { ITokenOverview, TokenHolder } from "@shared/dtos/token.dto";
@@ -40,10 +40,7 @@ tokenController.get('', async (req, res) => {
   // Frontend pagination is 1-based; accept legacy 0 as "first page".
   const requestedPage = Math.max(1, Number.parseInt(String(pageInfo.page || 1)));
   const pageSize = Number.parseInt(String(pageInfo.size ?? 100));
-  const assets = await API.assets({
-    page: requestedPage,
-    count: pageSize
-  });
+  const assets = await getAssetsPage(requestedPage, pageSize);
 
   const assetData: ITokenOverview[] = assets.map((asset) => {
     return {
@@ -121,7 +118,7 @@ tokenController.get('/:tokenId', async (req, res) => {
   const assetById = await API.assetsById(req.params.tokenId);
   const [mintTx, history] = await Promise.all([
     getTransactions(assetById.initial_mint_tx_hash),
-    API.assetsHistoryAll(assetById.asset)
+    getAssetHistory(assetById.asset)
   ]);
 
   // One lookup per *distinct* mint/burn tx, in parallel through the cache — the
