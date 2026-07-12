@@ -2,11 +2,36 @@ import { ApiReturnType } from "@shared/APIReturnType";
 import { AddressDetail, StakeAddressDetail } from "@shared/dtos/address.dto";
 import { Transaction } from "@shared/dtos/transaction.dto";
 import { Router, Request, Response } from "express";
-import { API, POOL_API } from "../config/blockfrost";
-import { cache, fetchAddressTotal } from "../config/cache";
-import { fetchTransactionDetail } from "../service/transactionService";
+import { API } from "../config/blockfrost";
+import { fetchAddressTotal, getBlock, getPoolMetadata, getTransactions } from "../config/cache";
+import { computeTotalLovelaceOutput, computeTxTags } from "@shared/helpers/txTags";
 
 export const addressController = Router();
+
+// A tx-list row only needs the header fields. The previous implementation ran
+// the FULL detail assembly (UTxOs, asset metadata, certificates, contracts —
+// ~10 upstream calls) per row; two cached lookups produce the identical row.
+async function toTransactionRow(txHash: string): Promise<Transaction> {
+    const tx = await getTransactions(txHash);
+    const block = await getBlock(tx.block);
+    return {
+        hash: txHash,
+        blockNo: tx.block_height ?? 0,
+        blockHash: tx.block,
+        epochNo: block.epoch ?? 0,
+        epochSlot: block.epoch_slot ?? 0,
+        epochSlotNo: block.epoch_slot ?? 0,
+        slot: tx.slot ?? 0,
+        addressesInput: [],
+        addressesOutput: [],
+        fee: Number.parseInt(tx.fees ?? "0"),
+        totalOutput: computeTotalLovelaceOutput(tx.output_amount),
+        time: tx.block_time.toString(),
+        balance: 0,
+        tokens: [],
+        tags: computeTxTags(tx),
+    } as Transaction;
+}
 
 addressController.get('/:address', async (req, res) => {
     const address = req.params.address;
@@ -97,26 +122,7 @@ addressController.get('/:address/transactions', async (req, res) => {
             const totalTxs = (account as any).tx_count ?? undefined;
             const stakeTxs = await API.accountsTransactions(address, { page, count, order: "desc" });
             const txData: Transaction[] = await Promise.all(
-                stakeTxs.map(async (entry: any) => {
-                    const txDetail = await fetchTransactionDetail(entry.tx_hash);
-                    return {
-                        hash: entry.tx_hash,
-                        blockNo: txDetail.tx.blockNo,
-                        blockHash: txDetail.tx.blockHash,
-                        epochNo: txDetail.tx.epochNo,
-                        epochSlot: txDetail.tx.epochSlot,
-                        epochSlotNo: txDetail.tx.epochSlot ?? 0,
-                        slot: txDetail.tx.slotNo,
-                        addressesInput: [],
-                        addressesOutput: [],
-                        fee: txDetail.tx.fee,
-                        totalOutput: txDetail.tx.totalOutput,
-                        time: txDetail.tx.time,
-                        balance: 0,
-                        tokens: [],
-                        tags: (txDetail.tx as any).tags,
-                    } as Transaction;
-                })
+                stakeTxs.map((entry: any) => toTransactionRow(entry.tx_hash))
             );
             res.json({
                 data: txData,
@@ -135,26 +141,7 @@ addressController.get('/:address/transactions', async (req, res) => {
         ]);
 
         const txData: Transaction[] = await Promise.all(
-            addrTxs.map(async (addrTx) => {
-                const txDetail = await fetchTransactionDetail(addrTx.tx_hash);
-                return {
-                    hash: addrTx.tx_hash,
-                    blockNo: txDetail.tx.blockNo,
-                    blockHash: txDetail.tx.blockHash,
-                    epochNo: txDetail.tx.epochNo,
-                    epochSlot: txDetail.tx.epochSlot,
-                    epochSlotNo: txDetail.tx.epochSlot ?? 0,
-                    slot: txDetail.tx.slotNo,
-                    addressesInput: [],
-                    addressesOutput: [],
-                    fee: txDetail.tx.fee,
-                    totalOutput: txDetail.tx.totalOutput,
-                    time: txDetail.tx.time,
-                    balance: 0,
-                    tokens: [],
-                    tags: (txDetail.tx as any).tags,
-                } as Transaction;
-            })
+            addrTxs.map((addrTx) => toTransactionRow(addrTx.tx_hash))
         );
 
         res.json({
@@ -194,18 +181,18 @@ addressController.get('/:address/stake', async (req, res) => {
             }
         };
 
-        // Pool metadata enrichment is best-effort and requires blockfrost.io
-        // (POOL_API). When only demeter is configured the pool fields stay
-        // blank rather than failing the whole stake-address response.
-        if (stakeAddressData.pool_id && POOL_API) {
-            try {
-                const pool = await POOL_API.poolMetadata(stakeAddressData.pool_id);
+        // Pool metadata enrichment is best-effort and requires blockfrost.io;
+        // the cached helper resolves to null when only demeter is configured,
+        // leaving the pool fields blank rather than failing the response.
+        if (stakeAddressData.pool_id) {
+            const pool = await getPoolMetadata(stakeAddressData.pool_id);
+            if (pool) {
                 stakeAddressDetail.pool.tickerName = pool.ticker || '';
                 stakeAddressDetail.pool.poolName = pool.name || '';
                 stakeAddressDetail.pool.poolId = pool.pool_id || '';
-            } catch { /* no metadata */ }
-        } else if (stakeAddressData.pool_id) {
-            stakeAddressDetail.pool.poolId = stakeAddressData.pool_id;
+            } else {
+                stakeAddressDetail.pool.poolId = stakeAddressData.pool_id;
+            }
         }
 
         res.json({

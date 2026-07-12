@@ -1,11 +1,11 @@
 import { Router } from "express";
-import { API } from "../config/blockfrost";
 import { ApiReturnType } from "@shared/APIReturnType";
+import { getLatestParameters } from "../config/cache";
 
 export const protocolParamsController = Router();
 
 protocolParamsController.get("", async (_req, res) => {
-  const params = await API.epochsLatestParameters();
+  const params = await getLatestParameters();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const result: Record<string, any> = {
     minFeeA: params.min_fee_a,

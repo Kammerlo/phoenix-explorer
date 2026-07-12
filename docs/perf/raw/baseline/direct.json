@@ -1,0 +1,2642 @@
+{
+ "label": "baseline-direct",
+ "base": "blockfrost.io(direct)",
+ "at": "2026-07-12T12:42:49.112Z",
+ "results": [
+  {
+   "name": "dashboard/stats",
+   "runs": [
+    {
+     "ms": 129.8,
+     "ttfb": null,
+     "bytes": 698,
+     "upstream": 3,
+     "upstreamBytes": 1091,
+     "error": null
+    },
+    {
+     "ms": 144.2,
+     "ttfb": null,
+     "bytes": 698,
+     "upstream": 3,
+     "upstreamBytes": 1091,
+     "error": null
+    },
+    {
+     "ms": 195.9,
+     "ttfb": null,
+     "bytes": 698,
+     "upstream": 3,
+     "upstreamBytes": 1091,
+     "error": null
+    },
+    {
+     "ms": 258.3,
+     "ttfb": null,
+     "bytes": 698,
+     "upstream": 3,
+     "upstreamBytes": 1091,
+     "error": null
+    },
+    {
+     "ms": 47.1,
+     "ttfb": null,
+     "bytes": 698,
+     "upstream": 3,
+     "upstreamBytes": 1091,
+     "error": null
+    },
+    {
+     "ms": 272.5,
+     "ttfb": null,
+     "bytes": 698,
+     "upstream": 3,
+     "upstreamBytes": 1091,
+     "error": null
+    },
+    {
+     "ms": 96.7,
+     "ttfb": null,
+     "bytes": 698,
+     "upstream": 3,
+     "upstreamBytes": 1091,
+     "error": null
+    },
+    {
+     "ms": 222.3,
+     "ttfb": null,
+     "bytes": 698,
+     "upstream": 3,
+     "upstreamBytes": 1091,
+     "error": null
+    },
+    {
+     "ms": 48.8,
+     "ttfb": null,
+     "bytes": 698,
+     "upstream": 3,
+     "upstreamBytes": 1091,
+     "error": null
+    },
+    {
+     "ms": 270.4,
+     "ttfb": null,
+     "bytes": 698,
+     "upstream": 3,
+     "upstreamBytes": 1091,
+     "error": null
+    }
+   ]
+  },
+  {
+   "name": "blocks:list",
+   "runs": [
+    {
+     "ms": 789,
+     "ttfb": null,
+     "bytes": 13523,
+     "upstream": 22,
+     "upstreamBytes": 22490,
+     "error": null
+    },
+    {
+     "ms": 321.2,
+     "ttfb": null,
+     "bytes": 13523,
+     "upstream": 22,
+     "upstreamBytes": 22490,
+     "error": null
+    },
+    {
+     "ms": 268.1,
+     "ttfb": null,
+     "bytes": 13523,
+     "upstream": 22,
+     "upstreamBytes": 22490,
+     "error": null
+    },
+    {
+     "ms": 522.9,
+     "ttfb": null,
+     "bytes": 13523,
+     "upstream": 22,
+     "upstreamBytes": 22490,
+     "error": null
+    },
+    {
+     "ms": 315.2,
+     "ttfb": null,
+     "bytes": 13523,
+     "upstream": 22,
+     "upstreamBytes": 22490,
+     "error": null
+    },
+    {
+     "ms": 537.5,
+     "ttfb": null,
+     "bytes": 13523,
+     "upstream": 22,
+     "upstreamBytes": 22490,
+     "error": null
+    },
+    {
+     "ms": 175.9,
+     "ttfb": null,
+     "bytes": 13523,
+     "upstream": 22,
+     "upstreamBytes": 22490,
+     "error": null
+    },
+    {
+     "ms": 148.1,
+     "ttfb": null,
+     "bytes": 13523,
+     "upstream": 22,
+     "upstreamBytes": 22490,
+     "error": null
+    },
+    {
+     "ms": 177.2,
+     "ttfb": null,
+     "bytes": 13523,
+     "upstream": 22,
+     "upstreamBytes": 22490,
+     "error": null
+    },
+    {
+     "ms": 132.8,
+     "ttfb": null,
+     "bytes": 13523,
+     "upstream": 22,
+     "upstreamBytes": 22490,
+     "error": null
+    }
+   ]
+  },
+  {
+   "name": "blocks:detail",
+   "runs": [
+    {
+     "ms": 304,
+     "ttfb": null,
+     "bytes": 722,
+     "upstream": 2,
+     "upstreamBytes": 1244,
+     "error": null
+    },
+    {
+     "ms": 163.6,
+     "ttfb": null,
+     "bytes": 722,
+     "upstream": 2,
+     "upstreamBytes": 1244,
+     "error": null
+    },
+    {
+     "ms": 91,
+     "ttfb": null,
+     "bytes": 722,
+     "upstream": 2,
+     "upstreamBytes": 1244,
+     "error": null
+    },
+    {
+     "ms": 84.9,
+     "ttfb": null,
+     "bytes": 722,
+     "upstream": 2,
+     "upstreamBytes": 1244,
+     "error": null
+    },
+    {
+     "ms": 126.6,
+     "ttfb": null,
+     "bytes": 722,
+     "upstream": 2,
+     "upstreamBytes": 1244,
+     "error": null
+    },
+    {
+     "ms": 88.1,
+     "ttfb": null,
+     "bytes": 722,
+     "upstream": 2,
+     "upstreamBytes": 1244,
+     "error": null
+    },
+    {
+     "ms": 149.6,
+     "ttfb": null,
+     "bytes": 722,
+     "upstream": 2,
+     "upstreamBytes": 1244,
+     "error": null
+    },
+    {
+     "ms": 91.1,
+     "ttfb": null,
+     "bytes": 722,
+     "upstream": 2,
+     "upstreamBytes": 1244,
+     "error": null
+    },
+    {
+     "ms": 84.6,
+     "ttfb": null,
+     "bytes": 722,
+     "upstream": 2,
+     "upstreamBytes": 1244,
+     "error": null
+    },
+    {
+     "ms": 127.5,
+     "ttfb": null,
+     "bytes": 722,
+     "upstream": 2,
+     "upstreamBytes": 1244,
+     "error": null
+    }
+   ]
+  },
+  {
+   "name": "blocks:txs",
+   "runs": [
+    {
+     "ms": 143.1,
+     "ttfb": null,
+     "bytes": 2311,
+     "upstream": 8,
+     "upstreamBytes": 5652,
+     "error": null
+    },
+    {
+     "ms": 222.1,
+     "ttfb": null,
+     "bytes": 2311,
+     "upstream": 8,
+     "upstreamBytes": 5652,
+     "error": null
+    },
+    {
+     "ms": 139.6,
+     "ttfb": null,
+     "bytes": 2311,
+     "upstream": 8,
+     "upstreamBytes": 5652,
+     "error": null
+    },
+    {
+     "ms": 194.8,
+     "ttfb": null,
+     "bytes": 2311,
+     "upstream": 8,
+     "upstreamBytes": 5652,
+     "error": null
+    },
+    {
+     "ms": 138.4,
+     "ttfb": null,
+     "bytes": 2311,
+     "upstream": 8,
+     "upstreamBytes": 5652,
+     "error": null
+    },
+    {
+     "ms": 171.5,
+     "ttfb": null,
+     "bytes": 2311,
+     "upstream": 8,
+     "upstreamBytes": 5652,
+     "error": null
+    },
+    {
+     "ms": 137.5,
+     "ttfb": null,
+     "bytes": 2311,
+     "upstream": 8,
+     "upstreamBytes": 5652,
+     "error": null
+    },
+    {
+     "ms": 172.8,
+     "ttfb": null,
+     "bytes": 2311,
+     "upstream": 8,
+     "upstreamBytes": 5652,
+     "error": null
+    },
+    {
+     "ms": 136.7,
+     "ttfb": null,
+     "bytes": 2311,
+     "upstream": 8,
+     "upstreamBytes": 5652,
+     "error": null
+    },
+    {
+     "ms": 186.3,
+     "ttfb": null,
+     "bytes": 2311,
+     "upstream": 8,
+     "upstreamBytes": 5652,
+     "error": null
+    }
+   ]
+  },
+  {
+   "name": "epochs:list",
+   "runs": [
+    {
+     "ms": 95.3,
+     "ttfb": null,
+     "bytes": 6067,
+     "upstream": 2,
+     "upstreamBytes": 5083,
+     "error": null
+    },
+    {
+     "ms": 142.8,
+     "ttfb": null,
+     "bytes": 6067,
+     "upstream": 2,
+     "upstreamBytes": 5083,
+     "error": null
+    },
+    {
+     "ms": 92.3,
+     "ttfb": null,
+     "bytes": 6067,
+     "upstream": 2,
+     "upstreamBytes": 5083,
+     "error": null
+    },
+    {
+     "ms": 93.3,
+     "ttfb": null,
+     "bytes": 6067,
+     "upstream": 2,
+     "upstreamBytes": 5083,
+     "error": null
+    },
+    {
+     "ms": 89.4,
+     "ttfb": null,
+     "bytes": 6067,
+     "upstream": 2,
+     "upstreamBytes": 5083,
+     "error": null
+    },
+    {
+     "ms": 89.2,
+     "ttfb": null,
+     "bytes": 6067,
+     "upstream": 2,
+     "upstreamBytes": 5083,
+     "error": null
+    },
+    {
+     "ms": 178.3,
+     "ttfb": null,
+     "bytes": 6067,
+     "upstream": 2,
+     "upstreamBytes": 5083,
+     "error": null
+    },
+    {
+     "ms": 96.7,
+     "ttfb": null,
+     "bytes": 6067,
+     "upstream": 2,
+     "upstreamBytes": 5083,
+     "error": null
+    },
+    {
+     "ms": 178.9,
+     "ttfb": null,
+     "bytes": 6067,
+     "upstream": 2,
+     "upstreamBytes": 5083,
+     "error": null
+    },
+    {
+     "ms": 93.4,
+     "ttfb": null,
+     "bytes": 6067,
+     "upstream": 2,
+     "upstreamBytes": 5083,
+     "error": null
+    }
+   ]
+  },
+  {
+   "name": "epochs:detail",
+   "runs": [
+    {
+     "ms": 47.2,
+     "ttfb": null,
+     "bytes": 323,
+     "upstream": 2,
+     "upstreamBytes": 481,
+     "error": null
+    },
+    {
+     "ms": 111,
+     "ttfb": null,
+     "bytes": 323,
+     "upstream": 2,
+     "upstreamBytes": 481,
+     "error": null
+    },
+    {
+     "ms": 43.9,
+     "ttfb": null,
+     "bytes": 323,
+     "upstream": 2,
+     "upstreamBytes": 481,
+     "error": null
+    },
+    {
+     "ms": 46.8,
+     "ttfb": null,
+     "bytes": 323,
+     "upstream": 2,
+     "upstreamBytes": 481,
+     "error": null
+    },
+    {
+     "ms": 130.1,
+     "ttfb": null,
+     "bytes": 323,
+     "upstream": 2,
+     "upstreamBytes": 481,
+     "error": null
+    },
+    {
+     "ms": 43.5,
+     "ttfb": null,
+     "bytes": 323,
+     "upstream": 2,
+     "upstreamBytes": 481,
+     "error": null
+    },
+    {
+     "ms": 49,
+     "ttfb": null,
+     "bytes": 323,
+     "upstream": 2,
+     "upstreamBytes": 481,
+     "error": null
+    },
+    {
+     "ms": 128.9,
+     "ttfb": null,
+     "bytes": 323,
+     "upstream": 2,
+     "upstreamBytes": 481,
+     "error": null
+    },
+    {
+     "ms": 47.3,
+     "ttfb": null,
+     "bytes": 323,
+     "upstream": 2,
+     "upstreamBytes": 481,
+     "error": null
+    },
+    {
+     "ms": 67.5,
+     "ttfb": null,
+     "bytes": 323,
+     "upstream": 2,
+     "upstreamBytes": 481,
+     "error": null
+    }
+   ]
+  },
+  {
+   "name": "epochs:blocks",
+   "runs": [
+    {
+     "ms": 600.8,
+     "ttfb": null,
+     "bytes": 13631,
+     "upstream": 41,
+     "upstreamBytes": 22296,
+     "error": null
+    },
+    {
+     "ms": 175.8,
+     "ttfb": null,
+     "bytes": 13631,
+     "upstream": 41,
+     "upstreamBytes": 22296,
+     "error": null
+    },
+    {
+     "ms": 425.5,
+     "ttfb": null,
+     "bytes": 13631,
+     "upstream": 41,
+     "upstreamBytes": 22296,
+     "error": null
+    },
+    {
+     "ms": 419.5,
+     "ttfb": null,
+     "bytes": 13631,
+     "upstream": 41,
+     "upstreamBytes": 22296,
+     "error": null
+    },
+    {
+     "ms": 530.7,
+     "ttfb": null,
+     "bytes": 13631,
+     "upstream": 41,
+     "upstreamBytes": 22296,
+     "error": null
+    },
+    {
+     "ms": 302.4,
+     "ttfb": null,
+     "bytes": 13631,
+     "upstream": 41,
+     "upstreamBytes": 22296,
+     "error": null
+    },
+    {
+     "ms": 540.6,
+     "ttfb": null,
+     "bytes": 13631,
+     "upstream": 41,
+     "upstreamBytes": 22296,
+     "error": null
+    },
+    {
+     "ms": 311.2,
+     "ttfb": null,
+     "bytes": 13631,
+     "upstream": 41,
+     "upstreamBytes": 22296,
+     "error": null
+    },
+    {
+     "ms": 530,
+     "ttfb": null,
+     "bytes": 13631,
+     "upstream": 41,
+     "upstreamBytes": 22296,
+     "error": null
+    },
+    {
+     "ms": 314.4,
+     "ttfb": null,
+     "bytes": 13631,
+     "upstream": 41,
+     "upstreamBytes": 22296,
+     "error": null
+    }
+   ]
+  },
+  {
+   "name": "txs:list",
+   "runs": [
+    {
+     "ms": 1360.7,
+     "ttfb": null,
+     "bytes": 6206,
+     "upstream": 31,
+     "upstreamBytes": 17172,
+     "error": null
+    },
+    {
+     "ms": 648.6,
+     "ttfb": null,
+     "bytes": 6206,
+     "upstream": 31,
+     "upstreamBytes": 17172,
+     "error": null
+    },
+    {
+     "ms": 656.6,
+     "ttfb": null,
+     "bytes": 6206,
+     "upstream": 31,
+     "upstreamBytes": 17172,
+     "error": null
+    },
+    {
+     "ms": 633.7,
+     "ttfb": null,
+     "bytes": 6206,
+     "upstream": 31,
+     "upstreamBytes": 17172,
+     "error": null
+    },
+    {
+     "ms": 674.3,
+     "ttfb": null,
+     "bytes": 6206,
+     "upstream": 31,
+     "upstreamBytes": 17172,
+     "error": null
+    },
+    {
+     "ms": 598.2,
+     "ttfb": null,
+     "bytes": 6206,
+     "upstream": 31,
+     "upstreamBytes": 17172,
+     "error": null
+    },
+    {
+     "ms": 605,
+     "ttfb": null,
+     "bytes": 85,
+     "upstream": 31,
+     "upstreamBytes": 2216,
+     "error": "Request failed with status code 429"
+    },
+    {
+     "ms": 635,
+     "ttfb": null,
+     "bytes": 85,
+     "upstream": 31,
+     "upstreamBytes": 2216,
+     "error": "Request failed with status code 429"
+    },
+    {
+     "ms": 587.8,
+     "ttfb": null,
+     "bytes": 85,
+     "upstream": 31,
+     "upstreamBytes": 2216,
+     "error": "Request failed with status code 429"
+    },
+    {
+     "ms": 693.4,
+     "ttfb": null,
+     "bytes": 85,
+     "upstream": 31,
+     "upstreamBytes": 2216,
+     "error": "Request failed with status code 429"
+    }
+   ]
+  },
+  {
+   "name": "txs:summary",
+   "runs": [
+    {
+     "ms": 423.8,
+     "ttfb": null,
+     "bytes": 193094,
+     "upstream": 11,
+     "upstreamBytes": 54565,
+     "error": null
+    },
+    {
+     "ms": 418.1,
+     "ttfb": null,
+     "bytes": 161501,
+     "upstream": 11,
+     "upstreamBytes": 46712,
+     "error": null
+    },
+    {
+     "ms": 316.8,
+     "ttfb": null,
+     "bytes": 193177,
+     "upstream": 11,
+     "upstreamBytes": 54598,
+     "error": null
+    },
+    {
+     "ms": 93.2,
+     "ttfb": null,
+     "bytes": 7049,
+     "upstream": 6,
+     "upstreamBytes": 8938,
+     "error": null
+    },
+    {
+     "ms": 95.4,
+     "ttfb": null,
+     "bytes": 7049,
+     "upstream": 6,
+     "upstreamBytes": 8938,
+     "error": null
+    },
+    {
+     "ms": 388.8,
+     "ttfb": null,
+     "bytes": 68109,
+     "upstream": 11,
+     "upstreamBytes": 23364,
+     "error": null
+    },
+    {
+     "ms": 172.9,
+     "ttfb": null,
+     "bytes": 87,
+     "upstream": 6,
+     "upstreamBytes": 8274,
+     "error": "Request failed with status code 429"
+    },
+    {
+     "ms": 39.6,
+     "ttfb": null,
+     "bytes": 87,
+     "upstream": 3,
+     "upstreamBytes": 0,
+     "error": "Request failed with status code 429"
+    },
+    {
+     "ms": 46.4,
+     "ttfb": null,
+     "bytes": 87,
+     "upstream": 3,
+     "upstreamBytes": 0,
+     "error": "Request failed with status code 429"
+    },
+    {
+     "ms": 407.4,
+     "ttfb": null,
+     "bytes": 193177,
+     "upstream": 11,
+     "upstreamBytes": 54598,
+     "error": null
+    }
+   ]
+  },
+  {
+   "name": "txs:detail-script",
+   "runs": [
+    {
+     "ms": 410.5,
+     "ttfb": null,
+     "bytes": 193221,
+     "upstream": 11,
+     "upstreamBytes": 54653,
+     "error": null
+    },
+    {
+     "ms": 153.7,
+     "ttfb": null,
+     "bytes": 7049,
+     "upstream": 6,
+     "upstreamBytes": 8938,
+     "error": null
+    },
+    {
+     "ms": 87.2,
+     "ttfb": null,
+     "bytes": 87,
+     "upstream": 6,
+     "upstreamBytes": 8274,
+     "error": "Request failed with status code 429"
+    },
+    {
+     "ms": 42.1,
+     "ttfb": null,
+     "bytes": 87,
+     "upstream": 3,
+     "upstreamBytes": 0,
+     "error": "Request failed with status code 429"
+    },
+    {
+     "ms": 823.4,
+     "ttfb": null,
+     "bytes": 193221,
+     "upstream": 11,
+     "upstreamBytes": 54653,
+     "error": null
+    },
+    {
+     "ms": 739.3,
+     "ttfb": null,
+     "bytes": 193221,
+     "upstream": 11,
+     "upstreamBytes": 54653,
+     "error": null
+    },
+    {
+     "ms": 750.4,
+     "ttfb": null,
+     "bytes": 193221,
+     "upstream": 11,
+     "upstreamBytes": 54653,
+     "error": null
+    },
+    {
+     "ms": 782.4,
+     "ttfb": null,
+     "bytes": 193221,
+     "upstream": 11,
+     "upstreamBytes": 54653,
+     "error": null
+    },
+    {
+     "ms": 563.3,
+     "ttfb": null,
+     "bytes": 193221,
+     "upstream": 11,
+     "upstreamBytes": 54653,
+     "error": null
+    },
+    {
+     "ms": 859.7,
+     "ttfb": null,
+     "bytes": 193221,
+     "upstream": 11,
+     "upstreamBytes": 54653,
+     "error": null
+    }
+   ]
+  },
+  {
+   "name": "txs:detail-plain",
+   "runs": [
+    {
+     "ms": 371.7,
+     "ttfb": null,
+     "bytes": 1550,
+     "upstream": 4,
+     "upstreamBytes": 2206,
+     "error": null
+    },
+    {
+     "ms": 141.8,
+     "ttfb": null,
+     "bytes": 1550,
+     "upstream": 4,
+     "upstreamBytes": 2206,
+     "error": null
+    },
+    {
+     "ms": 90.8,
+     "ttfb": null,
+     "bytes": 1550,
+     "upstream": 4,
+     "upstreamBytes": 2206,
+     "error": null
+    },
+    {
+     "ms": 91.3,
+     "ttfb": null,
+     "bytes": 1550,
+     "upstream": 4,
+     "upstreamBytes": 2206,
+     "error": null
+    },
+    {
+     "ms": 149,
+     "ttfb": null,
+     "bytes": 1550,
+     "upstream": 4,
+     "upstreamBytes": 2206,
+     "error": null
+    },
+    {
+     "ms": 91.7,
+     "ttfb": null,
+     "bytes": 1550,
+     "upstream": 4,
+     "upstreamBytes": 2206,
+     "error": null
+    },
+    {
+     "ms": 88.9,
+     "ttfb": null,
+     "bytes": 1550,
+     "upstream": 4,
+     "upstreamBytes": 2206,
+     "error": null
+    },
+    {
+     "ms": 117.4,
+     "ttfb": null,
+     "bytes": 1550,
+     "upstream": 4,
+     "upstreamBytes": 2206,
+     "error": null
+    },
+    {
+     "ms": 94.3,
+     "ttfb": null,
+     "bytes": 1550,
+     "upstream": 4,
+     "upstreamBytes": 2206,
+     "error": null
+    },
+    {
+     "ms": 148.4,
+     "ttfb": null,
+     "bytes": 1550,
+     "upstream": 4,
+     "upstreamBytes": 2206,
+     "error": null
+    }
+   ]
+  },
+  {
+   "name": "tokens:list",
+   "runs": [
+    {
+     "ms": 46.5,
+     "ttfb": null,
+     "bytes": 7200,
+     "upstream": 1,
+     "upstreamBytes": 2943,
+     "error": null
+    },
+    {
+     "ms": 42.4,
+     "ttfb": null,
+     "bytes": 7200,
+     "upstream": 1,
+     "upstreamBytes": 2943,
+     "error": null
+    },
+    {
+     "ms": 127.5,
+     "ttfb": null,
+     "bytes": 7200,
+     "upstream": 1,
+     "upstreamBytes": 2943,
+     "error": null
+    },
+    {
+     "ms": 45.8,
+     "ttfb": null,
+     "bytes": 7200,
+     "upstream": 1,
+     "upstreamBytes": 2943,
+     "error": null
+    },
+    {
+     "ms": 47.6,
+     "ttfb": null,
+     "bytes": 7200,
+     "upstream": 1,
+     "upstreamBytes": 2943,
+     "error": null
+    },
+    {
+     "ms": 129.2,
+     "ttfb": null,
+     "bytes": 7200,
+     "upstream": 1,
+     "upstreamBytes": 2943,
+     "error": null
+    },
+    {
+     "ms": 47.7,
+     "ttfb": null,
+     "bytes": 7200,
+     "upstream": 1,
+     "upstreamBytes": 2943,
+     "error": null
+    },
+    {
+     "ms": 48.7,
+     "ttfb": null,
+     "bytes": 7200,
+     "upstream": 1,
+     "upstreamBytes": 2943,
+     "error": null
+    },
+    {
+     "ms": 124.9,
+     "ttfb": null,
+     "bytes": 7200,
+     "upstream": 1,
+     "upstreamBytes": 2943,
+     "error": null
+    },
+    {
+     "ms": 45.5,
+     "ttfb": null,
+     "bytes": 7200,
+     "upstream": 1,
+     "upstreamBytes": 2943,
+     "error": null
+    }
+   ]
+  },
+  {
+   "name": "tokens:by-policy",
+   "runs": [
+    {
+     "ms": 48.8,
+     "ttfb": null,
+     "bytes": 258,
+     "upstream": 1,
+     "upstreamBytes": 100,
+     "error": null
+    },
+    {
+     "ms": 126.5,
+     "ttfb": null,
+     "bytes": 258,
+     "upstream": 1,
+     "upstreamBytes": 100,
+     "error": null
+    },
+    {
+     "ms": 40.5,
+     "ttfb": null,
+     "bytes": 258,
+     "upstream": 1,
+     "upstreamBytes": 100,
+     "error": null
+    },
+    {
+     "ms": 45.8,
+     "ttfb": null,
+     "bytes": 258,
+     "upstream": 1,
+     "upstreamBytes": 100,
+     "error": null
+    },
+    {
+     "ms": 130.9,
+     "ttfb": null,
+     "bytes": 258,
+     "upstream": 1,
+     "upstreamBytes": 100,
+     "error": null
+    },
+    {
+     "ms": 46.3,
+     "ttfb": null,
+     "bytes": 258,
+     "upstream": 1,
+     "upstreamBytes": 100,
+     "error": null
+    },
+    {
+     "ms": 44.6,
+     "ttfb": null,
+     "bytes": 258,
+     "upstream": 1,
+     "upstreamBytes": 100,
+     "error": null
+    },
+    {
+     "ms": 128.6,
+     "ttfb": null,
+     "bytes": 258,
+     "upstream": 1,
+     "upstreamBytes": 100,
+     "error": null
+    },
+    {
+     "ms": 44.9,
+     "ttfb": null,
+     "bytes": 258,
+     "upstream": 1,
+     "upstreamBytes": 100,
+     "error": null
+    },
+    {
+     "ms": 46.9,
+     "ttfb": null,
+     "bytes": 258,
+     "upstream": 1,
+     "upstreamBytes": 100,
+     "error": null
+    }
+   ]
+  },
+  {
+   "name": "tokens:detail",
+   "runs": [
+    {
+     "ms": 126.4,
+     "ttfb": null,
+     "bytes": 240,
+     "upstream": 1,
+     "upstreamBytes": 470,
+     "error": null
+    },
+    {
+     "ms": 45.9,
+     "ttfb": null,
+     "bytes": 240,
+     "upstream": 1,
+     "upstreamBytes": 470,
+     "error": null
+    },
+    {
+     "ms": 44.8,
+     "ttfb": null,
+     "bytes": 240,
+     "upstream": 1,
+     "upstreamBytes": 470,
+     "error": null
+    },
+    {
+     "ms": 125.2,
+     "ttfb": null,
+     "bytes": 240,
+     "upstream": 1,
+     "upstreamBytes": 470,
+     "error": null
+    },
+    {
+     "ms": 44.4,
+     "ttfb": null,
+     "bytes": 240,
+     "upstream": 1,
+     "upstreamBytes": 470,
+     "error": null
+    },
+    {
+     "ms": 48.3,
+     "ttfb": null,
+     "bytes": 240,
+     "upstream": 1,
+     "upstreamBytes": 470,
+     "error": null
+    },
+    {
+     "ms": 129.9,
+     "ttfb": null,
+     "bytes": 240,
+     "upstream": 1,
+     "upstreamBytes": 470,
+     "error": null
+    },
+    {
+     "ms": 47.4,
+     "ttfb": null,
+     "bytes": 240,
+     "upstream": 1,
+     "upstreamBytes": 470,
+     "error": null
+    },
+    {
+     "ms": 45.1,
+     "ttfb": null,
+     "bytes": 240,
+     "upstream": 1,
+     "upstreamBytes": 470,
+     "error": null
+    },
+    {
+     "ms": 128.2,
+     "ttfb": null,
+     "bytes": 240,
+     "upstream": 1,
+     "upstreamBytes": 470,
+     "error": null
+    }
+   ]
+  },
+  {
+   "name": "tokens:holders",
+   "runs": [
+    {
+     "ms": 44.3,
+     "ttfb": null,
+     "bytes": 214,
+     "upstream": 1,
+     "upstreamBytes": 141,
+     "error": null
+    },
+    {
+     "ms": 46.1,
+     "ttfb": null,
+     "bytes": 214,
+     "upstream": 1,
+     "upstreamBytes": 141,
+     "error": null
+    },
+    {
+     "ms": 127.9,
+     "ttfb": null,
+     "bytes": 214,
+     "upstream": 1,
+     "upstreamBytes": 141,
+     "error": null
+    },
+    {
+     "ms": 44.9,
+     "ttfb": null,
+     "bytes": 214,
+     "upstream": 1,
+     "upstreamBytes": 141,
+     "error": null
+    },
+    {
+     "ms": 42.8,
+     "ttfb": null,
+     "bytes": 214,
+     "upstream": 1,
+     "upstreamBytes": 141,
+     "error": null
+    },
+    {
+     "ms": 131,
+     "ttfb": null,
+     "bytes": 214,
+     "upstream": 1,
+     "upstreamBytes": 141,
+     "error": null
+    },
+    {
+     "ms": 46.7,
+     "ttfb": null,
+     "bytes": 214,
+     "upstream": 1,
+     "upstreamBytes": 141,
+     "error": null
+    },
+    {
+     "ms": 48.4,
+     "ttfb": null,
+     "bytes": 214,
+     "upstream": 1,
+     "upstreamBytes": 141,
+     "error": null
+    },
+    {
+     "ms": 124.5,
+     "ttfb": null,
+     "bytes": 214,
+     "upstream": 1,
+     "upstreamBytes": 141,
+     "error": null
+    },
+    {
+     "ms": 47.7,
+     "ttfb": null,
+     "bytes": 214,
+     "upstream": 1,
+     "upstreamBytes": 141,
+     "error": null
+    }
+   ]
+  },
+  {
+   "name": "tokens:txs",
+   "runs": [
+    {
+     "ms": 270.7,
+     "ttfb": null,
+     "bytes": 796,
+     "upstream": 5,
+     "upstreamBytes": 3007,
+     "error": null
+    },
+    {
+     "ms": 140.9,
+     "ttfb": null,
+     "bytes": 796,
+     "upstream": 5,
+     "upstreamBytes": 3007,
+     "error": null
+    },
+    {
+     "ms": 225.7,
+     "ttfb": null,
+     "bytes": 796,
+     "upstream": 5,
+     "upstreamBytes": 3007,
+     "error": null
+    },
+    {
+     "ms": 133.2,
+     "ttfb": null,
+     "bytes": 796,
+     "upstream": 5,
+     "upstreamBytes": 3007,
+     "error": null
+    },
+    {
+     "ms": 187,
+     "ttfb": null,
+     "bytes": 796,
+     "upstream": 5,
+     "upstreamBytes": 3007,
+     "error": null
+    },
+    {
+     "ms": 136.3,
+     "ttfb": null,
+     "bytes": 796,
+     "upstream": 5,
+     "upstreamBytes": 3007,
+     "error": null
+    },
+    {
+     "ms": 230.4,
+     "ttfb": null,
+     "bytes": 796,
+     "upstream": 5,
+     "upstreamBytes": 3007,
+     "error": null
+    },
+    {
+     "ms": 137.3,
+     "ttfb": null,
+     "bytes": 796,
+     "upstream": 5,
+     "upstreamBytes": 3007,
+     "error": null
+    },
+    {
+     "ms": 780.9,
+     "ttfb": null,
+     "bytes": 796,
+     "upstream": 5,
+     "upstreamBytes": 3007,
+     "error": null
+    },
+    {
+     "ms": 256.5,
+     "ttfb": null,
+     "bytes": 796,
+     "upstream": 5,
+     "upstreamBytes": 3007,
+     "error": null
+    }
+   ]
+  },
+  {
+   "name": "addresses:detail",
+   "runs": [
+    {
+     "ms": 228.6,
+     "ttfb": null,
+     "bytes": 287,
+     "upstream": 2,
+     "upstreamBytes": 6162,
+     "error": null
+    },
+    {
+     "ms": 259.3,
+     "ttfb": null,
+     "bytes": 287,
+     "upstream": 2,
+     "upstreamBytes": 6162,
+     "error": null
+    },
+    {
+     "ms": 48.2,
+     "ttfb": null,
+     "bytes": 287,
+     "upstream": 2,
+     "upstreamBytes": 6162,
+     "error": null
+    },
+    {
+     "ms": 273.7,
+     "ttfb": null,
+     "bytes": 287,
+     "upstream": 2,
+     "upstreamBytes": 6162,
+     "error": null
+    },
+    {
+     "ms": 96.2,
+     "ttfb": null,
+     "bytes": 287,
+     "upstream": 2,
+     "upstreamBytes": 6162,
+     "error": null
+    },
+    {
+     "ms": 230.7,
+     "ttfb": null,
+     "bytes": 287,
+     "upstream": 2,
+     "upstreamBytes": 6162,
+     "error": null
+    },
+    {
+     "ms": 48.3,
+     "ttfb": null,
+     "bytes": 287,
+     "upstream": 2,
+     "upstreamBytes": 6162,
+     "error": null
+    },
+    {
+     "ms": 267.3,
+     "ttfb": null,
+     "bytes": 287,
+     "upstream": 2,
+     "upstreamBytes": 6162,
+     "error": null
+    },
+    {
+     "ms": 102.1,
+     "ttfb": null,
+     "bytes": 287,
+     "upstream": 2,
+     "upstreamBytes": 6162,
+     "error": null
+    },
+    {
+     "ms": 221.7,
+     "ttfb": null,
+     "bytes": 287,
+     "upstream": 2,
+     "upstreamBytes": 6162,
+     "error": null
+    }
+   ]
+  },
+  {
+   "name": "addresses:txs",
+   "runs": [
+    {
+     "ms": 585.7,
+     "ttfb": null,
+     "bytes": 7587,
+     "upstream": 41,
+     "upstreamBytes": 33692,
+     "error": null
+    },
+    {
+     "ms": 370.4,
+     "ttfb": null,
+     "bytes": 7587,
+     "upstream": 41,
+     "upstreamBytes": 33692,
+     "error": null
+    },
+    {
+     "ms": 473.3,
+     "ttfb": null,
+     "bytes": 85,
+     "upstream": 21,
+     "upstreamBytes": 2802,
+     "error": "Request failed with status code 429"
+    },
+    {
+     "ms": 173,
+     "ttfb": null,
+     "bytes": 85,
+     "upstream": 21,
+     "upstreamBytes": 2802,
+     "error": "Request failed with status code 429"
+    },
+    {
+     "ms": 95.1,
+     "ttfb": null,
+     "bytes": 85,
+     "upstream": 21,
+     "upstreamBytes": 2802,
+     "error": "Request failed with status code 429"
+    },
+    {
+     "ms": 179.6,
+     "ttfb": null,
+     "bytes": 85,
+     "upstream": 21,
+     "upstreamBytes": 2802,
+     "error": "Request failed with status code 429"
+    },
+    {
+     "ms": 95,
+     "ttfb": null,
+     "bytes": 85,
+     "upstream": 21,
+     "upstreamBytes": 2802,
+     "error": "Request failed with status code 429"
+    },
+    {
+     "ms": 86.3,
+     "ttfb": null,
+     "bytes": 85,
+     "upstream": 21,
+     "upstreamBytes": 2802,
+     "error": "Request failed with status code 429"
+    },
+    {
+     "ms": 41.6,
+     "ttfb": null,
+     "bytes": 85,
+     "upstream": 1,
+     "upstreamBytes": 986,
+     "error": "Request failed with status code 429"
+    },
+    {
+     "ms": 85.8,
+     "ttfb": null,
+     "bytes": 85,
+     "upstream": 21,
+     "upstreamBytes": 2802,
+     "error": "Request failed with status code 429"
+    }
+   ]
+  },
+  {
+   "name": "addresses:stake",
+   "runs": [
+    {
+     "ms": 195.9,
+     "ttfb": null,
+     "bytes": 319,
+     "upstream": 2,
+     "upstreamBytes": 702,
+     "error": null
+    },
+    {
+     "ms": 86.5,
+     "ttfb": null,
+     "bytes": 319,
+     "upstream": 2,
+     "upstreamBytes": 702,
+     "error": null
+    },
+    {
+     "ms": 85.9,
+     "ttfb": null,
+     "bytes": 319,
+     "upstream": 2,
+     "upstreamBytes": 702,
+     "error": null
+    },
+    {
+     "ms": 78.1,
+     "ttfb": null,
+     "bytes": 87,
+     "upstream": 1,
+     "upstreamBytes": 0,
+     "error": "Request failed with status code 429"
+    },
+    {
+     "ms": 88.8,
+     "ttfb": null,
+     "bytes": 319,
+     "upstream": 2,
+     "upstreamBytes": 702,
+     "error": null
+    },
+    {
+     "ms": 85.5,
+     "ttfb": null,
+     "bytes": 319,
+     "upstream": 2,
+     "upstreamBytes": 702,
+     "error": null
+    },
+    {
+     "ms": 97.2,
+     "ttfb": null,
+     "bytes": 319,
+     "upstream": 2,
+     "upstreamBytes": 702,
+     "error": null
+    },
+    {
+     "ms": 88.4,
+     "ttfb": null,
+     "bytes": 319,
+     "upstream": 2,
+     "upstreamBytes": 702,
+     "error": null
+    },
+    {
+     "ms": 147.1,
+     "ttfb": null,
+     "bytes": 319,
+     "upstream": 2,
+     "upstreamBytes": 702,
+     "error": null
+    },
+    {
+     "ms": 82.4,
+     "ttfb": null,
+     "bytes": 319,
+     "upstream": 2,
+     "upstreamBytes": 702,
+     "error": null
+    }
+   ]
+  },
+  {
+   "name": "pools:list",
+   "runs": [
+    {
+     "ms": 1019.3,
+     "ttfb": null,
+     "bytes": 4815,
+     "upstream": 1,
+     "upstreamBytes": 12764,
+     "error": null
+    },
+    {
+     "ms": 44.6,
+     "ttfb": null,
+     "bytes": 4815,
+     "upstream": 1,
+     "upstreamBytes": 12764,
+     "error": null
+    },
+    {
+     "ms": 62.3,
+     "ttfb": null,
+     "bytes": 4815,
+     "upstream": 1,
+     "upstreamBytes": 12764,
+     "error": null
+    },
+    {
+     "ms": 44.2,
+     "ttfb": null,
+     "bytes": 4815,
+     "upstream": 1,
+     "upstreamBytes": 12764,
+     "error": null
+    },
+    {
+     "ms": 46.7,
+     "ttfb": null,
+     "bytes": 4815,
+     "upstream": 1,
+     "upstreamBytes": 12764,
+     "error": null
+    },
+    {
+     "ms": 122.3,
+     "ttfb": null,
+     "bytes": 4815,
+     "upstream": 1,
+     "upstreamBytes": 12764,
+     "error": null
+    },
+    {
+     "ms": 44,
+     "ttfb": null,
+     "bytes": 4815,
+     "upstream": 1,
+     "upstreamBytes": 12764,
+     "error": null
+    },
+    {
+     "ms": 47.2,
+     "ttfb": null,
+     "bytes": 4815,
+     "upstream": 1,
+     "upstreamBytes": 12764,
+     "error": null
+    },
+    {
+     "ms": 129.7,
+     "ttfb": null,
+     "bytes": 4815,
+     "upstream": 1,
+     "upstreamBytes": 12764,
+     "error": null
+    },
+    {
+     "ms": 42.2,
+     "ttfb": null,
+     "bytes": 4815,
+     "upstream": 1,
+     "upstreamBytes": 12764,
+     "error": null
+    }
+   ]
+  },
+  {
+   "name": "pools:detail",
+   "runs": [
+    {
+     "ms": 1462.6,
+     "ttfb": null,
+     "bytes": 675,
+     "upstream": 2,
+     "upstreamBytes": 2185,
+     "error": null
+    },
+    {
+     "ms": 47.7,
+     "ttfb": null,
+     "bytes": 675,
+     "upstream": 2,
+     "upstreamBytes": 2185,
+     "error": null
+    },
+    {
+     "ms": 100.6,
+     "ttfb": null,
+     "bytes": 675,
+     "upstream": 2,
+     "upstreamBytes": 2185,
+     "error": null
+    },
+    {
+     "ms": 45.5,
+     "ttfb": null,
+     "bytes": 675,
+     "upstream": 2,
+     "upstreamBytes": 2185,
+     "error": null
+    },
+    {
+     "ms": 43.9,
+     "ttfb": null,
+     "bytes": 675,
+     "upstream": 2,
+     "upstreamBytes": 2185,
+     "error": null
+    },
+    {
+     "ms": 130.7,
+     "ttfb": null,
+     "bytes": 675,
+     "upstream": 2,
+     "upstreamBytes": 2185,
+     "error": null
+    },
+    {
+     "ms": 45.6,
+     "ttfb": null,
+     "bytes": 675,
+     "upstream": 2,
+     "upstreamBytes": 2185,
+     "error": null
+    },
+    {
+     "ms": 43.2,
+     "ttfb": null,
+     "bytes": 675,
+     "upstream": 2,
+     "upstreamBytes": 2185,
+     "error": null
+    },
+    {
+     "ms": 128.7,
+     "ttfb": null,
+     "bytes": 675,
+     "upstream": 2,
+     "upstreamBytes": 2185,
+     "error": null
+    },
+    {
+     "ms": 46,
+     "ttfb": null,
+     "bytes": 675,
+     "upstream": 2,
+     "upstreamBytes": 2185,
+     "error": null
+    }
+   ]
+  },
+  {
+   "name": "pools:blocks",
+   "runs": [
+    {
+     "ms": 365.5,
+     "ttfb": null,
+     "bytes": 13130,
+     "upstream": 23,
+     "upstreamBytes": 16562,
+     "error": null
+    },
+    {
+     "ms": 98.9,
+     "ttfb": null,
+     "bytes": 125,
+     "upstream": 22,
+     "upstreamBytes": 3128,
+     "error": "Request failed with status code 429"
+    },
+    {
+     "ms": 171.3,
+     "ttfb": null,
+     "bytes": 125,
+     "upstream": 22,
+     "upstreamBytes": 3128,
+     "error": "Request failed with status code 429"
+    },
+    {
+     "ms": 39.6,
+     "ttfb": null,
+     "bytes": 125,
+     "upstream": 2,
+     "upstreamBytes": 0,
+     "error": "Request failed with status code 429"
+    },
+    {
+     "ms": 92.1,
+     "ttfb": null,
+     "bytes": 125,
+     "upstream": 22,
+     "upstreamBytes": 3128,
+     "error": "Request failed with status code 429"
+    },
+    {
+     "ms": 128.5,
+     "ttfb": null,
+     "bytes": 125,
+     "upstream": 22,
+     "upstreamBytes": 3128,
+     "error": "Request failed with status code 429"
+    },
+    {
+     "ms": 92.5,
+     "ttfb": null,
+     "bytes": 125,
+     "upstream": 22,
+     "upstreamBytes": 3128,
+     "error": "Request failed with status code 429"
+    },
+    {
+     "ms": 318.7,
+     "ttfb": null,
+     "bytes": 125,
+     "upstream": 22,
+     "upstreamBytes": 3128,
+     "error": "Request failed with status code 429"
+    },
+    {
+     "ms": 134,
+     "ttfb": null,
+     "bytes": 125,
+     "upstream": 22,
+     "upstreamBytes": 3128,
+     "error": "Request failed with status code 429"
+    },
+    {
+     "ms": 225,
+     "ttfb": null,
+     "bytes": 125,
+     "upstream": 22,
+     "upstreamBytes": 3128,
+     "error": "Request failed with status code 429"
+    }
+   ]
+  },
+  {
+   "name": "gov:actions",
+   "runs": [
+    {
+     "ms": 42.6,
+     "ttfb": null,
+     "bytes": 3580,
+     "upstream": 1,
+     "upstreamBytes": 4253,
+     "error": null
+    },
+    {
+     "ms": 229.4,
+     "ttfb": null,
+     "bytes": 3580,
+     "upstream": 1,
+     "upstreamBytes": 4253,
+     "error": null
+    },
+    {
+     "ms": 96.6,
+     "ttfb": null,
+     "bytes": 3580,
+     "upstream": 1,
+     "upstreamBytes": 4253,
+     "error": null
+    },
+    {
+     "ms": 224.1,
+     "ttfb": null,
+     "bytes": 3580,
+     "upstream": 1,
+     "upstreamBytes": 4253,
+     "error": null
+    },
+    {
+     "ms": 40.8,
+     "ttfb": null,
+     "bytes": 3580,
+     "upstream": 1,
+     "upstreamBytes": 4253,
+     "error": null
+    },
+    {
+     "ms": 279.7,
+     "ttfb": null,
+     "bytes": 3580,
+     "upstream": 1,
+     "upstreamBytes": 4253,
+     "error": null
+    },
+    {
+     "ms": 95.9,
+     "ttfb": null,
+     "bytes": 3580,
+     "upstream": 1,
+     "upstreamBytes": 4253,
+     "error": null
+    },
+    {
+     "ms": 225.3,
+     "ttfb": null,
+     "bytes": 3580,
+     "upstream": 1,
+     "upstreamBytes": 4253,
+     "error": null
+    },
+    {
+     "ms": 44,
+     "ttfb": null,
+     "bytes": 3580,
+     "upstream": 1,
+     "upstreamBytes": 4253,
+     "error": null
+    },
+    {
+     "ms": 274.6,
+     "ttfb": null,
+     "bytes": 3580,
+     "upstream": 1,
+     "upstreamBytes": 4253,
+     "error": null
+    }
+   ]
+  },
+  {
+   "name": "gov:action-detail",
+   "runs": [
+    {
+     "ms": 99.3,
+     "ttfb": null,
+     "bytes": 434,
+     "upstream": 1,
+     "upstreamBytes": 453,
+     "error": null
+    },
+    {
+     "ms": 220.4,
+     "ttfb": null,
+     "bytes": 434,
+     "upstream": 1,
+     "upstreamBytes": 453,
+     "error": null
+    },
+    {
+     "ms": 40.5,
+     "ttfb": null,
+     "bytes": 434,
+     "upstream": 1,
+     "upstreamBytes": 453,
+     "error": null
+    },
+    {
+     "ms": 281.4,
+     "ttfb": null,
+     "bytes": 434,
+     "upstream": 1,
+     "upstreamBytes": 453,
+     "error": null
+    },
+    {
+     "ms": 94.2,
+     "ttfb": null,
+     "bytes": 434,
+     "upstream": 1,
+     "upstreamBytes": 453,
+     "error": null
+    },
+    {
+     "ms": 224.1,
+     "ttfb": null,
+     "bytes": 434,
+     "upstream": 1,
+     "upstreamBytes": 453,
+     "error": null
+    },
+    {
+     "ms": 42,
+     "ttfb": null,
+     "bytes": 434,
+     "upstream": 1,
+     "upstreamBytes": 453,
+     "error": null
+    },
+    {
+     "ms": 279.7,
+     "ttfb": null,
+     "bytes": 434,
+     "upstream": 1,
+     "upstreamBytes": 453,
+     "error": null
+    },
+    {
+     "ms": 95.2,
+     "ttfb": null,
+     "bytes": 434,
+     "upstream": 1,
+     "upstreamBytes": 453,
+     "error": null
+    },
+    {
+     "ms": 99.8,
+     "ttfb": null,
+     "bytes": 434,
+     "upstream": 1,
+     "upstreamBytes": 453,
+     "error": null
+    }
+   ]
+  },
+  {
+   "name": "gov:action-votes",
+   "runs": [
+    {
+     "ms": 57.7,
+     "ttfb": null,
+     "bytes": 14884,
+     "upstream": 1,
+     "upstreamBytes": 19481,
+     "error": null
+    },
+    {
+     "ms": 52.8,
+     "ttfb": null,
+     "bytes": 14884,
+     "upstream": 1,
+     "upstreamBytes": 19481,
+     "error": null
+    },
+    {
+     "ms": 109.5,
+     "ttfb": null,
+     "bytes": 14884,
+     "upstream": 1,
+     "upstreamBytes": 19481,
+     "error": null
+    },
+    {
+     "ms": 49,
+     "ttfb": null,
+     "bytes": 14884,
+     "upstream": 1,
+     "upstreamBytes": 19481,
+     "error": null
+    },
+    {
+     "ms": 45.1,
+     "ttfb": null,
+     "bytes": 14884,
+     "upstream": 1,
+     "upstreamBytes": 19481,
+     "error": null
+    },
+    {
+     "ms": 129.1,
+     "ttfb": null,
+     "bytes": 14884,
+     "upstream": 1,
+     "upstreamBytes": 19481,
+     "error": null
+    },
+    {
+     "ms": 43.8,
+     "ttfb": null,
+     "bytes": 14884,
+     "upstream": 1,
+     "upstreamBytes": 19481,
+     "error": null
+    },
+    {
+     "ms": 44.1,
+     "ttfb": null,
+     "bytes": 14884,
+     "upstream": 1,
+     "upstreamBytes": 19481,
+     "error": null
+    },
+    {
+     "ms": 131.3,
+     "ttfb": null,
+     "bytes": 14884,
+     "upstream": 1,
+     "upstreamBytes": 19481,
+     "error": null
+    },
+    {
+     "ms": 46.6,
+     "ttfb": null,
+     "bytes": 14884,
+     "upstream": 1,
+     "upstreamBytes": 19481,
+     "error": null
+    }
+   ]
+  },
+  {
+   "name": "gov:dreps",
+   "runs": [
+    {
+     "ms": 80.5,
+     "ttfb": null,
+     "bytes": 7302,
+     "upstream": 1,
+     "upstreamBytes": 142384,
+     "error": null
+    },
+    {
+     "ms": 104.3,
+     "ttfb": null,
+     "bytes": 7302,
+     "upstream": 1,
+     "upstreamBytes": 142384,
+     "error": null
+    },
+    {
+     "ms": 57.3,
+     "ttfb": null,
+     "bytes": 7302,
+     "upstream": 1,
+     "upstreamBytes": 142384,
+     "error": null
+    },
+    {
+     "ms": 51.5,
+     "ttfb": null,
+     "bytes": 7302,
+     "upstream": 1,
+     "upstreamBytes": 142384,
+     "error": null
+    },
+    {
+     "ms": 109.2,
+     "ttfb": null,
+     "bytes": 7302,
+     "upstream": 1,
+     "upstreamBytes": 142384,
+     "error": null
+    },
+    {
+     "ms": 47.7,
+     "ttfb": null,
+     "bytes": 7302,
+     "upstream": 1,
+     "upstreamBytes": 142384,
+     "error": null
+    },
+    {
+     "ms": 53.8,
+     "ttfb": null,
+     "bytes": 7302,
+     "upstream": 1,
+     "upstreamBytes": 142384,
+     "error": null
+    },
+    {
+     "ms": 104.5,
+     "ttfb": null,
+     "bytes": 7302,
+     "upstream": 1,
+     "upstreamBytes": 142384,
+     "error": null
+    },
+    {
+     "ms": 54.8,
+     "ttfb": null,
+     "bytes": 7302,
+     "upstream": 1,
+     "upstreamBytes": 142384,
+     "error": null
+    },
+    {
+     "ms": 49.1,
+     "ttfb": null,
+     "bytes": 7302,
+     "upstream": 1,
+     "upstreamBytes": 142384,
+     "error": null
+    }
+   ]
+  },
+  {
+   "name": "gov:drep-detail",
+   "runs": [
+    {
+     "ms": 113.1,
+     "ttfb": null,
+     "bytes": 413,
+     "upstream": 1,
+     "upstreamBytes": 273,
+     "error": null
+    },
+    {
+     "ms": 42.4,
+     "ttfb": null,
+     "bytes": 413,
+     "upstream": 1,
+     "upstreamBytes": 273,
+     "error": null
+    },
+    {
+     "ms": 44.2,
+     "ttfb": null,
+     "bytes": 413,
+     "upstream": 1,
+     "upstreamBytes": 273,
+     "error": null
+    },
+    {
+     "ms": 125.8,
+     "ttfb": null,
+     "bytes": 413,
+     "upstream": 1,
+     "upstreamBytes": 273,
+     "error": null
+    },
+    {
+     "ms": 44.3,
+     "ttfb": null,
+     "bytes": 413,
+     "upstream": 1,
+     "upstreamBytes": 273,
+     "error": null
+    },
+    {
+     "ms": 42.7,
+     "ttfb": null,
+     "bytes": 413,
+     "upstream": 1,
+     "upstreamBytes": 273,
+     "error": null
+    },
+    {
+     "ms": 129.9,
+     "ttfb": null,
+     "bytes": 413,
+     "upstream": 1,
+     "upstreamBytes": 273,
+     "error": null
+    },
+    {
+     "ms": 38.2,
+     "ttfb": null,
+     "bytes": 413,
+     "upstream": 1,
+     "upstreamBytes": 273,
+     "error": null
+    },
+    {
+     "ms": 51.8,
+     "ttfb": null,
+     "bytes": 413,
+     "upstream": 1,
+     "upstreamBytes": 273,
+     "error": null
+    },
+    {
+     "ms": 128.4,
+     "ttfb": null,
+     "bytes": 413,
+     "upstream": 1,
+     "upstreamBytes": 273,
+     "error": null
+    }
+   ]
+  },
+  {
+   "name": "gov:drep-votes",
+   "runs": [
+    {
+     "ms": 47.4,
+     "ttfb": null,
+     "bytes": 2084,
+     "upstream": 1,
+     "upstreamBytes": 6077,
+     "error": null
+    },
+    {
+     "ms": 43.4,
+     "ttfb": null,
+     "bytes": 2084,
+     "upstream": 1,
+     "upstreamBytes": 6077,
+     "error": null
+    },
+    {
+     "ms": 128.2,
+     "ttfb": null,
+     "bytes": 2084,
+     "upstream": 1,
+     "upstreamBytes": 6077,
+     "error": null
+    },
+    {
+     "ms": 44.1,
+     "ttfb": null,
+     "bytes": 2084,
+     "upstream": 1,
+     "upstreamBytes": 6077,
+     "error": null
+    },
+    {
+     "ms": 43.5,
+     "ttfb": null,
+     "bytes": 2084,
+     "upstream": 1,
+     "upstreamBytes": 6077,
+     "error": null
+    },
+    {
+     "ms": 129.7,
+     "ttfb": null,
+     "bytes": 2084,
+     "upstream": 1,
+     "upstreamBytes": 6077,
+     "error": null
+    },
+    {
+     "ms": 42.5,
+     "ttfb": null,
+     "bytes": 2084,
+     "upstream": 1,
+     "upstreamBytes": 6077,
+     "error": null
+    },
+    {
+     "ms": 41.8,
+     "ttfb": null,
+     "bytes": 2084,
+     "upstream": 1,
+     "upstreamBytes": 6077,
+     "error": null
+    },
+    {
+     "ms": 99.6,
+     "ttfb": null,
+     "bytes": 2084,
+     "upstream": 1,
+     "upstreamBytes": 6077,
+     "error": null
+    },
+    {
+     "ms": 41.9,
+     "ttfb": null,
+     "bytes": 2084,
+     "upstream": 1,
+     "upstreamBytes": 6077,
+     "error": null
+    }
+   ]
+  },
+  {
+   "name": "gov:drep-delegates",
+   "runs": [
+    {
+     "ms": 64.1,
+     "ttfb": null,
+     "bytes": 1912,
+     "upstream": 1,
+     "upstreamBytes": 1885,
+     "error": null
+    },
+    {
+     "ms": 113.7,
+     "ttfb": null,
+     "bytes": 1912,
+     "upstream": 1,
+     "upstreamBytes": 1885,
+     "error": null
+    },
+    {
+     "ms": 46.7,
+     "ttfb": null,
+     "bytes": 1912,
+     "upstream": 1,
+     "upstreamBytes": 1885,
+     "error": null
+    },
+    {
+     "ms": 45.4,
+     "ttfb": null,
+     "bytes": 1912,
+     "upstream": 1,
+     "upstreamBytes": 1885,
+     "error": null
+    },
+    {
+     "ms": 127.7,
+     "ttfb": null,
+     "bytes": 1912,
+     "upstream": 1,
+     "upstreamBytes": 1885,
+     "error": null
+    },
+    {
+     "ms": 44.8,
+     "ttfb": null,
+     "bytes": 1912,
+     "upstream": 1,
+     "upstreamBytes": 1885,
+     "error": null
+    },
+    {
+     "ms": 43.9,
+     "ttfb": null,
+     "bytes": 1912,
+     "upstream": 1,
+     "upstreamBytes": 1885,
+     "error": null
+    },
+    {
+     "ms": 131.1,
+     "ttfb": null,
+     "bytes": 1912,
+     "upstream": 1,
+     "upstreamBytes": 1885,
+     "error": null
+    },
+    {
+     "ms": 48.2,
+     "ttfb": null,
+     "bytes": 1912,
+     "upstream": 1,
+     "upstreamBytes": 1885,
+     "error": null
+    },
+    {
+     "ms": 46,
+     "ttfb": null,
+     "bytes": 1912,
+     "upstream": 1,
+     "upstreamBytes": 1885,
+     "error": null
+    }
+   ]
+  },
+  {
+   "name": "protocol-params",
+   "runs": [
+    {
+     "ms": 126.2,
+     "ttfb": null,
+     "bytes": 45385,
+     "upstream": 1,
+     "upstreamBytes": 48647,
+     "error": null
+    },
+    {
+     "ms": 62,
+     "ttfb": null,
+     "bytes": 45385,
+     "upstream": 1,
+     "upstreamBytes": 48647,
+     "error": null
+    },
+    {
+     "ms": 51.8,
+     "ttfb": null,
+     "bytes": 45385,
+     "upstream": 1,
+     "upstreamBytes": 48647,
+     "error": null
+    },
+    {
+     "ms": 105.2,
+     "ttfb": null,
+     "bytes": 45385,
+     "upstream": 1,
+     "upstreamBytes": 48647,
+     "error": null
+    },
+    {
+     "ms": 64.3,
+     "ttfb": null,
+     "bytes": 45385,
+     "upstream": 1,
+     "upstreamBytes": 48647,
+     "error": null
+    },
+    {
+     "ms": 51.6,
+     "ttfb": null,
+     "bytes": 45385,
+     "upstream": 1,
+     "upstreamBytes": 48647,
+     "error": null
+    },
+    {
+     "ms": 104.6,
+     "ttfb": null,
+     "bytes": 45385,
+     "upstream": 1,
+     "upstreamBytes": 48647,
+     "error": null
+    },
+    {
+     "ms": 45.8,
+     "ttfb": null,
+     "bytes": 45385,
+     "upstream": 1,
+     "upstreamBytes": 48647,
+     "error": null
+    },
+    {
+     "ms": 63.1,
+     "ttfb": null,
+     "bytes": 45385,
+     "upstream": 1,
+     "upstreamBytes": 48647,
+     "error": null
+    },
+    {
+     "ms": 109.3,
+     "ttfb": null,
+     "bytes": 45385,
+     "upstream": 1,
+     "upstreamBytes": 48647,
+     "error": null
+    }
+   ]
+  },
+  {
+   "name": "search",
+   "runs": [
+    {
+     "ms": 121.7,
+     "ttfb": null,
+     "bytes": 100,
+     "upstream": 2,
+     "upstreamBytes": 663,
+     "error": null
+    },
+    {
+     "ms": 45.3,
+     "ttfb": null,
+     "bytes": 100,
+     "upstream": 2,
+     "upstreamBytes": 663,
+     "error": null
+    },
+    {
+     "ms": 198.5,
+     "ttfb": null,
+     "bytes": 100,
+     "upstream": 2,
+     "upstreamBytes": 663,
+     "error": null
+    },
+    {
+     "ms": 273.6,
+     "ttfb": null,
+     "bytes": 100,
+     "upstream": 2,
+     "upstreamBytes": 663,
+     "error": null
+    },
+    {
+     "ms": 97.1,
+     "ttfb": null,
+     "bytes": 100,
+     "upstream": 2,
+     "upstreamBytes": 663,
+     "error": null
+    },
+    {
+     "ms": 45.7,
+     "ttfb": null,
+     "bytes": 100,
+     "upstream": 2,
+     "upstreamBytes": 663,
+     "error": null
+    },
+    {
+     "ms": 236.8,
+     "ttfb": null,
+     "bytes": 100,
+     "upstream": 2,
+     "upstreamBytes": 663,
+     "error": null
+    },
+    {
+     "ms": 98.9,
+     "ttfb": null,
+     "bytes": 100,
+     "upstream": 2,
+     "upstreamBytes": 663,
+     "error": null
+    },
+    {
+     "ms": 224.3,
+     "ttfb": null,
+     "bytes": 100,
+     "upstream": 2,
+     "upstreamBytes": 663,
+     "error": null
+    },
+    {
+     "ms": 46.1,
+     "ttfb": null,
+     "bytes": 100,
+     "upstream": 2,
+     "upstreamBytes": 663,
+     "error": null
+    }
+   ]
+  }
+ ]
+}

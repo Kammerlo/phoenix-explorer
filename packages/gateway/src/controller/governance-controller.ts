@@ -4,9 +4,34 @@ import { GovActionVote, GovernanceActionDetail, GovernanceActionListItem, VoteDa
 import { ApiReturnType } from "@shared/APIReturnType";
 import { Drep, DrepDelegates } from "@shared/dtos/drep.dto";
 
-import { cache, getTransactions } from "../config/cache";
+import {
+    cache,
+    getDrepById,
+    getDrepDelegators,
+    getDrepMetadata,
+    getDrepUpdates,
+    getDrepVotes,
+    getDrepVotesPage,
+    getProposal,
+    getProposalMetadata,
+    getProposalVotes,
+    getProposalsPage,
+    getTransactions
+} from "../config/cache";
 
 export const governanceController = Router();
+
+// DRep off-chain metadata arrives either as a JSON object or a JSON string.
+function parseDrepJsonMetadata(drepMetadata: { json_metadata?: unknown } | null | undefined): any {
+    if (!drepMetadata?.json_metadata) return {};
+    if (typeof drepMetadata.json_metadata !== 'string') return drepMetadata.json_metadata;
+    try {
+        return JSON.parse(drepMetadata.json_metadata);
+    } catch (parseError) {
+        console.error("Error parsing DRep json_metadata:", parseError);
+        return {};
+    }
+}
 
 governanceController.get('/actions', async (req, res) => {
     const pageInfo = req.query;
@@ -14,10 +39,7 @@ governanceController.get('/actions', async (req, res) => {
     // Frontend pagination is 1-based; accept legacy 0 as "first page".
     const requestedPage = Math.max(1, Number.parseInt(String(pageInfo.page || 1)));
     const requestedSize = Number.parseInt(String(pageInfo.size || 10));
-    const proposals = await API.governance.proposals({
-        page: requestedPage,
-        count: requestedSize
-    });
+    const proposals = await getProposalsPage(requestedPage, requestedSize);
 
     const govActionListItems: GovernanceActionListItem[] = proposals.map((proposal: any) => {
         // Blockfrost list returns `expiration` (scheduled expiry epoch).
@@ -57,10 +79,10 @@ governanceController.get('/actions/:txHash/:indexStr', async (req, res) => {
         // Proposal is required; metadata + votes are best-effort. Without this split
         // a proposal with no off-chain metadata 404'd via proposalMetadata and the
         // entire detail page rendered "Governance Action Not Found".
-        const proposal = await API.governance.proposal(txHash, index);
+        const proposal = await getProposal(txHash, index);
         const [metadata, votes, transaction] = await Promise.all([
-            API.governance.proposalMetadata(txHash, index).catch(() => null as any),
-            API.governance.proposalVotesAll(txHash, index).catch(() => [] as any[]),
+            getProposalMetadata(txHash, index) as Promise<any>,
+            getProposalVotes(txHash, index).catch(() => [] as any[]),
             getTransactions(txHash).catch(() => ({ block_time: undefined } as any))
         ]);
 
@@ -134,7 +156,7 @@ governanceController.get('/actions/:txHash/:indexStr', async (req, res) => {
 governanceController.get('/actions/:txHash/:indexStr/votes', async (req, res) => {
     const { txHash, indexStr } = req.params;
     const index = Number.parseInt(indexStr);
-    const votes = await API.governance.proposalVotesAll(txHash, index);
+    const votes = await getProposalVotes(txHash, index);
 
     const govActionVote: GovActionVote[] = await Promise.all(votes.map(async (vote) => {
             const transaction = await getTransactions(vote.tx_hash);
@@ -165,35 +187,22 @@ governanceController.get('/dreps', async (req, res) => {
         count: requestedSize
     });
 
-    let dreps: Drep[] = [];
-    for (const drep of drepsData) {
-
+    // One parallel pair of cached lookups per row — this was a serial
+    // two-calls-per-DRep loop (~40 upstream calls in sequence per page).
+    const dreps: Drep[] = await Promise.all(drepsData.map(async (drep) => {
         let drepDetails;
         let drepMetadata;
-        let jsonMetadata : any
+        let jsonMetadata: any;
         try {
-            drepDetails = await API.governance.drepsById(drep.drep_id);
-            drepMetadata = await API.governance.drepsByIdMetadata(drep.drep_id);
-            
-            // Safely parse DRep metadata
-            if (drepMetadata?.json_metadata) {
-                if (typeof drepMetadata.json_metadata === 'string') {
-                    try {
-                        jsonMetadata = JSON.parse(drepMetadata.json_metadata);
-                    } catch (parseError) {
-                        console.error("Error parsing DRep json_metadata:", parseError);
-                        jsonMetadata = {};
-                    }
-                } else {
-                    jsonMetadata = drepMetadata.json_metadata;
-                }
-            } else {
-                jsonMetadata = {};
-            }
+            [drepDetails, drepMetadata] = await Promise.all([
+                getDrepById(drep.drep_id),
+                getDrepMetadata(drep.drep_id)
+            ]);
+            jsonMetadata = parseDrepJsonMetadata(drepMetadata);
         } catch (e) {
             console.error("Error fetching drep details for drep id:", drep.drep_id);
         }
-        dreps.push({
+        return {
             activeVoteStake: drepDetails ? drepDetails.amount : 0,
             anchorHash: drepMetadata ? drepMetadata?.hash : "",
             anchorUrl: drepMetadata ? drepMetadata?.url : "",
@@ -204,8 +213,8 @@ governanceController.get('/dreps', async (req, res) => {
             drepHash: drep.hex,
             drepId: drep.drep_id,
             status: "ACTIVE",
-        } as Drep);
-    }
+        } as Drep;
+    }));
     // Apply client-supplied sort (e.g. ?sort=activeVoteStake,DESC). The values that come
     // from Blockfrost are strings or numbers — coerce to a numeric comparator for stake/amount fields.
     const sortParam = String(pageInfo.sort || '');
@@ -250,46 +259,34 @@ governanceController.get('/dreps/:drepId', async (req, res) => {
     let createTx : any;
     let lastUpdateTx : any;
     let votes : any[] = [];
+    let proposals: any[] = [];
     try {
-        drepDetails = await API.governance.drepsById(drepId);
-        drepMetadata = await API.governance.drepsByIdMetadata(drepId);
-        
-        // Safely parse DRep metadata
-        if (drepMetadata?.json_metadata) {
-            if (typeof drepMetadata.json_metadata === 'string') {
-                try {
-                    jsonMetadata = JSON.parse(drepMetadata.json_metadata);
-                } catch (parseError) {
-                    console.error("Error parsing DRep json_metadata:", parseError);
-                    jsonMetadata = {};
-                }
-            } else {
-                jsonMetadata = drepMetadata.json_metadata;
-            }
-        } else {
-            jsonMetadata = {};
+        // Every lookup is independent of the others — fetch them (and the
+        // proposals list for the participation rate) in one parallel wave
+        // through the cache. This was 7+ serial upstream calls.
+        [drepDetails, drepMetadata, delegators, updates, votes, proposals] = await Promise.all([
+            getDrepById(drepId),
+            getDrepMetadata(drepId),
+            getDrepDelegators(drepId),
+            getDrepUpdates(drepId),
+            getDrepVotes(drepId),
+            getProposalsPage(1, 100).catch(() => [] as any[])
+        ]);
+        jsonMetadata = parseDrepJsonMetadata(drepMetadata);
+        if (updates && updates.length > 0) {
+            [createTx, lastUpdateTx] = await Promise.all([
+                getTransactions(updates[0].tx_hash),
+                getTransactions(updates[updates.length - 1].tx_hash)
+            ]);
         }
-        
-        delegators = await API.governance.drepsByIdDelegatorsAll(drepId);
-        updates = await API.governance.drepsByIdUpdatesAll(drepId);
-        if(updates && updates.length > 0) {
-            createTx = await API.txs(updates[0].tx_hash);
-            lastUpdateTx = await API.txs(updates[updates.length - 1].tx_hash);
-        }
-        votes = await API.governance.drepsByIdVotesAll(drepId);
     } catch (e) {
         console.error("Error fetching drep details for drep id:", drepId);
     }
 
-    // Compute governance participation rate: votes cast / total proposals on chain
+    // Governance participation rate: votes cast / total proposals on chain.
     let govParticipationRate = 0;
-    try {
-        const proposals = await API.governance.proposals({ page: 1, count: 100 });
-        if (proposals.length > 0 && votes.length > 0) {
-            govParticipationRate = Math.min(1, votes.length / proposals.length);
-        }
-    } catch {
-        // leave at 0 if proposals fetch fails
+    if (proposals.length > 0 && votes.length > 0) {
+        govParticipationRate = Math.min(1, votes.length / proposals.length);
     }
 
 
@@ -325,7 +322,7 @@ governanceController.get('/dreps/:drepId', async (req, res) => {
 governanceController.get('/dreps/:drepId/votes', async (req, res) => {
     const { drepId } = req.params;
     const pageInfo = req.query;
-    const votesData = await API.governance.drepsByIdVotes(drepId);
+    const votesData = await getDrepVotesPage(drepId);
     // Frontend pagination is 1-based; accept legacy 0 as "first page".
     const rawPage = Number.parseInt(String(pageInfo.page ?? 1));
     const rawSize = Number.parseInt(String(pageInfo.size ?? 10));
@@ -356,7 +353,7 @@ governanceController.get('/dreps/:drepId/votes', async (req, res) => {
 governanceController.get('/dreps/:drepId/delegates', async (req, res) => {
     const { drepId } = req.params;
     const pageInfo = req.query;
-    const delegatorsData = await API.governance.drepsByIdDelegatorsAll(drepId);
+    const delegatorsData = await getDrepDelegators(drepId);
     // Frontend pagination is 1-based; accept legacy 0 as "first page".
     const rawPage = Number.parseInt(String(pageInfo.page ?? 1));
     const rawSize = Number.parseInt(String(pageInfo.size ?? 10));

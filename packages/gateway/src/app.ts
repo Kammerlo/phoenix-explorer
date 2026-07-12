@@ -1,4 +1,5 @@
 import express from "express";
+import compression from "compression";
 import cors from "cors";
 import { epochController } from "./controller/epoch-controller";
 import { blockController } from "./controller/block-controller";
@@ -16,6 +17,9 @@ import { errorHandler } from "./middleware/errorHandler";
 const app = express();
 
 app.use(cors()); // Adjust for your frontend origin if needed
+// Gzip JSON responses — a token-heavy transaction detail is ~290KB identity /
+// ~30KB gzipped. Browsers always send Accept-Encoding, so this is pure win.
+app.use(compression());
 app.use(express.json());
 
 app.use("/api/epochs", epochController);

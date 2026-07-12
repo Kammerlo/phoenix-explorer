@@ -1,9 +1,9 @@
 import {Router} from 'express';
-import {API, POOL_API} from "../config/blockfrost";
+import {API} from "../config/blockfrost";
 import {EpochOverview} from "@shared/dtos/epoch.dto";
 import {Block} from "@shared/dtos/block.dto";
 import {ApiReturnType} from "@shared/APIReturnType";
-import {cache, getBlock, getEpoch} from "../config/cache";
+import {cache, getBlock, getEpoch, getLatestEpoch, getPoolMetadata} from "../config/cache";
 import { getEpochStatus, getEpochProgress, computeEpochSlotNo, MAINNET_EPOCH_MAX_SLOT } from "@shared/helpers/epochHelpers";
 
 export const epochController = Router();
@@ -11,7 +11,7 @@ export const epochController = Router();
 epochController.get('', async (req, res) => {
   const pageInfo = req.query;
   const unixTimestamp = Math.floor(Date.now() / 1000);
-  const latestEpoch = await API.epochsLatest();
+  const latestEpoch = await getLatestEpoch();
   // Frontend pagination is 1-based (page 1 = first page). Accept legacy 0
   // as "first page" so existing callers don't break.
   const rawPage = Number.parseInt(String(pageInfo.page || 1));
@@ -63,9 +63,7 @@ epochController.get('', async (req, res) => {
 
 epochController.get('/:epochNo', async (req, res) => {
   const {epochNo} = req.params;
-  const latestEpoch = await API.epochsLatest();
-
-  let requestedEpoch = await getEpoch(epochNo);
+  const [latestEpoch, requestedEpoch] = await Promise.all([getLatestEpoch(), getEpoch(epochNo)]);
 
   const unixTimestamp = Math.floor(Date.now() / 1000);
 
@@ -117,23 +115,19 @@ epochController.get('/:epochNo/blocks', async (req, res) => {
   // Fetch full block data for each hash
   const rawBlocks = await Promise.all(epochBlocks.map(hash => getBlock(hash)));
 
-  // Batch-fetch pool metadata for unique slot leaders. Skipped entirely when
-  // only demeter is configured — `/pools/*` is blockfrost.io-only.
+  // Batch-fetch pool metadata for unique slot leaders through the 1h cache.
+  // Resolves to null entries when only demeter is configured (`/pools/*` is
+  // blockfrost.io-only) or when a pool has no metadata.
   const poolMeta = new Map<string, { name: string; ticker: string }>();
-  if (POOL_API) {
-    const blockfrost = POOL_API;
-    const uniqueLeaders = [...new Set(rawBlocks.map(b => b.slot_leader).filter(Boolean))] as string[];
-    await Promise.all(
-      uniqueLeaders
-        .filter(l => l.startsWith('pool'))
-        .map(async (leader) => {
-          try {
-            const meta = await blockfrost.poolMetadata(leader);
-            poolMeta.set(leader, { name: meta.name ?? '', ticker: meta.ticker ?? '' });
-          } catch { /* no metadata */ }
-        })
-    );
-  }
+  const uniqueLeaders = [...new Set(rawBlocks.map(b => b.slot_leader).filter(Boolean))] as string[];
+  await Promise.all(
+    uniqueLeaders
+      .filter(l => l.startsWith('pool'))
+      .map(async (leader) => {
+        const meta = await getPoolMetadata(leader);
+        if (meta) poolMeta.set(leader, { name: meta.name ?? '', ticker: meta.ticker ?? '' });
+      })
+  );
 
   const blocks: Block[] = rawBlocks.map((block) => {
     const meta = block.slot_leader ? poolMeta.get(block.slot_leader) : undefined;

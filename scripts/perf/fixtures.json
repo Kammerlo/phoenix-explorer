@@ -1,0 +1,18 @@
+{
+  "comment": "Frozen fixture IDs for the endpoint benchmark. Same IDs are used for the before- and after-measurement so results are apples-to-apples. Resolved live on mainnet 2026-07-12.",
+  "epochNo": 641,
+  "blockId": "13667926",
+  "txHashScript": "76dce176bd880cbf9c06560de6856b853d896961e47cced1a3c14a605be2c06d",
+  "txHashPlain": "1f83f0fba9ad30626a7b7dbd197d8114c98d3204f2638cf23409bc9348c629a1",
+  "address": "addr1z8p79rpkcdz8x9d6tft0x0dx5mwuzac2sa4gm8cvkw5hcnq9qxvlp6p6qxzqmh2kgezgupmrgnk8m942tgzpu70r5j8sdwc009",
+  "stakeAddress": "stake1uyzsrx0saqaqrpqdm4tyv3ywqa35fmraj6495pq70836frcakttm9",
+  "poolId": "pool1z5uqdk7dzdxaae5633fqfcu2eqzy3a3rgtuvy087fdld7yws0xt",
+  "tokenUnit": "ac3f4224723e2ed9d166478662f6e48bae9ddf0fc5ee58f54f6c322943454e54",
+  "policyId": "ac3f4224723e2ed9d166478662f6e48bae9ddf0fc5ee58f54f6c3229",
+  "govActionTx": "15f82a365bdee483a4b03873a40d3829cc88c048ff3703e11bd01dd9e035c916",
+  "govActionIndex": "0",
+  "drepId": "drep1yfaaaaa270yjt6tu5skndugekprf5ykv5jshanl0c6gqx5qpstskf",
+  "scriptHash": "c5a1debec3a1a931e19b6bfeeb4c608071e6c5b2b1f5abbfb92a41ae",
+  "searchQuery": "13667926",
+  "pageInfo": { "page": "1", "size": "20" }
+}
