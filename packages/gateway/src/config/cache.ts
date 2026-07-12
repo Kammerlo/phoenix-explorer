@@ -168,6 +168,12 @@ export function getAssetHistory(unit: string): Promise<components["schemas"]["as
 // Governance lookups. Proposals/votes/DRep records change slowly relative to
 // page views; metadata endpoints 404 for anchors without off-chain documents,
 // hence the null fallbacks.
+export function getProposalsPage(page: number, count: number) {
+  return cachedFetch(`gov-proposals-${page}-${count}`, DEFAULT_TTL, () =>
+    API.governance.proposals({ page, count })
+  );
+}
+
 export function getProposal(txHash: string, index: number) {
   return cachedFetch(`gov-proposal-${txHash}-${index}`, DEFAULT_TTL, () =>
     API.governance.proposal(txHash, index)
@@ -217,6 +223,13 @@ export function getDrepUpdates(drepId: string) {
 export function getDrepVotes(drepId: string) {
   return cachedFetch(`drep-votes-${drepId}`, DEFAULT_TTL, () =>
     API.governance.drepsByIdVotesAll(drepId)
+  );
+}
+
+// First page (Blockfrost default 100) — what the paged votes route serves.
+export function getDrepVotesPage(drepId: string) {
+  return cachedFetch(`drep-votes-page-${drepId}`, DEFAULT_TTL, () =>
+    API.governance.drepsByIdVotes(drepId)
   );
 }
 
