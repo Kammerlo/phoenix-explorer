@@ -347,6 +347,22 @@ export class BlockfrostConnector extends ConnectorBase {
     }
   }
 
+  // Header-only detail so the tx page renders its overview immediately — the
+  // ApiConnector default resolves the FULL detail (11 upstream calls, ~190KB
+  // for a token-heavy tx) just to show the header. Two calls, same semantics
+  // as the gateway's /transactions/:hash/summary.
+  async getTxSummary(txHash: string): Promise<ApiReturnType<TransactionDetail>> {
+    return this.request<TransactionDetail>(async () => {
+      const tx = (await this.client.get<BfTx>(`/txs/${txHash}`)).data;
+      const block = await this._fetchBlockRaw(tx.block);
+      const summary = await buildTransactionDetail({ tx, block, utxos: { inputs: [], outputs: [] } });
+      // Header only — leave the heavy sections undefined so the UI keeps their skeletons.
+      summary.utxOs = undefined;
+      summary.collaterals = undefined;
+      return summary;
+    });
+  }
+
   private async _fetchTxSummary(hash: string, block: Block): Promise<Transaction> {
     const txResp = await this.client.get<BfTx>(`/txs/${hash}`);
     const tx = txResp.data;
