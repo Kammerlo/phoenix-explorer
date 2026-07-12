@@ -15,12 +15,14 @@
   "dependencies": {
     "@blockfrost/blockfrost-js": "^6.1.1",
     "@blockfrost/openapi": "^0.1.86",
+    "compression": "^1.8.1",
     "cors": "^2.8.5",
     "dotenv": "^16.6.1",
     "express": "^5.2.1",
     "node-cache": "^5.1.2"
   },
   "devDependencies": {
+    "@types/compression": "^1.8.1",
     "@types/cors": "^2.8.18",
     "@types/express": "^5.0.6",
     "@types/node": "^22.19.17",
