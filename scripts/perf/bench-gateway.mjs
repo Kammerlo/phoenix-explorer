@@ -88,22 +88,29 @@ function upstreamCallsSinceMark() {
   return (text.match(/\[(demeter|blockfrost)\] /g) ?? []).length;
 }
 
+// Requests are aborted after 180s and recorded as status 0 — a hung upstream
+// must produce a data point, not kill the sweep.
+const REQUEST_ABORT_MS = 180_000;
+
 async function measure(url) {
   upstreamCallsSinceMark(); // reset mark
   const t0 = performance.now();
-  const res = await fetch(BASE + url, { headers: { "Accept-Encoding": "identity" } });
-  const ttfb = performance.now() - t0;
-  const body = await res.arrayBuffer();
-  const total = performance.now() - t0;
+  let out;
+  try {
+    const res = await fetch(BASE + url, {
+      headers: { "Accept-Encoding": "identity" },
+      signal: AbortSignal.timeout(REQUEST_ABORT_MS)
+    });
+    const ttfb = performance.now() - t0;
+    const body = await res.arrayBuffer();
+    const total = performance.now() - t0;
+    out = { ms: +total.toFixed(1), ttfb: +ttfb.toFixed(1), bytes: body.byteLength, status: res.status };
+  } catch {
+    out = { ms: +(performance.now() - t0).toFixed(1), ttfb: null, bytes: 0, status: 0 };
+  }
   // Give the last upstream log line a moment to flush before counting.
   await new Promise((r) => setTimeout(r, 60));
-  return {
-    ms: +total.toFixed(1),
-    ttfb: +ttfb.toFixed(1),
-    bytes: body.byteLength,
-    status: res.status,
-    upstream: upstreamCallsSinceMark()
-  };
+  return { ...out, upstream: upstreamCallsSinceMark() };
 }
 
 const results = [];
