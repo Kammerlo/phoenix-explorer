@@ -4,7 +4,7 @@ import { PoolDetail, PoolOverview } from "@shared/dtos/pool.dto";
 import { Block } from "@shared/dtos/block.dto";
 import { Router } from "express";
 import { API, POOL_API } from "../config/blockfrost";
-import { getBlock, getTransactions } from "../config/cache";
+import { getAccount, getBlock, getTransactions } from "../config/cache";
 
 export const poolController = Router();
 
@@ -109,18 +109,15 @@ if (!POOL_API) {
     try {
         const pool = await blockfrost.poolsById(poolId);
         // Metadata, relays, registration tx and owner balances are independent —
-        // fetch them in parallel (owner balances fan out per owner address).
+        // fetch them in parallel. An owner's total controlled balance is one
+        // cached /accounts call (controlled_amount), not an addresses fan-out.
         const [poolMetadata, relays, createTx, ownerBalances] = await Promise.all([
             blockfrost.poolMetadata(poolId),
             blockfrost.poolsByIdRelays(poolId),
             getTransactions(pool.registration[0]),
             Promise.all(pool.owners.map(async (owner) => {
-                const addressInfo = await API.accountsAddresses(owner);
-                const addresses = await Promise.all(addressInfo.map((a) => API.addresses(a.address)));
-                return addresses.reduce(
-                    (sum, addr) => sum + Number.parseInt(addr.amount.find((x) => x.unit === 'lovelace')?.quantity || '0'),
-                    0
-                );
+                const account = await getAccount(owner);
+                return Number.parseInt(account.controlled_amount || '0');
             }))
         ]);
         const totalBalanceOfPoolOwners = ownerBalances.reduce((a, b) => a + b, 0);

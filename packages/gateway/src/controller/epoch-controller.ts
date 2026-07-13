@@ -63,7 +63,9 @@ epochController.get('', async (req, res) => {
 
 epochController.get('/:epochNo', async (req, res) => {
   const {epochNo} = req.params;
-  const [latestEpoch, requestedEpoch] = await Promise.all([getLatestEpoch(), getEpoch(epochNo)]);
+  // Latest first (15s cache, usually free) so a finished epoch caches for 24h.
+  const latestEpoch = await getLatestEpoch();
+  const requestedEpoch = await getEpoch(epochNo, latestEpoch.epoch);
 
   const unixTimestamp = Math.floor(Date.now() / 1000);
 
@@ -102,7 +104,8 @@ epochController.get('/:epochNo', async (req, res) => {
 epochController.get('/:epochNo/blocks', async (req, res) => {
   const {epochNo} = req.params;
   const pageInfo = req.query;
-  let epoch = await getEpoch(epochNo);
+  const latestEpoch = await getLatestEpoch();
+  let epoch = await getEpoch(epochNo, latestEpoch.epoch);
   // Frontend pagination is 1-based; accept legacy 0 as "first page".
   const epochBlocksPage = Math.max(1, Number.parseInt(String(pageInfo.page ?? 1)));
   const epochBlocksSize = Number.parseInt(String(pageInfo.size ?? 100));

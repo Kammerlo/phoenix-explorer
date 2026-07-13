@@ -3,7 +3,7 @@ import { AddressDetail, StakeAddressDetail } from "@shared/dtos/address.dto";
 import { Transaction } from "@shared/dtos/transaction.dto";
 import { Router, Request, Response } from "express";
 import { API } from "../config/blockfrost";
-import { fetchAddressTotal, getBlock, getPoolMetadata, getTransactions } from "../config/cache";
+import { fetchAddressTotal, getAccount, getBlock, getPoolMetadata, getTransactions } from "../config/cache";
 import { computeTotalLovelaceOutput, computeTxTags } from "@shared/helpers/txTags";
 
 export const addressController = Router();
@@ -44,7 +44,7 @@ addressController.get('/:address', async (req, res) => {
         // addresses controlled by the stake key.
         if (address.startsWith('stake')) {
             const [accountData, accountTotals, accountAssets] = await Promise.all([
-                API.accounts(address),
+                getAccount(address),
                 API.accountsAddressesTotal(address).catch(() => null),
                 API.accountsAddressesAssetsAll(address).catch(() => [] as any[])
             ]);
@@ -118,7 +118,7 @@ addressController.get('/:address/transactions', async (req, res) => {
 
         if (isStakeAddress) {
             // Aggregate transactions across all payment addresses controlled by this stake key.
-            const account = await API.accounts(address);
+            const account = await getAccount(address);
             const totalTxs = (account as any).tx_count ?? undefined;
             const stakeTxs = await API.accountsTransactions(address, { page, count, order: "desc" });
             const txData: Transaction[] = await Promise.all(
@@ -166,7 +166,7 @@ addressController.get('/:address/stake', async (req, res) => {
     const address = req.params.address;
 
     try {
-        const stakeAddressData = await API.accounts(address);
+        const stakeAddressData = await getAccount(address);
 
         const stakeAddressDetail: StakeAddressDetail = {
             status: stakeAddressData.active ? "ACTIVE" : "INACTIVE",

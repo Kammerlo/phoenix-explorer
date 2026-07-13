@@ -8,13 +8,15 @@ import {
     cache,
     getDrepById,
     getDrepDelegators,
+    getDrepFirstUpdate,
+    getDrepLastUpdate,
     getDrepMetadata,
-    getDrepUpdates,
     getDrepVotes,
     getDrepVotesPage,
     getProposal,
     getProposalMetadata,
     getProposalVotes,
+    getProposalsDenominator,
     getProposalsPage,
     getTransactions
 } from "../config/cache";
@@ -255,28 +257,31 @@ governanceController.get('/dreps/:drepId', async (req, res) => {
     let drepMetadata;
     let jsonMetadata : any;
     let delegators : any[] = [];
-    let updates : any[] = [];
     let createTx : any;
     let lastUpdateTx : any;
     let votes : any[] = [];
     let proposals: any[] = [];
     try {
         // Every lookup is independent of the others — fetch them (and the
-        // proposals list for the participation rate) in one parallel wave
-        // through the cache. This was 7+ serial upstream calls.
-        [drepDetails, drepMetadata, delegators, updates, votes, proposals] = await Promise.all([
+        // proposals denominator for the participation rate) in one parallel
+        // wave through the cache. Only the first and last certificate update
+        // are needed (createdAt/updatedAt), not the full update history.
+        let firstUpdate: any[] = [];
+        let lastUpdate: any[] = [];
+        [drepDetails, drepMetadata, delegators, firstUpdate, lastUpdate, votes, proposals] = await Promise.all([
             getDrepById(drepId),
             getDrepMetadata(drepId),
             getDrepDelegators(drepId),
-            getDrepUpdates(drepId),
+            getDrepFirstUpdate(drepId),
+            getDrepLastUpdate(drepId),
             getDrepVotes(drepId),
-            getProposalsPage(1, 100).catch(() => [] as any[])
+            getProposalsDenominator().catch(() => [] as any[])
         ]);
         jsonMetadata = parseDrepJsonMetadata(drepMetadata);
-        if (updates && updates.length > 0) {
+        if (firstUpdate.length > 0 && lastUpdate.length > 0) {
             [createTx, lastUpdateTx] = await Promise.all([
-                getTransactions(updates[0].tx_hash),
-                getTransactions(updates[updates.length - 1].tx_hash)
+                getTransactions(firstUpdate[0].tx_hash),
+                getTransactions(lastUpdate[0].tx_hash)
             ]);
         }
     } catch (e) {

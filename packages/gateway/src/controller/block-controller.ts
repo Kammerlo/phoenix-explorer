@@ -162,7 +162,8 @@ blockController.get('/:blockId', async (req, res) => {
 
 blockController.get('/:blockId/transactions', async (req, res) => {
   const block = await getBlock(req.params.blockId);
-  const txHashes = await getBlockTxs(block.hash);
+  // A block >10 confirmations deep is final — its tx list caches for 24h.
+  const txHashes = await getBlockTxs(block.hash, (block.confirmations ?? 0) > 10);
 
   // Server-side pagination: only the requested page of tx details is fetched
   // (in parallel, through the cache). The full hash list gives a real total.
