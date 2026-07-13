@@ -118,22 +118,31 @@ export class BlockfrostConnector extends ConnectorBase {
       const requestedPage = Math.max(1, Number(pageInfo.page ?? 1));
       const count = Number(pageInfo.size ?? 20);
 
-      // Match gateway: walk backwards from latest, skip for pagination
-      const totalToSkip = (requestedPage - 1) * count;
-      const totalToFetch = totalToSkip + count;
-
-      const allBlocks: BfBlock[] = [];
+      // Blockfrost paginates /previous like any list endpoint — request the
+      // target page directly instead of walking from page 1 and discarding
+      // the skipped rows (page 10 × size 20 used to fetch 200 rows for 20).
       const BF_MAX = 100;
-      const pagesNeeded = Math.ceil(totalToFetch / BF_MAX);
-      for (let bfPage = 1; bfPage <= pagesNeeded; bfPage++) {
-        const c = Math.min(BF_MAX, totalToFetch - allBlocks.length);
+      let allBlocks: BfBlock[] = [];
+      if (count <= BF_MAX) {
         const page = await this.client.get<BfBlock[]>(`/blocks/${latest.data.hash}/previous`, {
-          params: { page: bfPage, count: c }
+          params: { page: requestedPage, count }
         });
-        allBlocks.push(...page.data);
-        if (page.data.length < c) break;
+        allBlocks = page.data;
+      } else {
+        // Oversized page (not used by the UI): fall back to a bounded walk.
+        const totalToSkip = (requestedPage - 1) * count;
+        const totalToFetch = totalToSkip + count;
+        const pagesNeeded = Math.ceil(totalToFetch / BF_MAX);
+        for (let bfPage = 1; bfPage <= pagesNeeded; bfPage++) {
+          const c = Math.min(BF_MAX, totalToFetch - allBlocks.length);
+          const page = await this.client.get<BfBlock[]>(`/blocks/${latest.data.hash}/previous`, {
+            params: { page: bfPage, count: c }
+          });
+          allBlocks.push(...page.data);
+          if (page.data.length < c) break;
+        }
+        allBlocks.splice(0, totalToSkip);
       }
-      allBlocks.splice(0, totalToSkip);
 
       // Fetch pool metadata for slot leaders
       const poolMeta = await this._fetchPoolMetaBatch(allBlocks.map(b => b.slot_leader));
@@ -230,15 +239,37 @@ export class BlockfrostConnector extends ConnectorBase {
       const MAX_BLOCKS_TO_SCAN = 50;
       let blocksScanned = 0;
 
+      // Adaptive parallel scan through a session-scoped memo: block tx-hash
+      // lists are immutable, so revisits and deeper pages reuse them instead
+      // of re-walking the chain serially one block per round-trip.
+      const BATCH_SIZES = [2, 4, 8, 16, 20];
+      let batchIndex = 0;
       while (txEntries.length < size && blockHeight > 0 && blocksScanned < MAX_BLOCKS_TO_SCAN) {
-        const hashesResp = await this.client.get<string[]>(`/blocks/${blockHeight}/txs`);
-        blocksScanned++;
-        for (const txHash of hashesResp.data ?? []) {
-          if (toSkip > 0) { toSkip--; continue; }
-          if (txEntries.length >= size) break;
-          txEntries.push({ txHash, blockHeight });
+        const batchSize = BATCH_SIZES[Math.min(batchIndex++, BATCH_SIZES.length - 1)];
+        const heights: number[] = [];
+        while (
+          heights.length < batchSize &&
+          blockHeight - heights.length > 0 &&
+          blocksScanned + heights.length < MAX_BLOCKS_TO_SCAN
+        ) {
+          heights.push(blockHeight - heights.length);
         }
-        blockHeight--;
+        const hashLists = await Promise.all(
+          heights.map((h) =>
+            memoizeImmutable(blockTxsMemo, String(h), () =>
+              this.client.get<string[]>(`/blocks/${h}/txs`).then((r) => r.data ?? [])
+            )
+          )
+        );
+        for (let i = 0; i < hashLists.length && txEntries.length < size; i++) {
+          for (const txHash of hashLists[i]) {
+            if (toSkip > 0) { toSkip--; continue; }
+            if (txEntries.length >= size) break;
+            txEntries.push({ txHash, blockHeight: heights[i] });
+          }
+        }
+        blocksScanned += heights.length;
+        blockHeight -= heights.length;
       }
 
       const txs = await Promise.all(
@@ -330,16 +361,22 @@ export class BlockfrostConnector extends ConnectorBase {
         inputs: utxos.inputs ?? [],
         outputs: utxos.outputs ?? [],
         resolvers: {
+          // Script/datum CBOR is content-addressed and immutable — memoized
+          // module-wide so revisiting a contract tx never re-downloads it.
           scriptCbor: (hash) =>
-            this.client
-              .get<{ cbor: string | null }>(`/scripts/${hash}/cbor`)
-              .then((r) => r.data?.cbor ?? null)
-              .catch(() => null),
+            memoizeImmutable(scriptCborMemo, hash, () =>
+              this.client
+                .get<{ cbor: string | null }>(`/scripts/${hash}/cbor`)
+                .then((r) => r.data?.cbor ?? null)
+                .catch(() => null)
+            ),
           datumCbor: (hash) =>
-            this.client
-              .get<{ cbor: string | null }>(`/scripts/datum/${hash}/cbor`)
-              .then((r) => r.data?.cbor ?? null)
-              .catch(() => null)
+            memoizeImmutable(datumCborMemo, hash, () =>
+              this.client
+                .get<{ cbor: string | null }>(`/scripts/datum/${hash}/cbor`)
+                .then((r) => r.data?.cbor ?? null)
+                .catch(() => null)
+            )
         }
       });
     } catch {
@@ -442,14 +479,27 @@ export class BlockfrostConnector extends ConnectorBase {
       const resp = await this.client.get<{ tx_hash: string; block_height: number; block_time: number }[]>(
         path, { params: { page, count, order: "desc" } }
       );
+      // Fetch each distinct block once — busy addresses often have several
+      // txs in the same block, and a per-row fetch re-downloaded it each time.
+      const rows = resp.data ?? [];
+      const blockByHeight = await this._fetchBlocksByHeight(rows.map((t) => t.block_height));
       const txs = await Promise.all(
-        (resp.data ?? []).map(async (t) => {
-          const block = bfBlockToBlock(await this._fetchBlockRaw(String(t.block_height)));
-          return this._fetchTxSummary(t.tx_hash, block);
-        })
+        rows.map((t) => this._fetchTxSummary(t.tx_hash, blockByHeight.get(t.block_height)!))
       );
       return { data: txs, extras: { currentPage: page - 1, pageSize: count } };
     });
+  }
+
+  // One block fetch per distinct height, resolved into a lookup map.
+  private async _fetchBlocksByHeight(heights: number[]): Promise<Map<number, Block>> {
+    const distinct = [...new Set(heights)];
+    const map = new Map<number, Block>();
+    await Promise.all(
+      distinct.map(async (h) => {
+        map.set(h, bfBlockToBlock(await this._fetchBlockRaw(String(h))));
+      })
+    );
+    return map;
   }
 
   async getWalletStakeFromAddress(address: string): Promise<ApiReturnType<StakeAddressDetail>> {
@@ -512,11 +562,11 @@ export class BlockfrostConnector extends ConnectorBase {
       const resp = await this.client.get<{ tx_hash: string; tx_index: number; block_height: number }[]>(
         `/assets/${tokenId}/transactions`, { params: { page, count, order: "desc" } }
       );
+      // Same dedupe as getAddressTxsFromAddress — token activity clusters in blocks.
+      const rows = resp.data ?? [];
+      const blockByHeight = await this._fetchBlocksByHeight(rows.map((t) => t.block_height));
       const txs = await Promise.all(
-        (resp.data ?? []).map(async (t) => {
-          const block = bfBlockToBlock(await this._fetchBlockRaw(String(t.block_height)));
-          return this._fetchTxSummary(t.tx_hash, block);
-        })
+        rows.map((t) => this._fetchTxSummary(t.tx_hash, blockByHeight.get(t.block_height)!))
       );
       return { data: txs, extras: { currentPage: page - 1, pageSize: count } };
     });
@@ -878,9 +928,11 @@ export class BlockfrostConnector extends ConnectorBase {
         return { data: results, extras: { total: results.length } };
       }
 
-      // Free-text: scan recently-minted assets for name match
+      // Free-text: scan one page of recently-minted assets for a name match.
+      // (Scanning 100 of millions of assets is best-effort at most — the old
+      // 3-page walk tripled the quota cost of every miss for no real recall.)
       if (/^[a-zA-Z0-9$.\-_ ]+$/.test(q)) {
-        for (let page = 1; page <= 3 && results.length < 5; page++) {
+        for (let page = 1; page <= 1 && results.length < 5; page++) {
           const assets = await probe(() => this.client.get<any[]>(`/assets`, { params: { count: 100, page } }));
           if (!assets?.data?.length) break;
           for (const asset of assets.data) {
@@ -1035,6 +1087,28 @@ function bfBlockToBlock(b: BfBlock, poolMeta?: Map<string, { name: string; ticke
     confirmation: b.confirmations,
     blockVrf: b.block_vrf,
   } as Block;
+}
+
+// ── Module-scope memos for immutable lookups ─────────────────────────────────
+// Content-addressed / immutable data (block tx-hash lists, script & datum
+// CBOR) never changes, and the connector is re-instantiated on provider-config
+// reads — module scope makes the memo survive that. Bounded FIFO eviction
+// keeps memory flat; failed fetches are evicted so they can retry.
+const MEMO_MAX = 500;
+const blockTxsMemo = new Map<string, Promise<string[]>>();
+const scriptCborMemo = new Map<string, Promise<string | null>>();
+const datumCborMemo = new Map<string, Promise<string | null>>();
+
+function memoizeImmutable<T>(store: Map<string, Promise<T>>, key: string, fetcher: () => Promise<T>): Promise<T> {
+  const hit = store.get(key);
+  if (hit) return hit;
+  const request = fetcher().catch((err) => {
+    store.delete(key);
+    throw err;
+  });
+  if (store.size >= MEMO_MAX) store.delete(store.keys().next().value as string);
+  store.set(key, request);
+  return request;
 }
 
 function bfAssetToTokenOverview(a: BfAsset): ITokenOverview {

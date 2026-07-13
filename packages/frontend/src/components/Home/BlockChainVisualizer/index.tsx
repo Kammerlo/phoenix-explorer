@@ -293,8 +293,20 @@ const BlockChainVisualizer: React.FC = () => {
 
   useEffect(() => {
     doFetch();
-    const id = setInterval(doFetch, 30_000);
-    return () => clearInterval(id);
+    // Don't poll hidden tabs — a backgrounded Home tab would otherwise keep
+    // hitting the API forever. Refresh immediately when the tab returns.
+    const tick = () => {
+      if (!document.hidden) doFetch();
+    };
+    const onVisible = () => {
+      if (!document.hidden) doFetch();
+    };
+    const id = setInterval(tick, 30_000);
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      clearInterval(id);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
   }, [doFetch]);
 
   useEffect(() => {
