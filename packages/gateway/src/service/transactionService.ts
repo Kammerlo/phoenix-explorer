@@ -37,7 +37,7 @@ async function buildTxContracts(txHash: string, utxos: any): Promise<IContractIt
  * enrichment. Asset metadata resolves through the deduped 1h cache.
  */
 export async function fetchTransactionDetail(txHash: string): Promise<TransactionDetail> {
-  const cachedTxDetail = getTxDetail(txHash);
+  const cachedTxDetail = await getTxDetail(txHash);
   if (cachedTxDetail) return cachedTxDetail;
 
   const [tx, utxos, metadata] = await Promise.all([

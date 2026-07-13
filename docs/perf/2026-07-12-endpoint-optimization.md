@@ -276,3 +276,35 @@ reverted. None of these are in the committed code.
    - Recommendation: **don't implement.** Halving a 3s once-per-5-minutes
      cold path is not worth losing three columns; revisit only if the tx list
      becomes a high-frequency uncached path (e.g. much shorter TTLs).
+
+
+## Addendum 2026-07-13 — Blockfrost quota reduction
+
+A follow-up audit (every route traced call-by-call, findings adversarially
+verified) removed *unnecessary* fetching — data fetched but never consumed at
+that freshness. The project had hit HTTP 402 "Project Over Limit" during this
+work, which these changes address structurally:
+
+- **Immutable data no longer expires**: tx content/UTxOs/metadata, finalized
+  blocks' tx lists, finished epochs, proposal anchor metadata and assembled
+  tx details now sit on the 24h tier (confirmation is recomputed from the
+  cached tip on read). Per-tx lookups were the largest Blockfrost call class
+  and were re-fetched every 5 minutes forever.
+- **No more fetch-everything for a count/two fields**: DRep detail fetches
+  only the first+last certificate update (count:1 asc/desc, was the full
+  history); the participation denominator has its own 1h cache; delegator
+  and vote fetch-alls moved to 30-60min TTLs; pool-owner balance is one
+  cached `/accounts` call per owner (was an addresses fan-out; measured
+  6 → 1 upstream calls).
+- **No speculative over-fetch**: the tx-list block scan grows adaptively
+  (2, 4, 8…) instead of always burning a 10-block batch.
+- **No polling nobody sees**: the Home 30s poll skips hidden tabs; the dead
+  CoinGecko interval hook and Statistic component were deleted.
+- **Direct connector**: target-page fetch for blocks (was walk-from-page-1),
+  memoized immutable block-tx lists + script/datum CBOR, per-distinct-block
+  fetches on address/token tx lists, free-text asset search capped at 1 page.
+
+Verified live (targeted checks, not full sweeps, to protect the remaining
+quota): tx-list warm repeat 0 upstream calls / 2.8ms; DRep detail 14 → 9 cold
+calls; pool detail 6 → 1; cached tx summary serves with a freshly computed
+confirmation. All response shapes and fields unchanged.

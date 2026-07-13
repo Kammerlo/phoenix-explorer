@@ -14,7 +14,12 @@ export const transactionController = Router();
 // and cached (block→hashes never changes), so paging deeper or refreshing reuses
 // the already-scanned prefix instead of re-walking it serially.
 const MAX_BLOCKS_TO_SCAN = 50;
-const BLOCK_BATCH_SIZE = 10;
+// Adaptive scan: recent mainnet blocks average dozens of txs, so page 1 is
+// usually covered by 1-2 blocks — start small and grow instead of always
+// burning a fixed 10-block batch of upstream calls.
+const BLOCK_BATCH_SIZES = [2, 4, 8, 16, 20];
+// Blocks this far below the tip are final — their tx lists cache for 24h.
+const FINALITY_DEPTH = 10;
 
 transactionController.get("", asyncHandler(async (req, res) => {
   const page = Math.max(1, parseInt(String(req.query.page ?? 1)));
@@ -28,16 +33,20 @@ transactionController.get("", asyncHandler(async (req, res) => {
   const txEntries: { txHash: string; blockHeight: number }[] = [];
   let height = latestBlock.height!;
   let blocksScanned = 0;
+  let batchIndex = 0;
   while (txEntries.length < wanted && height > 0 && blocksScanned < MAX_BLOCKS_TO_SCAN) {
+    const batchSize = BLOCK_BATCH_SIZES[Math.min(batchIndex++, BLOCK_BATCH_SIZES.length - 1)];
     const batchHeights: number[] = [];
     while (
-      batchHeights.length < BLOCK_BATCH_SIZE &&
+      batchHeights.length < batchSize &&
       height - batchHeights.length > 0 &&
       blocksScanned + batchHeights.length < MAX_BLOCKS_TO_SCAN
     ) {
       batchHeights.push(height - batchHeights.length);
     }
-    const hashLists = await Promise.all(batchHeights.map((h) => getBlockTxs(h)));
+    const hashLists = await Promise.all(
+      batchHeights.map((h) => getBlockTxs(h, h <= latestBlock.height! - FINALITY_DEPTH))
+    );
     hashLists.forEach((hashes, i) => {
       for (const txHash of hashes) {
         txEntries.push({ txHash, blockHeight: batchHeights[i] });
@@ -82,7 +91,7 @@ transactionController.get("", asyncHandler(async (req, res) => {
 // fully-assembled detail straight from cache when available.
 transactionController.get("/:txHash/summary", asyncHandler(async (req, res) => {
   const txHash = String(req.params.txHash);
-  const cached = getTxDetail(txHash);
+  const cached = await getTxDetail(txHash);
   if (cached) {
     res.json({ data: cached, lastUpdated: Date.now() } as ApiReturnType<TransactionDetail>);
     return;

@@ -4,7 +4,10 @@ import {API, POOL_API} from "./blockfrost";
 import {TransactionDetail} from "@shared/dtos/transaction.dto";
 
 export const cache = new NodeCache({
-  stdTTL: 300 // 5 minutes (default time to live for cache entries)
+  stdTTL: 300, // 5 minutes (default time to live for cache entries)
+  // With 24h TTLs on immutable data the cache would otherwise grow unbounded;
+  // ~50k entries keeps worst-case memory in the low hundreds of MB.
+  maxKeys: 50_000
 });
 
 // TTL tiers. Chain data is immutable once on-chain, but anything derived from
@@ -37,13 +40,13 @@ async function cachedFetch<T>(
   const request = (async () => {
     try {
       const value = await fetcher();
-      cache.set(key, value, ttl);
+      safeSet(key, value, ttl);
       return value;
     } catch (err) {
       if (!onError) throw err;
       console.warn(`cachedFetch(${key}) failed -`, (err as Error)?.message);
       const fallback = onError(err);
-      cache.set(key, fallback.value, fallback.ttl);
+      safeSet(key, fallback.value, fallback.ttl);
       return fallback.value;
     } finally {
       inFlight.delete(key);
@@ -53,12 +56,30 @@ async function cachedFetch<T>(
   return request;
 }
 
+// node-cache throws ECACHEFULL once maxKeys is reached — a full cache must
+// degrade to "not cached", never break the request.
+function safeSet(key: string, value: unknown, ttl: number) {
+  try {
+    cache.set(key, value, ttl);
+  } catch (err) {
+    console.warn(`cache full — dropping ${key}:`, (err as Error)?.message);
+  }
+}
+
 export function fetchAddressTotal(address: string): Promise<components["schemas"]["address_content_total"]> {
   return cachedFetch(`address-total-${address}`, DEFAULT_TTL, () => API.addressesTotal(address));
 }
 
-export function getEpoch(epochNo: string): Promise<components["schemas"]["epoch_content"]> {
-  return cachedFetch(`epoch-${epochNo}`, DEFAULT_TTL, () => API.epochs(Number.parseInt(epochNo)));
+// A finished epoch's figures (block/tx counts, output, fees, active stake)
+// are final — pass the current epoch number so closed epochs cache for 24h.
+export function getEpoch(
+  epochNo: string,
+  latestEpochNo?: number
+): Promise<components["schemas"]["epoch_content"]> {
+  const finished = latestEpochNo !== undefined && Number.parseInt(epochNo) < latestEpochNo;
+  return cachedFetch(`epoch-${epochNo}`, finished ? IMMUTABLE_TTL : DEFAULT_TTL, () =>
+    API.epochs(Number.parseInt(epochNo))
+  );
 }
 
 export function getBlock(blockHash: string): Promise<components["schemas"]["block_content"]> {
@@ -110,31 +131,50 @@ export function getPoolMetadata(
   );
 }
 
-// The tx-hash list of a block never changes once the block is on-chain.
-export function getBlockTxs(heightOrHash: number | string): Promise<string[]> {
-  return cachedFetch(`block-txs-${heightOrHash}`, DEFAULT_TTL, () => API.blocksTxs(heightOrHash));
+// The tx-hash list of a block never changes once the block is finalized.
+// Callers that know the block is safely below the tip (`finalized: true`) get
+// the 24h tier; near-tip blocks keep the short TTL to survive shallow reorgs.
+export function getBlockTxs(heightOrHash: number | string, finalized = false): Promise<string[]> {
+  return cachedFetch(
+    `block-txs-${heightOrHash}`,
+    finalized ? IMMUTABLE_TTL : DEFAULT_TTL,
+    () => API.blocksTxs(heightOrHash)
+  );
 }
 
+// Transaction content, UTxOs and metadata are immutable once the tx is
+// on-chain — re-fetching them every 5 minutes was pure quota waste (per-tx
+// lookups are the single largest Blockfrost call class in this gateway).
 export function getTransactions(txHash: string): Promise<components["schemas"]["tx_content"]> {
-  return cachedFetch(`tx-${txHash}`, DEFAULT_TTL, () => API.txs(txHash));
+  return cachedFetch(`tx-${txHash}`, IMMUTABLE_TTL, () => API.txs(txHash));
 }
 
 export function getTxMetadata(txHash: string): Promise<components["schemas"]["tx_content_metadata"]> {
-  return cachedFetch(`tx-metadata-${txHash}`, DEFAULT_TTL, () => API.txsMetadata(txHash));
+  return cachedFetch(`tx-metadata-${txHash}`, IMMUTABLE_TTL, () => API.txsMetadata(txHash));
 }
 
 export function getUtxos(txHash: string): Promise<components["schemas"]["tx_content_utxo"]> {
-  return cachedFetch(`utxos-${txHash}`, DEFAULT_TTL, () => API.txsUtxos(txHash));
+  return cachedFetch(`utxos-${txHash}`, IMMUTABLE_TTL, () => API.txsUtxos(txHash));
 }
 
-export function getTxDetail(txHash: string): TransactionDetail | undefined {
-  return cache.get(`tx-detail-${txHash}`) as TransactionDetail | undefined;
+// The assembled transaction detail is immutable except `tx.confirmation`,
+// which is recomputed from the cached chain tip on every read — so the
+// expensive assembly (utxos, assets, certificates, contracts) is cached for
+// 24h instead of being rebuilt from ~10 upstream calls every 5 minutes.
+export async function getTxDetail(txHash: string): Promise<TransactionDetail | undefined> {
+  const detail = cache.get(`tx-detail-${txHash}`) as TransactionDetail | undefined;
+  if (!detail) return undefined;
+  try {
+    const latest = await getLatestBlock();
+    detail.tx.confirmation = Math.max(0, (latest.height ?? 0) - (detail.tx.blockNo ?? 0));
+  } catch {
+    /* keep the stored confirmation if the tip lookup hiccups */
+  }
+  return detail;
 }
 
-// Persist the fully-assembled transaction detail so repeat views are instant.
-// Only `confirmation` drifts over time, so a short TTL keeps it acceptably fresh.
 export function setTxDetail(txHash: string, detail: TransactionDetail) {
-  cache.set(`tx-detail-${txHash}`, detail, DEFAULT_TTL);
+  safeSet(`tx-detail-${txHash}`, detail, IMMUTABLE_TTL);
 }
 
 // Asset metadata is fetched once per distinct asset (a single tx references the
@@ -183,14 +223,21 @@ export function getProposal(txHash: string, index: number) {
 export function getProposalMetadata(txHash: string, index: number) {
   return cachedFetch(
     `gov-proposal-meta-${txHash}-${index}`,
-    DEFAULT_TTL,
+    // Anchor metadata is content-addressed (validated against anchor_hash at
+    // submission) — immutable. The null fallback keeps the short TTL so a
+    // transient fetch failure can recover.
+    IMMUTABLE_TTL,
     () => API.governance.proposalMetadata(txHash, index),
     () => ({ value: null, ttl: DEFAULT_TTL })
   );
 }
 
+// Vote lists are append-only and can span many 100-row pages for high-profile
+// actions; a 30-min window bounds how often the full list is re-paged.
+const VOTES_TTL = 1800;
+
 export function getProposalVotes(txHash: string, index: number) {
-  return cachedFetch(`gov-proposal-votes-${txHash}-${index}`, DEFAULT_TTL, () =>
+  return cachedFetch(`gov-proposal-votes-${txHash}-${index}`, VOTES_TTL, () =>
     API.governance.proposalVotesAll(txHash, index)
   );
 }
@@ -208,22 +255,49 @@ export function getDrepMetadata(drepId: string) {
   );
 }
 
+// Full delegator/vote lists page at 100 rows/call and are only consumed for
+// counts + the paged delegates tab — an hour of staleness on those is
+// invisible, and it divides the paging cost by 12 vs the 5-min default.
+const AGGREGATE_TTL = 3600;
+
 export function getDrepDelegators(drepId: string) {
-  return cachedFetch(`drep-delegators-${drepId}`, DEFAULT_TTL, () =>
+  return cachedFetch(`drep-delegators-${drepId}`, AGGREGATE_TTL, () =>
     API.governance.drepsByIdDelegatorsAll(drepId)
   );
 }
 
-export function getDrepUpdates(drepId: string) {
-  return cachedFetch(`drep-updates-${drepId}`, DEFAULT_TTL, () =>
-    API.governance.drepsByIdUpdatesAll(drepId)
+// Only the first and last certificate update are ever displayed
+// (createdAt/updatedAt) — fetch exactly those instead of the whole history.
+export function getDrepFirstUpdate(drepId: string) {
+  return cachedFetch(`drep-update-first-${drepId}`, AGGREGATE_TTL, () =>
+    API.governance.drepsByIdUpdates(drepId, { page: 1, count: 1, order: "asc" })
+  );
+}
+
+export function getDrepLastUpdate(drepId: string) {
+  return cachedFetch(`drep-update-last-${drepId}`, VOTES_TTL, () =>
+    API.governance.drepsByIdUpdates(drepId, { page: 1, count: 1, order: "desc" })
   );
 }
 
 export function getDrepVotes(drepId: string) {
-  return cachedFetch(`drep-votes-${drepId}`, DEFAULT_TTL, () =>
+  return cachedFetch(`drep-votes-${drepId}`, VOTES_TTL, () =>
     API.governance.drepsByIdVotesAll(drepId)
   );
+}
+
+// Denominator for the DRep participation rate — the on-chain proposal count
+// moves by a handful per 5-day epoch, so an hour of staleness is free quota.
+export function getProposalsDenominator() {
+  return cachedFetch("gov-proposals-denominator", AGGREGATE_TTL, () =>
+    API.governance.proposals({ page: 1, count: 100 })
+  );
+}
+
+// One call returns an account's total controlled balance — replaces the
+// per-owner accountsAddresses × addresses N+1 fan-out on pool detail.
+export function getAccount(stakeAddress: string) {
+  return cachedFetch(`account-${stakeAddress}`, DEFAULT_TTL, () => API.accounts(stakeAddress));
 }
 
 // First page (Blockfrost default 100) — what the paged votes route serves.
