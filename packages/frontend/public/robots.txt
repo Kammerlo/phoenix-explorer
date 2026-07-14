@@ -1,13 +1,21 @@
 # https://www.robotstxt.org/robotstxt.html
+#
+# Every detail page below sits in an effectively infinite link space (every tx
+# links to blocks, addresses and tokens, which link to more txs...). Letting
+# crawlers walk them burns the upstream API quota 24/7 for pages no search
+# user needs. List/landing pages stay crawlable. Loosen deliberately if SEO
+# on detail pages ever matters more than API quota.
 User-agent: *
-Disallow: /en/addresses*
-Disallow: /en/block*
-Disallow: /en/transaction*
-Disallow: /en/tokens*
-Disallow: /en/contracts*
-Disallow: /en/stake-address*
-Disallow: /en/pool-certificates*
-Disallow: /en/pool-certificates*
-Disallow: /en/pool-de-registrations*
-Disallow: /en/instantaneous-rewards*
-Disallow: /api/*
+Disallow: /api/
+Disallow: /transaction/
+Disallow: /block/
+Disallow: /address/
+Disallow: /stake-address/
+Disallow: /stake/
+Disallow: /token/
+Disallow: /policy/
+Disallow: /pool/
+Disallow: /drep/
+Disallow: /epoch/
+Disallow: /governance-action/
+Disallow: /search

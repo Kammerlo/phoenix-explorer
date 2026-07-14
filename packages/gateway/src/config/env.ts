@@ -26,6 +26,11 @@ export const ENV = {
   PORT: parseInt(process.env.PORT ?? "3000", 10),
   HOST: process.env.HOST ?? "0.0.0.0",
   NETWORK: (process.env.NETWORK ?? "mainnet") as CardanoNetwork,
+  // Per-IP request ceiling for /api (requests per minute). A human browsing
+  // stays far below the default; crawlers walking detail pages do not. Every
+  // inbound page view costs upstream Blockfrost quota — this caps the burn.
+  // Set 0 to disable.
+  RATE_LIMIT_PER_MIN: parseInt(process.env.RATE_LIMIT_PER_MIN ?? "300", 10),
 };
 
 // One-line dump of how each provider env var resolved, with secrets masked, so
