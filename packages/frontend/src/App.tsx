@@ -4,6 +4,7 @@ import { BrowserRouter as Router } from "react-router-dom";
 import "slick-carousel/slick/slick-theme.css";
 import "slick-carousel/slick/slick.css";
 import { Buffer } from "buffer";
+import { Analytics } from "@vercel/analytics/react";
 
 import AppContainer from "./AppContainer";
 import Routers from "./Routers";
@@ -36,6 +37,7 @@ const App: React.FC = () => {
           </AppContainer>
         </Router>
       </Provider>
+      <Analytics />
     </I18nextProvider>
   );
 };
